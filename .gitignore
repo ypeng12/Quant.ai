@@ -1,0 +1,25 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Virtual Environments
+venv/
+.venv/
+env/
+.env
+
+# PDF and documentation binaries (exclude reading packages)
+*.pdf
+
+# IDE and model temp directories
+.gemini/
+.idea/
+.vscode/
+node_modules/
+dist/
+build/
