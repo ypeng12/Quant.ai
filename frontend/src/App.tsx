@@ -291,7 +291,7 @@ function App() {
           ) : data ? (
             <>
               {/* 账户资产价值计数器 */}
-              <div className="pnl-container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexDirection: 'row', flexWrap: 'wrap', gap: '1rem' }}>
+              <div className="pnl-header-container">
                 <div>
                   <div className="portfolio-value">
                     ${data.summary.final_equity.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -302,7 +302,7 @@ function App() {
                 </div>
                 
                 {/* 周期切换器 */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'flex-end' }}>
+                <div className="interval-picker-container">
                   <span style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', fontWeight: 600 }}>切换 K 线周期</span>
                   <div className="time-tabs" style={{ marginTop: 0 }}>
                     {Object.entries(INTERVAL_LABELS).map(([key, label]) => (
@@ -324,7 +324,7 @@ function App() {
               </div>
 
               {/* 策略设置与形态识别日志 并排展示 */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '2rem' }}>
+              <div className="strategy-patterns-grid">
                 <StrategySettings 
                   params={strategyParams} 
                   onChange={setStrategyParams} 

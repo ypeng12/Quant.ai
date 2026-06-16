@@ -80,17 +80,17 @@ def scan_market_stocks(tickers: str = None):
             company_details = get_company_info(ticker)
             
             # 推荐规则
-            recommended = rvol > 1.2 and atr_pct > 1.5
+            recommended = bool(rvol > 1.2 and atr_pct > 1.5)
             
             results.append({
                 "ticker": ticker,
                 "name": company_details["name"],
                 "sector": company_details["sector"],
-                "price": round(latest_day['Close'], 2),
-                "rvol": round(rvol, 2),
-                "atr_pct": round(atr_pct, 2),
-                "gap_pct": round(gap_pct, 2),
-                "volume_m": round(latest_volume / 1_000_000, 2),
+                "price": float(round(latest_day['Close'], 2)),
+                "rvol": float(round(rvol, 2)),
+                "atr_pct": float(round(atr_pct, 2)),
+                "gap_pct": float(round(gap_pct, 2)),
+                "volume_m": float(round(float(latest_volume) / 1_000_000, 2)),
                 "recommended": recommended,
                 "reason": f"成交量放大至 {rvol:.1f} 倍，日均振幅达 {atr_pct:.1f}%，具备极强的交易热度。" if recommended else "当前市场动能不足或振幅较窄，建议观望。"
             })
