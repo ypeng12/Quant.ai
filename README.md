@@ -10,6 +10,14 @@
 
 Quont.ai is a production-ready, fully-automated stock trading engine and interactive backtest simulator. Built with a Python FastAPI backend and a React (Vite) frontend, it features real-time K-line pattern recognition, dynamic market regime routing, ATR-based risk sizing, and out-of-sample walk-forward optimization.
 
+<p align="center">
+  <kbd>
+    <img src="assets/mobile_demo.webp" width="340" alt="Quont.ai Mobile Responsive Terminal Demo" />
+  </kbd>
+  <br>
+  <sub>📱 <b>Mobile-Responsive Terminal Showcase</b> (Real-time Interactive Dashboard)</sub>
+</p>
+
 ---
 
 ## 🚀 Key Features
