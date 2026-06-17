@@ -8,6 +8,20 @@ import pandas as pd
 import numpy as np
 import yfinance as yf
 
+import math
+
+def clean_float(val, default=0.0):
+    if val is None or pd.isna(val):
+        return default
+    try:
+        v = float(val)
+        if math.isnan(v) or math.isinf(v):
+            return default
+        return v
+    except Exception:
+        return default
+
+
 from app.config import INITIAL_CASH, WATCHLIST, FORCE_LIQUIDATION_TIME
 from app.data_manager import fetch_and_prepare_data, get_company_info, calculate_atr, INTERVAL_TO_PERIOD
 from app.patterns import analyze_patterns
@@ -76,6 +90,13 @@ def scan_market_stocks(tickers: str = None):
             # 3. 跳空幅度 Gap%
             gap_pct = ((latest_day['Open'] - prev_day['Close']) / prev_day['Close']) * 100
             
+            # 清理 nan 和 inf 值
+            price = clean_float(latest_day['Close'])
+            rvol = clean_float(rvol)
+            atr_pct = clean_float(atr_pct)
+            gap_pct = clean_float(gap_pct)
+            volume_m = clean_float(latest_volume) / 1_000_000
+            
             # 获取公司基本静态档案
             company_details = get_company_info(ticker)
             
@@ -86,11 +107,11 @@ def scan_market_stocks(tickers: str = None):
                 "ticker": ticker,
                 "name": company_details["name"],
                 "sector": company_details["sector"],
-                "price": float(round(latest_day['Close'], 2)),
+                "price": float(round(price, 2)),
                 "rvol": float(round(rvol, 2)),
                 "atr_pct": float(round(atr_pct, 2)),
                 "gap_pct": float(round(gap_pct, 2)),
-                "volume_m": float(round(float(latest_volume) / 1_000_000, 2)),
+                "volume_m": float(round(volume_m, 2)),
                 "recommended": recommended,
                 "reason": f"成交量放大至 {rvol:.1f} 倍，日均振幅达 {atr_pct:.1f}%，具备极强的交易热度。" if recommended else "当前市场动能不足或振幅较窄，建议观望。"
             })
@@ -230,17 +251,17 @@ def run_backtest_api(
         for idx, r in df.iterrows():
             chart_candles.append({
                 "time": int(idx.timestamp()),
-                "open": round(float(r['Open']), 2),
-                "high": round(float(r['High']), 2),
-                "low": round(float(r['Low']), 2),
-                "close": round(float(r['Close']), 2),
-                "volume": int(r['Volume']),
-                "vwap": round(float(r['VWAP']), 2) if not pd.isna(r['VWAP']) else None,
-                "ema_9": round(float(r['EMA_9']), 2) if not pd.isna(r['EMA_9']) else None,
-                "ema_21": round(float(r['EMA_21']), 2) if not pd.isna(r['EMA_21']) else None,
-                "ema_50": round(float(r['EMA_50']), 2) if not pd.isna(r['EMA_50']) else None,
-                "rsi": round(float(r['RSI']), 1) if not pd.isna(r['RSI']) else None,
-                "squeeze": bool(r['Squeeze_On']),
+                "open": round(clean_float(r['Open']), 2),
+                "high": round(clean_float(r['High']), 2),
+                "low": round(clean_float(r['Low']), 2),
+                "close": round(clean_float(r['Close']), 2),
+                "volume": int(clean_float(r['Volume'])),
+                "vwap": round(clean_float(r['VWAP']), 2) if not pd.isna(r['VWAP']) else None,
+                "ema_9": round(clean_float(r['EMA_9']), 2) if not pd.isna(r['EMA_9']) else None,
+                "ema_21": round(clean_float(r['EMA_21']), 2) if not pd.isna(r['EMA_21']) else None,
+                "ema_50": round(clean_float(r['EMA_50']), 2) if not pd.isna(r['EMA_50']) else None,
+                "rsi": round(clean_float(r['RSI']), 1) if not pd.isna(r['RSI']) else None,
+                "squeeze": bool(r['Squeeze_On']) if not pd.isna(r['Squeeze_On']) else False,
                 "regime": r.get('Regime', 'range_bound')
             })
             
@@ -280,14 +301,14 @@ def run_backtest_api(
             "interval": interval,
             "summary": {
                 "initial_cash": INITIAL_CASH,
-                "final_equity": res["final_equity"],
-                "net_pnl": res["net_pnl"],
-                "pnl_pct": res["pnl_pct"],
-                "total_trades": res["total_trades"],
-                "round_trips": res["round_trips"],
-                "win_rate": res["win_rate"],
-                "commission": res["commission"],
-                "max_drawdown": res["max_drawdown"]
+                "final_equity": clean_float(res["final_equity"]),
+                "net_pnl": clean_float(res["net_pnl"]),
+                "pnl_pct": clean_float(res["pnl_pct"]),
+                "total_trades": int(res["total_trades"]),
+                "round_trips": int(res["round_trips"]),
+                "win_rate": clean_float(res["win_rate"]),
+                "commission": clean_float(res["commission"]),
+                "max_drawdown": clean_float(res["max_drawdown"])
             },
             "ledger": res["ledger"],
             "candles": chart_candles,
