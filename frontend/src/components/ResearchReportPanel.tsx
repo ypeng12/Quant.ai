@@ -51,7 +51,9 @@ const DEFAULT_CHECKLIST: ChecklistItem[] = [
 
 const formatContent = (text: string): string => {
   return (text || '')
-    .replace(/\[cite\|[^\]]*\]/g, '') // Hide citation brackets
+    .replace(/\uE200cite[^\uE201]*\uE201/g, '') // Hide unicode citation blocks
+    .replace(/\[cite\|[^\]]*\]/g, '') // Hide markdown citation brackets
+    .replace(/[\uE200-\uE202]/g, '') // Clear stray unicode markers
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
     .replace(/`(.*?)`/g, '<code>$1</code>');
 };
