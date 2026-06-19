@@ -2,7 +2,7 @@
 
 import React from 'react';
 
-interface LedgerItem {
+export interface LedgerItem {
   timestamp: string;
   action: 'BUY' | 'SELL';
   ticker: string;
@@ -19,9 +19,10 @@ interface LedgerItem {
 
 interface LedgerTableProps {
   ledger: LedgerItem[];
+  onRowClick?: (item: LedgerItem) => void;
 }
 
-export const LedgerTable: React.FC<LedgerTableProps> = ({ ledger }) => {
+export const LedgerTable: React.FC<LedgerTableProps> = ({ ledger, onRowClick }) => {
   const formatTime = (timeStr: string) => {
     // 简化时间显示，只保留 "YYYY-MM-DD HH:MM"
     try {
@@ -62,7 +63,11 @@ export const LedgerTable: React.FC<LedgerTableProps> = ({ ledger }) => {
               const pnlText = hasPnl ? `${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)}` : '--';
 
               return (
-                <tr key={index}>
+                <tr 
+                  key={index}
+                  onClick={() => onRowClick && onRowClick(item)}
+                  style={{ cursor: onRowClick ? 'pointer' : 'default' }}
+                >
                   <td>{formatTime(item.timestamp)}</td>
                   <td>
                     <span className={`action-badge ${item.action.toLowerCase()}`}>

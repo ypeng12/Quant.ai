@@ -1,9 +1,10 @@
 // frontend/src/App.tsx
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { StockChart } from './components/StockChart';
 import { PortfolioStats } from './components/PortfolioStats';
-import { LedgerTable } from './components/LedgerTable';
+import { LedgerTable, type LedgerItem } from './components/LedgerTable';
+import { IntradayZoomChart } from './components/IntradayZoomChart';
 import { StrategySettings, type StrategyParams } from './components/StrategySettings';
 import { CompanyInfoCard } from './components/CompanyInfoCard';
 import { PatternLog } from './components/PatternLog';
@@ -48,20 +49,7 @@ interface CandleData {
   squeeze: boolean;
 }
 
-interface LedgerItem {
-  timestamp: string;
-  action: 'BUY' | 'SELL';
-  ticker: string;
-  shares: number;
-  market_price: number;
-  execution_price: number;
-  commission: number;
-  total_value: number;
-  total_cost?: number;
-  revenue?: number;
-  realized_pnl?: number;
-  cash_remaining: number;
-}
+
 
 interface ChartMarker {
   time: number;
@@ -141,7 +129,7 @@ const INTERVAL_LABELS: Record<string, string> = {
   "1d": "Daily"
 };
 
-type ActiveTab = 'dashboard' | 'research' | 'report' | 'walkforward' | 'experiments';
+type ActiveTab = 'dashboard' | 'research' | 'report' | 'walkforward' | 'experiments' | 'replay';
 
 function App() {
   const [watchlist, setWatchlist] = useState<string[]>(["TSLA", "NVDA", "AAPL", "MSFT", "AMD"]);
@@ -165,6 +153,24 @@ function App() {
   const [tuningLoading, setTuningLoading] = useState<boolean>(false);
   const [tuningReport, setTuningReport] = useState<string | null>(null);
   const [tuningMetrics, setTuningMetrics] = useState<any>(null);
+
+  // Intraday Zoom Panel states
+  const [zoomTradeItem, setZoomTradeItem] = useState<LedgerItem | null>(null);
+  const [zoomCandles, setZoomCandles] = useState<any[]>([]);
+  const [zoomLoading, setZoomLoading] = useState<boolean>(false);
+  const [focusTime, setFocusTime] = useState<number | undefined>(undefined);
+
+  // Replay Simulator states
+  const [availableDates, setAvailableDates] = useState<string[]>([]);
+  const [replayDate, setReplayDate] = useState<string>('');
+  const [replayLoading, setReplayLoading] = useState<boolean>(false);
+  const [replayData, setReplayData] = useState<any>(null);
+  const [replayIndex, setReplayIndex] = useState<number>(0);
+  const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const [replaySpeed, setReplaySpeed] = useState<number>(300);
+
+  // Workflow Guide visibility
+  const [showGuide, setShowGuide] = useState<boolean>(true);
 
   // AI 智能调参逻辑
   useEffect(() => {
@@ -318,6 +324,170 @@ function App() {
     setStrategyParams(newParams);
   };
 
+  // available dates fetch side-effect
+  useEffect(() => {
+    if (activeTab === 'replay') {
+      const fetchDates = async () => {
+        try {
+          const res = await fetch(`http://127.0.0.1:8000/api/replay/available_dates?ticker=${activeTicker}`);
+          const json = await res.json();
+          if (json.success && json.dates.length > 0) {
+            setAvailableDates(json.dates);
+            setReplayDate(json.dates[0]); // default to latest day
+          }
+        } catch (e) {
+          console.error("Failed to fetch available dates:", e);
+        }
+      };
+      fetchDates();
+    }
+  }, [activeTab, activeTicker]);
+
+  // load replay data
+  const handleLoadReplay = async () => {
+    if (!replayDate) return;
+    setReplayLoading(true);
+    setIsPlaying(false);
+    setReplayIndex(0);
+    setReplayData(null);
+    try {
+      const params = new URLSearchParams({
+        ticker: activeTicker.toUpperCase(),
+        date: replayDate,
+        strategy_mode: strategyParams.strategy_mode,
+        stop_loss_pct: String(strategyParams.stop_loss_pct),
+        profit_target_pct: String(strategyParams.profit_target_pct),
+        trailing_stop_mode: strategyParams.trailing_stop_mode,
+        trailing_stop_atr_mult: String(strategyParams.trailing_stop_atr_mult),
+        rsi_threshold_buy: String(strategyParams.rsi_threshold_buy),
+        risk_per_trade_pct: String(strategyParams.risk_per_trade_pct),
+        max_position_size_pct: String(strategyParams.max_position_size_pct),
+        commission_per_share: String(strategyParams.commission_per_share),
+        slippage_rate: String(strategyParams.slippage_rate),
+        market_open_focus: String(strategyParams.market_open_focus),
+      });
+      const res = await fetch(`http://127.0.0.1:8000/api/replay/data?${params.toString()}`);
+      const json = await res.json();
+      if (json.success) {
+        setReplayData(json);
+        setReplayIndex(0);
+      } else {
+        alert("加载复盘数据失败: " + json.error);
+      }
+    } catch (e) {
+      console.error(e);
+      alert("网络请求失败");
+    } finally {
+      setReplayLoading(false);
+    }
+  };
+
+  const playbackTimerRef = useRef<any>(null);
+
+  // Playback timer loop
+  useEffect(() => {
+    if (isPlaying && replayData && replayIndex < replayData.candles.length - 1) {
+      playbackTimerRef.current = setInterval(() => {
+        setReplayIndex((prev) => {
+          if (prev >= replayData.candles.length - 1) {
+            setIsPlaying(false);
+            clearInterval(playbackTimerRef.current);
+            return prev;
+          }
+          return prev + 1;
+        });
+      }, replaySpeed);
+    } else {
+      if (playbackTimerRef.current) {
+        clearInterval(playbackTimerRef.current);
+      }
+    }
+
+    return () => {
+      if (playbackTimerRef.current) {
+        clearInterval(playbackTimerRef.current);
+      }
+    };
+  }, [isPlaying, replayData, replayIndex, replaySpeed]);
+
+  // Ledger row click handler
+  const handleLedgerRowClick = async (item: LedgerItem) => {
+    if (activeInterval === '1d') {
+      setZoomLoading(true);
+      setZoomTradeItem(item);
+      setZoomCandles([]);
+      try {
+        const dateStr = item.timestamp.split(' ')[0]; // YYYY-MM-DD
+        const res = await fetch(`http://127.0.0.1:8000/api/intraday_data?ticker=${item.ticker}&date=${dateStr}`);
+        const json = await res.json();
+        if (json.success) {
+          setZoomCandles(json.candles);
+        } else {
+          alert("加载日内数据失败: " + json.error);
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setZoomLoading(false);
+      }
+    } else {
+      const t = Math.floor(new Date(item.timestamp).getTime() / 1000);
+      setFocusTime(t);
+      const chartEl = document.getElementById('main-chart-card');
+      chartEl?.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  // Replay live state calculations
+  const slicedCandles = replayData ? replayData.candles.slice(0, replayIndex + 1) : [];
+  const currentTimestamp = slicedCandles.length > 0 ? slicedCandles[slicedCandles.length - 1].time : 0;
+  
+  const slicedLedger = replayData 
+    ? replayData.ledger.filter((item: any) => {
+        const t = Math.floor(new Date(item.timestamp).getTime() / 1000);
+        return t <= currentTimestamp;
+      })
+    : [];
+
+  const slicedMarkers = replayData 
+    ? replayData.markers.filter((m: any) => m.time <= currentTimestamp)
+    : [];
+
+  const getLiveReplayStats = () => {
+    if (!replayData || slicedCandles.length === 0) return { cash: 100000, shares: 0, positionValue: 0, equity: 100000, pnl: 0, pnlPct: 0 };
+    
+    let cash = 100000;
+    let shares = 0;
+    
+    for (const item of slicedLedger) {
+      cash = item.cash_remaining;
+      if (item.action === 'BUY') {
+        shares += item.shares;
+      } else {
+        shares -= item.shares;
+      }
+    }
+    
+    const lastCandle = slicedCandles[slicedCandles.length - 1];
+    const currentPrice = lastCandle.close;
+    const positionValue = shares * currentPrice;
+    const equity = cash + positionValue;
+    const netPnL = equity - 100000;
+    const pnlPct = (netPnL / 100000) * 100;
+    
+    return {
+      cash,
+      shares,
+      positionValue,
+      equity,
+      pnl: netPnL,
+      pnlPct,
+      currentPrice
+    };
+  };
+
+  const liveStats = getLiveReplayStats();
+
   // 添加自选股
   const handleAddTicker = (e: React.FormEvent) => {
     e.preventDefault();
@@ -379,6 +549,12 @@ function App() {
             📊 Dashboard
           </button>
           <button
+            className={`nav-tab ${activeTab === 'replay' ? 'active' : ''}`}
+            onClick={() => setActiveTab('replay')}
+          >
+            🎬 Replay Simulator
+          </button>
+          <button
             className={`nav-tab ${activeTab === 'walkforward' ? 'active' : ''}`}
             onClick={() => setActiveTab('walkforward')}
           >
@@ -401,6 +577,47 @@ function App() {
       <div className="app-container">
         {/* 左侧内容区 */}
         <main className="main-content">
+          {/* Collapsible Workflow Guide */}
+          {showGuide && (activeTab === 'dashboard' || activeTab === 'replay') && (
+            <div className="card fade-in" style={{ marginBottom: '1.5rem', background: 'rgba(0, 200, 5, 0.04)', border: '1px solid rgba(0, 200, 5, 0.2)', position: 'relative' }}>
+              <button 
+                onClick={() => setShowGuide(false)} 
+                style={{ position: 'absolute', top: '12px', right: '16px', background: 'transparent', border: 'none', color: 'var(--color-text-secondary)', cursor: 'pointer', fontSize: '0.85rem' }}
+              >
+                ✕ 隐藏指南
+              </button>
+              <h3 style={{ margin: '0 0 8px 0', fontSize: '1rem', color: '#fff', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                💡 Quant.ai 智能量化交易终端使用指南
+              </h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', fontSize: '0.8rem', color: '#e5e5e7', lineHeight: 1.4 }}>
+                <div>
+                  <strong style={{ color: 'var(--color-green)' }}>第一步：寻找高波动标的 🔍</strong>
+                  <p style={{ margin: '4px 0 0 0' }}>
+                    使用右下角的 <strong>选股扫描面板</strong> 进行盘前扫描，筛选出具备 RVol (相对成交量) 与 ATR 振幅支撑的股票，它们是日内开盘突击的最优交易候选。
+                  </p>
+                </div>
+                <div>
+                  <strong style={{ color: 'var(--color-green)' }}>第二步：设计策略与AI调参 🤖</strong>
+                  <p style={{ margin: '4px 0 0 0' }}>
+                    在 <strong>Dashboard</strong> 中，您可以启用 <strong>AI Auto-Pilot 智能托管</strong>。系统会自动拉取最近 5 天的数据进行快速寻优，制定出抗回撤、收益稳健的量化配置。
+                  </p>
+                </div>
+                <div>
+                  <strong style={{ color: 'var(--color-green)' }}>第三步：历史沙盒复盘 🎬</strong>
+                  <p style={{ margin: '4px 0 0 0' }}>
+                    切换到 <strong>Replay Simulator</strong>。选择任意历史日期，点【加载复盘沙盒】，再点击播放即可仿真复盘该天系统买卖的全流程。
+                  </p>
+                </div>
+                <div>
+                  <strong style={{ color: 'var(--color-green)' }}>第四步：成交检查与透视 🔎</strong>
+                  <p style={{ margin: '4px 0 0 0' }}>
+                    在交易流水中，<strong>点击任意一行交易记录</strong>：如果是日线交易，下方会弹出 <strong>1分钟日内微观透视</strong> 详细图表，显示具体开盘成交时刻，让您精准审计。
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Deep Research Tab */}
           {activeTab === 'report' && (
             <ResearchReportPanel 
@@ -429,6 +646,199 @@ function App() {
           {/* Experiments Tab */}
           {activeTab === 'experiments' && (
             <ExperimentCompare />
+          )}
+
+          {/* Replay Simulator Tab */}
+          {activeTab === 'replay' && (
+            <div className="fade-in">
+              <div className="card" style={{ marginBottom: '1.5rem', background: '#09090b', border: '1px solid var(--color-border)' }}>
+                <h2 style={{ fontSize: '1.1rem', fontWeight: 800, margin: '0 0 1rem 0', color: '#fff' }}>
+                  🎬 Quant.ai 开盘历史交易复盘模拟器
+                </h2>
+                
+                {/* 选项栏 */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap', marginBottom: '1.25rem' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <label style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', fontWeight: 700 }}>复盘日期 (Past Date)</label>
+                    <select 
+                      value={replayDate} 
+                      onChange={(e) => setReplayDate(e.target.value)}
+                      style={{ background: '#111', border: '1px solid #333', color: '#fff', padding: '6px 12px', borderRadius: '6px', fontSize: '0.82rem', minWidth: '150px' }}
+                    >
+                      {availableDates.map(d => (
+                        <option key={d} value={d}>{d}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <button 
+                    onClick={handleLoadReplay}
+                    disabled={replayLoading || !replayDate}
+                    className="btn btn-primary"
+                    style={{ marginTop: '1.1rem', padding: '8px 16px', fontSize: '0.8rem', cursor: 'pointer' }}
+                  >
+                    {replayLoading ? '⏳ 加载中...' : '🔌 加载复盘沙盒'}
+                  </button>
+
+                  {replayData && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '1.1rem', background: '#141416', padding: '4px 12px', borderRadius: '8px', border: '1px solid #222' }}>
+                      <button 
+                        onClick={() => setIsPlaying(!isPlaying)}
+                        style={{ background: 'transparent', border: 'none', color: 'var(--color-green)', fontSize: '1.1rem', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '4px' }}
+                        title={isPlaying ? '暂停' : '播放'}
+                      >
+                        {isPlaying ? '⏸️ 暂停' : '▶️ 播放'}
+                      </button>
+                      
+                      <button 
+                        onClick={() => {
+                          setReplayIndex(prev => Math.min(replayData.candles.length - 1, prev + 1));
+                          setIsPlaying(false);
+                        }}
+                        style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '1.1rem', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '4px' }}
+                        title="单步步进"
+                      >
+                        ➡️ 单步
+                      </button>
+
+                      <button 
+                        onClick={() => {
+                          setReplayIndex(0);
+                          setIsPlaying(false);
+                        }}
+                        style={{ background: 'transparent', border: 'none', color: 'var(--color-red)', fontSize: '1.1rem', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '4px' }}
+                        title="重置"
+                      >
+                        ⏹️ 重置
+                      </button>
+
+                      {/* 播放速度 */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: 'var(--color-text-secondary)', marginLeft: '12px' }}>
+                        <span>回放间隔:</span>
+                        <input 
+                          type="range" 
+                          min="50" 
+                          max="1000" 
+                          step="50" 
+                          value={1050 - replaySpeed} 
+                          onChange={(e) => setReplaySpeed(1050 - Number(e.target.value))}
+                          style={{ width: '80px', accentColor: 'var(--color-green)' }}
+                        />
+                        <span>{(1000 / replaySpeed).toFixed(1)}x</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--color-text-secondary)', lineHeight: 1.4 }}>
+                  💡 <strong>复盘模式说明</strong>：系统会拉取该股当天 1分钟 级别完整的价格数据，以所选的策略参数在沙盒中从 09:30 开始分时播放。
+                  您可以手动调节播放速度，观察系统的实时开盘决策并校对买卖点。
+                </p>
+              </div>
+
+              {replayData ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                  {/* 复盘图表 */}
+                  <div className="card">
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                      <h3 className="card-title" style={{ margin: 0 }}>📈 1分钟 分时复盘曲线 (Sandbox Time-series Chart)</h3>
+                      <span style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>
+                        进度: <strong>{slicedCandles.length} / {replayData.candles.length}</strong> 根 K线 | 
+                        当前时间: <strong style={{ color: '#fff' }}>
+                          {slicedCandles.length > 0 
+                            ? new Date(slicedCandles[slicedCandles.length - 1].time * 1000).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }) 
+                            : '09:30'}
+                        </strong>
+                      </span>
+                    </div>
+                    <StockChart candles={slicedCandles} markers={slicedMarkers} />
+                  </div>
+
+                  {/* 实时账户与交易流水 */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '1.5rem' }}>
+                    {/* Live Account Stats */}
+                    <div className="card">
+                      <h3 className="card-title">💵 模拟账户动态表现 (Live Portfolio)</h3>
+                      <div className="stats-grid" style={{ gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '10px' }}>
+                        <div className="stat-card" style={{ background: '#111', padding: '12px' }}>
+                          <span className="stat-label">总资产权益 (Equity)</span>
+                          <span className="stat-value" style={{ fontSize: '1.2rem' }}>${liveStats.equity.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+                        </div>
+                        <div className="stat-card" style={{ background: '#111', padding: '12px' }}>
+                          <span className="stat-label">账户现金 (Cash)</span>
+                          <span className="stat-value" style={{ fontSize: '1.2rem' }}>${liveStats.cash.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+                        </div>
+                        <div className="stat-card" style={{ background: '#111', padding: '12px' }}>
+                          <span className="stat-label">持仓市值 (Holdings)</span>
+                          <span className="stat-value" style={{ fontSize: '1.2rem' }}>${liveStats.positionValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+                        </div>
+                        <div className="stat-card" style={{ background: '#111', padding: '12px' }}>
+                          <span className="stat-label">持股数量 (Shares)</span>
+                          <span className="stat-value" style={{ fontSize: '1.2rem', color: liveStats.shares > 0 ? 'var(--color-green)' : '#fff' }}>{liveStats.shares} 股</span>
+                        </div>
+                        <div className="stat-card" style={{ background: '#111', padding: '12px', gridColumn: 'span 2' }}>
+                          <span className="stat-label">净收益 (PnL / %)</span>
+                          <span className="stat-value" style={{ fontSize: '1.25rem', color: liveStats.pnl >= 0 ? 'var(--color-green)' : 'var(--color-red)' }}>
+                            {liveStats.pnl >= 0 ? '+' : ''}${liveStats.pnl.toFixed(2)} ({liveStats.pnl >= 0 ? '+' : ''}{liveStats.pnlPct.toFixed(2)}%)
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Ledger List */}
+                    <div className="card" style={{ display: 'flex', flexDirection: 'column' }}>
+                      <h3 className="card-title" style={{ margin: '0 0 10px 0' }}>📜 日内动态交易账本 (Live Ledger)</h3>
+                      <div style={{ flex: 1, maxHeight: '230px', overflowY: 'auto' }}>
+                        {slicedLedger.length === 0 ? (
+                          <p style={{ color: 'var(--color-text-secondary)', margin: '20px 0', textAlign: 'center', fontSize: '0.85rem' }}>
+                            等待策略触发开盘信号...
+                          </p>
+                        ) : (
+                          <table className="ledger-table" style={{ fontSize: '0.8rem' }}>
+                            <thead>
+                              <tr>
+                                <th>时间</th>
+                                <th>动作</th>
+                                <th>股数</th>
+                                <th>成交价</th>
+                                <th style={{ textAlign: 'right' }}>实现PnL</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {[...slicedLedger].reverse().map((item: any, idx: number) => {
+                                const pnl = item.realized_pnl;
+                                const isBuy = item.action === 'BUY';
+                                const hasPnl = pnl !== undefined && !isBuy;
+                                const pnlColor = hasPnl ? (pnl >= 0 ? 'var(--color-green)' : 'var(--color-red)') : 'inherit';
+                                return (
+                                  <tr key={idx}>
+                                    <td>{item.timestamp.split(' ')[1]}</td>
+                                    <td>
+                                      <span className={`action-badge ${item.action.toLowerCase()}`} style={{ fontSize: '0.65rem', padding: '2px 4px' }}>
+                                        {item.action === 'BUY' ? 'BUY' : 'SELL'}
+                                      </span>
+                                    </td>
+                                    <td>{item.shares}</td>
+                                    <td>${item.execution_price.toFixed(2)}</td>
+                                    <td style={{ textAlign: 'right', fontWeight: 700, color: pnlColor }}>
+                                      {hasPnl ? `${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)}` : '--'}
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="card loader-container" style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-text-secondary)' }}>
+                  请选择复盘日期并点击【加载复盘沙盒】开始仿真！
+                </div>
+              )}
+            </div>
           )}
 
           {(activeTab === 'dashboard' || activeTab === 'research') && (
@@ -466,8 +876,8 @@ function App() {
                 </div>
 
                 {/* 核心 K 线图表 */}
-                <div className="chart-wrapper">
-                  <StockChart candles={data.candles} markers={data.markers} />
+                <div id="main-chart-card" className="chart-wrapper">
+                  <StockChart candles={data.candles} markers={data.markers} focusTime={focusTime} />
                 </div>
 
                 {/* Equity & Drawdown Curves */}
@@ -582,7 +992,35 @@ function App() {
                 <PortfolioStats summary={data.summary} />
 
                 {/* 交易明细账本 */}
-                <LedgerTable ledger={data.ledger} />
+                <LedgerTable ledger={data.ledger} onRowClick={handleLedgerRowClick} />
+
+                {/* 日内 1分钟 交易微观透视 */}
+                {zoomLoading && (
+                  <div className="card loader-container" style={{ marginTop: '1.5rem', padding: '2rem', textAlign: 'center' }}>
+                    <div className="spinner" style={{
+                      width: '24px',
+                      height: '24px',
+                      borderRadius: '50%',
+                      border: '2px solid rgba(0,200,5,0.1)',
+                      borderTop: '2px solid var(--color-green)',
+                      animation: 'spin 1s linear infinite',
+                      margin: '0 auto 10px auto'
+                    }}></div>
+                    <span style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
+                      正在拉取 {zoomTradeItem?.ticker} 日内高频分时数据并进行 1分钟 细节对齐...
+                    </span>
+                  </div>
+                )}
+                {!zoomLoading && zoomTradeItem && zoomCandles.length > 0 && (
+                  <IntradayZoomChart 
+                    candles={zoomCandles} 
+                    tradeItem={zoomTradeItem} 
+                    onClose={() => {
+                      setZoomTradeItem(null);
+                      setZoomCandles([]);
+                    }} 
+                  />
+                )}
               </>
             ) : (
               <div className="loader-container">

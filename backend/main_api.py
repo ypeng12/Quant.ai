@@ -1099,6 +1099,178 @@ def get_research_report():
         return {"success": False, "error": f"解析报告失败: {str(e)}"}
 
 
+@app.get("/api/replay/available_dates")
+def get_replay_available_dates(ticker: str = "TSLA"):
+    ticker = ticker.upper()
+    try:
+        # 获取 5d 1m 数据
+        df = fetch_and_prepare_data(ticker, period="5d", interval="1m")
+        # 提取独特日期列表（按时间从近到远排序，转为字符串）
+        unique_dates = sorted(list(set(df.index.date.astype(str))), reverse=True)
+        return {"success": True, "dates": unique_dates[:5]}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
+@app.get("/api/replay/data")
+def get_replay_data(
+    ticker: str = "TSLA",
+    date: str = None,
+    strategy_mode: str = "opening_breakout",
+    stop_loss_pct: float = 0.015,
+    profit_target_pct: float = 0.030,
+    trailing_stop_mode: str = "atr",
+    trailing_stop_atr_mult: float = 2.0,
+    rsi_threshold_buy: float = 65.0,
+    risk_per_trade_pct: float = 0.01,
+    max_position_size_pct: float = 0.50,
+    commission_per_share: float = 0.005,
+    slippage_rate: float = 0.0003,
+    market_open_focus: bool = True
+):
+    ticker = ticker.upper()
+    try:
+        if not date:
+            return {"success": False, "error": "必须指定 date 参数"}
+            
+        # 1. 拉取 5d 1m 的数据 (包含前后日数据以计算正确的指标，如 EMA/RSI)
+        df_all = fetch_and_prepare_data(ticker, period="5d", interval="1m")
+        
+        # 2. 运行形态分析
+        df_all = analyze_patterns(df_all)
+        
+        # 3. 筛选出指定日期的数据
+        target_date = datetime.datetime.strptime(date, "%Y-%m-%d").date()
+        df_date = df_all[df_all.index.date == target_date].copy()
+        
+        if df_date.empty:
+            return {"success": False, "error": f"没有找到 {date} 对应的数据。"}
+            
+        # 4. 在该日期的数据上运行策略回测
+        strategy_params = {
+            "strategy_mode": strategy_mode,
+            "stop_loss_pct": stop_loss_pct,
+            "profit_target_pct": profit_target_pct,
+            "trailing_stop_mode": trailing_stop_mode,
+            "trailing_stop_atr_mult": trailing_stop_atr_mult,
+            "rsi_threshold_buy": rsi_threshold_buy,
+            "market_open_focus": market_open_focus
+        }
+        
+        risk_params = {
+            "slippage_rate": slippage_rate,
+            "commission_per_share": commission_per_share,
+            "min_commission_per_order": 1.0,
+            "position_sizing_mode": "atr",
+            "risk_per_trade_pct": risk_per_trade_pct,
+            "max_position_size_pct": max_position_size_pct
+        }
+        
+        res = run_backtest_sim(df_date, ticker, strategy_params, risk_params, is_intraday=True)
+        
+        # 5. 整理 K线数据给前端 TradingView 图表渲染
+        chart_candles = []
+        for idx, r in df_date.iterrows():
+            chart_candles.append({
+                "time": int(idx.timestamp()),
+                "open": round(clean_float(r['Open']), 2),
+                "high": round(clean_float(r['High']), 2),
+                "low": round(clean_float(r['Low']), 2),
+                "close": round(clean_float(r['Close']), 2),
+                "volume": int(clean_float(r['Volume'])),
+                "vwap": round(clean_float(r['VWAP']), 2) if not pd.isna(r['VWAP']) else None,
+                "ema_9": round(clean_float(r['EMA_9']), 2) if not pd.isna(r['EMA_9']) else None,
+                "ema_21": round(clean_float(r['EMA_21']), 2) if not pd.isna(r['EMA_21']) else None,
+                "ema_50": round(clean_float(r['EMA_50']), 2) if not pd.isna(r['EMA_50']) else None,
+                "rsi": round(clean_float(r['RSI']), 1) if not pd.isna(r['RSI']) else None,
+                "squeeze": bool(r['Squeeze_On']) if not pd.isna(r['Squeeze_On']) else False,
+                "regime": r.get('Regime', 'range_bound')
+            })
+            
+        # 整理买卖标记 (markers)
+        trade_markers = []
+        for trade in res["ledger"]:
+            trade_time = int(pd.to_datetime(trade['timestamp']).timestamp())
+            if trade['action'] == 'BUY':
+                trade_markers.append({
+                    "time": trade_time,
+                    "position": "belowBar",
+                    "color": "#00c805",
+                    "shape": "arrowUp",
+                    "text": f"BUY {trade['shares']}股 @ {trade['execution_price']:.2f}"
+                })
+            elif trade['action'] == 'SELL':
+                pnl = trade.get('realized_pnl', 0.0)
+                color = "#ff3b30" if pnl < 0 else "#00c805"
+                text = f"SELL {trade['shares']}股 @ {trade['execution_price']:.2f} ({'+' if pnl>=0 else ''}{pnl:.2f})"
+                trade_markers.append({
+                    "time": trade_time,
+                    "position": "aboveBar",
+                    "color": color,
+                    "shape": "arrowDown",
+                    "text": text
+                })
+                
+        return {
+            "success": True,
+            "ticker": ticker,
+            "date": date,
+            "summary": {
+                "initial_cash": float(res.get("initial_cash", 100000.0)),
+                "final_equity": float(res.get("final_equity", 100000.0)),
+                "net_pnl": float(res.get("net_pnl", 0.0)),
+                "pnl_pct": float(res.get("pnl_pct", 0.0)),
+                "total_trades": int(res.get("total_trades", 0)),
+                "round_trips": int(res.get("round_trips", 0)),
+                "win_rate": float(res.get("win_rate", 0.0)),
+                "commission": float(res.get("commission", 0.0)),
+                "max_drawdown": float(res.get("max_drawdown", 0.0))
+            },
+            "ledger": res["ledger"],
+            "candles": chart_candles,
+            "markers": trade_markers,
+            "equity_curve": res["equity_curve"]
+        }
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return {"success": False, "error": str(e)}
+
+
+@app.get("/api/intraday_data")
+def get_intraday_data(ticker: str, date: str):
+    ticker = ticker.upper()
+    try:
+        # 获取 5d 1m 的数据并计算指标
+        df_all = fetch_and_prepare_data(ticker, period="5d", interval="1m")
+        df_all = analyze_patterns(df_all)
+        
+        # 筛选特定日期
+        target_date = datetime.datetime.strptime(date, "%Y-%m-%d").date()
+        df_date = df_all[df_all.index.date == target_date]
+        
+        if df_date.empty:
+            return {"success": False, "error": f"没有找到 {date} 对应的日内数据"}
+            
+        chart_candles = []
+        for idx, r in df_date.iterrows():
+            chart_candles.append({
+                "time": int(idx.timestamp()),
+                "open": round(clean_float(r['Open']), 2),
+                "high": round(clean_float(r['High']), 2),
+                "low": round(clean_float(r['Low']), 2),
+                "close": round(clean_float(r['Close']), 2),
+                "volume": int(clean_float(r['Volume'])),
+                "vwap": round(clean_float(r['VWAP']), 2) if not pd.isna(r['VWAP']) else None,
+                "ema_9": round(clean_float(r['EMA_9']), 2) if not pd.isna(r['EMA_9']) else None,
+                "ema_21": round(clean_float(r['EMA_21']), 2) if not pd.isna(r['EMA_21']) else None,
+                "ema_50": round(clean_float(r['EMA_50']), 2) if not pd.isna(r['EMA_50']) else None,
+            })
+        return {"success": True, "ticker": ticker, "date": date, "candles": chart_candles}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
 if __name__ == "__main__":
     print("启动 FastAPI 服务器于 http://127.0.0.1:8000 ...")
     uvicorn.run("main_api:app", host="127.0.0.1", port=8000, reload=True)

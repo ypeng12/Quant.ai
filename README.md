@@ -46,6 +46,14 @@ Quant.ai is a production-ready, fully-automated stock trading engine and interac
 - Dynamically grid-searches strategy settings over the recent 5 days of 1-minute bar data for the selected ticker.
 - Optimizes for the best risk-adjusted performance (Sharpe ratio and max drawdown mitigation) and automatically applies parameters to the active trading dashboard.
 
+### 7. 🎬 Historical Replay Mode (历史开盘复盘模拟器)
+- **Granular 1m Simulation**: Allows developers and traders to replay the market open sequence step-by-step for any trading day within the last 5 days.
+- **Interactive Controls**: Supports Play, Pause, Single-Step tick progression, Reset, and speed tuning (with simulated intervals down to 50ms per bar).
+- **Synchronized Portfolio updates**: Portfolio equity, cash, holdings, and transactions update dynamically on each step to observe execution points.
+
+### 8. 🔍 Intraday Trade Inspector (日内成交精细化透视)
+- **High-Frequency Audit**: In daily backtests, clicking any ledger row fetches the 1-minute candlestick data for the execution date and overlays the exact BUY/SELL orders at the market open (9:30 AM EST).
+- **Auto-scroll focus**: In intraday/1m backtests, clicking any ledger row centers the main chart's time axis precisely on the selected transaction bar.
 
 ---
 
