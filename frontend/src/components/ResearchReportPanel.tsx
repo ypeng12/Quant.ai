@@ -803,7 +803,11 @@ export const ResearchReportPanel: React.FC<ResearchReportPanelProps> = ({ onAppl
                           {comp.rows.map((row, ridx) => (
                             <tr key={ridx}>
                               {comp.headers!.map((h, colidx) => (
-                                <td key={colidx} style={{ fontSize: '0.82rem' }}>{row[h]}</td>
+                                <td 
+                                  key={colidx} 
+                                  style={{ fontSize: '0.9rem', lineHeight: '1.5', color: '#e5e5e7' }}
+                                  dangerouslySetInnerHTML={{ __html: formatContent(row[h] || '') }}
+                                />
                               ))}
                             </tr>
                           ))}
