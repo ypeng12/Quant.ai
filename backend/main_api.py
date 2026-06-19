@@ -35,7 +35,7 @@ from app.experiment_manager import list_experiments, save_experiment, get_experi
 from app.risk_analyst import generate_risk_report
 import time
 
-app = FastAPI(title="Quont.ai API Server")
+app = FastAPI(title="Quant.ai API Server")
 
 # 请求延迟追踪
 request_latencies = []

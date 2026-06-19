@@ -1,4 +1,4 @@
-# Quont.ai - Advanced Quant Trading Engine & Backtest Simulator
+# Quant.ai - Advanced Quant Trading Engine & Backtest Simulator
 
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.8%2B-blue.svg" alt="Python Version" />
@@ -8,10 +8,10 @@
   <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License" />
 </p>
 
-Quont.ai is a production-ready, fully-automated stock trading engine and interactive backtest simulator. Built with a Python FastAPI backend and a React (Vite) frontend, it features real-time K-line pattern recognition, dynamic market regime routing, ATR-based risk sizing, and out-of-sample walk-forward optimization.
+Quant.ai is a production-ready, fully-automated stock trading engine and interactive backtest simulator. Built with a Python FastAPI backend and a React (Vite) frontend, it features real-time K-line pattern recognition, dynamic market regime routing, ATR-based risk sizing, and out-of-sample walk-forward optimization.
 
 <p align="center">
-  <img src="assets/desktop_terminal.png" width="100%" alt="Quont.ai Desktop Trading Terminal" />
+  <img src="assets/desktop_terminal.png" width="100%" alt="Quant.ai Desktop Trading Terminal" />
 </p>
 
 ---

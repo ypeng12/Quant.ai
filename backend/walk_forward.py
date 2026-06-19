@@ -21,7 +21,7 @@ def walk_forward_optimization(ticker, interval="1d", period="2y", train_size=120
     - 滚动前进，直到覆盖所有行情数据
     """
     print("=" * 80)
-    print(f"             QUONT.AI - WALK-FORWARD OPTIMIZER (滚动参数优化引擎)")
+    print(f"             QUANT.AI - WALK-FORWARD OPTIMIZER (滚动参数优化引擎)")
     print(f" 标的代码: {ticker} | 周期: {interval} | 区间: {period} | 训练集大小: {train_size} | 测试集大小: {test_size}")
     print("=" * 80)
     

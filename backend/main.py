@@ -23,7 +23,7 @@ def run_simulation(ticker, period="5d", interval="1m", strategy_mode="dynamic", 
     4. 输出交易业绩及对账流水
     """
     print("=" * 70)
-    print(f"               QUONT.AI - BACKTEST SIMULATOR (通用回测模拟器)")
+    print(f"               QUANT.AI - BACKTEST SIMULATOR (通用回测模拟器)")
     print(f" 股票代码: {ticker} | 周期: {interval} | 区间: {period} | 模式: {strategy_mode} | 仓位管理: {position_sizing_mode}")
     print("=" * 70)
     
@@ -64,7 +64,7 @@ def run_simulation(ticker, period="5d", interval="1m", strategy_mode="dynamic", 
     
     # 4. 输出回测统计报告
     print("\n" + "=" * 70)
-    print("               QUONT.AI - BACKTEST REPORT (回测统计报告)")
+    print("               QUANT.AI - BACKTEST REPORT (回测统计报告)")
     print("=" * 70)
     print(f" 初始资金:      $ {INITIAL_CASH:,.2f}")
     print(f" 最终资产:      $ {res['final_equity']:,.2f}")
@@ -96,7 +96,7 @@ def run_simulation(ticker, period="5d", interval="1m", strategy_mode="dynamic", 
     print("=" * 70)
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Quont.ai 量化交易回测模拟器")
+    parser = argparse.ArgumentParser(description="Quant.ai 量化交易回测模拟器")
     parser.add_argument("--ticker", type=str, default="TSLA", help="测试股票代码 (默认: TSLA)")
     parser.add_argument("--period", type=str, default="5d", help="回测区间，支持 1d, 5d, 1mo, 1y 等 (默认: 5d)")
     parser.add_argument("--interval", type=str, default="1m", help="K线周期，支持 1m, 5m, 15m, 1d 等 (默认: 1m)")

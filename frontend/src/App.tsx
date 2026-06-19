@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { StockChart } from './components/StockChart';
 import { PortfolioStats } from './components/PortfolioStats';
 import { LedgerTable } from './components/LedgerTable';
-import { StrategySettings } from './components/StrategySettings';
+import { StrategySettings, type StrategyParams } from './components/StrategySettings';
 import { CompanyInfoCard } from './components/CompanyInfoCard';
 import { PatternLog } from './components/PatternLog';
 import { ScannerPanel } from './components/ScannerPanel';
@@ -90,19 +90,7 @@ interface RegimeData {
   commission: number;
 }
 
-interface StrategyParams {
-  strategy_mode: 'consensus' | 'ema_cross' | 'breakout' | 'patterns' | 'dynamic';
-  stop_loss_pct: number;
-  profit_target_pct: number;
-  trailing_stop_mode: 'atr' | 'flat' | 'none';
-  trailing_stop_atr_mult: number;
-  rsi_threshold_buy: number;
-  risk_per_trade_pct: number;
-  max_position_size_pct: number;
-  position_sizing_mode: 'atr' | 'flat';
-  commission_per_share: number;
-  slippage_rate: number;
-}
+
 
 interface BacktestResponse {
   success: boolean;
@@ -367,7 +355,7 @@ function App() {
       {/* 顶部标题栏 */}
       <header className="header-bar">
         <div className="logo">
-          Quont<span>.ai</span>
+          Quant<span>.ai</span>
         </div>
         
         {/* Tab Navigation */}
@@ -464,7 +452,7 @@ function App() {
                   {/* 周期切换器 */}
                   <div className="interval-picker-container">
                     <div className="time-tabs" style={{ marginTop: 0 }}>
-                      {Object.entries(INTERVAL_LABELS).map(([key, label]) => (
+                      {Object.entries(INTERVAL_LABELS).map(([key]) => (
                         <button
                           key={key}
                           className={`tab-btn ${activeInterval === key ? 'active' : ''}`}
@@ -688,7 +676,7 @@ function App() {
           </div>
           
           <div style={{ marginTop: 'auto', padding: '1rem', background: '#1c1c1e', border: '1px solid var(--color-border)', borderRadius: '8px', fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>
-            <strong style={{ color: '#ffffff', display: 'block', marginBottom: '4px' }}>About Quont.ai</strong>
+            <strong style={{ color: '#ffffff', display: 'block', marginBottom: '4px' }}>About Quant.ai</strong>
             AI-powered quantitative research platform. Define strategies via natural language, run backtests with realistic cost modeling, and receive AI-generated risk analysis reports.
             <br /><br />
             <em style={{ fontSize: '0.75rem' }}>For educational and research purposes only. Not investment advice.</em>
