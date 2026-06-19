@@ -25,5 +25,11 @@ MARKET_OPEN_TIME = "09:30"
 MARKET_CLOSE_TIME = "16:00"
 FORCE_LIQUIDATION_TIME = "15:55" # 日内清仓时间：下午 3:55 强制无条件市价清仓，不持股过夜
 
+# 开盘突击模式配置
+MARKET_OPEN_FOCUS_DEFAULT = True  # 是否默认开启开盘突击模式
+MARKET_OPEN_FOCUS_START = "09:30" # 开盘开始时间
+MARKET_OPEN_FOCUS_END = "10:15"   # 开盘结束时间 (前 45 分钟)
+FORCE_LIQUIDATION_OPEN_FOCUS = "10:30" # 开盘突击模式下，10:30 强制清仓出场，防午盘横盘震荡损耗
+
 # 默认监控的高流动性股票池
 WATCHLIST = ["TSLA", "NVDA", "AAPL", "MSFT", "AMD"]

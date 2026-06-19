@@ -3,7 +3,7 @@
 import React from 'react';
 
 export interface StrategyParams {
-  strategy_mode: 'consensus' | 'ema_cross' | 'breakout' | 'patterns';
+  strategy_mode: 'consensus' | 'ema_cross' | 'breakout' | 'patterns' | 'opening_breakout' | 'dynamic';
   stop_loss_pct: number;
   profit_target_pct: number;
   trailing_stop_mode: 'atr' | 'flat' | 'none';
@@ -14,15 +14,18 @@ export interface StrategyParams {
   position_sizing_mode: 'atr' | 'flat';
   commission_per_share: number;
   slippage_rate: number;
+  market_open_focus: boolean;
 }
 
 interface StrategySettingsProps {
   params: StrategyParams;
   onChange: (newParams: StrategyParams) => void;
   onReset: () => void;
+  aiAutoPilot: boolean;
+  onToggleAutoPilot: (val: boolean) => void;
 }
 
-export const StrategySettings: React.FC<StrategySettingsProps> = ({ params, onChange, onReset }) => {
+export const StrategySettings: React.FC<StrategySettingsProps> = ({ params, onChange, onReset, aiAutoPilot, onToggleAutoPilot }) => {
   const handleChange = (key: keyof StrategyParams, value: any) => {
     onChange({
       ...params,
@@ -31,27 +34,164 @@ export const StrategySettings: React.FC<StrategySettingsProps> = ({ params, onCh
   };
 
   return (
-    <div className="card">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <h3 className="card-title" style={{ margin: 0 }}>量化风控设置 (Strategy & Risk Settings)</h3>
-        <button 
-          onClick={onReset}
-          style={{
-            background: '#2c2c2e',
-            border: 'none',
-            color: '#ffffff',
-            padding: '4px 10px',
-            borderRadius: '4px',
-            fontSize: '0.8rem',
-            cursor: 'pointer',
-            fontWeight: 600
-          }}
-        >
-          重置默认
-        </button>
+    <div className="card" style={{ position: 'relative' }}>
+      
+      {/* AI Auto-Pilot Card */}
+      <div style={{
+        background: aiAutoPilot ? 'linear-gradient(135deg, rgba(0, 200, 5, 0.12), rgba(0, 150, 5, 0.04))' : 'rgba(255, 255, 255, 0.02)',
+        border: aiAutoPilot ? '1px dashed rgba(0, 200, 5, 0.4)' : '1px solid var(--color-border)',
+        borderRadius: '8px',
+        padding: '12px 16px',
+        marginBottom: '1.25rem',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '6px',
+        transition: 'all 0.3s ease'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '1.2rem' }}>🤖</span>
+            <span style={{ fontWeight: 700, fontSize: '0.9rem', color: '#ffffff' }}>AI 智能托管 / 自动调参</span>
+            {aiAutoPilot && (
+              <span style={{
+                background: 'rgba(0, 200, 5, 0.15)',
+                color: 'var(--color-green)',
+                padding: '2px 8px',
+                borderRadius: '12px',
+                fontSize: '0.75rem',
+                fontWeight: 700,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}>
+                <span style={{
+                  width: '6px',
+                  height: '6px',
+                  borderRadius: '50%',
+                  backgroundColor: 'var(--color-green)',
+                  animation: 'pulse 1.5s infinite',
+                  display: 'inline-block'
+                }}></span>
+                已激活
+              </span>
+            )}
+          </div>
+          
+          {/* Switch Switch */}
+          <label style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer' }}>
+            <input 
+              type="checkbox"
+              checked={aiAutoPilot}
+              onChange={(e) => onToggleAutoPilot(e.target.checked)}
+              style={{ display: 'none' }}
+            />
+            <div style={{
+              width: '40px',
+              height: '20px',
+              backgroundColor: aiAutoPilot ? 'var(--color-green)' : '#2c2c2e',
+              borderRadius: '10px',
+              position: 'relative',
+              transition: 'background-color 0.2s',
+              border: '1px solid var(--color-border)'
+            }}>
+              <div style={{
+                width: '16px',
+                height: '16px',
+                backgroundColor: aiAutoPilot ? '#000000' : '#ffffff',
+                borderRadius: '50%',
+                position: 'absolute',
+                top: '1px',
+                left: aiAutoPilot ? '21px' : '1px',
+                transition: 'left 0.2s'
+              }}></div>
+            </div>
+          </label>
+        </div>
+        <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.75rem', margin: 0, lineHeight: 1.4 }}>
+          {aiAutoPilot 
+            ? "机器学习调优中。算法自动分析开盘高频阻力与相对成交量，调配仓位与止损，保护本金并稳健止盈。"
+            : "开启后，系统将自动基于近期历史特征运行微型 Walk-Forward 调优，代替手动参数设置。"
+          }
+        </p>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+        <h3 className="card-title" style={{ margin: 0 }}>手动参数与风控 (Strategy Parameters)</h3>
+        
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          {/* 开盘突击模式 Checkbox */}
+          <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', color: '#ffffff', cursor: aiAutoPilot ? 'not-allowed' : 'pointer', userSelect: 'none' }}>
+            <input 
+              type="checkbox"
+              checked={params.market_open_focus}
+              disabled={aiAutoPilot}
+              onChange={(e) => handleChange('market_open_focus', e.target.checked)}
+              style={{
+                accentColor: 'var(--color-green)',
+                width: '14px',
+                height: '14px',
+                cursor: aiAutoPilot ? 'not-allowed' : 'pointer'
+              }}
+            />
+            🌅 开盘突击
+          </label>
+
+          <button 
+            onClick={onReset}
+            disabled={aiAutoPilot}
+            style={{
+              background: '#2c2c2e',
+              border: 'none',
+              color: '#ffffff',
+              padding: '4px 10px',
+              borderRadius: '4px',
+              fontSize: '0.8rem',
+              cursor: aiAutoPilot ? 'not-allowed' : 'pointer',
+              fontWeight: 600,
+              opacity: aiAutoPilot ? 0.5 : 1
+            }}
+          >
+            重置
+          </button>
+        </div>
+      </div>
+
+      <div style={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        gap: '1rem',
+        opacity: aiAutoPilot ? 0.35 : 1,
+        pointerEvents: aiAutoPilot ? 'none' : 'auto',
+        transition: 'all 0.3s ease',
+        position: 'relative'
+      }}>
+        {aiAutoPilot && (
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 10,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'transparent'
+          }}>
+            <div style={{
+              background: 'rgba(0, 0, 0, 0.8)',
+              border: '1px solid rgba(0, 200, 5, 0.3)',
+              borderRadius: '8px',
+              padding: '8px 16px',
+              fontSize: '0.8rem',
+              fontWeight: 700,
+              color: 'var(--color-green)',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.5)'
+            }}>
+              🔒 AI 智能托管进行中
+            </div>
+          </div>
+        )}
         
         {/* 策略选择 */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -68,9 +208,11 @@ export const StrategySettings: React.FC<StrategySettingsProps> = ({ params, onCh
               fontWeight: 600
             }}
           >
-            <option value="consensus">Combo Consensus (共振共识策略 - 推荐)</option>
+            <option value="opening_breakout">🌅 Market Open Breakout (开盘突击区间突破 - 推荐)</option>
+            <option value="consensus">Combo Consensus (共振共识策略)</option>
+            <option value="dynamic">Regime Dynamic Router (自适应市场路由)</option>
             <option value="ema_cross">EMA Golden/Dead Cross (日内均线交叉)</option>
-            <option value="breakout">Intraday Breakout (盘前/昨日阻力突破)</option>
+            <option value="breakout">Intraday Levels Breakout (阻力位突破)</option>
             <option value="patterns">K-Line Patterns (M顶/W底形态反转)</option>
           </select>
         </div>

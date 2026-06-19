@@ -23,3 +23,9 @@ env/
 node_modules/
 dist/
 build/
+
+# Local cache and databases
+backend/data_cache/
+backend/app/experiments.db
+*.db
+
