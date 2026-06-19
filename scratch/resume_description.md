@@ -1,4 +1,4 @@
-# Quont.ai 简历项目描述模版 (Resume Project Description Template)
+# Quant.ai 简历项目描述模版 (Resume Project Description Template)
 
 这里为您整理了适合写在简历上的项目描述。提供了 **中文版** 和 **英文版**，并针对 **量化开发岗 (Quant Developer)**、**算法交易工程师 (Algo Trading Engineer)** 与 **全栈/后端软件工程师 (Full-stack/Backend Engineer)** 进行了针对性的措辞优化。您可直接复制使用。
 
@@ -8,7 +8,7 @@
 
 ### 中文版
 
-**项目名称**：Quont.ai：高性能量化交易回测系统与交互式终端 (独立开发)  
+**项目名称**：Quant.ai：高性能量化交易回测系统与交互式终端 (独立开发)  
 **技术栈**：Python (FastAPI, Pandas, NumPy, yfinance) | React (TypeScript, Vite, Lightweight Charts) | Git  
 **项目描述**：  
 设计并开发了一款具备工业级风控管理与动态市场自适应的股票量化交易回测引擎及前端可视化终端，支持分钟级与日线级高频回测。
@@ -24,7 +24,7 @@
 
 ### 英文版 (English Version)
 
-**Project Name**: Quont.ai: High-Performance Algorithmic Trading Engine & Backtest Simulator (Sole Developer)  
+**Project Name**: Quant.ai: High-Performance Algorithmic Trading Engine & Backtest Simulator (Sole Developer)  
 **Tech Stack**: Python (FastAPI, Pandas, NumPy, yfinance) | React (TypeScript, Vite, Lightweight Charts) | Git  
 **Project Description**:  
 Designed and developed a production-ready, fully-automated quantitative trading backtest engine and interactive visual dashboard, supporting high-fidelity historical simulations at both minute and daily intervals.
@@ -42,7 +42,7 @@ Designed and developed a production-ready, fully-automated quantitative trading 
 
 ### 中文版
 
-**项目名称**：Quont.ai：量化交易模拟回测与数据终端 (独立开发)  
+**项目名称**：Quant.ai：量化交易模拟回测与数据终端 (独立开发)  
 **技术栈**：Python (FastAPI, Pandas, NumPy) | React (TypeScript, Vite) | RESTful API | CORS  
 **核心工作**：
 * **模块化系统架构**：基于“低耦合、高内聚”原则，采用 FastAPI (后端) 与 Vite React (前端) 分离架构，搭建了模块化的策略回测与资产变动计算核心（包含数据管理器、双向交易账本、形态识别器、风控总线与参数优化器）。
