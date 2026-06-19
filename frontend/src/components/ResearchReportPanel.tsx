@@ -1,6 +1,7 @@
 // frontend/src/components/ResearchReportPanel.tsx
 
 import React, { useState, useEffect } from 'react';
+import type { StrategyParams } from './StrategySettings';
 
 interface ComponentData {
   type: 'paragraph' | 'heading3' | 'table' | 'code' | 'alert' | 'list';
@@ -23,20 +24,6 @@ interface ReportResponse {
   title: string;
   sections: SectionData[];
   error?: string;
-}
-
-interface StrategyParams {
-  strategy_mode: 'consensus' | 'ema_cross' | 'breakout' | 'patterns' | 'dynamic';
-  stop_loss_pct: number;
-  profit_target_pct: number;
-  trailing_stop_mode: 'atr' | 'flat' | 'none';
-  trailing_stop_atr_mult: number;
-  rsi_threshold_buy: number;
-  risk_per_trade_pct: number;
-  max_position_size_pct: number;
-  position_sizing_mode: 'atr' | 'flat';
-  commission_per_share: number;
-  slippage_rate: number;
 }
 
 interface ResearchReportPanelProps {
@@ -62,7 +49,7 @@ const DEFAULT_CHECKLIST: ChecklistItem[] = [
   { id: '7', label: 'Shadow Live：小资金或空跑两周，检验真实滑点佣金摩擦成本与回测偏差', category: '实盘迁移', checked: false },
 ];
 
-export const ResearchReportPanel: React.FC<ResearchReportPanelProps> = ({ onApplyParams, activeTicker }) => {
+export const ResearchReportPanel: React.FC<ResearchReportPanelProps> = ({ onApplyParams }) => {
   const [report, setReport] = useState<ReportResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [activeSectionId, setActiveSectionId] = useState<string>('executive_summary');
@@ -84,12 +71,12 @@ export const ResearchReportPanel: React.FC<ResearchReportPanelProps> = ({ onAppl
 
   // Checklist state (persisted locally)
   const [checklist, setChecklist] = useState<ChecklistItem[]>(() => {
-    const saved = localStorage.getItem('quont_research_checklist');
+    const saved = localStorage.getItem('quant_research_checklist');
     return saved ? JSON.parse(saved) : DEFAULT_CHECKLIST;
   });
 
   useEffect(() => {
-    localStorage.setItem('quont_research_checklist', JSON.stringify(checklist));
+    localStorage.setItem('quant_research_checklist', JSON.stringify(checklist));
   }, [checklist]);
 
   const toggleChecklistItem = (id: string) => {
@@ -230,7 +217,13 @@ export const ResearchReportPanel: React.FC<ResearchReportPanelProps> = ({ onAppl
   };
 
   // Specific Candlestick configurations that we can map parameters to
-  const candlestickData = [
+  const candlestickData: Array<{
+    name: string;
+    type: string;
+    formula: string;
+    desc: string;
+    strategy: Partial<StrategyParams>;
+  }> = [
     { name: "长阳线 / 大阳线 (Big Bullish)", type: "bullish", formula: "bull and body_ratio >= 0.6 and upper_ratio <= 0.3 and lower_ratio <= 0.3", desc: "买方全天绝对主导，代表多头攻击动能充沛，后市看涨概率大。", strategy: { strategy_mode: "patterns", trailing_stop_atr_mult: 2.0 } },
     { name: "长阴线 / 大阴线 (Big Bearish)", type: "bearish", formula: "bear and body_ratio >= 0.6 and upper_ratio <= 0.3 and lower_ratio <= 0.3", desc: "空方全天绝对掌控，恐慌情绪蔓延，通常需要离场防御。", strategy: { strategy_mode: "dynamic" } },
     { name: "十字星 (Doji)", type: "neutral", formula: "body_ratio <= 0.1", desc: "多空平衡，波动率收缩。处于长期趋势末端常代表变盘，处于趋势中途代表调整中继。", strategy: { strategy_mode: "consensus" } },
@@ -685,7 +678,7 @@ export const ResearchReportPanel: React.FC<ResearchReportPanelProps> = ({ onAppl
                 <div className="interactive-widget-wrapper card" style={{ marginTop: '1.25rem', marginBottom: '1.5rem' }}>
                   <h3 className="widget-header">💻 量化策略引擎代码模块导航</h3>
                   <p style={{ fontSize: '0.82rem', color: 'var(--color-text-secondary)', marginBottom: '1rem' }}>
-                    Quont.ai 项目的后端量化逻辑采用模块化设计。点击直接阅读相关代码：
+                    Quant.ai 项目的后端量化逻辑采用模块化设计。点击直接阅读相关代码：
                   </p>
                   
                   <div className="code-links-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>

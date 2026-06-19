@@ -44,7 +44,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ onRunBacktest, isLoading, 
     {
       id: 'welcome',
       role: 'system',
-      content: `Welcome to Quont.ai Research Agent. Describe your trading research in natural language — I'll parse it into a strategy config, run the backtest, and generate a risk analysis report.\n\nTry: "Backtest TSLA with dynamic routing strategy on daily bars"`,
+      content: `Welcome to Quant.ai Research Agent. Describe your trading research in natural language — I'll parse it into a strategy config, run the backtest, and generate a risk analysis report.\n\nTry: "Backtest TSLA with dynamic routing strategy on daily bars"`,
       timestamp: new Date()
     }
   ]);

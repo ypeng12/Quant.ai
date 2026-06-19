@@ -9,7 +9,7 @@ def trace_execution_details(ticker, period="5d"):
     向用户解释“量化公式在后台是如何具体运行的”。
     """
     print("=" * 80)
-    print(f"               QUONT.AI - DATA TRACE VIEW (交易底层数据透视)")
+    print(f"               QUANT.AI - DATA TRACE VIEW (交易底层数据透视)")
     print("=" * 80)
     
     # 1. 抓取与计算全部技术数据

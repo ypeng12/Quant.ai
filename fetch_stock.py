@@ -24,7 +24,7 @@ def scan_stocks(tickers):
     3. 跳空幅度 (Gap %) - 开盘价相比昨天收盘价跳空了多少？
     """
     print("=" * 60)
-    print("   QUONT.AI - PROFESSIONAL DAY TRADER SCANNER (盘前选股器)")
+    print("   QUANT.AI - PROFESSIONAL DAY TRADER SCANNER (盘前选股器)")
     print("=" * 60)
     print("正在从 Yahoo Finance 获取数据，请稍候...\n")
     
