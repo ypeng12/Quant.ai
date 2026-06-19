@@ -30,9 +30,10 @@ interface ChartMarker {
 interface StockChartProps {
   candles: CandleData[];
   markers: ChartMarker[];
+  focusTime?: number;
 }
 
-export const StockChart: React.FC<StockChartProps> = ({ candles, markers }) => {
+export const StockChart: React.FC<StockChartProps> = ({ candles, markers, focusTime }) => {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const [renderError, setRenderError] = React.useState<string | null>(null);
@@ -148,8 +149,23 @@ export const StockChart: React.FC<StockChartProps> = ({ candles, markers }) => {
       }));
       candlestickSeries.setMarkers(chartMarkers);
 
-      // 自动缩放自适应数据范围
-      chart.timeScale().fitContent();
+      // 自动缩放或定位到具体交易位置
+      if (focusTime) {
+        const candleIndex = candles.findIndex((c) => c.time === focusTime);
+        if (candleIndex !== -1) {
+          const visibleCandles = 60;
+          const half = Math.floor(visibleCandles / 2);
+          const startIdx = Math.max(0, candleIndex - half);
+          const endIdx = Math.min(candles.length - 1, candleIndex + half);
+          const startTime = candles[startIdx].time as UTCTimestamp;
+          const endTime = candles[endIdx].time as UTCTimestamp;
+          chart.timeScale().setVisibleRange({ from: startTime, to: endTime });
+        } else {
+          chart.timeScale().fitContent();
+        }
+      } else {
+        chart.timeScale().fitContent();
+      }
 
       window.addEventListener('resize', handleResize);
     } catch (e: any) {
@@ -164,7 +180,7 @@ export const StockChart: React.FC<StockChartProps> = ({ candles, markers }) => {
         chart.remove();
       }
     };
-  }, [candles, markers]);
+  }, [candles, markers, focusTime]);
 
   if (renderError) {
     return (
