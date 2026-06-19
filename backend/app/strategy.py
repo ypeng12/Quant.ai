@@ -6,7 +6,7 @@ DEFAULT_PARAMS = {
     "trailing_stop_mode": "atr",
     "trailing_stop_atr_mult": 2.0,
     "rsi_threshold_buy": 65.0,
-    "strategy_mode": "dynamic"  # dynamic, consensus, ema_cross, breakout, patterns
+    "strategy_mode": "dynamic"  # dynamic, consensus, ema_cross, breakout, patterns, opening_breakout
 }
 
 def evaluate_market_state(row, prev_row, current_shares, avg_cost, ticker, highest_price=0.0, params=None):
@@ -37,6 +37,10 @@ def evaluate_market_state(row, prev_row, current_shares, avg_cost, ticker, highe
     pmh = row.get('PMH', 0.0)
     pdh = row.get('PDH', 0.0)
     
+    # 提取5分钟开盘突击关键位
+    orb_high = row.get('ORB_High', 0.0)
+    orb_low = row.get('ORB_Low', 0.0)
+    
     # 形态标记 (如果存在)
     pattern_w = row.get('Pattern_W_Bottom', False)
     pattern_m = row.get('Pattern_M_Top', False)
@@ -63,7 +67,7 @@ def evaluate_market_state(row, prev_row, current_shares, avg_cost, ticker, highe
         # 基础弱势过滤：价格必须在 VWAP 之上（除非是底背离反转模式）
         # 这里保留基本 VWAP 顺势法则，除 Patterns 模式和 Dynamic 震荡模式外，其他模式都需要 close >= vwap
         is_range_bound = (p["strategy_mode"] == "dynamic" and regime == "range_bound")
-        if p["strategy_mode"] != "patterns" and not is_range_bound and close < vwap:
+        if p["strategy_mode"] not in ["patterns", "opening_breakout"] and not is_range_bound and close < vwap:
             return "HOLD", "价格处于 VWAP 下方，属于弱势区间，不建仓。"
             
         # 1. 均线多头排列
@@ -82,8 +86,8 @@ def evaluate_market_state(row, prev_row, current_shares, avg_cost, ticker, highe
         # 4. 回调到 VWAP 支撑区 (0.2% 范围内)
         is_near_vwap_support = abs(close - vwap) / vwap <= 0.002
         
-        # 5. 静态过滤 (仅在非 dynamic 模式下应用)
-        if p["strategy_mode"] != "dynamic":
+        # 5. 静态过滤 (仅在非 dynamic 和非 opening_breakout 模式下应用)
+        if p["strategy_mode"] not in ["dynamic", "opening_breakout"]:
             if rsi > p["rsi_threshold_buy"]:
                 return "HOLD", f"RSI 值为 {rsi:.1f}，处于超买区间 (>{p['rsi_threshold_buy']:.0f})，暂不追高。"
             if squeeze:
@@ -142,6 +146,11 @@ def evaluate_market_state(row, prev_row, current_shares, avg_cost, ticker, highe
             if pattern_w:
                 return "BUY", "【共振形态买入】检测到 W底 (Double Bottom) 形态突破颈线。"
 
+        # E. 开盘区间突破策略 (ORB)
+        elif p["strategy_mode"] == "opening_breakout":
+            if orb_high > 0 and close > orb_high and rvol >= 1.2:
+                return "BUY", f"【开盘突击-突破】股价突破5分钟开盘最高位 {orb_high:.2f} 刀，且成交量放大 (RVOL={rvol:.2f})。"
+
     # ------------------ 状态2：已持有仓位 (寻找平仓机会) ------------------
     else:
         # 计算当前浮动盈亏
@@ -151,6 +160,10 @@ def evaluate_market_state(row, prev_row, current_shares, avg_cost, ticker, highe
         if p["strategy_mode"] == "dynamic" and regime in ["trend_down", "high_volatility"]:
             return "SELL", f"【动态路由-风控平仓】市场状态恶化转为 {regime} 风险区间，立即离场避险。"
         
+        # 0.5 开盘突击突破失败止损 (跌破开盘区间低点)
+        if p["strategy_mode"] == "opening_breakout" and orb_low > 0 and close < orb_low:
+            return "SELL", f"【开盘突击-突破失败止损】股价跌破5分钟开盘最低位 {orb_low:.2f} 刀，平仓防守。"
+
         # 1. 移动追踪止损 (Trailing Stop Loss)
         if p["trailing_stop_mode"] == "atr":
             stop_distance = atr * p["trailing_stop_atr_mult"]

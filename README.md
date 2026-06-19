@@ -38,6 +38,15 @@ Quont.ai is a production-ready, fully-automated stock trading engine and interac
 - Features a rolling optimization pipeline (`walk_forward.py`) that divides history into training and test intervals.
 - Optimizes parameters (strategy mode, ATR multiplier, RSI) by maximizing the drawdown-penalized net profit (Calmar-like metric) and validates performance out-of-sample.
 
+### 5. 🌅 Market Open Focus & Opening Range Breakout (ORB) Strategy
+- **Market Open Focus Mode**: Targets the high-volatility market opening (09:30 - 10:15 EST). Restricts buying to this high-momentum window and performs a force liquidation at 10:30 EST to protect capital from the midday choppy sideways trend.
+- **Opening Range Breakout (ORB)**: Precomputes the opening high and low from the first 5 minutes of regular hours (09:30 - 09:35 EST) and triggers high-probability breakout buys on high volume (RVOL > 1.2), using the opening range low as a hard failure stop-loss.
+
+### 6. 🤖 AI Auto-Pilot Parameter Tuning (智能托管)
+- Dynamically grid-searches strategy settings over the recent 5 days of 1-minute bar data for the selected ticker.
+- Optimizes for the best risk-adjusted performance (Sharpe ratio and max drawdown mitigation) and automatically applies parameters to the active trading dashboard.
+
+
 ---
 
 ## 📁 Project Structure

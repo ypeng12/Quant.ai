@@ -4,6 +4,7 @@ import yfinance as yf
 import pandas as pd
 import numpy as np
 import datetime
+from app.data_cache import get_cached, save_cache
 
 # 默认时间间隔对应的回测历史区间
 INTERVAL_TO_PERIOD = {
@@ -178,6 +179,25 @@ def get_yesterday_levels(ticker):
     
     return {"PDH": 0.0, "PDL": 0.0, "PDC": 0.0}
 
+def compute_candle_features(df):
+    """
+    计算K线形态特征向量：实体比例、上影线比例、下影线比例、跳空比例
+    """
+    df = df.copy()
+    diff = df['High'] - df['Low']
+    denom = np.where(diff == 0, 1e-8, diff)
+    
+    df['body_ratio'] = np.abs(df['Close'] - df['Open']) / denom
+    df['upper_shadow_ratio'] = (df['High'] - np.maximum(df['Close'], df['Open'])) / denom
+    df['lower_shadow_ratio'] = (np.minimum(df['Close'], df['Open']) - df['Low']) / denom
+    df['gap_flag'] = (df['Open'] - df['Close'].shift(1)) / (df['Close'].shift(1) + 1e-8)
+    
+    df['body_ratio'] = df['body_ratio'].fillna(0.0)
+    df['upper_shadow_ratio'] = df['upper_shadow_ratio'].fillna(0.0)
+    df['lower_shadow_ratio'] = df['lower_shadow_ratio'].fillna(0.0)
+    df['gap_flag'] = df['gap_flag'].fillna(0.0)
+    return df
+
 def fetch_and_prepare_data(ticker, period=None, interval="1m"):
     """
     获取股票行情并计算量化指标，支持多时间周期。
@@ -185,6 +205,11 @@ def fetch_and_prepare_data(ticker, period=None, interval="1m"):
     ticker = ticker.upper()
     if period is None:
         period = INTERVAL_TO_PERIOD.get(interval, "5d")
+        
+    # 优先尝试从本地缓存读取
+    cached_df = get_cached(ticker, period, interval)
+    if cached_df is not None:
+        return cached_df
         
     # 抓取包含盘前盘后的 K线数据
     stock = yf.Ticker(ticker)
@@ -318,9 +343,15 @@ def fetch_and_prepare_data(ticker, period=None, interval="1m"):
     # 清除临时列
     regular_hours_df.drop(columns=['Typical_Price', 'TP_Volume', 'Cum_TP_Vol', 'Cum_Vol'], inplace=True, errors='ignore')
     
+    # 计算 K线形态特征向量
+    regular_hours_df = compute_candle_features(regular_hours_df)
+    
     # 填充缺失值，避免初期的 NaN 导致崩溃
     regular_hours_df.ffill(inplace=True)
     regular_hours_df.bfill(inplace=True)
+    
+    # 保存数据到 Parquet 本地缓存
+    save_cache(ticker, period, interval, regular_hours_df)
     
     return regular_hours_df
 

@@ -8,6 +8,12 @@ import { StrategySettings } from './components/StrategySettings';
 import { CompanyInfoCard } from './components/CompanyInfoCard';
 import { PatternLog } from './components/PatternLog';
 import { ScannerPanel } from './components/ScannerPanel';
+import { ChatPanel } from './components/ChatPanel';
+import { EquityCurve } from './components/EquityCurve';
+import { RegimeBreakdown } from './components/RegimeBreakdown';
+import { ResearchReportPanel } from './components/ResearchReportPanel';
+import { WalkForwardPanel } from './components/WalkForwardPanel';
+import { ExperimentCompare } from './components/ExperimentCompare';
 
 interface SummaryData {
   initial_cash: number;
@@ -18,6 +24,13 @@ interface SummaryData {
   round_trips: number;
   win_rate: number;
   commission: number;
+  max_drawdown: number;
+  sharpe: number;
+  calmar: number;
+  cagr: number;
+  profit_factor: number;
+  gross_profit: number;
+  gross_loss: number;
 }
 
 interface CandleData {
@@ -67,8 +80,18 @@ interface PatternEvent {
   desc: string;
 }
 
+interface RegimeData {
+  regime: string;
+  total_pnl: number;
+  trade_count: number;
+  win_rate: number;
+  wins: number;
+  losses: number;
+  commission: number;
+}
+
 interface StrategyParams {
-  strategy_mode: 'consensus' | 'ema_cross' | 'breakout' | 'patterns';
+  strategy_mode: 'consensus' | 'ema_cross' | 'breakout' | 'patterns' | 'dynamic';
   stop_loss_pct: number;
   profit_target_pct: number;
   trailing_stop_mode: 'atr' | 'flat' | 'none';
@@ -91,6 +114,9 @@ interface BacktestResponse {
   candles: CandleData[];
   markers: ChartMarker[];
   equity_curve: { time: number; value: number }[];
+  drawdown_curve: { time: number; value: number }[];
+  regime_breakdown: RegimeData[];
+  regime_distribution: Record<string, number>;
   patterns_log: PatternEvent[];
   error?: string;
 }
@@ -104,9 +130,9 @@ interface CompanyInfo {
 }
 
 const DEFAULT_STRATEGY_PARAMS: StrategyParams = {
-  strategy_mode: 'consensus',
-  stop_loss_pct: 0.01,
-  profit_target_pct: 0.015,
+  strategy_mode: 'opening_breakout',
+  stop_loss_pct: 0.015,
+  profit_target_pct: 0.030,
   trailing_stop_mode: 'atr',
   trailing_stop_atr_mult: 2.0,
   rsi_threshold_buy: 65,
@@ -114,25 +140,29 @@ const DEFAULT_STRATEGY_PARAMS: StrategyParams = {
   max_position_size_pct: 0.50,
   position_sizing_mode: 'atr',
   commission_per_share: 0.005,
-  slippage_rate: 0.0003
+  slippage_rate: 0.0003,
+  market_open_focus: true
 };
 
 const INTERVAL_LABELS: Record<string, string> = {
-  "1m": "1分钟",
-  "5m": "5分钟",
-  "15m": "15分钟",
-  "30m": "30分钟",
-  "1h": "1小时",
-  "1d": "日线级"
+  "1m": "1 Min",
+  "5m": "5 Min",
+  "15m": "15 Min",
+  "30m": "30 Min",
+  "1h": "1 Hour",
+  "1d": "Daily"
 };
+
+type ActiveTab = 'dashboard' | 'research' | 'report' | 'walkforward' | 'experiments';
 
 function App() {
   const [watchlist, setWatchlist] = useState<string[]>(["TSLA", "NVDA", "AAPL", "MSFT", "AMD"]);
   const [newTickerInput, setNewTickerInput] = useState<string>('');
   
   const [activeTicker, setActiveTicker] = useState<string>('TSLA');
-  const [activeInterval, setActiveInterval] = useState<string>('1m');
+  const [activeInterval, setActiveInterval] = useState<string>('1d');
   const [strategyParams, setStrategyParams] = useState<StrategyParams>(DEFAULT_STRATEGY_PARAMS);
+  const [activeTab, setActiveTab] = useState<ActiveTab>('report');
   
   const [loading, setLoading] = useState<boolean>(true);
   const [data, setData] = useState<BacktestResponse | null>(null);
@@ -141,6 +171,52 @@ function App() {
   // 公司元数据状态
   const [companyInfo, setCompanyInfo] = useState<CompanyInfo | null>(null);
   const [infoLoading, setInfoLoading] = useState<boolean>(false);
+
+  // AI 智能托管托管状态
+  const [aiAutoPilot, setAiAutoPilot] = useState<boolean>(true);
+  const [tuningLoading, setTuningLoading] = useState<boolean>(false);
+  const [tuningReport, setTuningReport] = useState<string | null>(null);
+  const [tuningMetrics, setTuningMetrics] = useState<any>(null);
+
+  // AI 智能调参逻辑
+  useEffect(() => {
+    if (!aiAutoPilot) {
+      setTuningReport(null);
+      setTuningMetrics(null);
+      return;
+    }
+
+    const runAiTuning = async () => {
+      setTuningLoading(true);
+      try {
+        const response = await fetch('http://127.0.0.1:8000/api/ai_tune', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ticker: activeTicker.toUpperCase(),
+            interval: activeInterval,
+            period: activeInterval === '1m' ? '5d' : '1mo'
+          })
+        });
+        const json = await response.json();
+        if (json.success) {
+          // 应用 AI 调参最优值
+          setStrategyParams(prev => ({
+            ...prev,
+            ...json.best_params
+          }));
+          setTuningReport(json.reasoning);
+          setTuningMetrics(json.metrics);
+        }
+      } catch (e) {
+        console.error("AI dynamic tuning call failed:", e);
+      } finally {
+        setTuningLoading(false);
+      }
+    };
+
+    runAiTuning();
+  }, [aiAutoPilot, activeTicker, activeInterval]);
 
   // 1. 获取回测仿真数据 (参数改变自动重算)
   useEffect(() => {
@@ -160,7 +236,8 @@ function App() {
           max_position_size_pct: String(strategyParams.max_position_size_pct),
           position_sizing_mode: strategyParams.position_sizing_mode,
           commission_per_share: String(strategyParams.commission_per_share),
-          slippage_rate: String(strategyParams.slippage_rate)
+          slippage_rate: String(strategyParams.slippage_rate),
+          market_open_focus: String(strategyParams.market_open_focus)
         });
 
         const res = await fetch(`http://127.0.0.1:8000/api/backtest?${queryParams.toString()}`);
@@ -177,17 +254,20 @@ function App() {
             }));
           }
         } else {
-          console.error("回测运行失败:", json.error);
+          console.error("Backtest failed:", json.error);
         }
       } catch (e) {
-        console.error("连接 API 服务器失败:", e);
+        console.error("API connection failed:", e);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchBacktestData();
-  }, [activeTicker, activeInterval, strategyParams]);
+    // 如果 AI 调参中，等待调参完成再拉取数据以防止触发多次不一致的请求
+    if (!tuningLoading) {
+      fetchBacktestData();
+    }
+  }, [activeTicker, activeInterval, strategyParams, tuningLoading]);
 
   // 2. 获取公司详情介绍
   useEffect(() => {
@@ -198,7 +278,7 @@ function App() {
         const json = await res.json();
         setCompanyInfo(json);
       } catch (e) {
-        console.error("获取公司介绍失败:", e);
+        console.error("Company info fetch failed:", e);
       } finally {
         setInfoLoading(false);
       }
@@ -236,6 +316,20 @@ function App() {
     setActiveInterval(interval);
   };
 
+  // Handle AI agent backtest request
+  const handleAgentBacktest = (config: Record<string, unknown>) => {
+    const newParams: StrategyParams = {
+      ...DEFAULT_STRATEGY_PARAMS,
+      ...config as Partial<StrategyParams>
+    };
+    const ticker = (config.ticker as string) || activeTicker;
+    const interval = (config.interval as string) || activeInterval;
+    
+    setActiveTicker(ticker.toUpperCase());
+    setActiveInterval(interval);
+    setStrategyParams(newParams);
+  };
+
   // 添加自选股
   const handleAddTicker = (e: React.FormEvent) => {
     e.preventDefault();
@@ -249,7 +343,7 @@ function App() {
 
   // 删除自选股
   const handleRemoveTicker = (tickerToRemove: string, e: React.MouseEvent) => {
-    e.stopPropagation(); // 阻止触发切换股票
+    e.stopPropagation();
     const newWatchlist = watchlist.filter(t => t !== tickerToRemove);
     setWatchlist(newWatchlist);
     if (activeTicker === tickerToRemove && newWatchlist.length > 0) {
@@ -275,8 +369,43 @@ function App() {
         <div className="logo">
           Quont<span>.ai</span>
         </div>
-        <div style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem', fontWeight: 600 }}>
-          Professional AI 量化交易模拟回测终端
+        
+        {/* Tab Navigation */}
+        <div className="nav-tabs">
+          <button
+            className={`nav-tab ${activeTab === 'report' ? 'active' : ''}`}
+            onClick={() => setActiveTab('report')}
+          >
+            📖 Deep Research
+          </button>
+          <button
+            className={`nav-tab ${activeTab === 'research' ? 'active' : ''}`}
+            onClick={() => setActiveTab('research')}
+          >
+            🤖 AI Research
+          </button>
+          <button
+            className={`nav-tab ${activeTab === 'dashboard' ? 'active' : ''}`}
+            onClick={() => setActiveTab('dashboard')}
+          >
+            📊 Dashboard
+          </button>
+          <button
+            className={`nav-tab ${activeTab === 'walkforward' ? 'active' : ''}`}
+            onClick={() => setActiveTab('walkforward')}
+          >
+            🔄 Walk-Forward
+          </button>
+          <button
+            className={`nav-tab ${activeTab === 'experiments' ? 'active' : ''}`}
+            onClick={() => setActiveTab('experiments')}
+          >
+            🧪 Experiments
+          </button>
+        </div>
+
+        <div style={{ color: 'var(--color-text-secondary)', fontSize: '0.85rem', fontWeight: 600 }}>
+          AI Quant Research Agent Platform
         </div>
       </header>
 
@@ -284,74 +413,200 @@ function App() {
       <div className="app-container">
         {/* 左侧内容区 */}
         <main className="main-content">
-          {loading ? (
-            <div className="loader-container">
-              正在模拟重播 {activeTicker} ({INTERVAL_LABELS[activeInterval] || activeInterval}) 数据并计算 K线 形态...
-            </div>
-          ) : data ? (
-            <>
-              {/* 账户资产价值计数器 */}
-              <div className="pnl-header-container">
-                <div>
-                  <div className="portfolio-value">
-                    ${data.summary.final_equity.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          {/* Deep Research Tab */}
+          {activeTab === 'report' && (
+            <ResearchReportPanel 
+              onApplyParams={(config, tab) => {
+                setStrategyParams(prev => ({ ...prev, ...config }));
+                setActiveTab(tab);
+              }}
+              activeTicker={activeTicker}
+            />
+          )}
+
+          {/* AI Research Tab */}
+          {activeTab === 'research' && (
+            <ChatPanel 
+              onRunBacktest={handleAgentBacktest}
+              isLoading={loading}
+              activeTicker={activeTicker}
+            />
+          )}
+
+          {/* Walk-Forward Tab */}
+          {activeTab === 'walkforward' && (
+            <WalkForwardPanel activeTicker={activeTicker} />
+          )}
+
+          {/* Experiments Tab */}
+          {activeTab === 'experiments' && (
+            <ExperimentCompare />
+          )}
+
+          {(activeTab === 'dashboard' || activeTab === 'research') && (
+            loading ? (
+              <div className="loader-container">
+                Simulating {activeTicker} ({INTERVAL_LABELS[activeInterval] || activeInterval}) backtest...
+              </div>
+            ) : data ? (
+              <>
+                {/* 账户资产价值计数器 */}
+                <div className="pnl-header-container">
+                  <div>
+                    <div className="portfolio-value">
+                      ${data.summary.final_equity.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </div>
+                    <div className={`pnl-text ${pnlColorClass}`}>
+                      {pnlSign}${data.summary.net_pnl.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ({pnlSign}{data.summary.pnl_pct.toFixed(2)}%)
+                    </div>
                   </div>
-                  <div className={`pnl-text ${pnlColorClass}`}>
-                    {pnlSign}${data.summary.net_pnl.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ({pnlSign}{data.summary.pnl_pct.toFixed(2)}%) 当前区间盈亏
+                  
+                  {/* 周期切换器 */}
+                  <div className="interval-picker-container">
+                    <div className="time-tabs" style={{ marginTop: 0 }}>
+                      {Object.entries(INTERVAL_LABELS).map(([key, label]) => (
+                        <button
+                          key={key}
+                          className={`tab-btn ${activeInterval === key ? 'active' : ''}`}
+                          onClick={() => handleIntervalChange(key)}
+                        >
+                          {key.toUpperCase()}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
-                
-                {/* 周期切换器 */}
-                <div className="interval-picker-container">
-                  <span style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', fontWeight: 600 }}>切换 K 线周期</span>
-                  <div className="time-tabs" style={{ marginTop: 0 }}>
-                    {Object.entries(INTERVAL_LABELS).map(([key, label]) => (
-                      <button
-                        key={key}
-                        className={`tab-btn ${activeInterval === key ? 'active' : ''}`}
-                        onClick={() => handleIntervalChange(key)}
-                      >
-                        {key.toUpperCase()} ({label})
-                      </button>
-                    ))}
-                  </div>
+
+                {/* 核心 K 线图表 */}
+                <div className="chart-wrapper">
+                  <StockChart candles={data.candles} markers={data.markers} />
                 </div>
-              </div>
 
-              {/* 核心 K 线图表 */}
-              <div className="chart-wrapper">
-                <StockChart candles={data.candles} markers={data.markers} />
-              </div>
-
-              {/* 策略设置与形态识别日志 并排展示 */}
-              <div className="strategy-patterns-grid">
-                <StrategySettings 
-                  params={strategyParams} 
-                  onChange={setStrategyParams} 
-                  onReset={resetStrategyParams} 
+                {/* Equity & Drawdown Curves */}
+                <EquityCurve 
+                  equityCurve={data.equity_curve} 
+                  drawdownCurve={data.drawdown_curve || []} 
                 />
-                <PatternLog patterns={data.patterns_log} />
+
+                {/* Regime Breakdown */}
+                <RegimeBreakdown 
+                  breakdown={data.regime_breakdown || []} 
+                  distribution={data.regime_distribution || {}} 
+                />
+
+                {/* AI 托管微调状态报告 */}
+                {activeTab === 'dashboard' && tuningLoading && (
+                  <div className="card" style={{
+                    background: 'linear-gradient(135deg, #1c1c1e, #141416)',
+                    border: '1px dashed rgba(0, 200, 5, 0.4)',
+                    borderRadius: '10px',
+                    padding: '20px',
+                    marginBottom: '1.5rem',
+                    textAlign: 'center',
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.3)'
+                  }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+                      <div className="spinner" style={{
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '50%',
+                        border: '3px solid rgba(0,200,5,0.1)',
+                        borderTop: '3px solid var(--color-green)',
+                        animation: 'spin 1s linear infinite'
+                      }}></div>
+                      <h4 style={{ margin: 0, fontWeight: 700, color: '#ffffff', fontSize: '0.95rem' }}>AI 托管机器学习模型正在自动优化最佳参数...</h4>
+                      <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.8rem', margin: 0 }}>正在对 {activeTicker} 近期 5 天的高频 1m 波动率和突破阻力位进行量化网格搜索。</p>
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'dashboard' && aiAutoPilot && tuningReport && !tuningLoading && (
+                  <div className="card" style={{
+                    background: 'linear-gradient(135deg, #1c1c1e, #121214)',
+                    border: '1px solid rgba(0, 200, 5, 0.25)',
+                    borderRadius: '10px',
+                    padding: '1.25rem',
+                    marginBottom: '1.5rem',
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+                    animation: 'fadeIn 0.5s ease-in-out'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '0.75rem', borderBottom: '1px solid var(--color-border)', paddingBottom: '0.5rem' }}>
+                      <span style={{ fontSize: '1.3rem' }}>🛡️</span>
+                      <h4 style={{ margin: 0, fontWeight: 800, fontSize: '0.95rem', color: '#ffffff' }}>AI 智能托管报告 (AI Auto-Pilot Tuning Report)</h4>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                      <p style={{ color: '#e5e5ea', fontSize: '0.82rem', margin: 0, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
+                        {tuningReport}
+                      </p>
+                      
+                      {tuningMetrics && (
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', background: '#141416', padding: '10px 16px', borderRadius: '8px', border: '1px solid var(--color-border)' }}>
+                          <div>
+                            <div style={{ fontSize: '0.7rem', color: 'var(--color-text-secondary)', marginBottom: '2px' }}>回测总盈亏</div>
+                            <div style={{ fontSize: '0.95rem', fontWeight: 800, color: tuningMetrics.net_pnl >= 0 ? 'var(--color-green)' : 'var(--color-red)' }}>
+                              ${tuningMetrics.net_pnl.toFixed(2)}
+                            </div>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: '0.7rem', color: 'var(--color-text-secondary)', marginBottom: '2px' }}>测算胜率</div>
+                            <div style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--color-green)' }}>
+                              {tuningMetrics.win_rate.toFixed(1)}%
+                            </div>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: '0.7rem', color: 'var(--color-text-secondary)', marginBottom: '2px' }}>最大回撤</div>
+                            <div style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--color-red)' }}>
+                              {(tuningMetrics.max_drawdown * 100).toFixed(2)}%
+                            </div>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: '0.7rem', color: 'var(--color-text-secondary)', marginBottom: '2px' }}>测算交易数</div>
+                            <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#ffffff' }}>
+                              {tuningMetrics.round_trips} 笔
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* 策略设置与形态识别日志 并排展示 */}
+                {activeTab === 'dashboard' && (
+                  <>
+                    <div className="strategy-patterns-grid">
+                      <StrategySettings 
+                        params={strategyParams} 
+                        onChange={setStrategyParams} 
+                        onReset={resetStrategyParams}
+                        aiAutoPilot={aiAutoPilot}
+                        onToggleAutoPilot={setAiAutoPilot}
+                      />
+                      <PatternLog patterns={data.patterns_log} />
+                    </div>
+
+                    {/* 选股扫描面板 */}
+                    <ScannerPanel customTickers={watchlist} onSelectTicker={setActiveTicker} />
+                  </>
+                )}
+
+                {/* 账户业绩统计 */}
+                <PortfolioStats summary={data.summary} />
+
+                {/* 交易明细账本 */}
+                <LedgerTable ledger={data.ledger} />
+              </>
+            ) : (
+              <div className="loader-container">
+                Cannot connect to backend. Please ensure FastAPI is running on http://127.0.0.1:8000
               </div>
-
-              {/* 选股扫描面板 */}
-              <ScannerPanel customTickers={watchlist} onSelectTicker={setActiveTicker} />
-
-              {/* 账户业绩统计 */}
-              <PortfolioStats summary={data.summary} />
-
-              {/* 交易明细账本 */}
-              <LedgerTable ledger={data.ledger} />
-            </>
-          ) : (
-            <div className="loader-container">
-              未能连接到量化服务器，请确保 FastAPI 后端服务运行在 http://127.0.0.1:8000
-            </div>
+            )
           )}
         </main>
 
         {/* 右侧边栏自选股列表 & 公司档案 */}
         <aside className="sidebar">
-          <h4 className="sidebar-title">自选监控池 (Watchlist)</h4>
+          <h4 className="sidebar-title">Watchlist</h4>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             {watchlist.map((ticker) => {
@@ -397,7 +652,7 @@ function App() {
           <form onSubmit={handleAddTicker} style={{ display: 'flex', gap: '8px', marginTop: '0.25rem' }}>
             <input 
               type="text" 
-              placeholder="添加股票代码, 如 NVDA" 
+              placeholder="Add ticker, e.g. GOOGL" 
               value={newTickerInput}
               onChange={(e) => setNewTickerInput(e.target.value)}
               style={{
@@ -423,7 +678,7 @@ function App() {
                 cursor: 'pointer'
               }}
             >
-              添加
+              Add
             </button>
           </form>
 
@@ -432,11 +687,11 @@ function App() {
             <CompanyInfoCard ticker={activeTicker} info={companyInfo} loading={infoLoading} />
           </div>
           
-          <div style={{ marginTop: 'auto', padding: '1rem', background: '#1c1c1e', border: '1px solid var(--color-border)', borderRadius: '8px', fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
-            <strong style={{ color: '#ffffff', display: 'block', marginBottom: '4px' }}>动态回测规则说明:</strong>
-            1. **多周期切换**：支持 1m ~ 1d 不同级别。1m-1h 为常规交易时段日内测试，15:55 自动强平。<br />
-            2. **形态驱动**：可将检测到的 M顶/W底、锤子线、吞没K线作为策略的触发与防守参考指标。<br />
-            3. **智能风控**：启用 ATR 风险对齐仓位后，系统会根据振幅自动收紧/放大买入股数，控制亏损期望。
+          <div style={{ marginTop: 'auto', padding: '1rem', background: '#1c1c1e', border: '1px solid var(--color-border)', borderRadius: '8px', fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>
+            <strong style={{ color: '#ffffff', display: 'block', marginBottom: '4px' }}>About Quont.ai</strong>
+            AI-powered quantitative research platform. Define strategies via natural language, run backtests with realistic cost modeling, and receive AI-generated risk analysis reports.
+            <br /><br />
+            <em style={{ fontSize: '0.75rem' }}>For educational and research purposes only. Not investment advice.</em>
           </div>
         </aside>
       </div>

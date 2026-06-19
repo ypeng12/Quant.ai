@@ -30,13 +30,11 @@ def walk_forward_optimization(ticker, interval="1d", period="2y", train_size=120
         df_raw = fetch_and_prepare_data(ticker, period=period, interval=interval)
         df = analyze_patterns(df_raw)
     except Exception as e:
-        print(f"数据加载或指标计算失败: {str(e)}")
-        sys.exit(1)
+        raise ValueError(f"数据加载或指标计算失败: {str(e)}")
         
     total_len = len(df)
     if total_len < (train_size + test_size):
-        print(f"错误：历史数据共 {total_len} 根 Bar，不足以支持当前 Train({train_size}) + Test({test_size}) 的滚动窗口分配！")
-        sys.exit(1)
+        raise ValueError(f"错误：历史数据共 {total_len} 根 Bar，不足以支持当前 Train({train_size}) + Test({test_size}) 的滚动窗口分配！")
         
     print(f"行情数据准备就绪：共包含 {total_len} 根 K 线。")
     print("正在生成参数搜索网格...")
@@ -102,10 +100,13 @@ def walk_forward_optimization(ticker, interval="1d", period="2y", train_size=120
         
         oos_results.append({
             "window": window_count,
+            "train_period": f"{train_start_date} ~ {train_end_date}",
+            "test_period": f"{test_start_date} ~ {test_end_date}",
             "best_params": best_params,
             "net_pnl": test_res["net_pnl"],
             "max_drawdown": test_res["max_drawdown"],
             "round_trips": test_res["round_trips"],
+            "win_rate": test_res["win_rate"],
             "commission": test_res["commission"]
         })
         
@@ -126,7 +127,7 @@ def walk_forward_optimization(ticker, interval="1d", period="2y", train_size=120
     # 5. 汇总 Walk-forward 表现
     total_wf_pnl = sum(r["net_pnl"] for r in oos_results)
     total_wf_commission = sum(r["commission"] for r in oos_results)
-    avg_wf_drawdown = np.mean([r["max_drawdown"] for r in oos_results])
+    avg_wf_drawdown = float(np.mean([r["max_drawdown"] for r in oos_results])) if oos_results else 0.0
     total_wf_trades = sum(r["round_trips"] for r in oos_results)
     
     print("\n" + "=" * 80)
@@ -145,6 +146,28 @@ def walk_forward_optimization(ticker, interval="1d", period="2y", train_size=120
     print(f"   - 全历史最大回撤:    {static_res['max_drawdown']*100:.2f}%")
     print("=" * 80)
 
+    return {
+        "ticker": ticker,
+        "interval": interval,
+        "period": period or "1y",
+        "train_size": train_size,
+        "test_size": test_size,
+        "oos_results": oos_results,
+        "static_control": {
+            "net_pnl": static_res["net_pnl"],
+            "pnl_pct": static_res["pnl_pct"],
+            "round_trips": static_res["round_trips"],
+            "commission": static_res["commission"],
+            "max_drawdown": static_res["max_drawdown"]
+        },
+        "summary": {
+            "total_wf_pnl": total_wf_pnl,
+            "total_wf_commission": total_wf_commission,
+            "avg_wf_drawdown": avg_wf_drawdown,
+            "total_wf_trades": total_wf_trades
+        }
+    }
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Walk-Forward Rolling Parameter Optimizer")
     parser.add_argument("--ticker", type=str, default="TSLA", help="测试股票代码 (默认: TSLA)")
@@ -154,4 +177,8 @@ if __name__ == "__main__":
     parser.add_argument("--test", type=int, default=40, help="测试集 K线根数 (默认: 40)")
     
     args = parser.parse_args()
-    walk_forward_optimization(args.ticker, args.interval, args.period, args.train, args.test)
+    try:
+        walk_forward_optimization(args.ticker, args.interval, args.period, args.train, args.test)
+    except Exception as e:
+        print(e)
+        sys.exit(1)
