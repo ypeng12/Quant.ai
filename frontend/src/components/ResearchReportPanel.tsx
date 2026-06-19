@@ -49,6 +49,13 @@ const DEFAULT_CHECKLIST: ChecklistItem[] = [
   { id: '7', label: 'Shadow Live：小资金或空跑两周，检验真实滑点佣金摩擦成本与回测偏差', category: '实盘迁移', checked: false },
 ];
 
+const formatContent = (text: string): string => {
+  return (text || '')
+    .replace(/\[cite\|[^\]]*\]/g, '') // Hide citation brackets
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/`(.*?)`/g, '<code>$1</code>');
+};
+
 export const ResearchReportPanel: React.FC<ResearchReportPanelProps> = ({ onApplyParams }) => {
   const [report, setReport] = useState<ReportResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -769,9 +776,7 @@ export const ResearchReportPanel: React.FC<ResearchReportPanelProps> = ({ onAppl
                 if (comp.type === 'paragraph') {
                   return (
                     <p key={cidx} className="doc-paragraph" dangerouslySetInnerHTML={{
-                      __html: comp.content || ''
-                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                        .replace(/`(.*?)`/g, '<code>$1</code>')
+                      __html: formatContent(comp.content || '')
                     }} />
                   );
                 }
@@ -829,16 +834,19 @@ export const ResearchReportPanel: React.FC<ResearchReportPanelProps> = ({ onAppl
                       <strong style={{ display: 'block', fontSize: '0.85rem', marginBottom: '4px', textTransform: 'uppercase' }}>
                         {alertTitle}
                       </strong>
-                      <span style={{ fontSize: '0.82rem', lineHeight: 1.5, color: '#c5c5c5' }}>{comp.content}</span>
+                      <span 
+                        style={{ fontSize: '0.95rem', lineHeight: 1.6, color: '#f5f5f7' }}
+                        dangerouslySetInnerHTML={{ __html: formatContent(comp.content || '') }}
+                      />
                     </div>
                   );
                 }
                 
                 if (comp.type === 'list' && comp.items) {
                   return (
-                    <ul key={cidx} className="doc-list" style={{ paddingLeft: '20px', margin: '1rem 0' }}>
+                    <ul key={cidx} className="doc-list">
                       {comp.items.map((item, lidx) => (
-                        <li key={lidx} style={{ fontSize: '0.82rem', margin: '4px 0', color: '#dedede' }}>{item}</li>
+                        <li key={lidx} dangerouslySetInnerHTML={{ __html: formatContent(item) }} />
                       ))}
                     </ul>
                   );
