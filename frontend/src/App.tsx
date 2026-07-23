@@ -15,6 +15,8 @@ import { RegimeBreakdown } from './components/RegimeBreakdown';
 import { ResearchReportPanel } from './components/ResearchReportPanel';
 import { WalkForwardPanel } from './components/WalkForwardPanel';
 import { ExperimentCompare } from './components/ExperimentCompare';
+import { BrokerPanel } from './components/BrokerPanel';
+import { SameDayReplayPanel } from './components/SameDayReplayPanel';
 
 interface SummaryData {
   initial_cash: number;
@@ -129,7 +131,7 @@ const INTERVAL_LABELS: Record<string, string> = {
   "1d": "Daily"
 };
 
-type ActiveTab = 'dashboard' | 'research' | 'report' | 'walkforward' | 'experiments' | 'replay';
+type ActiveTab = 'dashboard' | 'research' | 'report' | 'walkforward' | 'experiments' | 'replay' | 'broker';
 
 function App() {
   const [watchlist, setWatchlist] = useState<string[]>(["TSLA", "NVDA", "AAPL", "MSFT", "AMD"]);
@@ -138,7 +140,7 @@ function App() {
   const [activeTicker, setActiveTicker] = useState<string>('TSLA');
   const [activeInterval, setActiveInterval] = useState<string>('1d');
   const [strategyParams, setStrategyParams] = useState<StrategyParams>(DEFAULT_STRATEGY_PARAMS);
-  const [activeTab, setActiveTab] = useState<ActiveTab>('report');
+  const [activeTab, setActiveTab] = useState<ActiveTab>('broker');
   
   const [loading, setLoading] = useState<boolean>(true);
   const [data, setData] = useState<BacktestResponse | null>(null);
@@ -528,48 +530,70 @@ function App() {
           Quant<span>.ai</span>
         </div>
         
-        {/* Tab Navigation */}
-        <div className="nav-tabs">
+        {/* Simplified Two Core Modes Navigation */}
+        <div className="nav-tabs" style={{ background: '#09090b', padding: '4px', borderRadius: '8px', border: '1px solid var(--color-border)' }}>
           <button
-            className={`nav-tab ${activeTab === 'report' ? 'active' : ''}`}
-            onClick={() => setActiveTab('report')}
+            className={`nav-tab ${activeTab === 'broker' ? 'active' : ''}`}
+            onClick={() => setActiveTab('broker')}
+            style={{
+              padding: '8px 18px',
+              fontSize: '0.9rem',
+              fontWeight: 800,
+              background: activeTab === 'broker' ? 'var(--color-green)' : 'transparent',
+              color: activeTab === 'broker' ? '#000000' : '#ffffff',
+              borderRadius: '6px',
+              border: 'none',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }}
           >
-            📖 Deep Research
-          </button>
-          <button
-            className={`nav-tab ${activeTab === 'research' ? 'active' : ''}`}
-            onClick={() => setActiveTab('research')}
-          >
-            🤖 AI Research
-          </button>
-          <button
-            className={`nav-tab ${activeTab === 'dashboard' ? 'active' : ''}`}
-            onClick={() => setActiveTab('dashboard')}
-          >
-            📊 Dashboard
+            ⚡ 模式一：Alpaca 实盘托管
           </button>
           <button
             className={`nav-tab ${activeTab === 'replay' ? 'active' : ''}`}
             onClick={() => setActiveTab('replay')}
+            style={{
+              padding: '8px 18px',
+              fontSize: '0.9rem',
+              fontWeight: 800,
+              background: activeTab === 'replay' ? 'var(--color-green)' : 'transparent',
+              color: activeTab === 'replay' ? '#000000' : '#ffffff',
+              borderRadius: '6px',
+              border: 'none',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }}
           >
-            🎬 Replay Simulator
+            📈 模式二：同天历史复盘
           </button>
-          <button
-            className={`nav-tab ${activeTab === 'walkforward' ? 'active' : ''}`}
-            onClick={() => setActiveTab('walkforward')}
+
+          {/* Optional Advanced Tools */}
+          <select
+            value={['broker', 'replay'].includes(activeTab) ? '' : activeTab}
+            onChange={(e) => {
+              if (e.target.value) setActiveTab(e.target.value as ActiveTab);
+            }}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: 'var(--color-text-secondary)',
+              fontSize: '0.8rem',
+              fontWeight: 600,
+              padding: '4px 8px',
+              cursor: 'pointer'
+            }}
           >
-            🔄 Walk-Forward
-          </button>
-          <button
-            className={`nav-tab ${activeTab === 'experiments' ? 'active' : ''}`}
-            onClick={() => setActiveTab('experiments')}
-          >
-            🧪 Experiments
-          </button>
+            <option value="" disabled style={{ background: '#111', color: '#888' }}>⚙️ 高级策略分析...</option>
+            <option value="dashboard" style={{ background: '#111', color: '#fff' }}>📊 策略回测仪表盘</option>
+            <option value="report" style={{ background: '#111', color: '#fff' }}>📖 深度量化报告</option>
+            <option value="research" style={{ background: '#111', color: '#fff' }}>🤖 AI 策略助手</option>
+            <option value="walkforward" style={{ background: '#111', color: '#fff' }}>🔄 Walk-Forward 滚动验证</option>
+            <option value="experiments" style={{ background: '#111', color: '#fff' }}>🧪 策略实验对比</option>
+          </select>
         </div>
 
         <div style={{ color: 'var(--color-text-secondary)', fontSize: '0.85rem', fontWeight: 600 }}>
-          AI Quant Research Agent Platform
+          Quant.ai
         </div>
       </header>
 
@@ -577,47 +601,6 @@ function App() {
       <div className="app-container">
         {/* 左侧内容区 */}
         <main className="main-content">
-          {/* Collapsible Workflow Guide */}
-          {showGuide && (activeTab === 'dashboard' || activeTab === 'replay') && (
-            <div className="card fade-in" style={{ marginBottom: '1.5rem', background: 'rgba(0, 200, 5, 0.04)', border: '1px solid rgba(0, 200, 5, 0.2)', position: 'relative' }}>
-              <button 
-                onClick={() => setShowGuide(false)} 
-                style={{ position: 'absolute', top: '12px', right: '16px', background: 'transparent', border: 'none', color: 'var(--color-text-secondary)', cursor: 'pointer', fontSize: '0.85rem' }}
-              >
-                ✕ 隐藏指南
-              </button>
-              <h3 style={{ margin: '0 0 8px 0', fontSize: '1rem', color: '#fff', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                💡 Quant.ai 智能量化交易终端使用指南
-              </h3>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', fontSize: '0.8rem', color: '#e5e5e7', lineHeight: 1.4 }}>
-                <div>
-                  <strong style={{ color: 'var(--color-green)' }}>第一步：寻找高波动标的 🔍</strong>
-                  <p style={{ margin: '4px 0 0 0' }}>
-                    使用右下角的 <strong>选股扫描面板</strong> 进行盘前扫描，筛选出具备 RVol (相对成交量) 与 ATR 振幅支撑的股票，它们是日内开盘突击的最优交易候选。
-                  </p>
-                </div>
-                <div>
-                  <strong style={{ color: 'var(--color-green)' }}>第二步：设计策略与AI调参 🤖</strong>
-                  <p style={{ margin: '4px 0 0 0' }}>
-                    在 <strong>Dashboard</strong> 中，您可以启用 <strong>AI Auto-Pilot 智能托管</strong>。系统会自动拉取最近 5 天的数据进行快速寻优，制定出抗回撤、收益稳健的量化配置。
-                  </p>
-                </div>
-                <div>
-                  <strong style={{ color: 'var(--color-green)' }}>第三步：历史沙盒复盘 🎬</strong>
-                  <p style={{ margin: '4px 0 0 0' }}>
-                    切换到 <strong>Replay Simulator</strong>。选择任意历史日期，点【加载复盘沙盒】，再点击播放即可仿真复盘该天系统买卖的全流程。
-                  </p>
-                </div>
-                <div>
-                  <strong style={{ color: 'var(--color-green)' }}>第四步：成交检查与透视 🔎</strong>
-                  <p style={{ margin: '4px 0 0 0' }}>
-                    在交易流水中，<strong>点击任意一行交易记录</strong>：如果是日线交易，下方会弹出 <strong>1分钟日内微观透视</strong> 详细图表，显示具体开盘成交时刻，让您精准审计。
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* Deep Research Tab */}
           {activeTab === 'report' && (
             <ResearchReportPanel 
@@ -648,197 +631,18 @@ function App() {
             <ExperimentCompare />
           )}
 
-          {/* Replay Simulator Tab */}
+          {/* Alpaca Live Tab (Mode 1) */}
+          {activeTab === 'broker' && (
+            <BrokerPanel />
+          )}
+
+          {/* Replay Simulator Tab (Mode 2) */}
           {activeTab === 'replay' && (
-            <div className="fade-in">
-              <div className="card" style={{ marginBottom: '1.5rem', background: '#09090b', border: '1px solid var(--color-border)' }}>
-                <h2 style={{ fontSize: '1.1rem', fontWeight: 800, margin: '0 0 1rem 0', color: '#fff' }}>
-                  🎬 Quant.ai 开盘历史交易复盘模拟器
-                </h2>
-                
-                {/* 选项栏 */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap', marginBottom: '1.25rem' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <label style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', fontWeight: 700 }}>复盘日期 (Past Date)</label>
-                    <select 
-                      value={replayDate} 
-                      onChange={(e) => setReplayDate(e.target.value)}
-                      style={{ background: '#111', border: '1px solid #333', color: '#fff', padding: '6px 12px', borderRadius: '6px', fontSize: '0.82rem', minWidth: '150px' }}
-                    >
-                      {availableDates.map(d => (
-                        <option key={d} value={d}>{d}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <button 
-                    onClick={handleLoadReplay}
-                    disabled={replayLoading || !replayDate}
-                    className="btn btn-primary"
-                    style={{ marginTop: '1.1rem', padding: '8px 16px', fontSize: '0.8rem', cursor: 'pointer' }}
-                  >
-                    {replayLoading ? '⏳ 加载中...' : '🔌 加载复盘沙盒'}
-                  </button>
-
-                  {replayData && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '1.1rem', background: '#141416', padding: '4px 12px', borderRadius: '8px', border: '1px solid #222' }}>
-                      <button 
-                        onClick={() => setIsPlaying(!isPlaying)}
-                        style={{ background: 'transparent', border: 'none', color: 'var(--color-green)', fontSize: '1.1rem', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '4px' }}
-                        title={isPlaying ? '暂停' : '播放'}
-                      >
-                        {isPlaying ? '⏸️ 暂停' : '▶️ 播放'}
-                      </button>
-                      
-                      <button 
-                        onClick={() => {
-                          setReplayIndex(prev => Math.min(replayData.candles.length - 1, prev + 1));
-                          setIsPlaying(false);
-                        }}
-                        style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '1.1rem', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '4px' }}
-                        title="单步步进"
-                      >
-                        ➡️ 单步
-                      </button>
-
-                      <button 
-                        onClick={() => {
-                          setReplayIndex(0);
-                          setIsPlaying(false);
-                        }}
-                        style={{ background: 'transparent', border: 'none', color: 'var(--color-red)', fontSize: '1.1rem', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '4px' }}
-                        title="重置"
-                      >
-                        ⏹️ 重置
-                      </button>
-
-                      {/* 播放速度 */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: 'var(--color-text-secondary)', marginLeft: '12px' }}>
-                        <span>回放间隔:</span>
-                        <input 
-                          type="range" 
-                          min="50" 
-                          max="1000" 
-                          step="50" 
-                          value={1050 - replaySpeed} 
-                          onChange={(e) => setReplaySpeed(1050 - Number(e.target.value))}
-                          style={{ width: '80px', accentColor: 'var(--color-green)' }}
-                        />
-                        <span>{(1000 / replaySpeed).toFixed(1)}x</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--color-text-secondary)', lineHeight: 1.4 }}>
-                  💡 <strong>复盘模式说明</strong>：系统会拉取该股当天 1分钟 级别完整的价格数据，以所选的策略参数在沙盒中从 09:30 开始分时播放。
-                  您可以手动调节播放速度，观察系统的实时开盘决策并校对买卖点。
-                </p>
-              </div>
-
-              {replayData ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                  {/* 复盘图表 */}
-                  <div className="card">
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                      <h3 className="card-title" style={{ margin: 0 }}>📈 1分钟 分时复盘曲线 (Sandbox Time-series Chart)</h3>
-                      <span style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>
-                        进度: <strong>{slicedCandles.length} / {replayData.candles.length}</strong> 根 K线 | 
-                        当前时间: <strong style={{ color: '#fff' }}>
-                          {slicedCandles.length > 0 
-                            ? new Date(slicedCandles[slicedCandles.length - 1].time * 1000).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }) 
-                            : '09:30'}
-                        </strong>
-                      </span>
-                    </div>
-                    <StockChart candles={slicedCandles} markers={slicedMarkers} />
-                  </div>
-
-                  {/* 实时账户与交易流水 */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '1.5rem' }}>
-                    {/* Live Account Stats */}
-                    <div className="card">
-                      <h3 className="card-title">💵 模拟账户动态表现 (Live Portfolio)</h3>
-                      <div className="stats-grid" style={{ gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '10px' }}>
-                        <div className="stat-card" style={{ background: '#111', padding: '12px' }}>
-                          <span className="stat-label">总资产权益 (Equity)</span>
-                          <span className="stat-value" style={{ fontSize: '1.2rem' }}>${liveStats.equity.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
-                        </div>
-                        <div className="stat-card" style={{ background: '#111', padding: '12px' }}>
-                          <span className="stat-label">账户现金 (Cash)</span>
-                          <span className="stat-value" style={{ fontSize: '1.2rem' }}>${liveStats.cash.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
-                        </div>
-                        <div className="stat-card" style={{ background: '#111', padding: '12px' }}>
-                          <span className="stat-label">持仓市值 (Holdings)</span>
-                          <span className="stat-value" style={{ fontSize: '1.2rem' }}>${liveStats.positionValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
-                        </div>
-                        <div className="stat-card" style={{ background: '#111', padding: '12px' }}>
-                          <span className="stat-label">持股数量 (Shares)</span>
-                          <span className="stat-value" style={{ fontSize: '1.2rem', color: liveStats.shares > 0 ? 'var(--color-green)' : '#fff' }}>{liveStats.shares} 股</span>
-                        </div>
-                        <div className="stat-card" style={{ background: '#111', padding: '12px', gridColumn: 'span 2' }}>
-                          <span className="stat-label">净收益 (PnL / %)</span>
-                          <span className="stat-value" style={{ fontSize: '1.25rem', color: liveStats.pnl >= 0 ? 'var(--color-green)' : 'var(--color-red)' }}>
-                            {liveStats.pnl >= 0 ? '+' : ''}${liveStats.pnl.toFixed(2)} ({liveStats.pnl >= 0 ? '+' : ''}{liveStats.pnlPct.toFixed(2)}%)
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Ledger List */}
-                    <div className="card" style={{ display: 'flex', flexDirection: 'column' }}>
-                      <h3 className="card-title" style={{ margin: '0 0 10px 0' }}>📜 日内动态交易账本 (Live Ledger)</h3>
-                      <div style={{ flex: 1, maxHeight: '230px', overflowY: 'auto' }}>
-                        {slicedLedger.length === 0 ? (
-                          <p style={{ color: 'var(--color-text-secondary)', margin: '20px 0', textAlign: 'center', fontSize: '0.85rem' }}>
-                            等待策略触发开盘信号...
-                          </p>
-                        ) : (
-                          <table className="ledger-table" style={{ fontSize: '0.8rem' }}>
-                            <thead>
-                              <tr>
-                                <th>时间</th>
-                                <th>动作</th>
-                                <th>股数</th>
-                                <th>成交价</th>
-                                <th style={{ textAlign: 'right' }}>实现PnL</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {[...slicedLedger].reverse().map((item: any, idx: number) => {
-                                const pnl = item.realized_pnl;
-                                const isBuy = item.action === 'BUY';
-                                const hasPnl = pnl !== undefined && !isBuy;
-                                const pnlColor = hasPnl ? (pnl >= 0 ? 'var(--color-green)' : 'var(--color-red)') : 'inherit';
-                                return (
-                                  <tr key={idx}>
-                                    <td>{item.timestamp.split(' ')[1]}</td>
-                                    <td>
-                                      <span className={`action-badge ${item.action.toLowerCase()}`} style={{ fontSize: '0.65rem', padding: '2px 4px' }}>
-                                        {item.action === 'BUY' ? 'BUY' : 'SELL'}
-                                      </span>
-                                    </td>
-                                    <td>{item.shares}</td>
-                                    <td>${item.execution_price.toFixed(2)}</td>
-                                    <td style={{ textAlign: 'right', fontWeight: 700, color: pnlColor }}>
-                                      {hasPnl ? `${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)}` : '--'}
-                                    </td>
-                                  </tr>
-                                );
-                              })}
-                            </tbody>
-                          </table>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="card loader-container" style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-text-secondary)' }}>
-                  请选择复盘日期并点击【加载复盘沙盒】开始仿真！
-                </div>
-              )}
-            </div>
+            <SameDayReplayPanel 
+              watchlist={watchlist} 
+              activeTicker={activeTicker} 
+              onSelectTicker={setActiveTicker} 
+            />
           )}
 
           {(activeTab === 'dashboard' || activeTab === 'research') && (

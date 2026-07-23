@@ -35,7 +35,16 @@ from app.experiment_manager import list_experiments, save_experiment, get_experi
 from app.risk_analyst import generate_risk_report
 import time
 
+from app.broker.live_runner import LiveTradingRunner
+
+class LiveStartRequest(BaseModel):
+    params: Optional[dict] = None
+    ignore_market_hours: Optional[bool] = True
+
 app = FastAPI(title="Quant.ai API Server")
+
+# Instantiate live trading background runner
+live_runner = LiveTradingRunner()
 
 # 请求延迟追踪
 request_latencies = []
@@ -1267,6 +1276,103 @@ def get_intraday_data(ticker: str, date: str):
                 "ema_50": round(clean_float(r['EMA_50']), 2) if not pd.isna(r['EMA_50']) else None,
             })
         return {"success": True, "ticker": ticker, "date": date, "candles": chart_candles}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
+@app.get("/api/broker/account")
+def get_broker_account():
+    """
+    获取 Alpaca 真实模拟盘账户资金和状态
+    """
+    from app.config import ALPACA_API_KEY, ALPACA_SECRET_KEY, ALPACA_BASE_URL
+    from app.broker.alpaca_adapter import AlpacaAdapter
+    
+    if not ALPACA_API_KEY or "your_paper_api_key_here" in ALPACA_API_KEY:
+        return {
+            "success": False,
+            "error": "Alpaca API 证书未配置。请在 backend/.env 中填写您的 ALPACA_API_KEY 和 ALPACA_API_SECRET。"
+        }
+    try:
+        adapter = AlpacaAdapter(
+            api_key=ALPACA_API_KEY,
+            api_secret=ALPACA_SECRET_KEY,
+            base_url=ALPACA_BASE_URL
+        )
+        summary = adapter.get_account_summary()
+        return summary
+    except Exception as e:
+        return {"success": False, "error": f"连接 Alpaca 失败: {str(e)}"}
+
+
+@app.get("/api/broker/positions")
+def get_broker_positions():
+    """
+    获取 Alpaca 真实模拟盘持仓列表
+    """
+    from app.config import ALPACA_API_KEY, ALPACA_SECRET_KEY, ALPACA_BASE_URL
+    from app.broker.alpaca_adapter import AlpacaAdapter
+    
+    if not ALPACA_API_KEY or "your_paper_api_key_here" in ALPACA_API_KEY:
+        return {
+            "success": False,
+            "error": "Alpaca API 证书未配置。请在 backend/.env 中填写您的 ALPACA_API_KEY 和 ALPACA_API_SECRET。"
+        }
+    try:
+        adapter = AlpacaAdapter(
+            api_key=ALPACA_API_KEY,
+            api_secret=ALPACA_SECRET_KEY,
+            base_url=ALPACA_BASE_URL
+        )
+        positions = adapter.get_open_positions()
+        return {"success": True, "positions": positions}
+    except Exception as e:
+        return {"success": False, "error": f"获取持仓失败: {str(e)}"}
+
+
+@app.post("/api/live/start")
+def start_live_trading(req: LiveStartRequest):
+    success = live_runner.start(strategy_params=req.params, ignore_market_hours=req.ignore_market_hours)
+    return {"success": success, "status": live_runner.get_status()}
+
+
+@app.post("/api/live/stop")
+def stop_live_trading():
+    success = live_runner.stop()
+    return {"success": success, "status": live_runner.get_status()}
+
+
+@app.get("/api/live/status")
+def get_live_status():
+    return {
+        "success": True,
+        "status": live_runner.get_status(),
+        "logs": live_runner.logs
+    }
+
+
+@app.post("/api/broker/cancel_orders")
+def cancel_all_orders():
+    from app.config import ALPACA_API_KEY, ALPACA_SECRET_KEY, ALPACA_BASE_URL
+    from app.broker.alpaca_adapter import AlpacaAdapter
+    try:
+        adapter = AlpacaAdapter(ALPACA_API_KEY, ALPACA_SECRET_KEY, ALPACA_BASE_URL)
+        res = adapter.cancel_all_orders()
+        live_runner.add_log("📢 用户手动触发：撤销所有未成交挂单。")
+        return res
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
+@app.post("/api/broker/close_positions")
+def close_all_positions():
+    from app.config import ALPACA_API_KEY, ALPACA_SECRET_KEY, ALPACA_BASE_URL
+    from app.broker.alpaca_adapter import AlpacaAdapter
+    try:
+        adapter = AlpacaAdapter(ALPACA_API_KEY, ALPACA_SECRET_KEY, ALPACA_BASE_URL)
+        res = adapter.close_all_positions()
+        live_runner.add_log("🚨 用户手动触发：一键紧急平仓所有持仓！")
+        return res
     except Exception as e:
         return {"success": False, "error": str(e)}
 

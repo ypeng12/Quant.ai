@@ -1,4 +1,16 @@
 # backend/app/config.py
+import os
+from dotenv import load_dotenv
+
+# Load env variables from backend/.env
+current_dir = os.path.dirname(os.path.abspath(__file__))
+dotenv_path = os.path.join(os.path.dirname(current_dir), '.env')
+load_dotenv(dotenv_path)
+
+# Alpaca API 配置
+ALPACA_API_KEY = os.getenv("ALPACA_API_KEY")
+ALPACA_SECRET_KEY = os.getenv("ALPACA_SECRET_KEY") or os.getenv("ALPACA_API_SECRET")
+ALPACA_BASE_URL = os.getenv("ALPACA_BASE_URL", "https://paper-api.alpaca.markets")
 
 # 模拟账户初始资金
 INITIAL_CASH = 30000.0          # 初始本金：3万美金
