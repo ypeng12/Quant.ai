@@ -1,3 +1,13 @@
+---
+title: Quant AI - Advanced Quant Trading Engine & Backtest Simulator
+emoji: 📈
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # Quant.ai - Advanced Quant Trading Engine & Backtest Simulator
 
 <p align="center">
@@ -8,7 +18,7 @@
   <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License" />
 </p>
 
-Quant.ai is a production-ready, fully-automated stock trading engine and interactive backtest simulator. Built with a Python FastAPI backend and a React (Vite) frontend, it features real-time K-line pattern recognition, dynamic market regime routing, ATR-based risk sizing, and out-of-sample walk-forward optimization.
+Quant.ai is an end-to-end, production-ready AI quantitative research platform, backtest engine, and live trading simulator. Built with a Python FastAPI backend and a React (TypeScript + Vite) interactive trading terminal, it combines natural language LLM tool calling, 22 vectorized K-line pattern recognizers, dynamic market regime routing, ATR volatility risk sizing, walk-forward optimization, and real-time Alpaca broker integration.
 
 <p align="center">
   <img src="assets/desktop_terminal.png" width="100%" alt="Quant.ai Desktop Trading Terminal" />
@@ -18,42 +28,48 @@ Quant.ai is a production-ready, fully-automated stock trading engine and interac
 
 ## 🚀 Key Features
 
-### 1. 📊 Advanced K-Line Feature & Pattern Recognition
+### 1. 🧠 AI Natural Language Strategy Agent & Tool Calling
+- **Natural Language Parsing**: Translates raw strategy descriptions (e.g. *"Backtest TSLA Donchian breakout on daily bars with 2x ATR stop"*) into validated strategy JSON configurations using OpenAI / Gemini LLM tool calling.
+- **Typed Tool Execution Graph**: Orchestrates multi-step workflow across backend execution tools (`fetch_market_data` → `compute_indicators` → `run_backtest` → `generate_risk_report`).
+- **Resilient Fallback Engine**: Built-in regex rule parser guarantees 100% operational availability even without API keys.
+
+### 2. 📊 Advanced K-Line Feature & Pattern Recognition
 - **12 K-Line Numerical Features**: Computes body ratio, upper/lower shadow ratios, gaps, relative volume (RVOL), and trend context dynamically.
 - **22 Quantifiable Candlestick Patterns**: Vectorized detection for patterns like Hammer, Shooting Star, Bullish/Bearish Engulfing, Piercing, Dark Cloud Cover, Morning/Evening Star, Three White Soldiers, Rising/Falling Three Methods, Gap Breakout, Exhaustion Gaps, and Neckline breakouts for W-Bottoms and M-Tops.
 
-### 2. 🚦 Dynamic Market Regime Router
+### 3. 🚦 Dynamic Market Regime Router
 - Dynamically classifies the market into four regimes:
   - `trend_up`: Strong bullish trend. Activates trend-following strategies (Donchian breakout, EMA crossover).
   - `trend_down`: Bearish trend. Suspends buy operations and goes into defense.
   - `high_volatility`: Extreme volatility (ATR/Close in top 10%). Enforces cash preservation.
   - `range_bound`: Oscillating market. Activates mean reversion (Bollinger Bands oversold) and candlestick reversals.
 
-### 3. 🛡️ Institutional-Grade Multi-Layer Risk Control
-- **ATR-Based Sizing**: Calculates trade size based on account equity, ATR stop-distance, and risk percentage.
-- **Soft Drawdown Limit (7%) & Consecutive Losses (5)**: Triggers a 50% reduction in position size.
-- **Hard Drawdown Limit (12%)**: Temporarily locks the trading engine (risk multiplier goes to 0) to prevent capital blowups.
+### 4. 🛡️ Institutional-Grade Multi-Layer Risk Control
+- **ATR-Based Volatility Sizing**: Dynamically calculates trade size based on account equity, ATR stop-distance, and risk percentage.
+- **Soft Drawdown Circuit Breaker (7% DD / 5 Losses)**: Automatically cuts position sizes by 50%.
+- **Hard Drawdown Lock (12% DD)**: Locks the trading engine (risk multiplier goes to 0) to protect capital from extreme market drawdowns.
 
-### 4. 🔄 Walk-Forward Parameter Optimization
+### 5. 📉 Automated AI Risk Analyst
+- **Diagnostic Risk Reports**: Evaluates Sharpe Ratio, Calmar Ratio, Profit Factor, max drawdown duration, transaction friction, and regime distribution post-backtest.
+- **Overfitting Risk Assessment**: Identifies fragile parameters and detects potential over-optimization.
+
+### 6. 🔄 Walk-Forward Parameter Optimization
 - Features a rolling optimization pipeline (`walk_forward.py`) that divides history into training and test intervals.
 - Optimizes parameters (strategy mode, ATR multiplier, RSI) by maximizing the drawdown-penalized net profit (Calmar-like metric) and validates performance out-of-sample.
 
-### 5. 🌅 Market Open Focus & Opening Range Breakout (ORB) Strategy
-- **Market Open Focus Mode**: Targets the high-volatility market opening (09:30 - 10:15 EST). Restricts buying to this high-momentum window and performs a force liquidation at 10:30 EST to protect capital from the midday choppy sideways trend.
-- **Opening Range Breakout (ORB)**: Precomputes the opening high and low from the first 5 minutes of regular hours (09:30 - 09:35 EST) and triggers high-probability breakout buys on high volume (RVOL > 1.2), using the opening range low as a hard failure stop-loss.
+### 7. ⚡ Alpaca Live & Paper Trading Integration
+- Integrates Alpaca Broker REST & WebSocket APIs (`alpaca_adapter.py`, `live_runner.py`) for live market execution, active order management, position monitoring, and paper trading account syncing.
 
-### 6. 🤖 AI Auto-Pilot Parameter Tuning (智能托管)
-- Dynamically grid-searches strategy settings over the recent 5 days of 1-minute bar data for the selected ticker.
-- Optimizes for the best risk-adjusted performance (Sharpe ratio and max drawdown mitigation) and automatically applies parameters to the active trading dashboard.
+### 8. 🧪 SQLite Experiment Tracking & Reproducibility
+- SQLite-backed experiment manager (`experiment_manager.py`) persisting full strategy configurations, benchmark performance metrics, and trade ledgers for side-by-side experiment comparison.
 
-### 7. 🎬 Historical Replay Mode (历史开盘复盘模拟器)
-- **Granular 1m Simulation**: Allows developers and traders to replay the market open sequence step-by-step for any trading day within the last 5 days.
-- **Interactive Controls**: Supports Play, Pause, Single-Step tick progression, Reset, and speed tuning (with simulated intervals down to 50ms per bar).
-- **Synchronized Portfolio updates**: Portfolio equity, cash, holdings, and transactions update dynamically on each step to observe execution points.
+### 9. 🌅 Market Open Focus & Opening Range Breakout (ORB) Strategy
+- **Market Open Focus Mode**: Targets high-volatility market opening (09:30 - 10:15 EST). Restricts buying to high-momentum windows and performs force liquidation at 10:30 EST.
+- **Opening Range Breakout (ORB)**: Precomputes opening high/low from the first 5 minutes of regular hours (09:30 - 09:35 EST) and triggers high-probability breakout buys on high volume (RVOL > 1.2), using opening range low as a hard failure stop-loss.
 
-### 8. 🔍 Intraday Trade Inspector (日内成交精细化透视)
-- **High-Frequency Audit**: In daily backtests, clicking any ledger row fetches the 1-minute candlestick data for the execution date and overlays the exact BUY/SELL orders at the market open (9:30 AM EST).
-- **Auto-scroll focus**: In intraday/1m backtests, clicking any ledger row centers the main chart's time axis precisely on the selected transaction bar.
+### 10. 🎬 Historical Replay Mode & Intraday Trade Inspector
+- **Granular 1m Simulation**: Step-by-step 1m bar market replay with 50ms tick speed controls.
+- **Intraday Trade Inspector**: Click any ledger trade to immediately center Lightweight Charts on the precise buy/sell timestamp.
 
 ---
 
@@ -62,6 +78,9 @@ Quant.ai is a production-ready, fully-automated stock trading engine and interac
 ```text
 ├── backend/
 │   ├── app/
+│   │   ├── agent.py            # Natural Language Strategy LLM Parser & Tool Execution Engine
+│   │   ├── risk_analyst.py     # AI Risk Analyst & Post-Backtest Diagnostic Engine
+│   │   ├── experiment_manager.py # SQLite Experiment Tracker & History Store
 │   │   ├── config.py           # Trade and risk configurations
 │   │   ├── data_manager.py     # YFinance data loading, technical indicators, and regimes
 │   │   ├── patterns.py         # 22 K-line patterns and W-Bottom/M-Top detection

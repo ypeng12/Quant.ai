@@ -1,6 +1,7 @@
 // frontend/src/components/ExperimentCompare.tsx
 
 import React, { useEffect, useState } from 'react';
+import { API_BASE } from '../config';
 
 interface Experiment {
   id: number;
@@ -54,7 +55,7 @@ export const ExperimentCompare: React.FC = () => {
     setIsLoading(true);
     setErrorMsg('');
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/experiments');
+      const res = await fetch(`${API_BASE}/api/experiments`);
       const data = await res.json();
       if (data.success) {
         setExperiments(data.experiments);
@@ -62,7 +63,7 @@ export const ExperimentCompare: React.FC = () => {
         setErrorMsg(data.error || '获取实验列表失败');
       }
     } catch (err) {
-      setErrorMsg('无法获取实验列表，请检查后端 API 是否已启动于 127.0.0.1:8000');
+      setErrorMsg(`无法获取实验列表，请检查后端 API 是否已启动 (${API_BASE})`);
     } finally {
       setIsLoading(false);
     }
@@ -92,7 +93,7 @@ export const ExperimentCompare: React.FC = () => {
     
     setIsLoading(true);
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/experiments/compare', {
+      const res = await fetch(`${API_BASE}/api/experiments/compare`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ids: selectedIds }),
@@ -117,7 +118,7 @@ export const ExperimentCompare: React.FC = () => {
     }
 
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/experiments/${id}`, {
+      const res = await fetch(`${API_BASE}/api/experiments/${id}`, {
         method: 'DELETE',
       });
       const data = await res.json();

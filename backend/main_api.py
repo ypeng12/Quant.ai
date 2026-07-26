@@ -1,7 +1,8 @@
-# backend/main_api.py
-
+import os
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from typing import Optional
 import uvicorn
@@ -1375,6 +1376,25 @@ def close_all_positions():
         return res
     except Exception as e:
         return {"success": False, "error": str(e)}
+
+
+# 静态文件托管（前端 React 构建产物）
+_backend_dir = os.path.dirname(os.path.abspath(__file__))
+_dist_dir = os.path.join(os.path.dirname(_backend_dir), "frontend", "dist")
+
+if os.path.exists(_dist_dir):
+    _assets_dir = os.path.join(_dist_dir, "assets")
+    if os.path.exists(_assets_dir):
+        app.mount("/assets", StaticFiles(directory=_assets_dir), name="assets")
+
+    @app.get("/{full_path:path}")
+    async def serve_spa(full_path: str):
+        if full_path.startswith("api/"):
+            return None
+        target_file = os.path.join(_dist_dir, full_path)
+        if full_path and os.path.exists(target_file) and os.path.isfile(target_file):
+            return FileResponse(target_file)
+        return FileResponse(os.path.join(_dist_dir, "index.html"))
 
 
 if __name__ == "__main__":

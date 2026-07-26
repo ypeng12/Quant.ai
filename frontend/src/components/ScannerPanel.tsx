@@ -1,6 +1,7 @@
 // frontend/src/components/ScannerPanel.tsx
 
 import React, { useState, useEffect } from 'react';
+import { API_BASE } from '../config';
 
 export interface ScanResult {
   ticker: string;
@@ -30,7 +31,7 @@ export const ScannerPanel: React.FC<ScannerPanelProps> = ({ customTickers, onSel
     setError(null);
     try {
       const symbolsParam = customTickers.join(',');
-      const res = await fetch(`http://127.0.0.1:8000/api/scan?tickers=${symbolsParam}`);
+      const res = await fetch(`${API_BASE}/api/scan?tickers=${symbolsParam}`);
       const json = await res.json();
       if (json.success) {
         setResults(json.results);

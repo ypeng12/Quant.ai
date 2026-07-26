@@ -1,8 +1,9 @@
 // frontend/src/components/SameDayReplayPanel.tsx
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { StockChart } from './StockChart';
 import { LedgerTable, type LedgerItem } from './LedgerTable';
+import { API_BASE } from '../config';
 
 interface SameDayReplayPanelProps {
   watchlist: string[];
@@ -21,7 +22,7 @@ export function SameDayReplayPanel({ watchlist, activeTicker, onSelectTicker }: 
   useEffect(() => {
     const fetchDates = async () => {
       try {
-        const res = await fetch(`http://127.0.0.1:8000/api/replay/available_dates?ticker=${activeTicker}`);
+        const res = await fetch(`${API_BASE}/api/replay/available_dates?ticker=${activeTicker}`);
         const json = await res.json();
         if (json.success && json.dates.length > 0) {
           setAvailableDates(json.dates);
@@ -56,7 +57,7 @@ export function SameDayReplayPanel({ watchlist, activeTicker, onSelectTicker }: 
           slippage_rate: '0.0003',
           market_open_focus: 'true'
         });
-        const res = await fetch(`http://127.0.0.1:8000/api/replay/data?${params.toString()}`);
+        const res = await fetch(`${API_BASE}/api/replay/data?${params.toString()}`);
         const json = await res.json();
         if (json.success) {
           setReplayData(json);
