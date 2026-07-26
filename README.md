@@ -11,12 +11,15 @@ pinned: false
 # Quant.ai - Advanced Quant Trading Engine & Backtest Simulator
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Python-3.8%2B-blue.svg" alt="Python Version" />
-  <img src="https://img.shields.io/badge/FastAPI-v0.95%2B-009688.svg" alt="FastAPI" />
-  <img src="https://img.shields.io/badge/React-v18-61dafb.svg" alt="React" />
-  <img src="https://img.shields.io/badge/Vite-v4-646cff.svg" alt="Vite" />
-  <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License" />
+  <a href="https://huggingface.co/spaces/Ypeng12/quant-ai" target="_blank">
+    <img src="https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Live%20Demo-FFD21E.svg?style=for-the-badge&logo=huggingface&logoColor=black" alt="Hugging Face Space" />
+  </a>
+  <img src="https://img.shields.io/badge/Python-3.8%2B-blue.svg?style=for-the-badge&logo=python&logoColor=white" alt="Python Version" />
+  <img src="https://img.shields.io/badge/FastAPI-v0.95%2B-009688.svg?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI" />
+  <img src="https://img.shields.io/badge/React-v18-61dafb.svg?style=for-the-badge&logo=react&logoColor=black" alt="React" />
 </p>
+
+> 🚀 **Live Interactive Demo**: Try the deployed terminal live on Hugging Face Spaces 👉 **[huggingface.co/spaces/Ypeng12/quant-ai](https://huggingface.co/spaces/Ypeng12/quant-ai)**
 
 Quant.ai is an end-to-end, production-ready AI quantitative research platform, backtest engine, and live trading simulator. Built with a Python FastAPI backend and a React (TypeScript + Vite) interactive trading terminal, it combines natural language LLM tool calling, 22 vectorized K-line pattern recognizers, dynamic market regime routing, ATR volatility risk sizing, walk-forward optimization, and real-time Alpaca broker integration.
 
