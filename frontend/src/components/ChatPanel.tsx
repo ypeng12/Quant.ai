@@ -1,6 +1,7 @@
 // frontend/src/components/ChatPanel.tsx
 
 import React, { useState, useRef, useEffect } from 'react';
+import { API_BASE } from '../config';
 
 interface ChatMessage {
   id: string;
@@ -71,7 +72,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ onRunBacktest, isLoading, 
 
     try {
       // Step 1: Parse prompt → strategy config
-      const parseRes = await fetch('http://127.0.0.1:8000/api/agent/research', {
+      const parseRes = await fetch(`${API_BASE}/api/agent/research`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: trimmed })
@@ -108,7 +109,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ onRunBacktest, isLoading, 
       // Step 4: Generate risk report
       setReportLoading(true);
       try {
-        const reportRes = await fetch('http://127.0.0.1:8000/api/report/generate', {
+        const reportRes = await fetch(`${API_BASE}/api/report/generate`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(config)
@@ -135,7 +136,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ onRunBacktest, isLoading, 
       setMessages(prev => [...prev, {
         id: Date.now().toString(),
         role: 'assistant',
-        content: `❌ Connection failed: ${e}. Make sure the backend is running on http://127.0.0.1:8000`,
+        content: `❌ Connection failed: ${e}. Make sure the backend is running on ${API_BASE}`,
         timestamp: new Date()
       }]);
     }

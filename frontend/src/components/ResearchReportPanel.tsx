@@ -1,6 +1,7 @@
 // frontend/src/components/ResearchReportPanel.tsx
 
 import React, { useState, useEffect } from 'react';
+import { API_BASE } from '../config';
 import type { StrategyParams } from './StrategySettings';
 
 interface ComponentData {
@@ -96,7 +97,7 @@ export const ResearchReportPanel: React.FC<ResearchReportPanelProps> = ({ onAppl
     const fetchReport = async () => {
       setLoading(true);
       try {
-        const res = await fetch('http://127.0.0.1:8000/api/research_report');
+        const res = await fetch(`${API_BASE}/api/research_report`);
         const json = await res.json();
         if (json.success) {
           setReport(json);

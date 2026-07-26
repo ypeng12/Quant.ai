@@ -17,6 +17,7 @@ import { WalkForwardPanel } from './components/WalkForwardPanel';
 import { ExperimentCompare } from './components/ExperimentCompare';
 import { BrokerPanel } from './components/BrokerPanel';
 import { SameDayReplayPanel } from './components/SameDayReplayPanel';
+import { API_BASE } from './config';
 
 interface SummaryData {
   initial_cash: number;
@@ -185,7 +186,7 @@ function App() {
     const runAiTuning = async () => {
       setTuningLoading(true);
       try {
-        const response = await fetch('http://127.0.0.1:8000/api/ai_tune', {
+        const response = await fetch(`${API_BASE}/api/ai_tune`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -236,7 +237,7 @@ function App() {
           market_open_focus: String(strategyParams.market_open_focus)
         });
 
-        const res = await fetch(`http://127.0.0.1:8000/api/backtest?${queryParams.toString()}`);
+        const res = await fetch(`${API_BASE}/api/backtest?${queryParams.toString()}`);
         const json: BacktestResponse = await res.json();
         
         if (json.success) {
@@ -270,7 +271,7 @@ function App() {
     const fetchCompanyDetails = async () => {
       setInfoLoading(true);
       try {
-        const res = await fetch(`http://127.0.0.1:8000/api/company_info?ticker=${activeTicker}`);
+        const res = await fetch(`${API_BASE}/api/company_info?ticker=${activeTicker}`);
         const json = await res.json();
         setCompanyInfo(json);
       } catch (e) {
@@ -289,7 +290,7 @@ function App() {
       for (const ticker of watchlist) {
         if (ticker === activeTicker) continue;
         try {
-          const res = await fetch(`http://127.0.0.1:8000/api/backtest?ticker=${ticker}&interval=1d`);
+          const res = await fetch(`${API_BASE}/api/backtest?ticker=${ticker}&interval=1d`);
           const json: BacktestResponse = await res.json();
           if (json.success && json.candles.length > 0) {
             const lastCandle = json.candles[json.candles.length - 1];
@@ -331,7 +332,7 @@ function App() {
     if (activeTab === 'replay') {
       const fetchDates = async () => {
         try {
-          const res = await fetch(`http://127.0.0.1:8000/api/replay/available_dates?ticker=${activeTicker}`);
+          const res = await fetch(`${API_BASE}/api/replay/available_dates?ticker=${activeTicker}`);
           const json = await res.json();
           if (json.success && json.dates.length > 0) {
             setAvailableDates(json.dates);
@@ -368,7 +369,7 @@ function App() {
         slippage_rate: String(strategyParams.slippage_rate),
         market_open_focus: String(strategyParams.market_open_focus),
       });
-      const res = await fetch(`http://127.0.0.1:8000/api/replay/data?${params.toString()}`);
+      const res = await fetch(`${API_BASE}/api/replay/data?${params.toString()}`);
       const json = await res.json();
       if (json.success) {
         setReplayData(json);
@@ -420,7 +421,7 @@ function App() {
       setZoomCandles([]);
       try {
         const dateStr = item.timestamp.split(' ')[0]; // YYYY-MM-DD
-        const res = await fetch(`http://127.0.0.1:8000/api/intraday_data?ticker=${item.ticker}&date=${dateStr}`);
+        const res = await fetch(`${API_BASE}/api/intraday_data?ticker=${item.ticker}&date=${dateStr}`);
         const json = await res.json();
         if (json.success) {
           setZoomCandles(json.candles);
@@ -827,8 +828,34 @@ function App() {
                 )}
               </>
             ) : (
-              <div className="loader-container">
-                Cannot connect to backend. Please ensure FastAPI is running on http://127.0.0.1:8000
+              <div className="card loader-container" style={{ padding: '2.5rem', textAlign: 'center', margin: '2rem 0' }}>
+                <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>⏳</div>
+                <h3 style={{ color: '#ffffff', marginBottom: '0.5rem', fontSize: '1.1rem' }}>
+                  后端服务器正在启动或连接中断 (Backend Initializing / Connecting)
+                </h3>
+                <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.85rem', maxWidth: '500px', margin: '0 auto 1.5rem auto', lineHeight: 1.5 }}>
+                  Hugging Face Space 首次启动容器需要 1-2 分钟编译与加载数据（冷启动）。如果页面显示连接异常，请点击下方按钮重新连接。
+                </p>
+                <button
+                  onClick={() => {
+                    setLoading(true);
+                    // 重新触发数据拉取
+                    setActiveTicker(prev => prev);
+                  }}
+                  style={{
+                    background: 'var(--color-green)',
+                    color: '#000000',
+                    border: 'none',
+                    padding: '8px 20px',
+                    borderRadius: '6px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    fontSize: '0.9rem',
+                    boxShadow: '0 2px 8px rgba(0,200,5,0.3)'
+                  }}
+                >
+                  🔄 重新连接 API 服务器 (Retry Connection)
+                </button>
               </div>
             )
           )}

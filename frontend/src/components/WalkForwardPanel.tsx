@@ -1,6 +1,7 @@
 // frontend/src/components/WalkForwardPanel.tsx
 
 import React, { useState } from 'react';
+import { API_BASE } from '../config';
 
 interface WalkForwardPanelProps {
   activeTicker: string;
@@ -69,7 +70,7 @@ export const WalkForwardPanel: React.FC<WalkForwardPanelProps> = ({ activeTicker
     setResult(null);
 
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/walk_forward', {
+      const response = await fetch(`${API_BASE}/api/walk_forward`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -88,7 +89,7 @@ export const WalkForwardPanel: React.FC<WalkForwardPanelProps> = ({ activeTicker
         setErrorMsg(data.error || '运行 Walk-Forward 优化失败');
       }
     } catch (err) {
-      setErrorMsg('无法连接到后端服务器，请检查 FastAPI 服务是否在 127.0.0.1:8000 启动。');
+      setErrorMsg(`无法连接到后端服务器 (${API_BASE})。`);
     } finally {
       setIsLoading(false);
     }

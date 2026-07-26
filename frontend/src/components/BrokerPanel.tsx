@@ -1,6 +1,7 @@
 // frontend/src/components/BrokerPanel.tsx
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { API_BASE } from '../config';
 
 interface AccountSummary {
   success: boolean;
@@ -35,7 +36,7 @@ export function BrokerPanel() {
   const fetchBrokerData = async () => {
     try {
       // 1. Fetch account stats
-      const accRes = await fetch('http://127.0.0.1:8000/api/broker/account');
+      const accRes = await fetch(`${API_BASE}/api/broker/account`);
       const accJson = await accRes.json();
       if (accJson.success !== false) {
         setAccount(accJson);
@@ -45,14 +46,14 @@ export function BrokerPanel() {
       }
 
       // 2. Fetch positions
-      const posRes = await fetch('http://127.0.0.1:8000/api/broker/positions');
+      const posRes = await fetch(`${API_BASE}/api/broker/positions`);
       const posJson = await posRes.json();
       if (posJson.success) {
         setPositions(posJson.positions);
       }
 
       // 3. Fetch bot status and logs
-      const statusRes = await fetch('http://127.0.0.1:8000/api/live/status');
+      const statusRes = await fetch(`${API_BASE}/api/live/status`);
       const statusJson = await statusRes.json();
       if (statusJson.success) {
         setIsBotRunning(statusJson.status.is_running);
@@ -75,7 +76,7 @@ export function BrokerPanel() {
   const handleStartBot = async () => {
     setActionLoading("start");
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/live/start', {
+      const res = await fetch(`${API_BASE}/api/live/start`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ignore_market_hours: true })
@@ -98,7 +99,7 @@ export function BrokerPanel() {
   const handleStopBot = async () => {
     setActionLoading("stop");
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/live/stop', { method: 'POST' });
+      const res = await fetch(`${API_BASE}/api/live/stop`, { method: 'POST' });
       const json = await res.json();
       setIsBotRunning(json.status.is_running);
     } catch (e) {
@@ -113,7 +114,7 @@ export function BrokerPanel() {
     if (!window.confirm("确定要撤销 Alpaca 账户中的所有未成交挂单吗？")) return;
     setActionLoading("cancel_orders");
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/broker/cancel_orders', { method: 'POST' });
+      const res = await fetch(`${API_BASE}/api/broker/cancel_orders`, { method: 'POST' });
       const json = await res.json();
       alert(json.message || "撤单请求已发送");
     } catch (e) {
@@ -128,7 +129,7 @@ export function BrokerPanel() {
     if (!window.confirm("🚨 警告：这会以市价立即平仓所有股票持仓！确定继续吗？")) return;
     setActionLoading("liquidate");
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/broker/close_positions', { method: 'POST' });
+      const res = await fetch(`${API_BASE}/api/broker/close_positions`, { method: 'POST' });
       const json = await res.json();
       alert(json.message || "清仓请求已发送");
     } catch (e) {
@@ -182,7 +183,7 @@ export function BrokerPanel() {
             : 'linear-gradient(135deg, #18181b 0%, #09090b 100%)',
           border: isBotRunning ? '1px solid rgba(0, 200, 5, 0.4)' : '1px solid var(--color-border)',
           display: 'flex',
-          justify: 'space-between',
+          justifyContent: 'space-between',
           alignItems: 'center',
           flexWrap: 'wrap',
           gap: '1.5rem'
