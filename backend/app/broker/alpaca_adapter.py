@@ -43,16 +43,17 @@ class AlpacaAdapter:
             Dict containing cash, equity, buying power, and account status.
         """
         account = self.client.get_account()
+        status_str = account.status.value if hasattr(account.status, 'value') else str(account.status)
         return {
             "success": True,
-            "account_number": account.account_number,
-            "status": account.status,
-            "currency": account.currency,
+            "account_number": str(account.account_number),
+            "status": str(status_str),
+            "currency": str(account.currency),
             "cash": float(account.cash),
             "portfolio_value": float(account.portfolio_value),
             "buying_power": float(account.buying_power),
             "multiplier": float(account.multiplier),
-            "shorting_enabled": account.shorting_enabled,
+            "shorting_enabled": bool(account.shorting_enabled),
             "equity": float(account.equity),
             "initial_margin": float(account.initial_margin),
             "maintenance_margin": float(account.maintenance_margin),
