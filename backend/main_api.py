@@ -26,7 +26,7 @@ def clean_float(val, default=0.0):
 
 
 from app.config import INITIAL_CASH, WATCHLIST, FORCE_LIQUIDATION_TIME
-from app.data_manager import fetch_and_prepare_data, get_company_info, calculate_atr, INTERVAL_TO_PERIOD
+from app.data_manager import fetch_and_prepare_data, get_company_info, calculate_atr, INTERVAL_TO_PERIOD, get_batch_quotes
 from app.patterns import analyze_patterns
 from app.simulator import run_backtest_sim
 from app.agent import parse_research_prompt, get_example_prompts, get_backend_tools, get_chat_response
@@ -57,6 +57,28 @@ app = FastAPI(title="Quant.ai API Server")
 # Instantiate live trading background runner
 live_runner = LiveTradingRunner()
 
+@app.on_event("startup")
+def auto_start_live_runner():
+    """
+    后端服务启动时，自动初始化开启 AI 量化托管交易机器人，保障 24/7 全天候实时监控与自动交易。
+    """
+    try:
+        live_runner.start(
+            strategy_params={
+                "strategy_mode": "dynamic",
+                "stop_loss_pct": 0.015,
+                "profit_target_pct": 0.030,
+                "trailing_stop_mode": "atr",
+                "trailing_stop_atr_mult": 2.0,
+                "rsi_threshold_buy": 70.0,
+                "market_open_focus": False
+            },
+            ignore_market_hours=True
+        )
+        print("[System Startup] 🚀 AI 量化托管交易机器人已在后台自动启动上线！")
+    except Exception as e:
+        print(f"[System Startup Warning] 自动启动交易机器人异常: {e}")
+
 # 请求延迟追踪
 request_latencies = []
 
@@ -85,6 +107,22 @@ def get_watchlist_data():
     获取自选股池的列表
     """
     return {"watchlist": WATCHLIST}
+
+@app.get("/api/watchlist_prices")
+def get_watchlist_prices(tickers: Optional[str] = None):
+    """
+    极速批量获取自选股的实时行情（价格、涨跌额、涨跌幅%、高低价与成交量）
+    """
+    if tickers:
+        ticker_list = [t.strip().upper() for t in tickers.split(",") if t.strip()]
+    else:
+        ticker_list = WATCHLIST.copy()
+
+    quotes = get_batch_quotes(ticker_list)
+    return {
+        "success": True,
+        "quotes": quotes
+    }
 
 @app.get("/api/company_info")
 def get_company_details(ticker: str):

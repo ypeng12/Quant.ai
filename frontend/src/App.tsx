@@ -38,6 +38,17 @@ interface SummaryData {
   gross_loss: number;
 }
 
+export interface WatchlistQuote {
+  ticker: string;
+  price: number;
+  prev_close: number;
+  change: number;
+  change_percent: number;
+  high: number;
+  low: number;
+  volume: number;
+}
+
 interface CandleData {
   time: number;
   open: number;
@@ -146,7 +157,7 @@ function App() {
   
   const [loading, setLoading] = useState<boolean>(true);
   const [data, setData] = useState<BacktestResponse | null>(null);
-  const [sidebarPrices, setSidebarPrices] = useState<Record<string, number>>({});
+  const [watchlistQuotes, setWatchlistQuotes] = useState<Record<string, WatchlistQuote>>({});
   
   // 公司元数据状态
   const [companyInfo, setCompanyInfo] = useState<CompanyInfo | null>(null);
@@ -243,14 +254,6 @@ function App() {
         
         if (json.success) {
           setData(json);
-          // 更新侧边栏收盘价
-          if (json.candles.length > 0) {
-            const lastCandle = json.candles[json.candles.length - 1];
-            setSidebarPrices(prev => ({
-              ...prev,
-              [activeTicker]: lastCandle.close
-            }));
-          }
         } else {
           console.error("Backtest failed:", json.error);
         }
@@ -285,25 +288,28 @@ function App() {
     fetchCompanyDetails();
   }, [activeTicker]);
 
-  // 3. 异步获取侧边栏其它股票的基本收盘价
+  // 3. 批量获取自选股实时行情（含价格、涨跌额、涨跌幅%，30秒自动轮询）
   useEffect(() => {
-    const fetchInitialPrices = async () => {
-      for (const ticker of watchlist) {
-        if (ticker === activeTicker) continue;
-        try {
-          const res = await fetch(`${API_BASE}/api/backtest?ticker=${ticker}&interval=1d`);
-          const json: BacktestResponse = await res.json();
-          if (json.success && json.candles.length > 0) {
-            const lastCandle = json.candles[json.candles.length - 1];
-            setSidebarPrices(prev => ({
-              ...prev,
-              [ticker]: lastCandle.close
-            }));
-          }
-        } catch (e) {}
+    let isMounted = true;
+    const fetchWatchlistQuotes = async () => {
+      if (watchlist.length === 0) return;
+      try {
+        const res = await fetch(`${API_BASE}/api/watchlist_prices?tickers=${encodeURIComponent(watchlist.join(','))}`);
+        const json = await res.json();
+        if (json.success && json.quotes && isMounted) {
+          setWatchlistQuotes(json.quotes);
+        }
+      } catch (e) {
+        console.error("Watchlist quotes fetch failed:", e);
       }
     };
-    fetchInitialPrices();
+
+    fetchWatchlistQuotes();
+    const intervalId = setInterval(fetchWatchlistQuotes, 30000);
+    return () => {
+      isMounted = false;
+      clearInterval(intervalId);
+    };
   }, [watchlist]);
 
   const handleTickerChange = (ticker: string) => {
@@ -550,7 +556,7 @@ function App() {
               boxShadow: activeTab === 'institutional' ? '0 0 12px rgba(245, 158, 11, 0.4)' : 'none'
             }}
           >
-            🏆 HRT Alpha 实验室
+            🔬 机构级 Alpha 研究
           </button>
 
           <button
@@ -892,32 +898,41 @@ function App() {
         <aside className="sidebar">
           <h4 className="sidebar-title">Watchlist</h4>
           
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
             {watchlist.map((ticker) => {
-              const price = sidebarPrices[ticker];
+              const quote = watchlistQuotes[ticker];
+              const price = quote?.price;
+              const changePct = quote?.change_percent ?? 0;
+              const isUp = changePct >= 0;
               const isActive = ticker === activeTicker;
               return (
                 <div
                   key={ticker}
                   className={`watchlist-item ${isActive ? 'active' : ''}`}
                   onClick={() => handleTickerChange(ticker)}
-                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.65rem 0.85rem' }}
                 >
-                  <div>
-                    <span className="watchlist-ticker">{ticker}</span>
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <span className="watchlist-ticker" style={{ fontWeight: 700, fontSize: '0.95rem' }}>{ticker}</span>
+                    {quote && (
+                      <span style={{ fontSize: '0.72rem', color: isUp ? '#00c805' : '#ff3b30', fontWeight: 600, marginTop: '2px' }}>
+                        {isUp ? '+' : ''}{quote.change.toFixed(2)} ({isUp ? '+' : ''}{changePct.toFixed(2)}%)
+                      </span>
+                    )}
                   </div>
                   
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span className="watchlist-price">
+                    <span className="watchlist-price" style={{ fontWeight: 700, fontSize: '0.95rem' }}>
                       {price ? `$${price.toFixed(2)}` : '...'}
                     </span>
                     <button 
                       onClick={(e) => handleRemoveTicker(ticker, e)}
+                      title="移除自选股"
                       style={{
                         background: 'transparent',
                         border: 'none',
                         color: 'var(--color-text-secondary)',
-                        fontSize: '0.9rem',
+                        fontSize: '1rem',
                         cursor: 'pointer',
                         padding: '0 4px'
                       }}

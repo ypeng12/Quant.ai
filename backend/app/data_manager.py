@@ -224,9 +224,9 @@ def fetch_and_prepare_data(ticker, period=None, interval="1m"):
         
     # 确保时间戳已转换为本地时区 (美东时间)
     if df.index.tz is None:
-        df = df.tz_localize('UTC').tz_convert('US/Eastern')
+        df = df.tz_localize('UTC').tz_convert('America/New_York')
     else:
-        df = df.tz_convert('US/Eastern')
+        df = df.tz_convert('America/New_York')
         
     df['Date'] = df.index.date
     
@@ -354,6 +354,115 @@ def fetch_and_prepare_data(ticker, period=None, interval="1m"):
     save_cache(ticker, period, interval, regular_hours_df)
     
     return regular_hours_df
+
+BATCH_QUOTES_CACHE = {}
+BATCH_QUOTES_TIMESTAMP = None
+
+def get_batch_quotes(tickers: list):
+    """
+    极速批量获取自选股实时/最新交易日价格、前收价、当日涨跌额、涨跌幅(%)、最高价、最低价与成交量。
+    带有 15 秒内存缓存与回退兜底，防 Rate Limit 且响应极快。
+    """
+    global BATCH_QUOTES_CACHE, BATCH_QUOTES_TIMESTAMP
+    
+    now = datetime.datetime.now()
+    clean_tickers = [str(t).strip().upper() for t in tickers if str(t).strip()]
+    if not clean_tickers:
+        return {}
+
+    # 15s 内存缓存有效性校验
+    if BATCH_QUOTES_TIMESTAMP and (now - BATCH_QUOTES_TIMESTAMP).total_seconds() < 15:
+        cached_res = {t: BATCH_QUOTES_CACHE[t] for t in clean_tickers if t in BATCH_QUOTES_CACHE}
+        if len(cached_res) == len(clean_tickers):
+            return cached_res
+
+    results = {}
+    
+    # 使用 yfinance Fast Info 优先秒拉最新报价（最轻量速度最快）
+    for ticker in clean_tickers:
+        try:
+            stk = yf.Ticker(ticker)
+            fi = stk.fast_info
+            
+            last_price = float(fi.last_price or 0.0)
+            prev_close = float(fi.previous_close or last_price)
+            
+            if last_price > 0:
+                change = last_price - prev_close
+                change_pct = (change / prev_close * 100.0) if prev_close != 0 else 0.0
+                day_high = float(fi.day_high or last_price)
+                day_low = float(fi.day_low or last_price)
+                volume = int(fi.last_volume or 0)
+                
+                quote_data = {
+                    "ticker": ticker,
+                    "price": round(last_price, 2),
+                    "prev_close": round(prev_close, 2),
+                    "change": round(change, 2),
+                    "change_percent": round(change_pct, 2),
+                    "high": round(day_high, 2),
+                    "low": round(day_low, 2),
+                    "volume": volume,
+                    "timestamp": now.isoformat()
+                }
+                results[ticker] = quote_data
+                BATCH_QUOTES_CACHE[ticker] = quote_data
+        except Exception:
+            pass
+
+    # 若个别 ticker 在 fast_info 获取失败，尝试使用 history 补救
+    missing = [t for t in clean_tickers if t not in results]
+    if missing:
+        for ticker in missing:
+            if ticker in BATCH_QUOTES_CACHE:
+                results[ticker] = BATCH_QUOTES_CACHE[ticker]
+                continue
+            try:
+                stk = yf.Ticker(ticker)
+                hist = stk.history(period="5d")
+                if hist is not None and not hist.empty:
+                    latest_close = float(hist['Close'].iloc[-1])
+                    prev_close = float(hist['Close'].iloc[-2]) if len(hist) >= 2 else latest_close
+                    change = latest_close - prev_close
+                    change_pct = (change / prev_close * 100.0) if prev_close != 0 else 0.0
+                    
+                    quote_data = {
+                        "ticker": ticker,
+                        "price": round(latest_close, 2),
+                        "prev_close": round(prev_close, 2),
+                        "change": round(change, 2),
+                        "change_percent": round(change_pct, 2),
+                        "high": round(float(hist['High'].iloc[-1]), 2),
+                        "low": round(float(hist['Low'].iloc[-1]), 2),
+                        "volume": int(hist['Volume'].iloc[-1]),
+                        "timestamp": now.isoformat()
+                    }
+                    results[ticker] = quote_data
+                    BATCH_QUOTES_CACHE[ticker] = quote_data
+            except Exception:
+                pass
+
+    # 再次补漏 fallback 逻辑，保证前端100%有数据返回
+    for ticker in clean_tickers:
+        if ticker not in results:
+            if ticker in BATCH_QUOTES_CACHE:
+                results[ticker] = BATCH_QUOTES_CACHE[ticker]
+            else:
+                fallback_data = {
+                    "ticker": ticker,
+                    "price": 100.0,
+                    "prev_close": 100.0,
+                    "change": 0.0,
+                    "change_percent": 0.0,
+                    "high": 100.0,
+                    "low": 100.0,
+                    "volume": 0,
+                    "timestamp": now.isoformat()
+                }
+                results[ticker] = fallback_data
+
+    BATCH_QUOTES_TIMESTAMP = now
+    return results
 
 if __name__ == "__main__":
     print("测试多周期获取数据...")

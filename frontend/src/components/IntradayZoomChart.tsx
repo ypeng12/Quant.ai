@@ -120,7 +120,7 @@ export const IntradayZoomChart: React.FC<IntradayZoomChartProps> = ({ candles, t
       // 在东部时间 09:30:00，我们可以计算第一个在 09:30 的时间戳：
       for (const c of candles) {
         const dateObj = new Date(c.time * 1000);
-        // yfinance 历史分钟级数据在 US/Eastern 时区
+        // yfinance 历史分钟级数据在 America/New_York 时区
         // 我们可以直接通过 toLocaleTimeString 或者 getUTCHours/getHours 检查
         // 由于 backend 传来的 time 已经是 Unix 时间戳
         // 对应美东时间 9:30 约为 UTC 时间 13:30 (标准时) 或 14:30 (夏令时)
