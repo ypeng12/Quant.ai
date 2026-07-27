@@ -1639,7 +1639,7 @@ def backtest_multi_asset_portfolio(req: MultiAssetBacktestRequest):
 
 
 # =========================================================================
-# 🏆 10/10 HRT PURGED WALK-FORWARD ALPHA RESEARCH LAB ENDPOINTS
+# OUT-OF-SAMPLE PURGED WALK-FORWARD ALPHA RESEARCH LAB ENDPOINTS
 # =========================================================================
 
 class ResearchExperimentRequest(BaseModel):
@@ -1651,7 +1651,7 @@ class ResearchExperimentRequest(BaseModel):
 @app.post("/api/research/run")
 def trigger_alpha_research_experiment(req: ResearchExperimentRequest):
     """
-    Triggers the 10/10 HRT Out-of-Sample Purged Walk-Forward Cross Validation Alpha Experiment
+    Triggers the Out-of-Sample Purged Walk-Forward Cross Validation Alpha Experiment
     """
     try:
         from run_experiment import run_experiment
