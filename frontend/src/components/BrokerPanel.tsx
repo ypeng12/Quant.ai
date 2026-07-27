@@ -275,7 +275,7 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
       {todaySummary && (
         <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(5, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
           <div className="stat-card" style={{ background: '#09090b', border: `1px solid ${todayPnlPositive ? 'rgba(0,200,5,0.3)' : 'rgba(255,59,48,0.3)'}`, padding: '1.25rem' }}>
-            <span className="stat-label">今日总盈亏</span>
+            <span className="stat-label">今日已实现盈亏 (Realized)</span>
             <span className="stat-value" style={{ fontSize: '1.4rem', fontWeight: 900, color: todayPnlPositive ? 'var(--color-green)' : 'var(--color-red)' }}>
               {todayPnlPositive ? '+' : ''}${todaySummary.total_pnl.toFixed(2)}
             </span>
