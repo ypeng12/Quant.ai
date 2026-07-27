@@ -1459,6 +1459,29 @@ def close_all_positions():
         return {"success": False, "error": str(e)}
 
 
+@app.get("/api/live/action_feed")
+def get_action_feed(limit: int = 100):
+    """Returns only real BUY/SHORT/SELL/COVER trade actions (no scan noise)."""
+    logs = list(reversed(live_runner.action_logs[-limit:]))
+    return {"success": True, "logs": logs, "count": len(logs)}
+
+
+@app.get("/api/live/trade_history")
+def get_trade_history(days: int = 7):
+    """Returns persistent trade records for post-market review and replay."""
+    import datetime
+    cutoff = (datetime.datetime.now() - datetime.timedelta(days=days)).strftime("%Y-%m-%d")
+    history = [t for t in live_runner.trade_history if t["date"] >= cutoff]
+    return {"success": True, "trades": history, "total": len(history)}
+
+
+@app.get("/api/live/today_summary")
+def get_today_summary():
+    """Returns today's win/loss/PnL summary for the live trading bot."""
+    summary = live_runner.get_today_summary()
+    return {"success": True, "summary": summary}
+
+
 # =========================================================================
 # 🏛️ INSTITUTIONAL QUANT ENGINE ENDPOINTS (Jane Street / Citadel Standards)
 # =========================================================================
@@ -1513,8 +1536,8 @@ class StatArbRequest(BaseModel):
 @app.post("/api/stat-arb/run")
 def run_stat_arb(req: StatArbRequest):
     try:
-        df_y, _ = fetch_and_prepare_data(req.ticker_y, req.period, "1d")
-        df_x, _ = fetch_and_prepare_data(req.ticker_x, req.period, "1d")
+        df_y = fetch_and_prepare_data(req.ticker_y, req.period, "1d")
+        df_x = fetch_and_prepare_data(req.ticker_x, req.period, "1d")
         
         engine = StatArbEngine(z_entry_threshold=req.z_entry, z_exit_threshold=req.z_exit)
         res = engine.backtest_pairs(df_y, df_x, req.ticker_y, req.ticker_x)
@@ -1532,7 +1555,7 @@ def optimize_portfolio(req: PortfolioOptimizeRequest):
     try:
         returns_dict = {}
         for t in req.tickers:
-            df, _ = fetch_and_prepare_data(t, req.period, "1d")
+            df = fetch_and_prepare_data(t, req.period, "1d")
             returns_dict[t] = df['Close'].pct_change().dropna()
         
         returns_df = pd.DataFrame(returns_dict).dropna()
@@ -1557,7 +1580,7 @@ class DeflatedSharpeRequest(BaseModel):
 @app.post("/api/metrics/dsr")
 def calculate_deflated_sharpe(req: DeflatedSharpeRequest):
     try:
-        df, _ = fetch_and_prepare_data(req.ticker, req.period, "1d")
+        df = fetch_and_prepare_data(req.ticker, req.period, "1d")
         returns = df['Close'].pct_change().dropna().values
         
         engine = AdvancedMetricsEngine()
