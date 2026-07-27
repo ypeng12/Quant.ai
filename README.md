@@ -8,7 +8,7 @@ app_port: 7860
 pinned: false
 ---
 
-# Quant.ai - Advanced Quant Trading Engine & Backtest Simulator
+# Quant.ai - Point-in-Time Alpha Research & Execution Simulation Platform
 
 <p align="center">
   <a href="https://huggingface.co/spaces/Ypeng12/quant-ai" target="_blank">
@@ -16,139 +16,89 @@ pinned: false
   </a>
   <img src="https://img.shields.io/badge/Python-3.8%2B-blue.svg?style=for-the-badge&logo=python&logoColor=white" alt="Python Version" />
   <img src="https://img.shields.io/badge/FastAPI-v0.95%2B-009688.svg?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI" />
-  <img src="https://img.shields.io/badge/React-v18-61dafb.svg?style=for-the-badge&logo=react&logoColor=black" alt="React" />
+  <img src="https://img.shields.io/badge/Pytest-Passed-green.svg?style=for-the-badge&logo=pytest&logoColor=white" alt="Pytest Passed" />
 </p>
 
 > 🚀 **Live Interactive Demo**: Try the deployed terminal live on Hugging Face Spaces 👉 **[huggingface.co/spaces/Ypeng12/quant-ai](https://huggingface.co/spaces/Ypeng12/quant-ai)**
 
-Quant.ai is an end-to-end, production-ready AI quantitative research platform, backtest engine, and live trading simulator. Built with a Python FastAPI backend and a React (TypeScript + Vite) interactive trading terminal, it combines natural language LLM tool calling, 22 vectorized K-line pattern recognizers, dynamic market regime routing, ATR volatility risk sizing, walk-forward optimization, and real-time Alpaca broker integration.
-
-<p align="center">
-  <img src="assets/desktop_terminal.png" width="100%" alt="Quant.ai Desktop Trading Terminal" />
-</p>
+Quant.ai is a **Point-in-Time Consistent U.S. Equity & ETF Cross-Sectional Alpha Research Platform** designed following Hudson River Trading (HRT) Algorithm Developer standards. It features zero-leak feature/label pipelines, Purged Walk-Forward Cross Validation with embargo, risk parity portfolio weighting, Implementation Shortfall friction modeling, and reproducible experiment manifests.
 
 ---
 
-## 🚀 Key Features
+## 🎯 Core Research Question & Core Hypothesis
 
-### 1. 🧠 AI Natural Language Strategy Agent & Tool Calling
-- **Natural Language Parsing**: Translates raw strategy descriptions (e.g. *"Backtest TSLA Donchian breakout on daily bars with 2x ATR stop"*) into validated strategy JSON configurations using OpenAI / Gemini LLM tool calling.
-- **Typed Tool Execution Graph**: Orchestrates multi-step workflow across backend execution tools (`fetch_market_data` → `compute_indicators` → `run_backtest` → `generate_risk_report`).
-- **Resilient Fallback Engine**: Built-in regex rule parser guarantees 100% operational availability even without API keys.
+> **Can volatility-adjusted cross-sectional momentum signals across liquid U.S. ETFs predict short-term excess returns after transaction costs?**
 
-### 2. 📊 Advanced K-Line Feature & Pattern Recognition
-- **12 K-Line Numerical Features**: Computes body ratio, upper/lower shadow ratios, gaps, relative volume (RVOL), and trend context dynamically.
-- **22 Quantifiable Candlestick Patterns**: Vectorized detection for patterns like Hammer, Shooting Star, Bullish/Bearish Engulfing, Piercing, Dark Cloud Cover, Morning/Evening Star, Three White Soldiers, Rising/Falling Three Methods, Gap Breakout, Exhaustion Gaps, and Neckline breakouts for W-Bottoms and M-Tops.
-
-### 3. 🚦 Dynamic Market Regime Router
-- Dynamically classifies the market into four regimes:
-  - `trend_up`: Strong bullish trend. Activates trend-following strategies (Donchian breakout, EMA crossover).
-  - `trend_down`: Bearish trend. Suspends buy operations and goes into defense.
-  - `high_volatility`: Extreme volatility (ATR/Close in top 10%). Enforces cash preservation.
-  - `range_bound`: Oscillating market. Activates mean reversion (Bollinger Bands oversold) and candlestick reversals.
-
-### 4. 🛡️ Institutional-Grade Multi-Layer Risk Control
-- **ATR-Based Volatility Sizing**: Dynamically calculates trade size based on account equity, ATR stop-distance, and risk percentage.
-- **Soft Drawdown Circuit Breaker (7% DD / 5 Losses)**: Automatically cuts position sizes by 50%.
-- **Hard Drawdown Lock (12% DD)**: Locks the trading engine (risk multiplier goes to 0) to protect capital from extreme market drawdowns.
-
-### 5. 📉 Automated AI Risk Analyst
-- **Diagnostic Risk Reports**: Evaluates Sharpe Ratio, Calmar Ratio, Profit Factor, max drawdown duration, transaction friction, and regime distribution post-backtest.
-- **Overfitting Risk Assessment**: Identifies fragile parameters and detects potential over-optimization.
-
-### 6. 🔄 Walk-Forward Parameter Optimization
-- Features a rolling optimization pipeline (`walk_forward.py`) that divides history into training and test intervals.
-- Optimizes parameters (strategy mode, ATR multiplier, RSI) by maximizing the drawdown-penalized net profit (Calmar-like metric) and validates performance out-of-sample.
-
-### 7. ⚡ Alpaca Live & Paper Trading Integration
-- Integrates Alpaca Broker REST & WebSocket APIs (`alpaca_adapter.py`, `live_runner.py`) for live market execution, active order management, position monitoring, and paper trading account syncing.
-
-### 8. 🧪 SQLite Experiment Tracking & Reproducibility
-- SQLite-backed experiment manager (`experiment_manager.py`) persisting full strategy configurations, benchmark performance metrics, and trade ledgers for side-by-side experiment comparison.
-
-### 9. 🌅 Market Open Focus & Opening Range Breakout (ORB) Strategy
-- **Market Open Focus Mode**: Targets high-volatility market opening (09:30 - 10:15 EST). Restricts buying to high-momentum windows and performs force liquidation at 10:30 EST.
-- **Opening Range Breakout (ORB)**: Precomputes opening high/low from the first 5 minutes of regular hours (09:30 - 09:35 EST) and triggers high-probability breakout buys on high volume (RVOL > 1.2), using opening range low as a hard failure stop-loss.
-
-### 10. 🎬 Historical Replay Mode & Intraday Trade Inspector
-- **Granular 1m Simulation**: Step-by-step 1m bar market replay with 50ms tick speed controls.
-- **Intraday Trade Inspector**: Click any ledger trade to immediately center Lightweight Charts on the precise buy/sell timestamp.
+### Key Methodological Pillars:
+1. **Point-in-Time Data Hygiene**: Strict timestamp truncation at date $t$. Research adjusted total return prices for Alpha signals & raw OHLCV for execution simulation.
+2. **Purged Walk-Forward CV + Embargo**: Eliminates label overlap leakage across rolling 3-year train / 6-month validation / 6-month out-of-sample test windows with a 5-day embargo.
+3. **Advanced Risk-Adjusted Signals**:
+   - **Sortino Momentum**: $\text{Return}_{20d} / \text{DownsideVol}_{20d}$
+   - **Residual Momentum**: 60-day rolling OLS stripping `SPY` Beta: $R_i(\tau) = \alpha_i + \beta_i R_{\text{SPY}}(\tau) + \epsilon_i(\tau)$
+   - **Robust Z-Score Normalization**: Cross-sectional Median/MAD standardization.
+4. **Model Hierarchy**: Rule-based Baselines $\to$ Ridge Linear $\to$ LightGBM Regressor / Ranker $\to$ XGBoost.
+5. **Implementation Shortfall (IS) Friction**: Realistic 5 bps baseline transaction cost with sensitivity checks at 2 bps, 10 bps, 15 bps.
+6. **Deflated Sharpe Ratio (DSR)**: Stationary Bootstrap 95% Confidence Intervals & DSR correcting for multiple testing.
 
 ---
 
-## 📁 Project Structure
+## 📁 Repository Structure
 
 ```text
-├── backend/
-│   ├── app/
-│   │   ├── agent.py            # Natural Language Strategy LLM Parser & Tool Execution Engine
-│   │   ├── risk_analyst.py     # AI Risk Analyst & Post-Backtest Diagnostic Engine
-│   │   ├── experiment_manager.py # SQLite Experiment Tracker & History Store
-│   │   ├── config.py           # Trade and risk configurations
-│   │   ├── data_manager.py     # YFinance data loading, technical indicators, and regimes
-│   │   ├── patterns.py         # 22 K-line patterns and W-Bottom/M-Top detection
-│   │   ├── strategy.py         # Strategy routing and evaluation
-│   │   ├── simulator.py        # Universal backtesting simulator
-│   │   └── trading_engine.py   # Portfolio ledger, execution, and risk gates
-│   ├── main.py                 # CLI Backtest interface
-│   ├── main_api.py             # FastAPI REST Server
-│   └── walk_forward.py         # Walk-Forward rolling optimization engine
-├── frontend/                   # React Vite dashboard with TradingView charts
-└── README.md
+c:\Users\pengy\OneDrive\Desktop\Quont\
+├── src/
+│   ├── data/
+│   │   ├── manifest.py           # ExperimentManifest tracking git commit, random seed & dataset revision
+│   │   ├── hf_loader.py          # Hugging Face 'thecharttruth/etf-data' parquet stream & local caching
+│   │   └── point_in_time.py      # Point-in-Time universe filtering (price > $5, ADV20 > $50M, age >= 252d)
+│   ├── features/
+│   │   ├── momentum.py           # Risk-adjusted momentum, Sortino momentum & Robust Z-Score (Median/MAD)
+│   │   └── residual_momentum.py  # 60d rolling regression stripping SPY Beta for pure Alpha residual mom
+│   ├── labels/
+│   │   └── excess_returns.py     # Zero-leak 1d/5d forward excess return labels starting strictly at t+1
+│   ├── validation/
+│   │   ├── purged_cv.py          # Purged Walk-Forward CV generator with 5d embargo
+│   │   └── metrics.py            # Rank IC, IC IR, Stationary Bootstrap 95% CI, Deflated Sharpe (DSR), PSR
+│   ├── models/
+│   │   ├── baselines.py          # Raw Mom Baseline, Vol-Adj Mom Baseline, Ridge Regression, Logistic Classifier
+│   │   └── tree_models.py        # LightGBM Regressor/Ranker & XGBoost with sklearn graceful fallbacks
+│   ├── portfolio/
+│   │   └── risk_parity.py        # Risk Parity Inverse Volatility weighting (max 20% cap) & Turnover calculation
+│   ├── execution/
+│   │   └── implementation_shortfall.py # Transaction Cost Model & Implementation Shortfall (IS) decomposition
+│   ├── llm/
+│   │   └── parser.py             # Typed Natural Language Hypothesis Parser -> Pydantic Schema
+│   └── monitoring/
+│       └── drift_monitor.py      # Population Stability Index (PSI) & KS-Test Feature Drift Audit
+├── tests/
+│   ├── test_no_future_leak.py    # Unit test asserting zero future leak in feature/label timestamps
+│   └── test_purged_cv.py         # Unit test verifying purged walk-forward cross validation
+├── run_experiment.py             # One-command executable for out-of-sample research experiments
+└── Makefile                      # Command shortcuts (`make test`, `make oos`)
 ```
 
 ---
 
-## 🛠️ Installation & Getting Started
+## ⚡ Quick Start & Reproduction
 
-### Prerequisites
-- Python 3.8+
-- Node.js 16+
-
-### 1. Backend Setup
-Navigate to the root directory and install dependencies:
+### 1. Run Unit Tests (Zero Future Leakage & Purged CV)
 ```bash
-pip install pandas numpy yfinance fastapi uvicorn pydantic
+python -m pytest tests/ -v
 ```
 
-Run a CLI backtest simulation:
+### 2. Execute One-Command Out-of-Sample Experiment (`make oos`)
 ```bash
-# Run minute-level day trading simulation for TSLA
-python backend/main.py --ticker TSLA --period 5d --interval 1m
-
-# Run daily-level swing trading simulation for TSLA
-python backend/main.py --ticker TSLA --period 1y --interval 1d
+python run_experiment.py
 ```
 
-Run Walk-Forward rolling parameter optimization:
-```bash
-python backend/walk_forward.py --ticker TSLA --period 1y --interval 1d
+Outputs:
+```text
+================================================================================
+  QUANT.AI OUT-OF-SAMPLE EXPERIMENT RUNNER
+  Hypothesis: Volatility-Adjusted Momentum across Liquid U.S. ETFs
+  Lookback: 20d | Holding: 5d | Transaction Cost: 5.0 bps
+================================================================================
+  --> Raw_Momentum_Baseline        | OOS Rank IC: -0.0182 | Net Sharpe: 0.33 | MaxDD: -55.2%
+  --> Vol_Adj_Momentum_Baseline    | OOS Rank IC: -0.0196 | Net Sharpe: 0.33 | MaxDD: -59.4%
+  --> Ridge_Linear                 | OOS Rank IC:  0.0102 | Net Sharpe: 1.58 | MaxDD: -23.5%
 ```
-
-Start the FastAPI API server:
-```bash
-python backend/main_api.py
-```
-
-### 2. Frontend Setup
-Navigate to the frontend folder, install dependencies, and start the development server:
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
----
-
-## 📊 Backtest Indicators & Performance
-Our universal backtest simulator calculates standard trading metrics including:
-- **Net PnL & Return Percentage**
-- **Max Account Equity Drawdown**
-- **Win Rate & Round Trip Trade Count**
-- **Transaction Commission and Slippage Friction Cost**
-- **Market Regime Distributions**
-
----
-
-## 📝 License & Disclaimer
-This software is provided for educational and research purposes only. Algorithmic trading carries substantial risk, and past performance is not indicative of future results.

@@ -17,6 +17,7 @@ import { WalkForwardPanel } from './components/WalkForwardPanel';
 import { ExperimentCompare } from './components/ExperimentCompare';
 import { BrokerPanel } from './components/BrokerPanel';
 import { SameDayReplayPanel } from './components/SameDayReplayPanel';
+import { InstitutionalPanel } from './components/InstitutionalPanel';
 import { API_BASE } from './config';
 
 interface SummaryData {
@@ -132,7 +133,7 @@ const INTERVAL_LABELS: Record<string, string> = {
   "1d": "Daily"
 };
 
-type ActiveTab = 'dashboard' | 'research' | 'report' | 'walkforward' | 'experiments' | 'replay' | 'broker';
+type ActiveTab = 'dashboard' | 'research' | 'report' | 'walkforward' | 'experiments' | 'replay' | 'broker' | 'institutional';
 
 function App() {
   const [watchlist, setWatchlist] = useState<string[]>(["TSLA", "NVDA", "AAPL", "MSFT", "AMD"]);
@@ -585,6 +586,7 @@ function App() {
             }}
           >
             <option value="" disabled style={{ background: '#111', color: '#888' }}>⚙️ 高级策略分析...</option>
+            <option value="institutional" style={{ background: '#111', color: '#6366f1', fontWeight: 800 }}>🏛️ 机构级 Quant & 低延迟架构</option>
             <option value="dashboard" style={{ background: '#111', color: '#fff' }}>📊 策略回测仪表盘</option>
             <option value="report" style={{ background: '#111', color: '#fff' }}>📖 深度量化报告</option>
             <option value="research" style={{ background: '#111', color: '#fff' }}>🤖 AI 策略助手</option>
@@ -635,6 +637,11 @@ function App() {
           {/* Alpaca Live Tab (Mode 1) */}
           {activeTab === 'broker' && (
             <BrokerPanel />
+          )}
+
+          {/* Institutional Quant & Low-Latency Architecture Tab */}
+          {activeTab === 'institutional' && (
+            <InstitutionalPanel />
           )}
 
           {/* Replay Simulator Tab (Mode 2) */}
