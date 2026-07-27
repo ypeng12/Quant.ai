@@ -533,7 +533,26 @@ function App() {
         </div>
         
         {/* Simplified Two Core Modes Navigation */}
-        <div className="nav-tabs" style={{ background: '#09090b', padding: '4px', borderRadius: '8px', border: '1px solid var(--color-border)' }}>
+        <div className="nav-tabs" style={{ background: '#09090b', padding: '4px', borderRadius: '8px', border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <button
+            className={`nav-tab ${activeTab === 'institutional' ? 'active' : ''}`}
+            onClick={() => setActiveTab('institutional')}
+            style={{
+              padding: '8px 18px',
+              fontSize: '0.9rem',
+              fontWeight: 800,
+              background: activeTab === 'institutional' ? 'linear-gradient(135deg, #d97706, #b45309)' : 'transparent',
+              color: activeTab === 'institutional' ? '#ffffff' : '#fbbf24',
+              borderRadius: '6px',
+              border: activeTab === 'institutional' ? 'none' : '1px solid rgba(245, 158, 11, 0.4)',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              boxShadow: activeTab === 'institutional' ? '0 0 12px rgba(245, 158, 11, 0.4)' : 'none'
+            }}
+          >
+            🏆 HRT Alpha 实验室
+          </button>
+
           <button
             className={`nav-tab ${activeTab === 'broker' ? 'active' : ''}`}
             onClick={() => setActiveTab('broker')}
@@ -549,8 +568,9 @@ function App() {
               transition: 'all 0.2s ease'
             }}
           >
-            ⚡ 模式一：Alpaca 实盘托管
+            ⚡ Alpaca 实盘/模拟盘
           </button>
+
           <button
             className={`nav-tab ${activeTab === 'replay' ? 'active' : ''}`}
             onClick={() => setActiveTab('replay')}
@@ -566,7 +586,7 @@ function App() {
               transition: 'all 0.2s ease'
             }}
           >
-            📈 模式二：同天历史复盘
+            📈 同天历史复盘
           </button>
 
           {/* Optional Advanced Tools */}
