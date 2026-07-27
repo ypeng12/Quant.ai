@@ -1482,6 +1482,29 @@ def get_today_summary():
     return {"success": True, "summary": summary}
 
 
+@app.get("/api/live/analysis_feed")
+def get_analysis_feed(limit: int = 80):
+    """
+    Returns the most recent per-ticker analysis snapshots from the live runner logs.
+    Filters to only show meaningful analysis entries (trend, VWAP, RSI, alerts, decisions)
+    — excludes generic scan announcements.
+    """
+    # Keep entries that contain actual analysis content (contain ticker symbol pattern + indicators)
+    skip_prefixes = ["📡 [", "📥 检测", "⚠️ 无法", "🔍 [", "💤 ", "Background"]
+    analysis_logs = [
+        log for log in live_runner.logs
+        if not any(log[log.find(']')+1:].strip().startswith(p.strip('[]📡📥⚠️🔍💤')) 
+                   or any(log.startswith(p[:3]) and p[3:] in log for p in skip_prefixes)
+                   for p in skip_prefixes)
+        and ("VWAP" in log or "EMA" in log or "RSI" in log or "触发" in log or "平仓" in log)
+    ]
+    return {
+        "success": True, 
+        "logs": list(reversed(analysis_logs[-limit:])),
+        "count": len(analysis_logs)
+    }
+
+
 # =========================================================================
 # 🏛️ INSTITUTIONAL QUANT ENGINE ENDPOINTS (Jane Street / Citadel Standards)
 # =========================================================================
