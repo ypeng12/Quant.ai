@@ -662,7 +662,7 @@ function App() {
 
           {/* Alpaca Live Tab (Mode 1) */}
           {activeTab === 'broker' && (
-            <BrokerPanel />
+            <BrokerPanel watchlist={watchlist} />
           )}
 
           {/* Institutional Quant & Low-Latency Architecture Tab */}

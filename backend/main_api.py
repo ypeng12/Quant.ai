@@ -50,7 +50,11 @@ from app.broker.live_runner import LiveTradingRunner
 
 class LiveStartRequest(BaseModel):
     params: Optional[dict] = None
+    tickers: Optional[List[str]] = None
     ignore_market_hours: Optional[bool] = True
+
+class WatchlistSyncRequest(BaseModel):
+    tickers: List[str]
 
 app = FastAPI(title="Quant.ai API Server")
 
@@ -1414,8 +1418,18 @@ def get_broker_positions():
 
 @app.post("/api/live/start")
 def start_live_trading(req: LiveStartRequest):
-    success = live_runner.start(strategy_params=req.params, ignore_market_hours=req.ignore_market_hours)
+    success = live_runner.start(
+        strategy_params=req.params, 
+        tickers=req.tickers,
+        ignore_market_hours=req.ignore_market_hours
+    )
     return {"success": success, "status": live_runner.get_status()}
+
+
+@app.post("/api/live/watchlist/sync")
+def sync_watchlist(req: WatchlistSyncRequest):
+    live_runner.update_tickers(req.tickers)
+    return {"success": True, "active_tickers": live_runner.active_tickers}
 
 
 @app.post("/api/live/stop")
