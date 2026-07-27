@@ -34,6 +34,16 @@ from app.llm_client import get_usage_stats as llm_get_usage
 from app.data_cache import get_cache_stats, invalidate_cache
 from app.experiment_manager import list_experiments, save_experiment, get_experiment, delete_experiment, compare_experiments
 from app.risk_analyst import generate_risk_report
+from app.execution_algo import ExecutionAlgoEngine
+from app.stat_arb import StatArbEngine
+from app.event_alpha import EventAlphaEngine
+from app.portfolio_optimizer import PortfolioOptimizer
+from app.advanced_metrics import AdvancedMetricsEngine
+from app.udp_market_feed import run_udp_feed_demo
+from app.tcp_order_gateway import run_tcp_gateway_demo
+from app.low_latency_engine import run_memory_profiling_benchmark
+from app.orderbook_ofi import OrderFlowImbalanceEngine
+from app.multi_asset_simulator import MultiAssetPortfolioSimulator
 import time
 
 from app.broker.live_runner import LiveTradingRunner
@@ -1374,6 +1384,185 @@ def close_all_positions():
         res = adapter.close_all_positions()
         live_runner.add_log("🚨 用户手动触发：一键紧急平仓所有持仓！")
         return res
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
+# =========================================================================
+# 🏛️ INSTITUTIONAL QUANT ENGINE ENDPOINTS (Jane Street / Citadel Standards)
+# =========================================================================
+
+class OptimalExecutionRequest(BaseModel):
+    total_shares: int = 100000
+    num_intervals: int = 10
+    daily_volatility: float = 0.02
+    avg_daily_volume: float = 5000000.0
+    risk_aversion_lambda: float = 1e-5
+    current_price: float = 150.0
+
+@app.post("/api/optimal-execution/simulate")
+def simulate_optimal_execution(req: OptimalExecutionRequest):
+    try:
+        algo = ExecutionAlgoEngine(
+            daily_volatility=req.daily_volatility,
+            avg_daily_volume=req.avg_daily_volume
+        )
+        twap = algo.generate_twap_schedule(req.total_shares, req.num_intervals)
+        vwap = algo.generate_vwap_schedule(req.total_shares)
+        x_traj, n_trades, expected_cost = algo.almgren_chriss_optimal_trajectory(
+            total_shares=req.total_shares,
+            total_time_intervals=req.num_intervals,
+            risk_aversion_lambda=req.risk_aversion_lambda
+        )
+        temp_i, perm_i = algo.square_root_market_impact(
+            trade_size=req.total_shares // req.num_intervals,
+            current_price=req.current_price
+        )
+        return {
+            "success": True,
+            "twap_schedule": twap,
+            "vwap_schedule": vwap,
+            "almgren_chriss_trades": n_trades.tolist(),
+            "almgren_chriss_inventory": x_traj.tolist(),
+            "expected_implementation_shortfall_cost": expected_cost,
+            "temporary_impact_per_share": temp_i,
+            "permanent_impact_per_share": perm_i
+        }
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
+class StatArbRequest(BaseModel):
+    ticker_y: str = "KO"
+    ticker_x: str = "PEP"
+    period: str = "1y"
+    z_entry: float = 2.0
+    z_exit: float = 0.5
+
+@app.post("/api/stat-arb/run")
+def run_stat_arb(req: StatArbRequest):
+    try:
+        df_y, _ = fetch_and_prepare_data(req.ticker_y, req.period, "1d")
+        df_x, _ = fetch_and_prepare_data(req.ticker_x, req.period, "1d")
+        
+        engine = StatArbEngine(z_entry_threshold=req.z_entry, z_exit_threshold=req.z_exit)
+        res = engine.backtest_pairs(df_y, df_x, req.ticker_y, req.ticker_x)
+        return {"success": True, "result": res}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
+class PortfolioOptimizeRequest(BaseModel):
+    tickers: list = ["AAPL", "MSFT", "TSLA", "NVDA", "AMZN"]
+    period: str = "1y"
+
+@app.post("/api/portfolio/optimize")
+def optimize_portfolio(req: PortfolioOptimizeRequest):
+    try:
+        returns_dict = {}
+        for t in req.tickers:
+            df, _ = fetch_and_prepare_data(t, req.period, "1d")
+            returns_dict[t] = df['Close'].pct_change().dropna()
+        
+        returns_df = pd.DataFrame(returns_dict).dropna()
+        opt = PortfolioOptimizer()
+        erc_w = opt.optimize_risk_parity(returns_df)
+        mvo_w = opt.optimize_max_sharpe(returns_df)
+        
+        return {
+            "success": True,
+            "risk_parity_erc_weights": erc_w,
+            "max_sharpe_mvo_weights": mvo_w
+        }
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
+class DeflatedSharpeRequest(BaseModel):
+    ticker: str = "TSLA"
+    period: str = "1y"
+    num_trials: int = 50
+
+@app.post("/api/metrics/dsr")
+def calculate_deflated_sharpe(req: DeflatedSharpeRequest):
+    try:
+        df, _ = fetch_and_prepare_data(req.ticker, req.period, "1d")
+        returns = df['Close'].pct_change().dropna().values
+        
+        engine = AdvancedMetricsEngine()
+        dsr_res = engine.deflated_sharpe_ratio(returns, num_trials=req.num_trials)
+        return {"success": True, "result": dsr_res}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
+# =========================================================================
+# ⚡ LOW-LATENCY SOCKET PROGRAMMING & MEMORY POOL ENDPOINTS
+# =========================================================================
+
+@app.post("/api/low-latency/udp-feed")
+def trigger_udp_feed_demo(num_packets: int = 50):
+    try:
+        res = run_udp_feed_demo(num_packets=num_packets)
+        return {"success": True, "result": res}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
+@app.post("/api/low-latency/tcp-gateway")
+def trigger_tcp_gateway_demo():
+    try:
+        res = run_tcp_gateway_demo()
+        return {"success": True, "result": res}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
+@app.post("/api/low-latency/benchmark")
+def trigger_memory_profiling_benchmark(num_events: int = 500000):
+    try:
+        res = run_memory_profiling_benchmark(num_events=num_events)
+        return {"success": True, "result": res}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
+@app.post("/api/orderbook/ofi")
+def calculate_orderbook_ofi():
+    try:
+        np.random.seed(42)
+        n_ticks = 50
+        mid_prices = 150.0 + np.cumsum(np.random.normal(0, 0.02, n_ticks))
+        spreads = np.random.choice([0.01, 0.02], size=n_ticks)
+        bids = np.round(mid_prices - spreads / 2.0, 2)
+        asks = np.round(mid_prices + spreads / 2.0, 2)
+        bid_vols = np.random.randint(100, 2000, n_ticks).astype(float)
+        ask_vols = np.random.randint(100, 2000, n_ticks).astype(float)
+
+        df_l2 = pd.DataFrame({'bid_price': bids, 'bid_vol': bid_vols, 'ask_price': asks, 'ask_vol': ask_vols})
+        engine = OrderFlowImbalanceEngine(ofi_lookback=10)
+        res_df = engine.calculate_ofi_series(df_l2)
+        return {"success": True, "result": res_df.tail(20).to_dict(orient="records")}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
+class MultiAssetBacktestRequest(BaseModel):
+    tickers: list = ["AAPL", "MSFT", "TSLA", "NVDA", "AMZN"]
+    period: str = "1y"
+    top_n: int = 3
+
+@app.post("/api/portfolio/backtest-multi")
+def backtest_multi_asset_portfolio(req: MultiAssetBacktestRequest):
+    try:
+        universe_dict = {}
+        for t in req.tickers:
+            df, _ = fetch_and_prepare_data(t, req.period, "1d")
+            universe_dict[t] = df
+        
+        sim = MultiAssetPortfolioSimulator(top_n_select=req.top_n)
+        res = sim.run_portfolio_backtest(universe_dict)
+        return {"success": True, "result": res}
     except Exception as e:
         return {"success": False, "error": str(e)}
 

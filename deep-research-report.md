@@ -1,620 +1,724 @@
-# 日线为主的全自动炒股软件开发分析报告
+# Quant.ai 的 10/10 HRT 风格 Algorithm Developer 实施蓝图
 
 ## 执行摘要
 
-你的目标是做一套“以日线为主、手工式交易风格、但完全自动执行”的股票交易系统，并把目标表达为**长期平均每天净赚 500 美元**。从系统工程角度看，这个目标可以被拆成三个问题：一是是否存在**长期正期望**；二是资金规模能否把这个期望放大到 500 美元/日；三是系统是否能在**回测—模拟盘—实盘**迁移过程中不被交易成本、执行偏差、制度约束和过拟合吞噬。学术和工程证据都支持“趋势、动量、短期反转、配对/相对价值”这些策略族在特定市场与样本下曾经有效，但也同时显示，参数搜索、样本内挑选和数据窥探会显著放大虚假优势，因此回测与上线治理和策略本身同等重要。citeturn12search8turn12search5turn12search6turn14search0turn13search3turn15search0turn15search1
+这份方案把 Quant.ai 明确定位为一个**点位时间一致的美股横截面 Alpha 研究与执行仿真平台**，目标不是做“会说股票故事的 AI App”，而是做一套能经得住 HRT 风格追问的研究系统：它要能在**当时可获得的数据**上构造特征，预测**未来 1 日与 5 日的相对收益/排名**，用**purged + embargoed** 的时间序列验证框架做样本外测试，再把目标仓位交给**已有 C++ LOB / market replay 引擎**去估算成交、滑点、实现短缺和回测到实盘的落差。HRT 官方对 Algorithm Developer 的描述，本质上就是“用数学、统计、数据分析和 C++/Python 去构建和改进驱动交易的模型”，并在研究与交易基础设施上迭代；其学生项目页也明确把该岗位定义为对大量市场数据做严谨统计分析并产出预测交易模型。citeturn23search2turn23search3
 
-如果把“平均每天净赚 500 美元”近似成“每年净赚 12.5 万美元”，那么**资金规模**几乎决定了目标的现实性。按近似计算，本金 5 万美元对应约 250% 年化净收益目标，本金 10 万美元对应约 125%，本金 25 万美元对应约 50%，本金 50 万美元对应约 25%，本金 100 万美元对应约 12.5%。前两档对日线股票系统通常过于激进；25 万美元以上仍然困难，但开始进入“可以通过多策略、严格风控、稳定执行去争取”的区间；50 万到 100 万美元更符合“日线主导、低频执行、追求稳健”的现实路径。这个结论不代表保证收益，而是提醒你：**目标收益最终必须和本金、容忍回撤、杠杆、交易品种与可做空能力一起设计**。
+如果只保留一个核心设计原则，应当是：**研究层用调整后、点位时间一致的数据；执行层用原始 trades/quotes/LOB 与企业行为流单独处理。** Alpaca 的股票 bars 接口支持按 `asof` 日期查询符号，并支持 `raw`、`split`、`dividend`、`spin-off`、`all` 等多种调整方式；其独立 corporate actions 接口也能按时间段取回企业行为。与此同时，Alpaca 明确提示 symbol/CUSIP 可能变化、资产主数据会每日刷新；这些都意味着“今天的股票池”和“历史上当时可见的股票池”不能混为一谈。citeturn8search15turn8search0turn16search19
 
-本报告的核心结论有四条。第一，**K 线形态不要直接当“神谕”**，应当把 K 线拆解为可度量特征，例如实体占比、上下影线、缺口、趋势上下文、量能确认，再与指标和风险规则组合使用。第二，针对“日线为主”的软件，最值得优先编码的不是几十个花式模型，而是三组主策略：**趋势/突破、低 ADX 环境下的均值回归、以及带市场过滤的波段/动量**。第三，任何参数建议都只能作为**起始网格**，不能把“历史最优点”直接上线；你必须做样本外检验、滚动回测、Walk-forward、PBO/DSR 检测和成本压力测试。第四，实盘成功与否，往往不是因为指标公式，反而是因为**数据口径、除权复权、交易日历、回报对账、异常告警、回滚机制和合规边界**是否处理完整。citeturn15search0turn15search1turn15search18turn30search4turn21view1
+从工程优先级看，最重要的不是花哨模型，而是**数据真、标签干净、验证严、执行成本可信、实验可复现**。经典研究已经反复说明：动量效应在横截面上长期存在，但金融回测极易因为多重试验、选择偏差、幸存者偏差和时间泄漏而夸大结果；Brown 等关于 survivorship bias 的研究与 Bailey、López de Prado 关于 Deflated Sharpe Ratio 的论文，正是这一风险的典型提醒。对 Quant.ai 来说，最有价值的成果不是“训练出一个很高的 Sharpe”，而是“建立一套能证明 Sharpe 没被高估的流程”。citeturn15view4turn20view1turn14view2
 
-从开发优先级看，我建议你按以下顺序落地：先做**单市场、单币种、单边做多**版本；先上**一到两个可解释策略**，而不是“全家桶”；先做**严格风控与回测框架**，再堆叠指标；最后再扩到配对交易、指数对冲和日内/日线混合执行。对于股票现货，制度差异也非常关键：A 股普通股票存在“买入证券在交收前不得卖出，除非属于当日回转交易品种”的约束，而上交所、深交所又对程序化交易设有报告和管理规则；美股则有 9:30–16:00 ET 常规交易时段、保证金和日内保证金要求、税务申报和数据订阅限制。你的架构必须从一开始就把这些差异做成**市场适配层**，而不是写死在策略内部。citeturn43search5turn25view1turn19view10turn41search2turn41search4turn16search0
+因此，最终推荐的里程碑是：**用 7 周做出一个可复现、可审计、可 paper-trade 的版本**。它的最小可交付结果应包括：一个点位时间数据仓、横截面特征与标签流水线、walk-forward + purge/embargo 验证器、至少四类模型基线、组合与成本模型、与 C++ 执行引擎的联调、每日 paper-trading、Rank IC/校准/漂移监控，以及一条命令可以重跑完整 OOS 实验的工程骨架。Alpaca 的 historical bars / trades / quotes、market calendar、paper trading 与 order/event API，加上 Hugging Face 的可版本化数据加载与 `revision` 固定、DVC 的数据版本控制、GitHub Actions 的 Python CI，已经足够支持这条路线。citeturn8search15turn8search17turn16search6turn11search5turn11search13turn10search0turn9search1turn9search2
 
-## 关键目标与约束
+下表给出整套系统的实施优先级。
 
-下表把你已经明确和“未指定”的项目，转成开发规格。
+| 模块 | 目标 | 优先级 | 为什么 |
+|---|---|---:|---|
+| 点位时间数据层 | 解决漏未来、企业行为、股票池漂移、版本固定 | P0 | 数据错，后面全错 |
+| 标签与验证 | 保证 OOS 可信，控制过拟合 | P0 | 决定项目是否“研究级” |
+| Baseline + 线性/树/排序模型 | 建立逐层可解释的研究阶梯 | P0 | 面试最常追问这里 |
+| 组合与成本模型 | 把预测变成可执行收益 | P0 | “能不能赚”不等于“能不能成交” |
+| C++ 执行仿真联调 | 区分信号收益与执行收益 | P1 | 这是你区别于普通项目的关键 |
+| 监控与 paper trading | 建立 backtest-to-live 反馈闭环 | P1 | HRT 风格项目必须有 |
+| LLM 配置与解释层 | 限定在结构化配置与解释，不直接下单 | P2 | 加分项，不应喧宾夺主 |
 
-| 项目 | 当前状态 | 工程含义 |
+这套优先级来自 HRT 岗位要求、Alpaca/交易数据接口能力、以及金融机器学习中对验证严谨性的核心要求。citeturn23search3turn8search15turn11search13turn14view2turn2search20
+
+## 项目边界与关键假设
+
+这份方案默认把 Quant.ai 做成**中低频、收盘后生成次日计划、持有 1 到 5 个交易日**的美股研究系统，而不是高频做市系统。这样做的原因很现实：HRT 风格项目强调“预测 + 执行 + 统计严谨性”，但你当前最强的可实现组合，是**日频/分钟级研究 + 分钟到盘口级执行仿真**，而不是直接追逐纳秒级生产撮合。Nasdaq TotalView-ITCH 和 NYSE Integrated Feed 的官方文档都说明，直接交易所 feed 可以提供逐笔/逐订单深度与有序事件流，但那类数据和基础设施成本很高，更适合作为执行层和少量样本日的 replay，而非第一版全量研究数据。citeturn14view0turn14view1
+
+默认假设如下表所示。
+
+| 假设项 | 建议默认值 | 说明 |
 |---|---|---|
-| 目标收益 | 平均每天净赚 500 美元 | 必须把目标分解为：日均净值增长目标、最大可接受回撤、所需资金规模、策略容量 |
-| 风险容忍度 | 未指定 | 不能直接给仓位上限；默认应从保守值开始，例如单笔风险 0.25%–0.75% 权益 |
-| 交易品种 | 未指定 | 代码必须做市场抽象层：A 股/美股/ETF/指数 ETF/可转债/港股各自交易规则不同 |
-| 资金规模 | 未指定 | 决定目标收益可行性，也决定是否需要杠杆、是否需要多策略并行 |
-| 是否允许杠杆 | 未指定 | 必须把杠杆开关、融资利率、保证金规则、强平逻辑写成配置项 |
-| 交易时段 | 日线为主 | 信号主周期建议为日线；下单可选择收盘、次日开盘、次日 VWAP、条件单或分批执行 |
+| 交易对象 | 150–300 只高流动性美股 + 少量行业 ETF | 例如 S&P 100、Nasdaq 100 去重后，再加 SPY/QQQ/XLK/SMH 等 |
+| 预测频率 | 每个交易日收盘后 | 以 close\_t 构造特征，next open 执行 |
+| 预测目标 | 未来 1 日、5 日相对收益/排名 | 对市场或行业基准做超额收益 |
+| 执行起点 | `t+1` 开盘或 `t+1` 首个可交易 bar/mid | 明确引入一天行动滞后 |
+| 模型形态 | baseline → 线性/逻辑 → GBDT → 排序模型 | 先简单后复杂 |
+| 实盘阶段 | 仅 paper trading + tiny live gate | 第一版不自动大规模实单 |
+| LLM 权限 | 生成结构化配置、解释结果、总结失败 | 禁止直接决定实时仓位或绕过风险门 |
 
-如果你做的是**A 股普通股票**，上交所现行规则明确，投资者买入的证券在交收前不得卖出，但实行当日回转交易的品种除外；上交所现行竞价交易时段为 9:15–9:25 开盘集合竞价，9:30–11:30 与 13:00–14:57 连续竞价，14:57–15:00 收盘集合竞价。若采用程序化交易，交易所的程序化交易管理实施细则已于 2025 年生效，且深交所规则明确把**个人投资者**也纳入程序化交易投资者范围，首次进行程序化交易前须履行报告义务。citeturn43search5turn18search3turn25view1turn24search2
+这些假设与 HRT 官方对 Algorithm Developer 的描述一致：岗位本质是建立和维护交易模型，依托统计与技术能力，而不是做零售投顾式聊天机器人。citeturn23search3turn23search2
 
-如果你做的是**美股**，纳斯达克常规交易时段为周一至周五 9:30–16:00 ET；保证金方面，FINRA 概览页说明 Reg T 一般允许客户借入新开仓股票买入价的 50%，而自 2026 年 6 月 4 日起，FINRA Rule 4210 已切换到新的**日内保证金**框架，日内保证金要求取代了旧的 PDT 规则逻辑。也就是说，美股若允许杠杆，你必须把保证金检查和经纪商风控回报实时纳入系统，而不是只在日终核算。citeturn19view10turn41search2turn41search4turn41search7
+系统总架构建议如下。
 
-基于这些约束，建议你的第一版系统采用下面这种“最小可行交易域”：
-
-| 维度 | 第一版建议 |
-|---|---|
-| 市场 | 先二选一：A 股或美股，不建议首版跨市场 |
-| 标的池 | 先做流动性较好的 50–300 只股票或 ETF 白名单 |
-| 方向 | 先做单边长仓；若做空，再单独加借券/融券层 |
-| 周期 | 信号用日线；执行可选次日开盘/限价/VWAP |
-| 持有期 | 2–40 个交易日的波段化持有，避免一开始就做超长趋势或高频 |
-| 策略数 | 先 1–2 个主策略 + 1 个统一风控引擎 |
-| 回测口径 | 默认使用复权收盘生成信号、原始价执行、成本单独建模 |
-
-## K线形态与技术指标
-
-### K线应先被拆成特征，而不是先背名字
-
-行业里常见的 K 线“形态名词库”非常庞大。TA-Lib 的 Pattern Recognition Functions 本身就列出了大批模式识别接口，包括 Doji、Hammer、Engulfing、Morning Star、Evening Star、Three White Soldiers、Three Black Crows、Tasuki Gap、Rising/Falling Three Methods 等几十类模式。工程上最稳妥的做法，不是先追求“全叫得出名字”，而是先把 K 线拆成**稳定、可复用、可组合**的数值特征，再在此基础上构建形态检测器。citeturn32view0turn31view1turn31view3
-
-建议你先统一定义一组基础特征：
-
-| 特征名 | 定义 | 作用 |
-|---|---|---|
-| `range` | `high - low` | 当日波动区间 |
-| `body` | `abs(close - open)` | 实体大小 |
-| `body_ratio` | `body / max(range, eps)` | 强弱实体占比 |
-| `upper_shadow` | `high - max(open, close)` | 上影线 |
-| `lower_shadow` | `min(open, close) - low` | 下影线 |
-| `upper_ratio` | `upper_shadow / max(body, eps)` | 上影线相对实体比例 |
-| `lower_ratio` | `lower_shadow / max(body, eps)` | 下影线相对实体比例 |
-| `gap_up` | `low > prev_high` | 向上缺口 |
-| `gap_down` | `high < prev_low` | 向下缺口 |
-| `trend_up_ctx` | `ema20 > ema50 and slope(ema20,5)>0` | 上升趋势上下文 |
-| `trend_down_ctx` | `ema20 < ema50 and slope(ema20,5)<0` | 下降趋势上下文 |
-| `rv` | `volume / sma(volume,20)` | 量能确认 |
-
-一个可以直接移植的基础工具层伪代码如下：
-
-```pseudo
-function candle_features(bar, prev_bar, ema20, ema50, vol_ma20):
-    range = max(bar.high - bar.low, EPS)
-    body = abs(bar.close - bar.open)
-    upper_shadow = bar.high - max(bar.open, bar.close)
-    lower_shadow = min(bar.open, bar.close) - bar.low
-
-    return {
-        bull: bar.close > bar.open,
-        bear: bar.close < bar.open,
-        range: range,
-        body: body,
-        body_ratio: body / range,
-        upper_ratio: upper_shadow / max(body, EPS),
-        lower_ratio: lower_shadow / max(body, EPS),
-        gap_up: bar.low > prev_bar.high,
-        gap_down: bar.high < prev_bar.low,
-        rv: bar.volume / max(vol_ma20, EPS),
-        trend_up_ctx: ema20 > ema50 and slope(ema20, 5) > 0,
-        trend_down_ctx: ema20 < ema50 and slope(ema20, 5) < 0
-    }
+```mermaid
+flowchart LR
+    A[Point-in-time 数据仓] --> B[特征工程]
+    A --> C[企业行为与资产主数据]
+    B --> D[标签生成]
+    C --> D
+    D --> E[Purged Walk-forward 验证]
+    E --> F[Baseline / Linear / Tree / Rank 模型]
+    F --> G[组合构建与仓位控制]
+    G --> H[交易指令层]
+    H --> I[C++ LOB / Market Replay 执行仿真]
+    I --> J[实现短缺 / 滑点 / Fill 质量]
+    F --> K[每日评分与候选名单]
+    J --> L[Paper Trading 与监控]
+    K --> L
+    M[LLM 结构化配置与解释] --> B
+    M --> K
+    N[Manifest / DVC / CI] --> A
+    N --> E
+    N --> L
 ```
 
-### 常见日线 K 线形态与量化判定
+这张图的关键含义是：**研究、组合、执行、监控四层必须分离，但 manifest/版本系统要贯穿全链路**。DVC 官方文档明确把数据和模型版本绑定到 Git 工作流中；Hugging Face `load_dataset` 的 `revision` 则允许把外部数据依赖固定到 tag、branch 或 commit hash。两者结合，才有资格说“结果可复现”。citeturn9search1turn10search0
 
-下表覆盖了**最值得先编码**的主流日线形态。阈值不是唯一标准，而是为了便于落地为代码；你之后可以把这些阈值做成配置项，配合 Walk-forward 优化，而不是硬编码成“真理”。
+## 数据层与点位时间处理
 
-| 形态 | 心理学含义 | 建议量化判定 |
-|---|---|---|
-| 长阳线 | 买方全天主导，趋势延续概率上升 | `bull and body_ratio >= 0.6 and upper_ratio <= 0.3 and lower_ratio <= 0.3` |
-| 长阴线 | 卖方全天主导，弱势延续概率上升 | `bear and body_ratio >= 0.6 and upper_ratio <= 0.3 and lower_ratio <= 0.3` |
-| 十字星 Doji | 多空犹豫，拐点或中继，需结合上下文 | `body_ratio <= 0.1` |
-| 锤头 Hammer | 下探后被强力拉回，常见于下跌末端 | `lower_ratio >= 2.0 and upper_ratio <= 0.5 and body_ratio <= 0.35 and trend_down_ctx` |
-| 上吊线 Hanging Man | 上涨后的“锤头”，常是风险预警 | 同锤头，但要求 `trend_up_ctx` |
-| 倒锤头 Inverted Hammer | 下跌后试探反攻 | `upper_ratio >= 2.0 and lower_ratio <= 0.5 and body_ratio <= 0.35 and trend_down_ctx` |
-| 射击之星 Shooting Star | 上涨后冲高回落，卖压出现 | 与倒锤相同，但要求 `trend_up_ctx` |
-| 光头光脚 Marubozu | 极强单边推进 | `body_ratio >= 0.8 and upper_ratio <= 0.1 and lower_ratio <= 0.1` |
-| 纺锤线 Spinning Top | 有波动但收盘拉回中性，方向不明 | `0.1 < body_ratio < 0.35 and upper_ratio > 0.5 and lower_ratio > 0.5` |
-| 看涨吞没 Engulfing | 强反包，常见于反转起点 | 前一根为阴线，后一根为阳线，且 `curr.open <= prev.close and curr.close >= prev.open` |
-| 看跌吞没 Engulfing | 强反包下压 | 前一根为阳线，后一根为阴线，且 `curr.open >= prev.close and curr.close <= prev.open` |
-| 刺透 Piercing | 下跌后强力回补，偏反转 | 前阴后阳；后一根收盘进入前阴实体 50% 以上但未完全吞没 |
-| 乌云盖顶 Dark Cloud Cover | 上涨后被打回，偏反转 | 前阳后阴；后一根收盘跌入前阳实体 50% 以上 |
-| 孕线 Harami | 波动收缩，方向待确认 | 当前实体完全落在前一根实体内部 |
-| 启明星 Morning Star | 三日见底结构 | 大阴 + 小实体犹豫 + 大阳并收回第一根实体至少 50% |
-| 黄昏星 Evening Star | 三日见顶结构 | 大阳 + 小实体犹豫 + 大阴并跌回第一根实体至少 50% |
-| 红三兵 | 多头连续推进，趋势强化 | 连续三根阳线，收盘逐步抬高，回撤小 |
-| 三只乌鸦 | 空头连续推进，趋势恶化 | 连续三根阴线，收盘逐步下移，反抽小 |
-| 上升三法 / 下降三法 | 强趋势中的整理后延续 | 外层长实体 + 中间若干逆向小实体 + 最后一根顺势突破 |
-| 缺口突破/竭尽缺口 | 价格重定价，需配量能与上下文 | `gap_up` 或 `gap_down`，并要求 `rv >= 1.5` 与趋势上下文一致 |
+### 为什么点位时间一致是 Quant.ai 的根基
 
-这些模式都能直接映射到 TA-Lib 已公开的模式接口命名，例如 `CDLDOJI`、`CDLHAMMER`、`CDLENGULFING`、`CDLMORNINGSTAR`、`CDLEVENINGSTAR`、`CDL3WHITESOLDIERS`、`CDL3BLACKCROWS`、`CDLRISEFALL3METHODS`、`CDLTASUKIGAP` 等；如果你希望最大覆盖，可以把“本报告阈值版模式检测器”与“TA-Lib 整数输出版模式检测器”并行实现，前者便于自定义，后者便于做基准对照。citeturn32view0turn31view1turn31view2turn31view3
+金融研究里最常见、也最容易被忽视的问题，不是模型，而是**时间错位**。如果用今天仍然存在的股票池回测过去，就引入了 survivorship bias；如果用复权后的收盘价做研究，却又把同一价格当作历史可成交价格做执行仿真，就把企业行为处理和实际成交混淆了。Brown 等在经典研究中指出，只观察“活到样本末尾”的管理人或资产，会制造出虚假的持续表现；幸存偏差不只会抬高均值，还会扭曲横截面排序。citeturn20view1
 
-下面给出几个最常用的可编码伪代码模板：
+因此，Quant.ai 需要把“研究价格”和“执行价格”完全分开。研究层应该允许使用按 split/dividend/spin-off 调整后的价格序列，以便稳定构造动量、波动率和未来收益标签；执行层则应使用原始 trades、quotes 与 order book 事件，并由企业行为流来解释持仓数量、参考价和符号变化。Alpaca 的 bars 接口把这两个世界分得很清楚：你可以指定是否调整价格，也可以通过 `asof` 追溯符号在某一日期的状态；其 corporate actions 接口则单独返回企业行为事件。citeturn8search15turn8search0turn16search19
 
-```pseudo
-function is_hammer(f):
-    return f.lower_ratio >= 2.0
-       and f.upper_ratio <= 0.5
-       and f.body_ratio <= 0.35
-       and f.trend_down_ctx
+### 数据源分层与角色划分
 
-function bullish_engulfing(prev, curr):
-    return prev.close < prev.open
-       and curr.close > curr.open
-       and curr.open <= prev.close
-       and curr.close >= prev.open
+建议把数据源分成四层：**研究层、日更层、执行层、审计层**。研究层用于大样本日频建模；日更层用于每日收盘后更新；执行层用于分钟、quote、trade 或少量订单簿 replay；审计层用于企业行为、资产状态、日历与版本元数据。
 
-function morning_star(b1, b2, b3):
-    first_big_down = b1.close < b1.open and abs(b1.close-b1.open)/(b1.high-b1.low) >= 0.6
-    second_small = abs(b2.close-b2.open)/(b2.high-b2.low) <= 0.25
-    third_big_up = b3.close > b3.open and abs(b3.close-b3.open)/(b3.high-b3.low) >= 0.6
-    reclaim = b3.close >= b1.open - 0.5 * abs(b1.open - b1.close)
-    return first_big_down and second_small and third_big_up and reclaim
-```
-
-### 主流技术指标、公式、信号与参数建议
-
-SMA、EMA、MACD、RSI、布林带、ADX、ATR、OBV 这些“老指标”之所以还常用，不是因为它们神奇，而是因为它们分别从**趋势、动量、波动率、方向强度和量价确认**这几个维度提供了稳定特征。Sierra Chart 的官方技术指标参考给出了 SMA、EMA、MACD、RSI、Bollinger Bands、ADX、ATR、OBV 等公式；其中 SMA 为区间均值，EMA 使用 \(2/(n+1)\) 平滑因子，MACD 是快慢 EMA 差，RSI 基于涨跌均值比，布林带是均线加减标准差，ADX 由 DMI/DI 推导，ATR 来自 True Range 的均值，OBV 则是按涨跌方向累加/扣减成交量。citeturn40view0turn39view0turn19view2turn34view2turn33view1turn35view2turn36view0turn37search7turn38view1
-
-| 指标 | 核心公式/特征 | 典型信号 | 日线起始参数建议 | 简洁伪代码 |
+| 数据源 | 适合粒度 | 优势 | 关键限制 | 在 Quant.ai 中的角色 |
 |---|---|---|---|---|
-| SMA | 区间均值；更平滑，滞后更大 | 短均线上穿长均线；均线斜率转正 | `10/20/50/100/200` | `sma[t]=mean(close[t-n+1:t])` |
-| EMA | 对近期更敏感；平滑因子 `2/(n+1)` | 适合做趋势状态与动态支撑阻力 | `9/20/50/100` | `ema[t]=a*close[t]+(1-a)*ema[t-1]` |
-| MACD | `EMA_fast - EMA_slow`，再求信号线 | 金叉/死叉、零轴上方/下方、柱体扩张 | `12,26,9` 起步；优化网格可测 `8–15,20–35,5–12` | `macd=ema12-ema26; sig=ema(macd,9)` |
-| RSI | 涨跌幅相对强度，0–100 区间 | 超卖/超买、50 中轴、背离 | 经典 `14`；短反转可试 `2/3/5`，趋势可试 `14/21` | `rsi=100-100/(1+avg_up/avg_down)` |
-| 布林带 | `SMA ± k*std` | 触下轨反弹、挤压后突破、中轨回归 | `20,2` 起步；可测 `10/20/30` 与 `1.5/2/2.5` | `mid=sma20; up=mid+k*std20; dn=mid-k*std20` |
-| ATR | True Range 的均值，衡量波动 | 止损距离、仓位缩放、过滤低波动假突破 | `14` 常用；止损乘数 `1.5–3.0` | `atr=sma(tr,14)` |
-| ADX + DI | 趋势强度而非方向 | `ADX>20/25` 认为趋势环境增强；`+DI/-DI` 给方向 | `14` 常用 | `adx=wwma(dx,14)` |
-| OBV | 上涨日加量、下跌日减量 | 量价背离、突破确认 | `OBV` 配合 `OBV_MA(10/20)` | `obv += vol if close>prev_close else -vol` |
-| Donchian | N 日最高/最低通道 | 趋势突破、海龟系统 | `20/55` 常用 | `upper=max(high,n); lower=min(low,n)` |
-| Keltner | EMA 中轨 ± ATR 通道 | 与布林挤压组合看波动释放 | `20 EMA, 2 ATR` | `up=ema20 + 2*atr20` |
-| ROC / Momentum | 过去 N 日涨幅 | 动量排序、过滤弱票 | `20/60/120/252` | `roc=close/close[-n]-1` |
-| 相对量能 RVOL | 当前量/均量 | 突破确认、假信号过滤 | `vol / SMA(vol,20)` | `rv=vol/sma(vol,20)` |
+| Hugging Face `paperswithbacktest/Stocks-Daily-Price` | 日频 | 7000+ 美股、含 `adj_close`、适合快速研究 | 数据集为第三方维护；部分数据集可能 gated；通常不是点位时间资产主数据 | 研究层历史日频训练集 |
+| Hugging Face `paperswithbacktest/ETFs-Daily-Price` | 日频 | 3000+ ETF，便于基准与行业轮动研究 | 同样是第三方维护，需自行做审计 | 研究层 ETF/行业基准集 |
+| Alpaca bars / trades / quotes / assets / corp actions / calendar | 日频到逐笔 | 官方 API 边界清晰，支持 `asof`、adjustments、资产状态、企业行为、交易日历、paper trading | 历史覆盖与 feed 类型受计划影响；并非全量交易所订单簿 | 日更层、审计层、执行层基础 |
+| yfinance | 日频到分钟 | 批量抓取非常方便；原型速度快 | 官方文档强调仅供研究/教育用途；分钟数据只覆盖最近 60 天 | 开发早期补充源，不作为最终真值 |
+| Nasdaq TotalView-ITCH / NYSE Integrated Feed | 订单簿级 | 官方逐订单/深度数据与有序消息语义 | 获取和处理成本高 | 执行层与 C++ replay 核心样本 |
 
-下面给出一组建议直接落地的指标函数模板：
+表中关于数据接口能力、限制和版本机制的事实，分别来自 Hugging Face 数据集卡与文档、Alpaca 官方 API 文档、yfinance 官方文档以及 Nasdaq/NYSE 官方 feed 规范。citeturn13search2turn0search2turn10search0turn8search15turn16search1turn0search1turn0search13turn14view0turn14view1
 
-```pseudo
-function sma(series, n): return rolling_mean(series, n)
+实际落地时，最稳妥的策略是：**HF 做历史回溯研究，Alpaca 做每日增量与审计，交易所直连 feed 只用于执行仿真和少量重点样本日**。这种分层的好处是成本与可信度平衡：HF 帮你快速起盘，Alpaca 给你官方 API 约束和企业行为/资产状态补全，交易所 feed 则专门服务于你最需要“硬核证明”的 C++ 执行层。citeturn13search2turn8search15turn14view0turn14view1
 
-function ema(series, n):
-    a = 2.0 / (n + 1.0)
-    ema[0] = series[0]
-    for t in 1..len(series)-1:
-        ema[t] = a * series[t] + (1 - a) * ema[t-1]
-    return ema
+### 股票池、企业行为与点位时间主数据
 
-function macd(close, fast=12, slow=26, sig=9):
-    fast_line = ema(close, fast)
-    slow_line = ema(close, slow)
-    macd_line = fast_line - slow_line
-    signal = ema(macd_line, sig)
-    hist = macd_line - signal
-    return macd_line, signal, hist
+资产主数据至少应包含：`symbol`、稳定内部 `asset_id`、`cusip` 或外部映射、首次可交易日、终止/退市日、交易所、行业/板块、是否 overnight tradable、是否 active/tradable、企业行为链。Alpaca 的 Assets API 提供资产主列表与状态字段，且官方文档明确提醒 symbol/CUSIP 可能变化，资产主数据应每日刷新。citeturn16search1turn16search19
 
-function rsi(close, n=14):
-    up = max(close[t]-close[t-1], 0)
-    dn = max(close[t-1]-close[t], 0)
-    rs = ma(up, n) / max(ma(dn, n), EPS)
-    return 100 - 100 / (1 + rs)
+点位时间股票池的基本规则建议是：
 
-function atr(high, low, close, n=14):
-    tr = max(high-low, abs(high-prev_close), abs(low-prev_close))
-    return ma(tr, n)
+\[
+\mathcal{U}_t=\left\{i:\; active_{i,t}=1,\; tradable_{i,t}=1,\; price_{i,t} > 5,\; ADV_{20,i,t} > 50\text{M USD},\; age_{i,t}\ge 252 \right\}
+\]
 
-function adx(high, low, close, n=14):
-    +dm = max(high-prev_high, 0) if high-prev_high > prev_low-low else 0
-    -dm = max(prev_low-low, 0) if prev_low-low > high-prev_high else 0
-    tr = ...
-    +di = 100 * wilder_sum(+dm,n) / max(wilder_sum(tr,n), EPS)
-    -di = 100 * wilder_sum(-dm,n) / max(wilder_sum(tr,n), EPS)
-    dx = 100 * abs(+di - -di) / max(+di + -di, EPS)
-    adx = wilder_ma(dx, n)
-    return +di, -di, adx
+其中 `age` 表示上市后至少有 252 个交易日历史，目的是减少新股上市早期的极端行为对模型造成不稳定影响。这不是学术上的唯一选择，但在实现层面非常实用：它直接降低了缺失值比例、换手摩擦和样本分布漂移。资产状态、交易日历和早收盘信息都可以从 Alpaca 的 calendar/clock 与 assets 接口里拿到。citeturn11search5turn11search1turn16search1
+
+企业行为处理建议采用双账本：
+
+\[
+P^{research}_{t} = Adj(P_t; \text{split, dividend, spin-off})
+\]
+
+\[
+P^{exec}_{t} = Raw(P_t)
+\]
+
+持仓数量则由企业行为事件驱动动态调整：
+
+\[
+Q^{post}_{t} = Q^{pre}_{t}\times \text{split\_ratio}_{t}
+\]
+
+如果研究层只使用 `adj_close`，但仍把 `open/high/low/close` 视为原始价格，就会造成“收益用了复权、特征没复权”的混搭错误。更稳妥的做法是保存统一的 adjustment factor：
+
+\[
+a_t=\frac{AdjClose_t}{Close_t}
+\]
+
+并在研究层对 OHLC 统一乘以 \(a_t\)；但执行层必须继续保留 raw OHLC / quotes / trades。Alpaca 的 bars 调整参数和 corporate actions 文档，使这一分层实现起来相对直接。citeturn8search15turn8search1turn8search7
+
+### Manifest、版本固定与一条命令复现
+
+每一个实验都必须绑定一个 manifest。建议最少包含下列字段：
+
+```json
+{
+  "dataset_id": "us_equity_daily_v1",
+  "source": "hf+alpaca",
+  "hf_repo": "paperswithbacktest/Stocks-Daily-Price",
+  "hf_revision": "<commit_hash>",
+  "alpaca_asof": "2026-07-26",
+  "adjustments": ["split", "dividend", "spin-off"],
+  "universe_rule": "price>5 & adv20>50m & age>=252",
+  "calendar": "NYSE",
+  "feature_set": "alpha_v1.2",
+  "label_horizons": [1, 5],
+  "cv_scheme": "purged_walk_forward_v2",
+  "cost_model": "tc_v1",
+  "git_commit": "<repo_sha>",
+  "random_seed": 42
+}
 ```
 
-参数优化时，不要直接寻找“历史收益最高”的点，而要看**稳定区**。一个参数组合如果在 12/26/9、10/24/8、14/30/10 一片区域里都差不多有效，可信度远高于某个孤立尖峰。PBO 和 DSR 文献正是为了解决“你是不是只是把参数拟合到了噪声上”这个问题。citeturn15search0turn15search1
+Hugging Face 官方文档支持用 `revision` 直接锁定数据集的 tag、branch 或 commit；DVC 官方文档则提供 Git 之上的数据版本控制；GitHub Actions 官方文档提供了标准化的 Python 构建与测试工作流。把这三者串起来，才能真正做到“今天重跑的 OOS 曲线，和你简历上的数字一致”。citeturn10search0turn9search1turn9search2
 
-## 量化策略清单
-
-### 先做“市场状态识别”，再选择策略
-
-对日线系统而言，最常见的错误不是策略太少，而是**在错误的市场状态使用了错误的策略**。趋势策略怕震荡；均值回归怕单边；突破策略怕低流动和假信号；配对交易怕协整关系失效。因此建议你先实现一个**Regime Router**，把市场粗分为趋势、震荡、极端波动/风控收缩三类，再决定启用哪个子策略。
+建议的数据流水线如下。
 
 ```mermaid
 flowchart TD
-    A[日线OHLCV与市场指数] --> B[特征计算]
-    B --> C[趋势强度 ADX / 均线斜率 / 波动率分位数]
-    C --> D{市场状态}
-    D -->|趋势强化| E[趋势跟踪 / 突破]
-    D -->|震荡低趋势| F[均值回归 / 配对]
-    D -->|高波动高不确定| G[减仓 / 空仓 / 仅执行防守]
-    E --> H[统一风控]
-    F --> H
-    G --> H
-    H --> I[次日订单计划]
+    A[外部数据源] --> B[原始落地 raw/]
+    B --> C[数据质量检查]
+    C --> D[点位时间标准化]
+    D --> E[企业行为对齐]
+    E --> F[资产主数据对齐]
+    F --> G[研究层 parquet]
+    F --> H[执行层 parquet / arrow]
+    G --> I[Manifest 写入]
+    H --> I
+    I --> J[DVC 跟踪]
+    J --> K[特征与标签]
 ```
 
-趋势跟踪、时间序列动量和简单均线过滤在长期跨市场研究中显示出可持续性；横截面动量在股票市场的 3–12 个月区间也有长期文献支持；短期反转和配对交易同样有经典研究基础。下面的胜率、回撤区间并不是“官方数字”，而是基于这些文献揭示的收益形态与实盘工程经验做的**保守推断**，目的是给你提供代码参数的起点，而不是给出保证。citeturn12search8turn12search5turn12search6turn14search0turn13search1turn13search3
+### 数据层伪代码、默认参数与常见坑
 
-| 策略族 | 核心逻辑 | 入场规则 | 出场/止损/止盈 | 适用市场 | 优点 | 缺点 | 经验胜率/回撤区间 |
-|---|---|---|---|---|---|---|---|
-| 趋势跟踪 | 顺中期趋势持有，吃大波段 | `EMA20>EMA50>EMA200` 且 `ADX>20`，回踩均线转强或创 20/55 日新高 | 跌破 `EMA20/EMA50`、或 `2–3 ATR` 追踪止损；通常不设固定止盈 | 单边趋势、行业领涨阶段 | 正偏收益，大单盈利能覆盖多次小亏 | 震荡期来回打脸 | 胜率约 35%–50%，组合级 MDD 常见 15%–35% |
-| 均值回归 | 偏离均线/布林后向均值回归 | `ADX<18`、`close<BB_lower`、`RSI2<10`，最好配流动性和指数不崩 | 回到中轨/5–10 日均线即走；`1.5 ATR` 止损；加时间止损 | 横盘震荡、恐慌后的短弹 | 胜率较高、持仓时间短 | 容易被单边趋势碾压 | 胜率约 50%–65%，MDD 常见 10%–25% |
-| 中期动量 | 买强者，回避弱者 | 标的池按 60/120/252 日收益排序，只买高排名且站上长均线者 | 跌出排名、跌破长均线、或转弱止盈 | 板块轮动、抱团行情 | 容易做成选股器 | 轮动突变时回撤快 | 胜率约 40%–55%，MDD 常见 15%–30% |
-| 突破策略 | 价格脱离箱体，量能放大 | `close > donchian_high(20/55)` 且 `RVOL>1.5`，可配 `ADX` | 假突破回落、跌破短通道、`2 ATR` 止损 | 波动收缩后释放、业绩/事件驱动 | 简单、可解释、易自动化 | 假突破多 | 胜率约 35%–50%，MDD 常见 12%–30% |
-| 指数对冲波段 | 个股 alpha + 指数 beta 对冲 | 多头信号成立，同时按 beta 对冲股指/ETF | 多头失效或 beta 变化时同步平仓 | 大盘高波动、又想压系统回撤 | 回撤更可控 | 执行复杂，需更强数据 | 胜率约 45%–60%，MDD 常见 8%–20% |
-| 配对交易 | 价差偏离后收敛 | 先做相关/协整筛选，再在 spread z-score 超阈值时反向开仓 | `z=0` 附近回补；`|z|` 继续扩大即止损 | 同行业、高相关、相对价值行情 | 市场方向依赖低 | 关系失效时很伤 | 胜率约 50%–65%，MDD 常见 8%–20% |
-| 波段交易 | 趋势中做回撤，震荡中做边界 | 上升趋势里等回踩 `EMA20 + RSI回落`；下降趋势镜像做空或回避 | 回到前高/通道中上轨止盈；破结构点止损 | 日线主导、手工风格最像 | 解释性强，适合“人工风格自动化” | 规则边界多，易主观化 | 胜率约 45%–60%，MDD 常见 10%–25% |
-| 日内/日线混合 | 日线定方向，日内优化执行 | EOD 生成交易计划；次日开盘、VWAP、分时量能确认后执行 | 以日线失效为主，日内只做执行停损 | 股票容量较大、想降低冲击成本 | 能改善成交均价 | 系统复杂度上升 | 胜率取决于母策略，MDD 通常略低于裸日线执行 |
+下面是一段建议的伪代码骨架：
 
-下面给出每个策略都能直接复用的一套“统一信号骨架”。你只需要替换 `entry_condition`、`exit_condition` 和 `regime_filter`。
+```python
+def build_research_dataset(asof_date: str, hf_revision: str):
+    raw_hf = load_hf_daily_prices(revision=hf_revision)
+    assets = load_alpaca_assets(asof=asof_date)
+    corp = load_alpaca_corporate_actions(until=asof_date)
+    calendar = load_market_calendar("NYSE")
 
-```pseudo
-function run_strategy(bar, features, state, cfg):
-    if state.kill_switch:
-        return NO_ACTION
+    prices = validate_ohlcv(raw_hf, calendar)
+    prices = map_symbols_to_internal_ids(prices, assets, asof_date)
+    prices = apply_research_adjustments(prices, corp, mode=["split", "dividend", "spin-off"])
+    universe = build_point_in_time_universe(prices, assets, rules=UNIVERSE_RULES)
 
-    if not position_exists(bar.symbol):
-        if regime_filter(features, cfg)
-           and entry_condition(features, cfg)
-           and liquidity_filter(features, cfg)
-           and market_filter(features.market, cfg):
-            stop_price = compute_initial_stop(bar, features, cfg)
-            qty = size_by_risk(account, bar.close, stop_price, cfg)
-            return BUY(qty, bar.symbol, stop_price)
-    else:
-        if exit_condition(features, cfg) or hard_stop_hit(bar, position):
-            return SELL_ALL(bar.symbol)
-        else:
-            maybe_trail_stop(position, features, cfg)
-    return NO_ACTION
+    manifest = write_manifest(
+        hf_revision=hf_revision,
+        asof=asof_date,
+        adjustments=["split", "dividend", "spin-off"],
+        universe_rules=UNIVERSE_RULES,
+    )
+    save_parquet(prices, universe, manifest)
+    return manifest
 ```
 
-再给出适合首版上线的几个具体模板。
+默认参数建议如下：交易日历用 `NYSE`；`ADV20 > 50M USD`；`price > 5`；上市满 `252` 个交易日；研究层 adjustment 用 `all` 或显式 `split,dividend,spin-off`；执行层一律 `raw`；数据质量检查必须覆盖重复键、负价格/负成交量、`low <= open/close <= high`、缺失交易日占比、企业行为前后异常跳变以及 symbol 映射冲突。Alpaca bars、assets、calendar 和 corporate actions 文档都支持这些检查边界。citeturn8search15turn16search1turn11search5turn8search0
 
-```pseudo
-# 趋势跟踪
-entry = close > donchian_high(55) and ema20 > ema50 and ema50 > ema200 and adx > 20
-exit  = close < ema20 or close < donchian_low(20)
-stop  = entry_price - 2.5 * ATR(14)
+最大的坑有四个。第一，只用当前存活股票回测；第二，把调整后价格用于执行成本；第三，不保存 `asof` 和 `revision`；第四，在日频研究中忽略早收盘和停牌。Alpaca 的 FAQ 与 market data 文档已经明确提醒 inactive/halt/OTC 等状态会影响可用性，交易所 feed 规范也说明旁路消息里包含交易状态、撤单、纠错、停牌等控制信息。citeturn16search3turn14view0turn14view1
 
-# 均值回归
-entry = adx < 18 and close < bb_lower(20,2) and rsi(2) < 10 and rv < 2.5
-exit  = close >= bb_mid(20) or rsi(2) > 70
-stop  = entry_price - 1.5 * ATR(14)
-time_stop = 5 bars
+## 特征、标签与验证统计
 
-# 波段回踩
-entry = ema20 > ema50 and close between ema20 and ema20-1*ATR and rsi(5) rising from < 40
-exit  = close >= recent_swing_high or close < ema50
-stop  = recent_swing_low - 0.5 * ATR
-```
+### 特征工程的理论框架
 
-对你这种“人工式风格”的目标，我建议**优先顺序**是：先做“波段回踩 + 趋势突破”的双模块；第二步再加“低 ADX 的均值回归”作为震荡期替补；第三步才上配对和指数对冲。这样更符合日线交易软件的可维护性。
+Quant.ai 应该首先做**横截面可解释特征**，而不是堆几十个 TA 指标。Jegadeesh 与 Titman 的经典研究表明，中期相对强弱/动量在横截面上具有可预测性；对你这个项目来说，更有价值的是把动量、波动率、成交量冲击和行业相对强弱做成一套**按日横截面标准化**的研究矩阵。citeturn15view4
 
-## 风控与资金管理
+推荐的第一版特征族如下。
 
-对自动交易系统来说，**风控不是策略的附属品，而是第一策略**。同样的进场信号，在不同的仓位、相关性约束、撤退机制和成本模型下，最终实盘表现可能天差地别。A 股程序化交易规则要求程序化交易投资者满足可用性、安全性和合规性要求，不得影响系统安全和正常交易秩序；美股若使用保证金，FINRA 和 Reg T 会共同决定初始和日内保证金要求。这意味着你的风控层至少要有三层：**交易前风控、持仓中风控、账户级风控**。citeturn25view1turn41search2turn41search4
-
-### 建议直接写入代码的风控规则
-
-| 风控项 | 建议起始值 | 代码含义 |
-|---|---|---|
-| 单笔最大风险 | 权益的 `0.25%–0.75%` | 用于根据止损距离反推股数 |
-| 单票最大市值占比 | `5%–12%` | 防止单股黑天鹅 |
-| 单行业最大敞口 | `20%–30%` | 防止板块同涨同跌放大回撤 |
-| 同时持仓数 | `4–12` | 控制组合相关性与复杂度 |
-| 组合级最大毛敞口 | 无杠杆先 `<=100%` | 首版尽量不满杠杆 |
-| 组合级软回撤阈值 | `6%–8%` | 触发后风险减半 |
-| 组合级硬回撤阈值 | `10%–12%` | 停止新开仓，仅允许减仓/平仓 |
-| 日内执行损失阈值 | `1R` 或 `1%` 权益 | 若你有日内执行层，达到就停单 |
-| 连续亏损熔断 | `5–7` 笔 | 连亏后把风险系数下调 50% |
-| 异常波动停机 | 成交异常/数据断流/API 失败 | 立即进入保护模式 |
-
-仓位控制建议至少同时支持以下三种算法。
-
-| 算法 | 公式 | 适用场景 | 风险提示 |
+| 特征族 | 公式 | 建议默认值 | 说明 |
 |---|---|---|---|
-| 固定比例风险 | `qty = equity * risk_pct / stop_distance` | 首版最推荐 | 简单稳健 |
-| 波动率目标 | `weight ∝ 1 / volatility` | 多标的组合 | 需要稳定波动估计 |
-| 分数 Kelly | `f = edge / variance` 再乘 `0.25` | 有较成熟胜率/赔率估计时 | 对参数极敏感，不建议满 Kelly |
+| 动量 | \(mom^{(k)}_{i,t}=\ln(P_{i,t}/P_{i,t-k})\) | \(k\in\{5,20,60\}\) | 用研究层调整后价格 |
+| 波动率 | \(\sigma^{(k)}_{i,t}=\sqrt{252}\cdot std(r_{i,t-k+1:t})\) | \(k\in\{20,60\}\) | 年化日波动 |
+| 波动调整动量 | \(vmom^{(k)}_{i,t}=mom^{(k)}_{i,t}/(\sigma^{(k)}_{i,t}+\epsilon)\) | \(\epsilon=10^{-6}\) | 避免纯高波动股票占优 |
+| 相对强弱 | \(rs^{(k)}_{i,t}=mom^{(k)}_{i,t}-mom^{(k)}_{b(i),t}\) | 基准为 SPY 或 sector ETF | 预测超额收益更一致 |
+| 成交量冲击 | \(volz_{i,t}=z(\ln DollarVol_{i,t})\) | 20 日窗口 | Dollar volume 优于纯 volume |
+| 价格位置 | \(dist\_high^{(k)}_{i,t}=P_{i,t}/\max(P_{i,t-k+1:t})-1\) | \(k=20,60\) | 突破与回撤程度 |
+| 跳空 | \(gap_{i,t}=\ln(Open_{i,t}/Close_{i,t-1})\) | 1 日 | 可辅助短期反转 |
+| ATR 风险 | \(atr_{i,t} = ATR_{14}/Close_t\) | 14 日 | 给仓位与止损用 |
 
-固定比例风险是最适合首版系统的。它把“你愿意为这笔想法亏多少钱”作为第一原则，而不是“这只票该买多少股”。伪代码如下：
+上述公式本身是实现建议；动量作为核心研究起点，则有经典文献支持。citeturn15view4
 
-```pseudo
-function size_by_risk(account, entry_price, stop_price, cfg):
-    risk_dollar = account.equity * cfg.risk_per_trade
-    stop_distance = abs(entry_price - stop_price)
-    raw_qty = floor(risk_dollar / max(stop_distance, EPS))
-    max_qty_by_value = floor(account.equity * cfg.max_position_pct / entry_price)
-    qty = min(raw_qty, max_qty_by_value)
-    return max(qty, 0)
-```
+### 横截面标准化、稳健 z-score 与行业中性化
 
-账户级熔断建议写得更硬，而不是留给主观判断：
+日内或跨期直接比较原始特征几乎总会出问题，因为横截面分布会随市场状态变化。建议对每个交易日做横截面 winsorize 与标准化。若想降低极端值影响，可以优先使用中位数和 MAD：
 
-```pseudo
-function account_kill_switch(account, perf, cfg):
-    if perf.max_drawdown_from_peak >= cfg.hard_dd:
-        return HARD_STOP
-    if perf.current_month_drawdown >= cfg.monthly_dd_limit:
-        return REDUCE_RISK_50
-    if perf.consecutive_losses >= cfg.max_consecutive_losses:
-        return REDUCE_RISK_50
-    if perf.api_errors >= cfg.api_error_limit or perf.data_stale:
-        return PROTECTIVE_MODE
-    return NORMAL
-```
+\[
+z^{robust}_{i,t}=0.6745\cdot \frac{x_{i,t}-median_t(x)}{MAD_t(x)+\epsilon}
+\]
 
-### 成本、滑点、杠杆与保证金
+其中
 
-回测成本必须**比你现在想象的更保守**。IBKR 的官方佣金页显示，美国股票/ETF 的 IBKR Pro Fixed 为每股 0.005 美元、最低每单 1 美元；Tiered 则按月成交量分档，起始可低至每股 0.0035 美元、最低每单 0.35 美元。Alpaca 对部分零售账户提供美股 API 免佣，但官方也明确某些合作安排不一定享受免佣，且仍可能有经纪业务费用或监管费用。工程上应把这些经纪商公告当作**成本下限**，而不是回测成本上限。citeturn28search0turn28search3turn28search1turn28search11
+\[
+MAD_t(x)=median_t\left(\left|x_{i,t}-median_t(x)\right|\right)
+\]
 
-建议你的成本模型这样写：
+如果你要做行业中性化，最简单有效的方法是先在行业内去中心、再做行业内标准化：
 
-| 成本项 | 回测建议 |
-|---|---|
-| 佣金 | `max(固定每单, 每股佣金, 百分比佣金)` 三者择高 |
-| 滑点 | 大盘股日线单次 2–5 bps 起步；中小盘 5–20 bps 起步 |
-| 跳空风险 | 开盘执行额外加一层“开盘冲击滑点” |
-| 税费/监管费 | 写成市场适配模块，按卖出/双边规则配置 |
-| 借券费/融资利息 | 若做空或杠杆，必须单独建模 |
-| 部分成交 | 低流动性标的禁止“理想一次性全成”假设 |
+\[
+x^{sec}_{i,t} = x_{i,t} - \frac{1}{|S(i,t)|}\sum_{j\in S(i,t)}x_{j,t}
+\]
 
-若做美股杠杆，初始保证金要服从 Reg T 的一般 50% 框架，且 2026 年起日内保证金要求会在盘中监控账户风险；若做 A 股程序化交易，则除了融资融券业务本身，还要额外考虑交易所程序化报告和交易行为边界。也就是说，**杠杆不能只是一个乘数配置**，它必须伴随融资利率、日内/隔夜买入力、强平检查、API 回报风控和合规告警。citeturn41search2turn41search4turn41search7turn25view1
+\[
+z^{sec}_{i,t} = \frac{x^{sec}_{i,t}}{std_{j\in S(i,t)}(x_{j,t})+\epsilon}
+\]
 
-## 回测与参数优化
+实际工程里，行业中性化最好用 GICS/sector ETF 映射来做，不必一开始就上复杂风格回归。默认建议是：先按大行业做去均值和 z-score；第二版再做 beta-neutral 或多因子残差化。这个取舍的好处是足够稳、可解释、容易调试。行业 ETF 和市场基准可以由 HF ETF 数据或 Alpaca ETF 行情维护。citeturn0search2turn13search2
 
-### 数据要求与样本治理
+### IC、Rank IC 与横截面评估公式
 
-你需要的不是“能画图的数据”，而是**能经得起实盘审计的数据**。Polygon/Massive 的股票接口提供可按日和自定义周期获取的 OHLC 与成交量数据，并且提供 splits/dividends 端点以支持历史价格调整；IBKR 则提醒，API 的历史数据必须满足实时 Level 1 订阅要求，而且历史数据会过滤某些脱离 NBBO 的成交类型，因此历史成交量与实时/盘口视角可能不一致。QuantConnect 的文档也明确提醒，带有幸存者偏差、历史不足或清洗不充分的数据会导致劣化交易表现。citeturn21view3turn21view2turn30search3turn21view1turn30search4turn30search15
+对横截面模型而言，**Rank IC 比绝对方向准确率更重要**。推荐定义为：
 
-| 数据需求 | 为什么必须有 |
-|---|---|
-| 原始 OHLCV + 复权价 | 原始价用于执行，复权价用于信号与统计 |
-| 拆股/分红/送配事件 | 不处理会扭曲收益、ATR、通道突破、止损距离 |
-| 退市/停牌/换代码历史 | 避免幸存者偏差 |
-| 交易日历/时区 | 决定日线切片口径与次日执行窗口 |
-| 指数/基准数据 | 计算 beta、相对强弱、市场过滤 |
-| 成交量与流动性字段 | 防止小票“纸面收益、实盘不成交” |
-| 做空与融资可用性 | 若支持空头，这项是硬约束 |
-| 点时成分信息 | 若做指数成分轮动，必须 point-in-time |
+\[
+IC_t = corr\left(rank(\hat{y}_{i,t}),\; rank(y_{i,t})\right)
+\]
 
-如果你做中文市场研究，Tushare Pro、RQData、JoinQuant 都是常见工程入口。Tushare 官方文档显示其 `daily` 日线数据在交易日每日 15:00–17:00 之间更新；RQData 官方文档强调它提供整齐的历史数据 API；JoinQuant 的 API 文档则说明当选择天频率时，算法会在每根日线 bar 运行一次。这些平台适合作为研究/原型，但真正上实盘时，仍应以**你实际下单经纪商的行情口径**做最终一致性验证。citeturn22search3turn22search2turn22search11turn22search4turn23search7
+若用 Spearman 相关，则每日得到一个 \(IC_t\)。再关注：
 
-### 回测流程与过拟合检测
+\[
+\overline{IC} = \frac{1}{T}\sum_{t=1}^T IC_t
+\]
 
-推荐你把研究流程固定成下面这个管道，而不是每次“手工试参数”。
+\[
+IR_{IC} = \frac{\overline{IC}}{std(IC_t)}
+\]
 
-```mermaid
-flowchart LR
-    A[数据清洗与企业行为调整] --> B[构建训练集]
-    B --> C[参数网格/贝叶斯搜索]
-    C --> D[样本内筛选]
-    D --> E[样本外测试]
-    E --> F[滚动回测]
-    F --> G[Walk-forward]
-    G --> H[PBO / DSR / Reality Check]
-    H --> I{通过?}
-    I -->|是| J[模拟盘]
-    I -->|否| K[丢弃或重构]
-```
+实践上，若 `mean Rank IC` 长期为正、且在成本后 `top-minus-bottom` 组合仍显著优于基准，这比单个模型的回归 \(R^2\) 更有意义。横截面排序理论与量化策略构建都强调“先排得准，再构组合”；XGBoost/LightGBM 的 learning-to-rank 实现也是围绕 query-group 内排序而非点预测展开。citeturn4search15turn19search0turn5search1
 
-建议流程如下：
+### 标签设计
 
-| 阶段 | 建议做法 |
-|---|---|
-| 初筛 | 用 1–2 个核心参数族，先找有没有正期望的“区域” |
-| 样本内/样本外 | 不低于 60/40；更稳妥可用滚动 3 年训练 + 1 年测试 |
-| 滚动回测 | 每隔 1–3 个月重训一次，观察参数漂移 |
-| Walk-forward | 每个窗口都只把过去数据给模型，不能偷看未来 |
-| 过拟合检测 | 计算 PBO、DSR；必要时做 White’s Reality Check |
-| 成本压力测试 | 把滑点、佣金、跳空冲击翻倍/三倍 |
-| 稳健性测试 | 随机打乱部分交易顺序、随机剔除部分样本、蒙特卡洛重排 |
+最重要的标签原则只有一句话：**特征在 \(t\) 可见，标签只能从 \(t+1\) 开始计算**。如果日频特征用的是收盘数据 \(close_t\)，则执行友好的未来 \(h\) 日超额收益标签应从 `t+1 open` 或 `t+1 first tradable mid` 开始，而不是从 `close_t` 开始。
 
-Bailey 与 López de Prado 的 PBO 论文专门提出了用 CSCV 估计回测过拟合概率；DSR 则用于修正多重测试与非正态收益下的 Sharpe 夸大；Hsu、Hsu 与 Kuan 则用 White’s Reality Check 重新检查技术分析规则在数据窥探校正后的有效性。这三类方法应该出现在你的研究流水线上，而不是只出现在论文笔记里。citeturn15search0turn15search1turn15search18
+推荐标签定义为：
 
-一个可以直接写入研究引擎的 Walk-forward 伪代码如下：
+\[
+y^{(h)}_{i,t} = r^{exec,(h)}_{i,t+1} - r^{exec,(h)}_{b(i),t+1}
+\]
 
-```pseudo
-function walk_forward(data, train_len, test_len, param_grid):
-    results = []
-    start = 0
-    while start + train_len + test_len <= len(data):
-        train = data[start : start + train_len]
-        test  = data[start + train_len : start + train_len + test_len]
+若用 next-open 到 horizon close 的对数收益，则
 
-        best_params = select_params(train, param_grid, objective="net_profit_after_cost_and_dd_penalty")
-        test_perf = backtest(test, best_params)
+\[
+r^{exec,(h)}_{i,t+1}
+=
+\ln\left(\frac{P^{exec,end}_{i,t+h}}{P^{exec,start}_{i,t+1}}\right)
+\]
 
-        results.append({
-            train_start: train.start_date,
-            train_end: train.end_date,
-            test_start: test.start_date,
-            test_end: test.end_date,
-            params: best_params,
-            perf: test_perf
-        })
-        start += test_len
-    return aggregate(results)
-```
+对行业中性标签，可将 \(b(i)\) 设为该股票所属行业 ETF；对市场中性标签，则设为 SPY 或 QQQ。这个标签比“明天涨跌”更适合横截面选股，因为它天然和组合构建相连。citeturn8search15turn0search2
 
-### 开源框架与常用工具
+建议同时保留三类标签：
 
-不同框架的优势非常不一样。VectorBT 的官方文档强调它完全基于 pandas/NumPy、由 Numba/Rust 加速，适合“在几秒内测试成千上万组策略”；LEAN/QuantConnect 明确定位为研究、回测与实盘一体化的开源引擎；Backtrader 的官方文档强调易用性和策略对象组织；vn.py 提供 CTA 回测、价差交易等模块，适合中文生态；RQAlpha Plus 则明确支持回测、模拟和实盘运行。citeturn20view2turn20view3turn20view0turn19view15turn23search1turn23search5turn23search12
-
-| 框架 | 最适合的用途 | 不足 |
-|---|---|---|
-| VectorBT | 指标研究、参数穷举、超快回测、策略热力图 | 事件驱动交易细节要自己补很多 |
-| Backtrader | 结构清晰、上手快、单策略到组合回测 | 大规模参数搜索不如向量化工具快 |
-| LEAN | 研究、回测、优化、实盘一体化；多数据和券商连接 | 学习曲线略陡 |
-| vn.py | 中文交易网关生态、CTA/价差/多模块 | 股票生态和券商接入要看具体环境 |
-| RQAlpha Plus | 中文量化平台流，回测到模拟/实盘链路顺 | 与平台生态绑定较深 |
-| Zipline | 经典教材型回测引擎，有滑点和订单延迟建模 | 当前生态相对弱一些 |
-
-对你这个项目，我建议的组合是：**VectorBT 做参数扫描 + Backtrader 或 LEAN 做事件回测 + 独立风控层 + 独立订单路由器**。如果你确定主战场在中文市场，可以考虑 **RQData/RQAlpha Plus 或 vn.py** 作为主栈候选。
-
-## 实盘部署与代码清单
-
-### 数据源、下单接口与生产架构
-
-在美股公开 API 生态里，Alpaca 与 IBKR 是最实用的两类路线。Alpaca 的 Trading API 文档说明可监控、下单、撤单，并提供唯一订单标识；其 Market Data API 提供实时与历史数据，实时股票流通过 WebSocket 暴露不同 feed，例如 SIP、IEX、delayed SIP 等。IBKR 的 TWS API 文档覆盖了实时与历史行情请求、下单与监控，但其 Market Data Subscriptions 页面明确要求 API 市场数据通常需要 Level 1 订阅、IBKR Pro 账户、最低资金要求与 Market Data API Acknowledgement。对研究数据而言，Massive/Polygon 的 Aggregates 与 Splits/Dividends 端点很适合做历史回测；对中文研究数据，Tushare、RQData、JoinQuant 适合做研究原型。citeturn19view11turn19view12turn19view13turn21view4turn19view14turn21view0turn21view1turn21view2turn21view3turn22search3turn22search2turn22search4
-
-```mermaid
-flowchart LR
-    A[市场数据层] --> B[数据清洗与企业行为调整]
-    B --> C[特征引擎]
-    C --> D[信号引擎]
-    D --> E[组合与风控引擎]
-    E --> F[订单意图]
-    F --> G[Broker Adapter]
-    G --> H[成交/持仓/账户回报]
-    H --> I[对账与PnL]
-    I --> J[监控告警]
-    J --> K[日志/审计/版本回滚]
-```
-
-如果你面向 A 股，系统必须额外包含“**程序化交易报告与券商接口适配**”层。深交所规则明确，首次进行程序化交易前应先报告，重大变更也須报告；报告内容还包括资金规模、杠杆来源、最高申报速率、单日最高申报笔数、交易软件名称与开发主体等。换句话说，你的软件本身就可能成为**被监管对象的一部分**，因此版本管理、软件标识、责任人信息和日志留痕都不能是“以后再说”的事情。citeturn25view1
-
-### 需要在代码中直接写入的模块清单
-
-下面这张表，就是建议你直接建立的代码目录与函数接口。
-
-| 模块 | 函数接口示例 | 输入 | 输出 | 关键说明 |
+| 标签类型 | 形式 | 适合模型 | 优点 | 风险 |
 |---|---|---|---|---|
-| 数据拉取 | `load_bars(symbols, start, end, timeframe, adjustment)` | 标的、起止时间、周期、复权模式 | `BarFrame[]` | 必须支持原始价与复权价双口径 |
-| 企业行为 | `apply_corporate_actions(bars, splits, dividends)` | Bars、拆股、分红 | 调整后 Bars | 信号与执行口径分离 |
-| 交易日历 | `get_calendar(market)` | 市场代码 | 交易日序列/会话 | A 股与美股日历不能共用 |
-| 特征引擎 | `compute_features(bars, cfg)` | Bars、参数 | `FeatureFrame` | 输出 K 线特征 + 指标 |
-| 状态识别 | `classify_regime(features, market_state, cfg)` | 特征、指数/波动 | `RegimeState` | 决定启用哪类策略 |
-| 信号引擎 | `generate_signals(features, regime, positions, cfg)` | 特征、状态、持仓 | `Signal[]` | 只负责“想法”，不决定股数 |
-| 仓位引擎 | `size_positions(signals, account, risk_cfg)` | 信号、账户、风控 | `OrderIntent[]` | 根据止损距离反推规模 |
-| 风控闸门 | `risk_gate(order_intents, account, positions, limits)` | 订单意图、账户、仓位 | 过滤后订单 | 可一票否决任何信号 |
-| 订单路由 | `route_orders(order_intents, broker_cfg)` | 订单意图、券商配置 | `BrokerOrder[]` | 适配 Alpaca/IBKR/券商 API |
-| 成交模拟 | `simulate_fills(order, bars, cost_cfg)` | 订单、行情、成本 | `Fill[]` | 回测必须独立实现，不可偷懒 |
-| 对账模块 | `reconcile(local_positions, broker_positions, fills)` | 本地仓位、券商仓位 | `ReconReport` | 实盘每天必须做 |
-| 监控模块 | `monitor(metrics, thresholds)` | PnL、延迟、API 状态 | `Alert[]` | 钉钉/邮件/短信/Telegram |
-| 审计日志 | `write_audit_log(event)` | 事件对象 | 日志记录 | 满足回放与合规需要 |
-| 回滚模块 | `rollback(strategy_version)` | 策略版本号 | 成功/失败 | 实盘事故的最后保险 |
+| 回归 | 连续 \(y^{(h)}_{i,t}\) | 线性回归、GBDT 回归 | 可直接转 expected return | 噪声大、极端值多 |
+| 分类 | 是否进入前 q 分位 | 逻辑回归、二分类 GBDT | 易校准、便于风险门 | 丢失幅度信息 |
+| 排序 | 每日 query group 排序标签 | LambdaRank / LambdaMART | 与投资决策最一致 | 实现更复杂 |
 
-建议统一的数据对象定义如下：
+XGBoost 的官方 ranking 教程明确要求样本按 query group 排序，并用 `qid` 指示组；默认 objective 是基于 LambdaMART 的 `rank:ndcg`。LightGBM 的 `LGBMRanker` 也明确把 ranking 作为独立问题处理。对 Quant.ai 而言，**第一阶段推荐先做回归和分类，第二阶段增加排序模型**。citeturn19search0turn5search1turn5search9
 
-```pseudo
-type Bar = {
-    symbol: string,
-    ts: datetime,
-    open: float,
-    high: float,
-    low: float,
-    close: float,
-    volume: float,
-    adj_close: float?,
-    trade_date: string,
-    market: string
-}
+### 损失函数与建模目标的匹配
 
-type Signal = {
-    symbol: string,
-    side: "BUY" | "SELL" | "SHORT" | "COVER",
-    reason: string,
-    score: float,
-    planned_entry: float,
-    initial_stop: float,
-    planned_exit: float?,
-    strategy_id: string
-}
+若标签是连续超额收益，首选损失应是对异常值更稳的 Huber 或带样本权重的 MSE：
 
-type OrderIntent = {
-    symbol: string,
-    side: string,
-    qty: int,
-    order_type: "MKT" | "LMT" | "VWAP" | "MOC",
-    tif: string,
-    limit_price: float?,
-    stop_price: float?,
-    client_order_id: string
+\[
+\mathcal{L}_{MSE}=\frac{1}{N}\sum_i w_i(y_i-\hat y_i)^2
+\]
+
+若目标是“是否进入次日/5日 Top decile”，则用 binary cross-entropy：
+
+\[
+\mathcal{L}_{logit}=-\frac{1}{N}\sum_i \left[y_i\log p_i + (1-y_i)\log(1-p_i)\right]
+\]
+
+若目标是横截面排序，则用 pairwise ranking loss。一个直观形式是对同日组内的正负对 \((i,j)\) 做 logistic pairwise：
+
+\[
+\mathcal{L}_{rank}=\sum_{(i,j)\in \mathcal{P}_t}\log\left(1+\exp\left(-(\hat s_i-\hat s_j)\right)\right)
+\]
+
+其中 \(\mathcal{P}_t\) 表示同一交易日、真实收益 \(y_i > y_j\) 的样本对。XGBoost 和 LightGBM 的 ranking 模型实际上会用 NDCG/Lambda 框架对这类 pairwise 梯度做代理。citeturn19search0turn5search1turn19search6
+
+### Purged / embargoed walk-forward 验证
+
+普通 `KFold` 不适合金融时间序列，哪怕 `TimeSeriesSplit` 也只能保证过去训练未来，不会自动处理**标签区间重叠**。Scikit-learn 官方文档自己就强调 `TimeSeriesSplit` 的前提是时间有序、且测试集时间在训练集之后；但在金融里，如果标签覆盖未来 5 天，那么测试期之前几天的训练样本也可能“看到”测试窗口的收益信息。citeturn6search1
+
+因此建议使用 **walk-forward + purge + embargo**。设样本 \(i\) 的标签区间为 \([t_i, t_i+h]\)。对于测试窗口 \(\mathcal{T}\)，应从训练集删除所有满足：
+
+\[
+[t_i, t_i+h]\cap \mathcal{T}\neq \emptyset
+\]
+
+的样本，这叫 purge；然后在测试窗口后再空出一段 embargo 区间 \(\delta\)，删除所有落在 \((\max \mathcal{T}, \max \mathcal{T}+\delta]\) 的训练样本。López de Prado 的 Purged K-Fold/CPCV 思路就是为了解决这个重叠泄漏问题；后续研究也继续把 CPCV 作为降低 backtest overfitting 风险的重要框架。citeturn2search4turn2search20turn2search14
+
+推荐默认折法如下：
+
+- 训练窗：3 年
+- 验证窗：6 个月
+- 测试窗：6 个月
+- 标签 horizon：1 日、5 日
+- embargo：5 个交易日
+- 每个 horizon 单独验证
+
+伪代码如下：
+
+```python
+def purged_walk_forward(dates, label_horizon=5, train_days=756, val_days=126, test_days=126, embargo_days=5):
+    windows = []
+    start = 0
+    while start + train_days + val_days + test_days < len(dates):
+        train = dates[start : start + train_days]
+        val = dates[start + train_days : start + train_days + val_days]
+        test = dates[start + train_days + val_days : start + train_days + val_days + test_days]
+
+        train = purge_overlap(train, val, test, label_horizon)
+        train = apply_embargo(train, test, embargo_days)
+
+        windows.append((train, val, test))
+        start += test_days
+    return windows
+```
+
+### Block bootstrap、置信区间与 Deflated Sharpe
+
+金融序列的收益、IC、换手和滑点都存在依赖结构，不能把每日观测当作 iid。Politis 与 Romano 的 stationary bootstrap 通过**随机长度、几何分布长度的块采样**来重采样依赖时间序列，适合给 IC、Sharpe、平均超额收益和 top-minus-bottom 组合收益构造更稳健的置信区间。citeturn15view3turn3search8
+
+建议默认使用 stationary bootstrap：
+
+\[
+L \sim Geometric(p), \quad E[L]=1/p
+\]
+
+如果是日频 OOS 收益和 IC，默认 `E[L]=5` 或 `10` 个交易日都合理；如果是分钟级执行成本，可从 `20` 到 `60` 个一分钟 bar 做敏感性分析。最核心的统计输出不应只有一个点估计，而应包含：
+
+\[
+CI_{95\%}(\overline{IC}),\quad CI_{95\%}(Sharpe),\quad CI_{95\%}(TopDecile\ Return)
+\]
+
+同时，把 t 检验建立在 bootstrap 分布上，而不是简单 iid 标准误。citeturn15view3turn3search7
+
+Sharpe 相关推断则建议使用 Probabilistic Sharpe Ratio / Deflated Sharpe Ratio 框架。Bailey 与 López de Prado 提出的 DSR，核心是把多重试验与收益非正态性一起纳入校正；直观上，它回答的不是“观测到的 Sharpe 高不高”，而是“在你试了这么多模型之后，这个 Sharpe 还有多大概率不是偶然的”。其核心可写为：
+
+\[
+PSR(SR^*)=
+\Phi\left(
+\frac{(\widehat{SR}-SR^*)\sqrt{T-1}}
+{\sqrt{1-\hat{\gamma}_3\widehat{SR}+\frac{\hat{\gamma}_4-1}{4}\widehat{SR}^2}}
+\right)
+\]
+
+而 DSR 则令基准 \(SR^*\) 改为多重试验下噪声策略可能达到的阈值 \(SR_0\)。在 Quant.ai 里，建议把“试过多少组超参数、多少模型、多少特征组合”记入 manifest，再计算 DSR。citeturn14view2turn2search1
+
+## 模型、组合与执行模拟
+
+### 模型阶梯
+
+Quant.ai 不应直接上深度模型。最好的 HRT 风格叙事，是一条**逐层增强、逐层对照**的模型阶梯：先做 rule-based baseline，再做线性模型，再做树模型，再做排序模型。这样每一步都可解释、可否证、可比较。
+
+| 模型 | 目标 | 默认损失 | 主要优点 | 主要缺点 | 默认用途 |
+|---|---|---|---|---|---|
+| Momentum baseline | 排序/打分 | 规则 | 最可解释，天然基线 | 容量低 | 所有实验必须保留 |
+| Ridge / Lasso 回归 | 连续超额收益 | MSE/Huber | 解释性强，易做系数审计 | 线性假设强 | 第一主力基线 |
+| 逻辑回归 | Top quantile 分类 | Log loss | 易校准、概率输出清晰 | 丢信息 | 风险门、候选筛选 |
+| LightGBM / XGBoost 回归 | 连续收益 | Huber / L2 | 处理非线性强、训练快 | 易过拟合 | 第二主力模型 |
+| LightGBM Ranker / XGBoost rank:ndcg | 排序 | LambdaRank / NDCG | 直接对齐选股排序 | 训练与评估更复杂 | 第二阶段升级 |
+
+LightGBM 和 XGBoost 的官方文档都把 ranking 作为一等公民任务；XGBoost 官方 ranking 教程尤其适合你的 daily cross-section 设定，因为每个交易日天然可作为一个 `qid` query group。citeturn5search1turn19search0turn5search2
+
+### 线性、树与排序模型的具体建议
+
+线性模型不是“低级版本”，而是**解释和约束的锚**。对于回归标签，建议先做带 `L2` 正则的 ridge，再补 `L1`/elastic net 用于特征筛选；对分类标签，建议做带 class weights 的逻辑回归。Scikit-learn 官方文档对逻辑回归与时间序列切分是成熟稳定的，且非常便于和你后续的 CI / pytest 接起来。citeturn6search1turn5search3
+
+树模型建议从 LightGBM 开始：训练速度快、对表格因子特征表现稳定，并且有 `LGBMRanker`。默认可从以下参数开始：
+
+- `learning_rate = 0.05`
+- `num_leaves = 31`
+- `max_depth = -1`
+- `min_data_in_leaf = 300`
+- `feature_fraction = 0.7`
+- `bagging_fraction = 0.7`
+- `lambda_l1 = 0`
+- `lambda_l2 = 1`
+- `n_estimators = 2000`
+- `early_stopping_rounds = 100`
+
+排序模型方面，若 daily query group 平均只有 150–300 只股票，则 pairwise/listwise 的收益很可能体现在**Top decile 组合质量**而不是整体 RMSE。建议先用二值 relevance 标签，例如当日真实收益进入前 20% 记为 1，否则 0；第二版再尝试分级 relevance，比如前 10%/20%/中位/后 20%。LightGBM 和 XGBoost 的 ranking 文档都支持这一路线。citeturn5search1turn5search9turn19search0
+
+### 正则化、特征选择、校准与超参数搜索
+
+特征选择建议遵循三层规则。首先，基于业务删除显然重复或共线过高的特征；其次，对线性模型看稳定系数与 bootstrap 置信区间；第三，对树模型看 permutation importance，但只在**真正的 OOS holdout** 上计算。Scikit-learn 的 permutation importance 文档明确提醒：它衡量的是打乱单特征后模型分数下降的幅度，适合做黑箱模型的后验解释。citeturn6search2turn6search6
+
+如果使用分类模型输出概率，必须做校准。Scikit-learn 官方 calibration 文档支持 sigmoid/Platt scaling 与 isotonic regression。经验上，小样本或概率偏差近似单调时优先 sigmoid；样本较多且非线性失真明显时再用 isotonic。Quant.ai 的默认建议是：**逻辑回归通常不二次校准；树分类模型做 sigmoid 校准；排序模型不直接做概率校准，而是对 top bucket 的历史命中率做经验校准表。**citeturn5search0
+
+超参数搜索不要做成无限试验机。Optuna 是一个非常合适的工程选择，但搜索要嵌套在训练窗内部，不得把最终测试窗用于选参。建议默认每类模型只开 `30–60` 次试验，并把 trial 数、搜索空间和最佳 trial 一起写入 manifest。Optuna 官方文档与项目主页都支持这种 study/trial 工作流。citeturn6search0turn6search4
+
+### 组合构建与仓位管理
+
+模型分数不等于仓位。第一版组合构建建议采用**排序打分 + 波动率缩放 + 行业/市场约束**。设模型输出为 \(s_{i,t}\)，过去 20 日波动率为 \(\hat\sigma_{i,t}\)，则未约束权重可定义为：
+
+\[
+\tilde w_{i,t}=\frac{s_{i,t}}{\hat\sigma_{i,t}+\epsilon}
+\]
+
+再对其做横截面去均值和 gross 归一化：
+
+\[
+w_{i,t}= \frac{\tilde w_{i,t}-\overline{\tilde w_t}}{\sum_j |\tilde w_{j,t}-\overline{\tilde w_t}|}
+\]
+
+如果你只做 long-only，则把负权重截断为 0 再归一化；若做研究级 long-short，可再加 sector neutrality 和 beta neutrality 投影。第一版完全可以把“可交易版本”设成 long/avoid/cash，而把 long-short 只保留在研究层。citeturn4search15turn4search9
+
+仓位管理建议把 volatility targeting 和 fractional Kelly 分开。最稳的方法是先做资产级波动率缩放，再在组合层加一个很小的 Kelly 系数。Kelly 的核心思想来自 John Kelly 的经典论文，即在估计收益和风险可控的前提下最大化长期增长率；但在实务里，**从不建议全 Kelly**。citeturn4search3
+
+矩阵形式的 Kelly 权重为：
+
+\[
+w^{Kelly} = \Sigma^{-1}\mu
+\]
+
+但考虑估计误差，建议只使用 fraction \(c\)：
+
+\[
+w = c \cdot \Sigma^{-1}\mu,\quad c\in[0.1,0.25]
+\]
+
+第一版默认可用 `c = 0.1`，并叠加硬约束：单票权重上限 `2%–5%`，行业敞口上限 `20%–25%`，单日换手上限 `25%–50%`，极端 ATR 风险票自动降权。这样做的好处是：哪怕预测正确率一般，组合也不会因为估计误差而把自己炸掉。citeturn4search3turn4search20
+
+### 交易成本、滑点与实现短缺
+
+预测模型的收益必须先经过成本。建议用一个**层级化成本模型**：
+
+\[
+TC_{i,t} = Fee_{i,t} + SpreadCost_{i,t} + Impact_{i,t} + Delay_{i,t}
+\]
+
+最基础的半价差成本：
+
+\[
+SpreadCost_{i,t}=\frac{1}{2}spread_{i,t}\cdot |q_{i,t}|
+\]
+
+再加一个基于参与率/ADV 的冲击项。借鉴 Almgren–Chriss 的思想，可从一个简化函数开始：
+
+\[
+Impact_{i,t}= \alpha \sigma_{i,t}\sqrt{\frac{|q_{i,t}|}{ADV_{i,t}}} + \beta \frac{|q_{i,t}|}{ADV_{i,t}}
+\]
+
+其中 \(\alpha,\beta\) 需要用你的 replay 样本估计；第一版可从经验值启动，再逐周校准。Almgren–Chriss 论文的核心就是在交易成本和价格风险之间找最优执行轨迹，Perold 的 Implementation Shortfall 则提供了评估“理论决策价格”和“实际成交结果”之间差距的统一框架。citeturn20view0turn18search2turn18search17
+
+实现短缺可以写成：
+
+\[
+IS = side \cdot \frac{\bar{P}_{fill}-P_{decision}}{P_{decision}} + fees
+\]
+
+其中 `side=+1` 表示买单、`side=-1` 表示卖单。进一步可拆成：
+
+- **delay cost**：从生成信号到下单前，价格移动带来的损失；
+- **execution cost**：相对 decision price 的成交偏离；
+- **opportunity cost**：未成交部分最终放弃带来的损失。
+
+这三个指标都应在 daily monitor 中单独记录。Perold 与后续实现短缺文献都以此为核心。citeturn18search2turn18search7
+
+### 执行仿真与 C++ 引擎集成
+
+这是 Quant.ai 变成“10/10 项目”的决定性部分。Nasdaq TotalView-ITCH 官方规范明确提供逐订单、带归因的全深度数据，包含 Add/Modify/Delete/Replace/Trade/NOII 等消息；NYSE Integrated Feed 官方规范则提供按撮合引擎顺序发布的深度订单、成交、开收盘失衡、状态更新等消息。你已有的 C++ 引擎如果已经能稳定回放、维护簿、检查不变量，那么接下来要补的是**我的订单如何进入簿、如何排队、何时成交、成交了多少**。citeturn14view0turn14view1
+
+建议的订单模型分三层：
+
+| 层次 | 支持订单 | 第一版建议 |
+|---|---|---|
+| 研究层 | 目标仓位 / 目标数量 | 必做 |
+| 仿真层 | market、limit、cancel/replace、IOC、MOO/LOO | market + limit 先做，开盘单可后补 |
+| 纸交易层 | Alpaca `market`/`limit`/`stop`/`stop_limit`/`trailing_stop` | 先用 `market` 和 `limit` |
+
+Alpaca 订单文档显示，股票支持 `market`、`limit`、`stop`、`stop_limit`、`trailing_stop`，并支持 `bracket`、`oco`、`oto` 等 order class；其 paper trading 文档说明该环境使用真实市场数据并模拟成交。对于日频系统，这已经足以完成“模型 → 订单 → 成交 → 回写监控”的闭环。citeturn16search8turn11search13
+
+LOB fill 模型的第一版建议尽量保守。对于被动限价单，若你在价格 \(p\)、时间 \(t\) 报单，先记录当时同价位前方可见队列：
+
+\[
+Q^{ahead}_{t,p} = visible\_depth_{t,p}
+\]
+
+随后在 replay 中累计同价位前方被执行或撤销的数量，直到：
+
+\[
+Q^{ahead}_{t,p} \le 0
+\]
+
+下一个向该价位打到的对手量才可视为你的可成交量。这个模型有一个重要优点：它不会错把“价格触碰”当成“我一定成交”。它的缺点也很明显：不会捕捉隐藏流动性、优先级细节或交易所特定规则；但第一版宁愿偏保守，也不要高估 fill。citeturn14view0turn14view1
+
+建议的集成方式如下：
+
+```python
+# Python research -> C++ execution bridge
+signals = model.predict(cross_section_features_t)
+orders = portfolio_to_orders(signals, current_positions, risk_limits)
+
+write_arrow("orders.arrow", orders)
+run_cpp_replay(
+    market_data_path="lob_events.bin",
+    orders_path="orders.arrow",
+    output_path="fills.arrow"
+)
+
+fills = read_arrow("fills.arrow")
+metrics = compute_execution_metrics(fills, decision_prices, quotes)
+```
+
+在工程边界上，推荐让 Python 负责“研究、组合、风控、可解释输出”，让 C++ 负责“事件回放、订单簿状态、排队/成交、时延与不变量”。这样既保留你当前 Python 生态在研究端的效率，又能把 C++ 的价值集中在最 hard-core 的执行证明上。citeturn14view0turn14view1turn23search3
+
+## 监控、LLM 与工程复现
+
+### 监控体系
+
+一个像 HRT 风格的项目，如果没有监控，就还只是离线研究。监控建议分成四类：**信号质量、概率校准、输入分布漂移、回测到实盘差异**。
+
+首要指标是 Rank IC 和 top-bucket 收益。建议每日记录：
+
+\[
+IC_t,\quad Top5Ret_t,\quad Top10Ret_t,\quad TopDecileMinusBottomDecile_t
+\]
+
+并同时记录按市场状态分层的结果，例如 `risk-on / risk-off`、高波动 / 低波动、行业强弱轮动等。这样你才能知道模型是“普遍有效”还是“只在某一 regime 有效”。这一做法与横截面系统策略研究的一般方法一致。citeturn4search15turn4search9
+
+若模型输出概率，建议做 reliability curve、Brier score 与分桶命中率监控。Scikit-learn 的 calibration 模块为此提供了标准化工具。实际阈值建议为：过去 20 个交易日，若高置信区间的真实命中率持续低于预测概率 10 个百分点以上，则标记为校准退化。citeturn5search0
+
+输入漂移可以从简单而稳健的方法开始。推荐默认同时监控：
+
+- PSI（Population Stability Index）
+- KS 统计量
+- 关键特征的均值/方差与分位数漂移
+- 缺失率、极值率、行业覆盖率变化
+
+默认经验阈值可以设为 `PSI > 0.2` 触发黄灯、`PSI > 0.3` 触发红灯；但真正决定是否停模型的，不应是单日阈值，而是**连续若干天的漂移 + 策略绩效同时恶化**。这部分公式可以自行实现，不依赖外部库。citeturn11search5turn16search1
+
+最重要的一类监控是**backtest-to-live gap**。Paper trading 与 Alpaca 订单事件接口可以帮助你持续记录：
+
+- decision price vs submitted price
+- submitted vs filled
+- simulated fill vs paper fill
+- backtest 预测 hit rate vs live/paper hit rate
+- 估计成本 vs 实际/仿真成本
+
+Alpaca 的 paper trading 官方文档说明，它用真实市场数据驱动模拟成交；trade events API 则能持续推送订单状态变化。对 Quant.ai 来说，这正好可以作为真实 replay 和 broker 级模拟之间的对照层。citeturn11search13turn11search24
+
+### LLM 的正确角色
+
+LLM 在 Quant.ai 里应该是**配置与解释器**，不是“拍脑袋交易员”。最合适的职责有三类：
+
+第一，**结构化研究配置**。用户自然语言输入“测试半导体股 20 日相对强弱对未来 5 日超额收益的预测能力”，LLM 只负责把它转换成受限 JSON：
+
+```json
+{
+  "universe": "semiconductor_us_large_cap",
+  "features": ["mom_20", "rs_spy_20", "vol_20", "atr_14"],
+  "label": "future_5d_excess_return_vs_spy",
+  "model": "lightgbm_ranker",
+  "rebalance": "daily",
+  "execution_anchor": "next_open"
 }
 ```
 
-### 可直接复用的主流程伪代码
+这类用法最适合配合 JSON Schema 与 Pydantic。JSON Schema 官方文档把它定义为用于约束和验证 JSON 结构的声明式语言；Pydantic 官方文档则明确支持从模型导出 JSON Schema，并使用 `model_validate` / `model_validate_json` 做验证。OpenAI 的 structured outputs 文档也说明，模型输出可被约束到开发者提供的 schema。citeturn12search1turn12search0turn12search2turn12search8
 
-```pseudo
-function daily_main(trade_date):
-    bars = load_bars(universe, lookback_start(trade_date), trade_date, "1d", adjustment="both")
-    features = compute_features(bars, indicator_cfg)
-    regime = classify_regime(features, market_state=features.index, cfg=regime_cfg)
+第二，**结果解释**。它可以解释“为什么今天 AMD 排名高于 NVDA”，但解释只能引用已算出的特征、分数、风险和历史监控结果，而不能让 LLM 自己生成新的价格观点。最稳妥的实现方式是 retrieval-style：先把模型输出和特征快照作为 context 提供给 LLM，再要求它只在这些字段上总结。这样可以把幻觉风险压到最低。citeturn12search5turn12search3
 
-    signals = generate_signals(features, regime, positions, strategy_cfg)
-    order_intents = size_positions(signals, account, risk_cfg)
-    approved_orders = risk_gate(order_intents, account, positions, limits)
+第三，**故障归因与实验检索**。例如让 LLM 做“过去 20 个交易日中，失败的 top score 推荐分别失败在什么 regime、什么行业、什么成本条件下”。这本质上是自然语言 BI，而不是预测。
 
-    save_trade_plan(trade_date + 1, approved_orders)
-    write_audit_log({
-        date: trade_date,
-        signals: len(signals),
-        approved: len(approved_orders),
-        account_equity: account.equity
-    })
+必须明确禁止的内容只有两条：**LLM 不能直接产出未验证订单；LLM 不能绕过 risk engine。** 这是 guardrail 的核心。可以通过输入白名单、schema 验证、枚举字段、只读下单权限和两阶段确认来实现。citeturn12search1turn12search7turn12search11
+
+### 可复现性、测试与 CI
+
+Quant.ai 要达到“10/10”，复现性必须是产品特性，而不是 README 口号。建议坚持三条工程铁律：
+
+其一，**一条命令重跑完整 OOS**。例如：
+
+```bash
+make oos REPORT_DATE=2026-07-26
 ```
 
-如果你做“日线生成信号、次日执行”，则次日开盘前再跑一次执行引擎：
+它应自动完成：拉取数据版本、构造特征、生成标签、训练所有模型、做 walk-forward、产出报告、生成 paper trading watchlist。
 
-```pseudo
-function next_day_execute(trade_date):
-    plans = load_trade_plan(trade_date)
-    if data_is_stale() or api_is_degraded():
-        enter_protective_mode()
-        return
+其二，**notebook 只能做分析，不是生产真值**。所有关键结果都必须来自 `src/` 中可调用的模块和配置文件；notebook 只消费 manifest 和中间结果。
 
-    for p in plans:
-        live_order = create_broker_order(p, broker_cfg)
-        submit_order(live_order)
+其三，**CI 必须验证研究边界条件**。GitHub Actions 官方文档已经给出标准 Python test workflow；DVC 则负责数据与模型版本。citeturn9search2turn9search1
+
+建议的测试清单如下：
+
+| 测试类别 | 必测内容 | 失败后果 |
+|---|---|---|
+| Schema 测试 | LLM 输出、配置文件、manifest 合法 | 直接阻断运行 |
+| 数据测试 | 重复键、负价格、企业行为前后异常、symbol 映射冲突 | 阻断构建数据集 |
+| 无未来测试 | 任意样本的特征时间戳 < 标签起点 | 阻断训练 |
+| CV 测试 | train/test 无重叠、purge 与 embargo 生效 | 阻断评估 |
+| 模型测试 | baseline 与主模型在小样本上能跑通 | 阻断合并 |
+| 执行测试 | C++ replay 的簿不变量、成交守恒、determinism | 阻断发布 |
+| 监控测试 | 指标计算、告警阈值、日报模板生成 | 阻断日报 |
+
+Hugging Face 数据仓库的 dataset card/README 机制也很适合保存数据说明；官方文档明确把 README.md 视为 dataset card，可记录数据内容、来源、偏差和使用方法。对 Quant.ai 而言，这非常适合拿来做“内部数据集卡”。citeturn22search0turn22search3turn22search5
+
+建议的仓库结构如下：
+
+```text
+quant-ai/
+├── configs/
+│   ├── data/
+│   ├── features/
+│   ├── models/
+│   ├── cv/
+│   └── trading/
+├── data/
+│   ├── raw/
+│   ├── research/
+│   ├── execution/
+│   └── manifests/
+├── src/
+│   ├── data/
+│   ├── features/
+│   ├── labels/
+│   ├── validation/
+│   ├── models/
+│   ├── portfolio/
+│   ├── execution/
+│   ├── monitoring/
+│   └── llm/
+├── cpp/
+│   ├── replay/
+│   ├── lob/
+│   └── tests/
+├── reports/
+├── notebooks/
+├── tests/
+├── dvc.yaml
+├── Makefile
+└── .github/workflows/ci.yml
 ```
 
-### 示例参数表
+默认落地建议是：Python 侧用 `pyproject.toml` + `pytest` + `ruff` + `mypy`；C++ 侧用 `CMake` + `ctest`；CI 至少跑 Python 单测、关键快测 replay、不含全量训练的小样本 smoke test。官方 GitHub Actions 教程已经足够覆盖这一层。citeturn9search2
 
-这些不是最终参数，而是**首轮上线前的起始配置**。
+## 七周冲刺计划
 
-| 参数键 | 建议初值 | 说明 |
+下面给出一份严格按周验收的冲刺表。它假设你的现有 C++ replay/LOB 已经能处理基础事件流，只需继续联调和扩展。
+
+| 周次 | 目标 | 交付物 | 验收标准 |
+|---|---|---|---|
+| 第 1 周 | 点位时间数据层 | `RESEARCH_SPEC.md`、数据 schema、manifest v1、HF+Alpaca ingestion | 能固定 `revision` 与 `asof` 重建研究数据；质量测试全绿 |
+| 第 2 周 | 特征与标签 | `features_v1.py`、`labels_v1.py`、行业中性化、robust z-score | 任意样本通过“无未来”测试；能生成 1d/5d 标签 |
+| 第 3 周 | 验证框架与 baseline | purged walk-forward、embargo、stationary bootstrap、momentum baseline | 能输出完整 OOS fold 结果、Rank IC 与置信区间 |
+| 第 4 周 | 主模型阶梯 | ridge/logit、LightGBM、XGBoost、初版 ranker、Optuna 搜索 | 有统一模型比较表；每类模型 trial 记录进 manifest |
+| 第 5 周 | 组合、成本与执行联调 | 仓位引擎、TC model v1、IS 指标、Python→C++ 桥接 | 可从目标权重得到 replay fill；输出实现短缺与滑点分解 |
+| 第 6 周 | 监控与 paper trading | Alpaca paper trading、alerts、daily report、calibration/drift monitor | 每日自动生成 watchlist 与监控日报；paper 结果落库 |
+| 第 7 周 | 硬化与展示 | 4–6 页研究报告、演示视频、README、CI/DVC 完整打通 | 一条命令重跑 OOS；简历数字可复现；报告可直接面试讲解 |
+
+这一计划之所以可行，是因为大部分能力都来自现成官方接口：HF 的版本固定、Alpaca 的 market data / paper trading / orders / assets / corporate actions / calendar，以及 GitHub Actions + DVC 的复现栈。真正耗时的不是“写 API 调用”，而是把 purge/embargo、执行延迟、成本估计和监控闭环做对。citeturn10search0turn11search13turn16search8turn16search1turn8search0turn11search5turn9search1turn9search2
+
+最终验收时，建议你按下面的标准自查：
+
+- 任何一张 OOS 图都能追溯到 manifest、数据 revision、Git commit。
+- 能清楚说明研究层价格与执行层价格为何不同。
+- 能解释为什么普通 `TimeSeriesSplit` 不够，为什么要 purge/embargo。
+- 能拿出至少一个失败模型，并解释它为什么失败。
+- 能把“预测 alpha”与“执行 alpha”分开汇报。
+- 能展示 20–30 个交易日以上的 paper trading 历史。
+- 能把 LLM 的作用限制在结构化配置和解释，不把它当交易信号本身。
+
+### 优先阅读来源
+
+下表按“你真正该先看什么”排序，而不是按学术历史排序。
+
+| 主题 | 最优先来源 | 用途 |
 |---|---|---|
-| `ema_fast` | `20` | 趋势识别快线 |
-| `ema_slow` | `50` | 趋势识别慢线 |
-| `ema_filter` | `200` | 长趋势过滤 |
-| `adx_len` | `14` | 趋势强度 |
-| `adx_trend_th` | `20` | 趋势阈值 |
-| `rsi_short_len` | `2` | 短反转 |
-| `rsi_short_buy` | `10` | 短反转超卖 |
-| `bb_len` | `20` | 布林带长度 |
-| `bb_k` | `2.0` | 布林带倍数 |
-| `atr_len` | `14` | 波动率 |
-| `atr_stop_mult` | `1.5–2.5` | 止损倍数 |
-| `donchian_breakout` | `20` 或 `55` | 突破通道 |
-| `risk_per_trade` | `0.005` | 单笔风险 0.5% |
-| `max_position_pct` | `0.08` | 单票 8% |
-| `soft_dd` | `0.07` | 软回撤 7% |
-| `hard_dd` | `0.12` | 硬回撤 12% |
-| `max_consecutive_losses` | `5` | 连亏熔断 |
-| `min_rvol_for_breakout` | `1.5` | 突破量能过滤 |
+| HRT 岗位定义 | HRT Algorithm Developer 招聘页与 Student Opportunities 页面 citeturn23search2turn23search3 | 明确项目故事要对齐什么能力 |
+| Alpaca 数据真相 | bars / trades / quotes / assets / corporate actions / calendar / paper trading 文档 citeturn8search15turn8search17turn16search6turn16search1turn8search0turn11search5turn11search13 | 实现数据层、纸交易、审计层 |
+| Hugging Face 版本固定 | `load_dataset(..., revision=...)` 与 dataset card 文档 citeturn10search0turn22search0 | 固定外部数据依赖与自建数据卡 |
+| yfinance 边界 | 官方文档与 `download` 说明 citeturn0search1turn0search13 | 只把它当研究/原型工具 |
+| 交易所深度 feed | Nasdaq TotalView-ITCH、NYSE Integrated Feed 规范 citeturn14view0turn14view1 | 支持 C++ LOB / replay 设计 |
+| 动量研究起点 | Jegadeesh & Titman 1993 citeturn15view4 | 为第一版特征和 baseline 定锚 |
+| 验证与过拟合控制 | Purged CV/CPCV、DSR、Stationary Bootstrap citeturn2search4turn2search20turn14view2turn15view3 | 让 OOS 结果可信 |
+| 执行理论 | Perold 1988、Almgren–Chriss 2000 citeturn18search2turn20view0 | 成本、实现短缺、最优执行的理论底座 |
+| 排序模型实现 | LightGBM Ranker、XGBoost Learning to Rank 文档 citeturn5search1turn19search0 | 第二阶段做 cross-sectional ranker |
+| 结构化 LLM | JSON Schema、Pydantic、Structured Outputs 文档 citeturn12search1turn12search0turn12search2 | 只让 LLM 做受限配置与解释 |
+| 工程复现 | DVC 与 GitHub Actions 官方文档 citeturn9search1turn9search2 | 把“能跑”升级为“可复现” |
 
-### 模拟盘到实盘迁移步骤
-
-| 阶段 | 目标 | 放行条件 |
-|---|---|---|
-| 离线研究 | 找到有稳健性的参数区 | 样本外为正、成本敏感性不过度脆弱 |
-| 事件回测 | 验证撮合、滑点、订单状态机 | 成本后仍有边际，回撤在可接受范围内 |
-| 模拟盘 | 验证数据口径与订单回报一致性 | 本地仓位与券商仓位对账稳定，报警闭环完整 |
-| Shadow Live | 实盘看信号但不真钱下单 | 两周以上“计划单”和真实行情一致 |
-| 小资金实盘 | 验证真实成交、跳空和风控 | 1–2 个月无重大执行事故 |
-| 扩容 | 从 10% 风险预算放到 100% | 逐级提升，不允许一步到位 |
-
-## 参考来源与合规风险提示
-
-### 推荐优先参考来源
-
-下表按“官方/原始论文/中文权威资料优先”的原则整理了你最值得持续跟踪的来源。由于不能直接贴裸链接，点击引用即可进入原文。
-
-| 类别 | 推荐来源 | 用途 |
-|---|---|---|
-| 交易所规则 | 上交所交易规则、程序化交易实施细则；深交所程序化交易实施细则与盘后交易规则 citeturn43search5turn18search3turn25view1turn19view9 | 确认交易时段、回转交易限制、程序化报告义务 |
-| 美股监管 | FINRA Rule 4210、FINRA Margin Topic、IRS Topic 409 citeturn41search4turn41search2turn41search7turn16search0 | 保证金、日内风险、税务口径 |
-| 指标公式 | Sierra Chart Technical Studies Reference；TA-Lib Pattern Recognition citeturn40view0turn39view0turn19view2turn34view2turn33view1turn35view2turn36view0turn38view1turn32view0 | 指标与 K 线模式的公式与标准接口 |
-| 学术原始文献 | Moskowitz/Ooi/Pedersen 时间序列动量；Hurst/AQR 趋势跟踪百年证据；Faber 趋势过滤；Jegadeesh/Titman 动量；Gatev 配对交易；Bailey PBO/DSR citeturn12search8turn12search5turn12search6turn14search0turn13search3turn15search0turn15search1 | 评估策略是否有长期研究基础 |
-| 回测框架 | LEAN、VectorBT、Backtrader、vn.py、RQAlpha Plus、JoinQuant citeturn20view0turn20view2turn19view15turn23search1turn23search5turn23search12turn23search3 | 研究、回测、模拟盘、实盘框架选择 |
-| 数据接口 | Alpaca、IBKR、Massive/Polygon、Tushare、RQData、JoinQuant citeturn19view12turn19view13turn19view11turn21view4turn19view14turn21view0turn21view2turn21view3turn22search3turn22search2turn22search4 | 历史与实时数据、下单与回报 |
-
-### 风险与合规提示
-
-首先是**市场风险**。趋势、动量、反转、配对这些策略即便在长期研究里有效，也都会经历长时间失效、风格切换和深度回撤。你的软件不应追求“每天都赚 500 美元”，而应追求**长期期望值为正、回撤受控、容量可扩展**。这也是为什么本报告一直把目标拆成资金规模、风险预算和策略容量。citeturn12search8turn12search5turn13search3
-
-其次是**模型风险**。回测过拟合、样本内挑选和多重测试偏差会让你高估策略质量。没有样本外、滚动、Walk-forward、PBO 和 DSR 的“漂亮回测”，在统计上往往不够可信。citeturn15search0turn15search1turn15search18
-
-再次是**实现风险**。企业行为处理错误、幸存者偏差、历史/实时数据口径不一致、订单状态机错误、API 鉴权失效、行情延迟、对账失败，都会让实盘结果和回测完全脱钩。IBKR 官方就明确提醒 API 历史数据有订阅要求且历史成交量与实时数据可能不同；QuantConnect 也明确提醒，数据若存在幸存者偏差或清洗不足，会造成糟糕交易表现。citeturn21view0turn21view1turn30search4turn30search15
-
-最后是**法律、交易所规则与税务风险**。若你做 A 股并自动生成/发送指令，交易所规则已把这类行为纳入程序化交易管理，个人投资者也在范围内，首次交易前和重大变更时应履行报告义务；若你做美股并使用保证金，Reg T 与 FINRA 的日内保证金规则会直接影响你的可用买入力和风控；若有盈利，税务处理必须按所在地税法申报，美国可先从 IRS Topic 409 着手，境内则需结合券商与税务机关最新口径，特殊情形如限售股等另有规则。以上内容属于工程与合规研究，不构成法律、税务或个性化投资建议。citeturn25view1turn41search2turn41search4turn16search0turn16search10
+这份蓝图的核心结论可以压缩成一句话：**把 Quant.ai 做成一个点位时间一致、OOS 严格、可执行、可监控、可复现的美股 Alpha 研究与执行平台；把 LLM 限定在 schema 化配置和解释层；把你现有的 C++ 引擎变成真正的执行证据。** 这样，它才会像 HRT 风格的 Algorithm Developer 项目，而不是“加了股票界面的 ML Demo”。citeturn23search3turn14view0turn14view1turn14view2turn11search13turn9search1
