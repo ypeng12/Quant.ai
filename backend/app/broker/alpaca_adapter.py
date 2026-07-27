@@ -10,8 +10,16 @@ from alpaca.trading.client import TradingClient
 from alpaca.trading.requests import MarketOrderRequest, LimitOrderRequest
 from alpaca.trading.enums import OrderSide, TimeInForce, OrderStatus
 
+from dotenv import load_dotenv
+
 class AlpacaAdapter:
     def __init__(self, api_key: Optional[str] = None, api_secret: Optional[str] = None, base_url: Optional[str] = None):
+        # Auto load .env from backend/.env or root .env
+        cur_dir = os.path.dirname(os.path.abspath(__file__))
+        load_dotenv(os.path.join(os.path.dirname(os.path.dirname(cur_dir)), 'backend', '.env'))
+        load_dotenv(os.path.join(os.path.dirname(os.path.dirname(cur_dir)), '.env'))
+        load_dotenv()
+
         # Load from arguments or fallback to env variables
         self.api_key = api_key or os.environ.get("ALPACA_API_KEY")
         self.api_secret = api_secret or os.environ.get("ALPACA_SECRET_KEY") or os.environ.get("ALPACA_API_SECRET")
