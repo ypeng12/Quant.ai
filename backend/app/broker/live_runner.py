@@ -262,19 +262,18 @@ class LiveTradingRunner:
                     await asyncio.sleep(60)
                     continue
 
-                self.add_log("🔄 开始新一轮行情扫描与策略评估...")
+                self.add_log(f"📡 [{len(self.active_tickers)} 支股票] 开始本轮分析...")
                 
                 # 2. Get active positions from Alpaca to sync state
                 try:
                     positions_list = self.adapter.get_open_positions()
                     positions_by_ticker = {pos['ticker']: pos for pos in positions_list}
-                    # 自动将用户账户中持有的股票加入 AI 监控池
                     for pos_ticker in positions_by_ticker.keys():
                         if pos_ticker not in self.active_tickers:
                             self.active_tickers.append(pos_ticker)
-                            self.add_log(f"📥 检测到已买入持仓股票 [{pos_ticker}]，已自动同步拉入 AI 策略风控与监控池。")
+                            self.add_log(f"📥 检测到持仓股票 [{pos_ticker}]，已自动加入监控池。")
                 except Exception as e:
-                    self.add_log(f"⚠️ 无法从 Alpaca 获取当前持仓：{str(e)}，跳过本轮。")
+                    self.add_log(f"⚠️ 无法获取 Alpaca 持仓：{str(e)}，跳过本轮。")
                     await asyncio.sleep(20)
                     continue
 
@@ -284,10 +283,8 @@ class LiveTradingRunner:
                         break
                         
                     try:
-                        # Invalidate cache to force yfinance to fetch fresh prices
                         invalidate_cache(ticker)
                         
-                        # Fetch the last few days of bars
                         try:
                             df = fetch_and_prepare_data(ticker, period="3d", interval="1m")
                         except Exception:
@@ -300,20 +297,17 @@ class LiveTradingRunner:
                                 df = None
                         
                         if df is None or df.empty or len(df) < 2:
-                            self.add_log(f"🔍 [{ticker}] 等待最新 K 线数据更新（休眠中）")
+                            self.add_log(f"🔍 [{ticker}] 等待 K 线数据更新...")
                             continue
                             
-                        # Use the last bar as current state, second-to-last as prev
                         row = df.iloc[-1]
                         prev_row = df.iloc[-2]
                         close_price = float(row['Close'])
                         
-                        # Get broker position details
                         alpaca_pos = positions_by_ticker.get(ticker)
                         current_shares = alpaca_pos['shares'] if alpaca_pos else 0
                         avg_cost = alpaca_pos['avg_entry_price'] if alpaca_pos else 0.0
                         
-                        # Track highest price achieved while holding for trailing stop-loss
                         if current_shares > 0:
                             highest_price = max(
                                 self.highest_prices.get(ticker, avg_cost),
@@ -325,7 +319,7 @@ class LiveTradingRunner:
                             if ticker in self.highest_prices:
                                 del self.highest_prices[ticker]
 
-                        # 4. Evaluate strategy actions
+                        # 4. Evaluate strategy
                         action, reason = evaluate_market_state(
                             row=row,
                             prev_row=prev_row,
@@ -335,10 +329,60 @@ class LiveTradingRunner:
                             highest_price=highest_price,
                             params=self.strategy_params
                         )
-                        
-                        # Log status
-                        regime_name = row.get('Regime', 'range_bound')
-                        self.add_log(f"📊 [{ticker}] 当前价格: ${close_price:.2f} | 市场状态: {regime_name} | 持仓: {current_shares}股 | 决策: {action} ({reason})")
+
+                        # ── 生成富有信息量的分析快照 ──
+                        ema_9  = float(row.get('EMA_9',  close_price))
+                        ema_21 = float(row.get('EMA_21', close_price))
+                        vwap   = float(row.get('VWAP',   close_price))
+                        rsi    = float(row.get('RSI',    50.0))
+                        rvol   = float(row.get('RVOL',   1.0))
+                        regime = str(row.get('Regime', 'range_bound'))
+
+                        trend_icon = "📈" if ema_9 > ema_21 else "📉"
+                        vwap_pos   = "VWAP上方✅" if close_price >= vwap else "VWAP下方⚠️"
+                        ema_gap_pct = abs(ema_9 - ema_21) / ema_21 * 100
+
+                        # 持仓状态描述
+                        if current_shares > 0:
+                            pnl_pct = (close_price - avg_cost) / avg_cost * 100
+                            pos_label = f"多头 {current_shares}股 @ ${avg_cost:.2f} | 浮动: {'+' if pnl_pct>=0 else ''}{pnl_pct:.2f}%"
+                        elif current_shares < 0:
+                            pnl_pct = (avg_cost - close_price) / avg_cost * 100
+                            pos_label = f"空头 {abs(current_shares)}股 @ ${avg_cost:.2f} | 浮动: {'+' if pnl_pct>=0 else ''}{pnl_pct:.2f}%"
+                        else:
+                            pos_label = "空仓观望"
+
+                        # 接近触发的预警信号
+                        alerts = []
+                        vwap_dist_pct = abs(close_price - vwap) / vwap * 100
+                        ema_cross_dist = abs(ema_9 - ema_21) / ema_21 * 100
+                        if vwap_dist_pct < 0.15:
+                            alerts.append("🔔 逼近VWAP生命线")
+                        if ema_cross_dist < 0.08:
+                            alerts.append("⚡ EMA9/21 接近交叉")
+                        if rsi > 68:
+                            alerts.append(f"🌡️ RSI={rsi:.0f} 超买区间")
+                        if rsi < 32:
+                            alerts.append(f"🌡️ RSI={rsi:.0f} 超卖区间")
+                        if rvol > 1.8:
+                            alerts.append(f"🔥 RVOL={rvol:.1f}x 异常放量")
+                        alert_str = " | " + " · ".join(alerts) if alerts else ""
+
+                        # 决策标注
+                        if action == "HOLD":
+                            decision_icon = "⏳ 观望"
+                        elif action in ("BUY", "SHORT"):
+                            decision_icon = f"🚀 触发 {action}"
+                        else:
+                            decision_icon = f"🔒 平仓 {action}"
+
+                        snapshot = (
+                            f"{trend_icon} [{ticker}] ${close_price:.2f} | "
+                            f"{vwap_pos} | EMA差={ema_gap_pct:.2f}% | RSI={rsi:.0f} | "
+                            f"市况={regime} | {pos_label}{alert_str} → {decision_icon}"
+                        )
+                        self.add_log(snapshot)
+
 
                         # 5. Execute action on Alpaca
                         if action == "BUY" and current_shares == 0:

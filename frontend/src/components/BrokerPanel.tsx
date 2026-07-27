@@ -47,27 +47,29 @@ interface TodaySummary {
   worst_trade: number;
 }
 
-type ActiveTab = 'feed' | 'history';
+type ActiveTab = 'analysis' | 'actions' | 'history';
 
 export function BrokerPanel() {
   const [account, setAccount] = useState<AccountSummary | null>(null);
   const [positions, setPositions] = useState<BrokerPosition[]>([]);
   const [isBotRunning, setIsBotRunning] = useState<boolean>(false);
   const [actionFeed, setActionFeed] = useState<string[]>([]);
+  const [analysisFeed, setAnalysisFeed] = useState<string[]>([]);
   const [tradeHistory, setTradeHistory] = useState<TradeRecord[]>([]);
   const [todaySummary, setTodaySummary] = useState<TodaySummary | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<ActiveTab>('feed');
+  const [activeTab, setActiveTab] = useState<ActiveTab>('analysis');
 
   const fetchBrokerData = async () => {
     try {
-      const [accRes, posRes, statusRes, feedRes, histRes, todayRes] = await Promise.all([
+      const [accRes, posRes, statusRes, feedRes, analysisRes, histRes, todayRes] = await Promise.all([
         fetch(`${API_BASE}/api/broker/account`),
         fetch(`${API_BASE}/api/broker/positions`),
         fetch(`${API_BASE}/api/live/status`),
         fetch(`${API_BASE}/api/live/action_feed?limit=50`),
+        fetch(`${API_BASE}/api/live/analysis_feed?limit=80`),
         fetch(`${API_BASE}/api/live/trade_history?days=7`),
         fetch(`${API_BASE}/api/live/today_summary`),
       ]);
@@ -84,6 +86,9 @@ export function BrokerPanel() {
 
       const feedJson = await feedRes.json();
       if (feedJson.success) setActionFeed(feedJson.logs || []);
+
+      const analysisJson = await analysisRes.json();
+      if (analysisJson.success) setAnalysisFeed(analysisJson.logs || []);
 
       const histJson = await histRes.json();
       if (histJson.success) setTradeHistory(histJson.trades || []);
@@ -314,25 +319,81 @@ export function BrokerPanel() {
         <div className="card" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column' }}>
           {/* Tab 切换 */}
           <div style={{ display: 'flex', gap: '8px', marginBottom: '1rem', borderBottom: '1px solid var(--color-border)', paddingBottom: '10px' }}>
-            {(['feed', 'history'] as ActiveTab[]).map((tab) => (
-              <button key={tab} onClick={() => setActiveTab(tab)} style={{
-                background: activeTab === tab ? 'rgba(255,255,255,0.08)' : 'transparent',
-                border: activeTab === tab ? '1px solid rgba(255,255,255,0.15)' : '1px solid transparent',
-                color: activeTab === tab ? '#fff' : 'var(--color-text-secondary)',
-                padding: '5px 14px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.82rem', fontWeight: activeTab === tab ? 700 : 400
+            {([
+              { id: 'analysis', label: '🧠 AI 实时研判与预警' },
+              { id: 'actions', label: '⚡ 真实买卖动作' },
+              { id: 'history', label: '📅 历史交易记录' },
+            ] as { id: ActiveTab; label: string }[]).map((tab) => (
+              <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{
+                background: activeTab === tab.id ? 'rgba(255,255,255,0.08)' : 'transparent',
+                border: activeTab === tab.id ? '1px solid rgba(255,255,255,0.15)' : '1px solid transparent',
+                color: activeTab === tab.id ? '#fff' : 'var(--color-text-secondary)',
+                padding: '5px 14px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.82rem', fontWeight: activeTab === tab.id ? 700 : 400
               }}>
-                {tab === 'feed' ? '⚡ 实时买卖动态' : '📅 历史交易记录'}
+                {tab.label}
               </button>
             ))}
           </div>
 
-          {/* Action Feed Tab */}
-          {activeTab === 'feed' && (
+          {/* 1. AI 实时研判与预警 Tab (默认展示) */}
+          {activeTab === 'analysis' && (
+            <div style={{ flex: 1, overflowY: 'auto', maxHeight: '380px' }}>
+              {analysisFeed.length === 0 ? (
+                <div style={{ color: 'var(--color-text-secondary)', fontSize: '0.85rem', padding: '2.5rem 0', textAlign: 'center' }}>
+                  启动 AI 托管后，机器人每轮针对监控股票的**指标快照、形态研判与突破预警**将实时呈现于此。
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {analysisFeed.map((log, idx) => {
+                    const isBuyOrShort = log.includes('触发 BUY') || log.includes('触发 SHORT');
+                    const isAlert = log.includes('🔔') || log.includes('⚡') || log.includes('🔥') || log.includes('🌡️');
+                    const isSell = log.includes('平仓');
+                    
+                    let bg = '#141416';
+                    let border = '1px solid #27272a';
+                    let color = '#d4d4d8';
+
+                    if (isBuyOrShort) {
+                      bg = 'rgba(0, 200, 5, 0.08)';
+                      border = '1px solid rgba(0, 200, 5, 0.4)';
+                      color = 'var(--color-green)';
+                    } else if (isAlert) {
+                      bg = 'rgba(255, 149, 0, 0.06)';
+                      border = '1px solid rgba(255, 149, 0, 0.3)';
+                      color = '#ffb020';
+                    } else if (isSell) {
+                      bg = 'rgba(255, 59, 48, 0.06)';
+                      border = '1px solid rgba(255, 59, 48, 0.3)';
+                      color = '#ff6b6b';
+                    }
+
+                    return (
+                      <div key={idx} style={{
+                        background: bg,
+                        border: border,
+                        borderRadius: '8px',
+                        padding: '10px 14px',
+                        fontSize: '0.79rem',
+                        color: color,
+                        lineHeight: 1.5,
+                        fontFamily: 'monospace, sans-serif'
+                      }}>
+                        {log}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* 2. 真实买卖动作 Tab */}
+          {activeTab === 'actions' && (
             <div style={{ flex: 1, overflowY: 'auto', maxHeight: '380px' }}>
               {actionFeed.length === 0 ? (
                 <div style={{ color: 'var(--color-text-secondary)', fontSize: '0.85rem', padding: '2.5rem 0', textAlign: 'center' }}>
-                  启动 AI 托管后，实际买卖操作（做多/做空/平仓）将实时展示在此。<br />
-                  <span style={{ fontSize: '0.75rem', opacity: 0.6 }}>扫描日志已过滤，仅显示真实交易动作</span>
+                  暂无已执行订单。<br />
+                  <span style={{ fontSize: '0.75rem', opacity: 0.6 }}>当 AI 研判触发做多 / 做空 / 平仓条件时，实盘订单记录将展示在此</span>
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -351,12 +412,12 @@ export function BrokerPanel() {
             </div>
           )}
 
-          {/* Trade History Tab */}
+          {/* 3. 历史交易记录 Tab */}
           {activeTab === 'history' && (
             <div style={{ flex: 1, overflowY: 'auto', maxHeight: '380px' }}>
               {tradeHistory.length === 0 ? (
                 <div style={{ color: 'var(--color-text-secondary)', fontSize: '0.85rem', padding: '2.5rem 0', textAlign: 'center' }}>
-                  近 7 天暂无交易记录。<br />
+                  近 7 天暂无历史记录。<br />
                   <span style={{ fontSize: '0.75rem', opacity: 0.6 }}>交易成功后可在此复盘每笔买卖</span>
                 </div>
               ) : (
