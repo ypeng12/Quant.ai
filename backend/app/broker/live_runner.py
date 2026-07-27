@@ -227,10 +227,20 @@ class LiveTradingRunner:
                         # Invalidate cache to force yfinance to fetch fresh prices
                         invalidate_cache(ticker)
                         
-                        # Fetch the last few days of 1-minute bars
-                        df = fetch_and_prepare_data(ticker, period="3d", interval="1m")
+                        # Fetch the last few days of bars
+                        try:
+                            df = fetch_and_prepare_data(ticker, period="3d", interval="1m")
+                        except Exception:
+                            df = None
+                            
+                        if df is None or df.empty or len(df) < 2:
+                            try:
+                                df = fetch_and_prepare_data(ticker, period="5d", interval="5m")
+                            except Exception:
+                                df = None
                         
-                        if df.empty or len(df) < 2:
+                        if df is None or df.empty or len(df) < 2:
+                            self.add_log(f"🔍 [{ticker}] 等待最新 K 线数据更新（休眠中）")
                             continue
                             
                         # Use the last bar as current state, second-to-last as prev
