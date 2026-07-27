@@ -464,8 +464,9 @@ export function BrokerPanel() {
 
       {/* ====== 今日实时交易日志 ====== */}
       {(() => {
-        const today = new Date().toISOString().slice(0, 10);
-        const todayTrades = [...tradeHistory].filter(t => t.date === today).reverse();
+        // 使用后端返回的日期，避免 UTC 与本地美东时区不匹配导致找不到日志
+        const activeDate = todaySummary?.date || new Date().toLocaleDateString('sv-SE');
+        const todayTrades = [...tradeHistory].filter(t => t.date === activeDate).reverse();
 
         const tickerMap: Record<string, { trades: TradeRecord[]; totalPnl: number; openAction: string | null }> = {};
         todayTrades.forEach(t => {

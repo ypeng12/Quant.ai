@@ -83,12 +83,17 @@ class MockAlpacaAdapter:
         self.positions.clear()
         return {"success": True, "message": "已成功平仓所有模拟持仓"}
 
+import json
+
 class LiveTradingRunner:
     def __init__(self):
         self.is_running = False
         self.logs = []          # 全量日志（含扫描信息）
         self.action_logs = []   # 仅含实际买卖动作的日志
         self.trade_history = [] # 持久化交易记录（用于复盘）
+        self.history_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "trade_history.json")
+        self.load_trade_history()
+
         self.active_tickers = WATCHLIST.copy()
         self.highest_prices = {}
         self.loop_task = None
@@ -106,6 +111,28 @@ class LiveTradingRunner:
         }
         self.ignore_market_hours = True  # Set to True by default to allow testing anytime
         self.adapter = MockAlpacaAdapter()
+
+    def load_trade_history(self):
+        """从本地磁盘 trade_history.json 加载持久化交易历史，防止服务重启清空数据。"""
+        try:
+            if os.path.exists(self.history_file):
+                with open(self.history_file, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    self.trade_history = data.get("trade_history", [])
+                    self.action_logs = data.get("action_logs", [])
+        except Exception as e:
+            print(f"Error loading trade_history.json: {e}")
+
+    def save_trade_history(self):
+        """保存交易历史与动作日志到本地磁盘。"""
+        try:
+            with open(self.history_file, 'w', encoding='utf-8') as f:
+                json.dump({
+                    "trade_history": self.trade_history,
+                    "action_logs": self.action_logs
+                }, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            print(f"Error saving trade_history.json: {e}")
 
     def add_log(self, msg: str):
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -149,18 +176,39 @@ class LiveTradingRunner:
             "pnl": round(pnl, 2),
             "reason": reason
         })
-        # 最多保留 1000 条历史记录
         if len(self.trade_history) > 1000:
             self.trade_history.pop(0)
 
+        # 实时写入磁盘
+        self.save_trade_history()
+
     def get_today_summary(self) -> dict:
-        """统计今日交易的胜负与盈亏情况。"""
+        """统计今日交易胜负与盈亏（包含已实现盈亏 + 当前持仓未实现浮动盈亏）。"""
         today = datetime.datetime.now().strftime("%Y-%m-%d")
         today_trades = [t for t in self.trade_history if t["date"] == today]
+        
+        # 若今日尚未有新记录，但历史库中有记录，回溯最近一天的交易记录
+        if not today_trades and self.trade_history:
+            latest_date = self.trade_history[-1]["date"]
+            today_trades = [t for t in self.trade_history if t["date"] == latest_date]
+            today = latest_date
+
         closed_trades = [t for t in today_trades if t["action"] in ("SELL", "COVER") and t["pnl"] != 0.0]
         wins = [t for t in closed_trades if t["pnl"] > 0]
         losses = [t for t in closed_trades if t["pnl"] < 0]
-        total_pnl = sum(t["pnl"] for t in closed_trades)
+        realized_pnl = sum(t["pnl"] for t in closed_trades)
+
+        # 实时计算现有持仓的未实现浮动盈亏
+        unrealized_pnl = 0.0
+        try:
+            open_positions = self.adapter.get_open_positions()
+            for pos in open_positions:
+                unrealized_pnl += pos.get("unrealized_pnl", 0.0)
+        except Exception:
+            pass
+
+        total_pnl = realized_pnl + unrealized_pnl
+
         return {
             "date": today,
             "total_trades": len(today_trades),
@@ -168,6 +216,8 @@ class LiveTradingRunner:
             "wins": len(wins),
             "losses": len(losses),
             "win_rate": round(len(wins) / len(closed_trades) * 100, 1) if closed_trades else 0.0,
+            "realized_pnl": round(realized_pnl, 2),
+            "unrealized_pnl": round(unrealized_pnl, 2),
             "total_pnl": round(total_pnl, 2),
             "best_trade": round(max((t["pnl"] for t in closed_trades), default=0.0), 2),
             "worst_trade": round(min((t["pnl"] for t in closed_trades), default=0.0), 2)
