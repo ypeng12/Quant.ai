@@ -91,15 +91,15 @@ class LiveTradingRunner:
         self.loop_task = None
         self.strategy_params = {
             "strategy_mode": "dynamic",
-            "stop_loss_pct": 0.015,
-            "profit_target_pct": 0.030,
+            "stop_loss_pct": 0.006,          # 0.6% 止损 — 高频日内短线
+            "profit_target_pct": 0.008,      # 0.8% 止盈 — 快速锁利
             "trailing_stop_mode": "atr",
-            "trailing_stop_atr_mult": 2.0,
-            "rsi_threshold_buy": 70.0,
-            "risk_per_trade_pct": 0.01,
+            "trailing_stop_atr_mult": 1.0,   # 更紧追踪止损
+            "rsi_threshold_buy": 72.0,
+            "risk_per_trade_pct": 0.03,      # 每次交易风险占资金 3%，确保仓位有意义
             "max_position_size_pct": 0.50,
             "position_sizing_mode": "atr",
-            "market_open_focus": False  # 全天候搜索高概率交易信号
+            "market_open_focus": False       # 全天候扫描信号
         }
         self.ignore_market_hours = True  # Set to True by default to allow testing anytime
         self.adapter = MockAlpacaAdapter()
@@ -357,8 +357,8 @@ class LiveTradingRunner:
                     except Exception as ex:
                         self.add_log(f"⚠️ 扫描 {ticker} 发生错误: {str(ex)}")
 
-                # Wait for next minute (60 seconds)
-                await asyncio.sleep(60)
+                # 每 30 秒扫描一次，高频检验交易信号
+                await asyncio.sleep(30)
 
             except asyncio.CancelledError:
                 self.add_log("Background trading loop task cancelled.")
