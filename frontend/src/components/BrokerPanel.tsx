@@ -47,12 +47,17 @@ interface TodaySummary {
   worst_trade: number;
 }
 
+interface BrokerPanelProps {
+  watchlist?: string[];
+}
+
 type ActiveTab = 'analysis' | 'actions' | 'history';
 
-export function BrokerPanel() {
+export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
   const [account, setAccount] = useState<AccountSummary | null>(null);
   const [positions, setPositions] = useState<BrokerPosition[]>([]);
   const [isBotRunning, setIsBotRunning] = useState<boolean>(false);
+  const [activeTickers, setActiveTickers] = useState<string[]>([]);
   const [actionFeed, setActionFeed] = useState<string[]>([]);
   const [analysisFeed, setAnalysisFeed] = useState<string[]>([]);
   const [tradeHistory, setTradeHistory] = useState<TradeRecord[]>([]);
@@ -82,7 +87,12 @@ export function BrokerPanel() {
       if (posJson.success) setPositions(posJson.positions);
 
       const statusJson = await statusRes.json();
-      if (statusJson.success) setIsBotRunning(statusJson.status.is_running);
+      if (statusJson.success) {
+        setIsBotRunning(statusJson.status.is_running);
+        if (statusJson.status.active_tickers) {
+          setActiveTickers(statusJson.status.active_tickers);
+        }
+      }
 
       const feedJson = await feedRes.json();
       if (feedJson.success) setActionFeed(feedJson.logs || []);
@@ -103,6 +113,21 @@ export function BrokerPanel() {
     }
   };
 
+  // 当侧边栏 Watchlist 变动时，实时自动同步至 AI Live Scanner 研判股票池
+  useEffect(() => {
+    if (watchlist.length > 0) {
+      fetch(`${API_BASE}/api/live/watchlist/sync`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tickers: watchlist })
+      }).then(res => res.json()).then(data => {
+        if (data.success && data.active_tickers) {
+          setActiveTickers(data.active_tickers);
+        }
+      }).catch(err => console.error('Watchlist sync error:', err));
+    }
+  }, [watchlist]);
+
   useEffect(() => {
     fetchBrokerData();
     const interval = setInterval(fetchBrokerData, 5000);
@@ -115,7 +140,7 @@ export function BrokerPanel() {
       const res = await fetch(`${API_BASE}/api/live/start`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ignore_market_hours: true })
+        body: JSON.stringify({ tickers: watchlist, ignore_market_hours: true })
       });
       const json = await res.json();
       if (json.success) setIsBotRunning(json.status.is_running);
@@ -217,6 +242,33 @@ export function BrokerPanel() {
             </button>
           )}
         </div>
+      </div>
+
+      {/* AI 研判股票池同步条 */}
+      <div style={{
+        marginBottom: '1.2rem',
+        padding: '10px 16px',
+        background: 'rgba(255,255,255,0.03)',
+        borderRadius: '8px',
+        border: '1px solid rgba(255,255,255,0.08)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '10px',
+        fontSize: '0.82rem'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <span style={{ color: 'var(--color-green)', fontWeight: 700 }}>🎯 AI 实时研判股票池 ({activeTickers.length} 支已与 Watchlist 自动对齐):</span>
+          {activeTickers.map(t => (
+            <span key={t} style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', padding: '2px 8px', borderRadius: '4px', color: '#fff', fontWeight: 800, fontSize: '0.78rem' }}>
+              {t}
+            </span>
+          ))}
+        </div>
+        <span style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>
+          💡 在左侧 Watchlist 添加/删除股票，AI 研判将实时自动同步
+        </span>
       </div>
 
       {/* 今日盈亏摘要 */}

@@ -223,13 +223,35 @@ class LiveTradingRunner:
             "worst_trade": round(min((t["pnl"] for t in closed_trades), default=0.0), 2)
         }
 
-    def start(self, strategy_params: Optional[Dict] = None, ignore_market_hours: bool = True):
+    def update_tickers(self, new_tickers: List[str]):
+        """动态更新 AI 托管监控与研判股票池（合并用户 Watchlist 与已持有持仓股票）。"""
+        if not new_tickers:
+            return
+        cleaned = [t.upper().strip() for t in new_tickers if t and isinstance(t, str)]
+        
+        # 确保当前持仓的股票始终保留在监控池中
+        try:
+            positions = self.adapter.get_open_positions()
+            for pos in positions:
+                if pos['ticker'] not in cleaned:
+                    cleaned.append(pos['ticker'])
+        except Exception:
+            pass
+
+        if set(cleaned) != set(self.active_tickers):
+            self.active_tickers = cleaned
+            self.add_log(f"🔄 AI 实时研判股票池已更新为：{self.active_tickers}")
+
+    def start(self, strategy_params: Optional[Dict] = None, tickers: Optional[List[str]] = None, ignore_market_hours: bool = True):
         if self.is_running:
             self.add_log("【警告】量化交易机器人已在运行中。")
             return False
             
         if strategy_params:
             self.strategy_params.update(strategy_params)
+
+        if tickers:
+            self.update_tickers(tickers)
             
         self.ignore_market_hours = ignore_market_hours
         
@@ -251,7 +273,7 @@ class LiveTradingRunner:
             self.add_log(f"💡 连接 Alpaca 失败 ({str(e)})，已自动平滑切换至【本地虚拟模拟盘模式】。")
 
         self.is_running = True
-        self.add_log(f"🚀 量化交易机器人已启动！监控列表: {self.active_tickers} | 策略模式: {self.strategy_params['strategy_mode']}")
+        self.add_log(f"🚀 量化交易机器人已启动！监控股票池 ({len(self.active_tickers)} 支): {self.active_tickers} | 策略模式: {self.strategy_params['strategy_mode']}")
         
         # Spawn async loop task safely
         try:
