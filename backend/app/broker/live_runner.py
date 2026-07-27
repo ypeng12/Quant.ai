@@ -213,6 +213,11 @@ class LiveTradingRunner:
                 try:
                     positions_list = self.adapter.get_open_positions()
                     positions_by_ticker = {pos['ticker']: pos for pos in positions_list}
+                    # 自动将用户账户中持有的股票加入 AI 监控池
+                    for pos_ticker in positions_by_ticker.keys():
+                        if pos_ticker not in self.active_tickers:
+                            self.active_tickers.append(pos_ticker)
+                            self.add_log(f"📥 检测到已买入持仓股票 [{pos_ticker}]，已自动同步拉入 AI 策略风控与监控池。")
                 except Exception as e:
                     self.add_log(f"⚠️ 无法从 Alpaca 获取当前持仓：{str(e)}，跳过本轮。")
                     await asyncio.sleep(20)
@@ -255,7 +260,6 @@ class LiveTradingRunner:
                         
                         # Track highest price achieved while holding for trailing stop-loss
                         if current_shares > 0:
-                            # Initialize or update peak price
                             highest_price = max(
                                 self.highest_prices.get(ticker, avg_cost),
                                 close_price
@@ -283,54 +287,72 @@ class LiveTradingRunner:
 
                         # 5. Execute action on Alpaca
                         if action == "BUY" and current_shares == 0:
-                            # Fetch account value for position sizing
                             account = self.adapter.get_account_summary()
                             total_equity = account['equity']
                             cash = account['cash']
                             
-                            # Size using ATR logic
-                            risk_pct = self.strategy_params.get("risk_per_trade_pct", 0.01)
-                            atr_mult = self.strategy_params.get("trailing_stop_atr_mult", 2.0)
+                            risk_pct = self.strategy_params.get("risk_per_trade_pct", 0.02)
+                            atr_mult = self.strategy_params.get("trailing_stop_atr_mult", 1.5)
                             max_pct = self.strategy_params.get("max_position_size_pct", 0.50)
-                            atr = float(row['ATR'])
+                            atr = float(row['ATR']) if 'ATR' in row and row['ATR'] > 0 else close_price * 0.02
                             
                             dollar_risk = total_equity * risk_pct
                             stop_distance = atr * atr_mult
                             
-                            if stop_distance > 0:
-                                shares = int(dollar_risk / stop_distance)
-                            else:
-                                shares = int((total_equity * max_pct) / close_price)
-                                
-                            # Apply sizing caps
-                            max_alloc = total_equity * max_pct
-                            max_shares = int(max_alloc / close_price)
+                            shares = int(dollar_risk / stop_distance) if stop_distance > 0 else int((total_equity * max_pct) / close_price)
+                            max_shares = int((total_equity * max_pct) / close_price)
                             shares = min(shares, max_shares)
                             
-                            # Ensure we don't buy more than we have cash for
-                            cash_shares = int((cash * 0.95) / close_price) # leave 5% buffer
-                            shares = min(shares, cash_shares)
+                            cash_shares = int((cash * 0.95) / close_price)
+                            shares = max(1, min(shares, cash_shares))
 
-                            if shares > 0:
-                                self.add_log(f"🛒 [{ticker}] 触发买入信号！发送买单：以市价买入 {shares} 股...")
-                                order_res = self.adapter.submit_market_order(ticker, shares, "buy")
-                                if order_res.get("success"):
-                                    self.add_log(f"✅ [{ticker}] 买单提交成功！Alpaca 订单号: {order_res['order_id']}")
-                                    self.highest_prices[ticker] = close_price
-                                else:
-                                    self.add_log(f"❌ [{ticker}] 买单提交失败。原因: {order_res.get('error')}")
+                            self.add_log(f"🛒 [{ticker}] 触发做多信号！发送买单：以市价买入 {shares} 股...")
+                            order_res = self.adapter.submit_market_order(ticker, shares, "buy")
+                            if order_res.get("success"):
+                                self.add_log(f"✅ [{ticker}] 做多买单提交成功！Alpaca 订单号: {order_res.get('order_id', order_res.get('id'))}")
+                                self.highest_prices[ticker] = close_price
                             else:
-                                self.add_log(f"⚠️ [{ticker}] 资金不足或计算股数为0，无法下单。")
+                                self.add_log(f"❌ [{ticker}] 做多买单提交失败。原因: {order_res.get('error')}")
+
+                        elif action == "SHORT" and current_shares == 0:
+                            account = self.adapter.get_account_summary()
+                            total_equity = account['equity']
+                            
+                            risk_pct = self.strategy_params.get("risk_per_trade_pct", 0.02)
+                            max_pct = self.strategy_params.get("max_position_size_pct", 0.50)
+                            atr = float(row['ATR']) if 'ATR' in row and row['ATR'] > 0 else close_price * 0.02
+                            
+                            dollar_risk = total_equity * risk_pct
+                            stop_distance = atr * 1.5
+                            shares = int(dollar_risk / stop_distance) if stop_distance > 0 else int((total_equity * max_pct) / close_price)
+                            max_shares = int((total_equity * max_pct) / close_price)
+                            shares = max(1, min(shares, max_shares))
+
+                            self.add_log(f"📉 [{ticker}] 触发做空信号！发送融券卖单：以市价融券做空 {shares} 股...")
+                            order_res = self.adapter.submit_market_order(ticker, shares, "sell")
+                            if order_res.get("success"):
+                                self.add_log(f"✅ [{ticker}] 融券做空单提交成功！Alpaca 订单号: {order_res.get('order_id', order_res.get('id'))}")
+                            else:
+                                self.add_log(f"❌ [{ticker}] 融券做空单提交失败。原因: {order_res.get('error')}")
 
                         elif action == "SELL" and current_shares > 0:
-                            self.add_log(f"🔔 [{ticker}] 触发卖出信号！发送平仓卖单：以市价卖出 {current_shares} 股...")
+                            self.add_log(f"🔔 [{ticker}] 触发多单平仓信号！发送卖单：以市价卖出 {current_shares} 股...")
                             order_res = self.adapter.submit_market_order(ticker, current_shares, "sell")
                             if order_res.get("success"):
-                                self.add_log(f"✅ [{ticker}] 平仓单提交成功！Alpaca 订单号: {order_res['order_id']}")
+                                self.add_log(f"✅ [{ticker}] 多单平仓成功！Alpaca 订单号: {order_res.get('order_id', order_res.get('id'))}")
                                 if ticker in self.highest_prices:
                                     del self.highest_prices[ticker]
                             else:
-                                self.add_log(f"❌ [{ticker}] 平仓单提交失败。原因: {order_res.get('error')}")
+                                self.add_log(f"❌ [{ticker}] 多单平仓失败。原因: {order_res.get('error')}")
+
+                        elif action == "COVER" and current_shares < 0:
+                            cover_qty = abs(current_shares)
+                            self.add_log(f"🔔 [{ticker}] 触发空单平仓信号！发送买入还券单：买入 {cover_qty} 股平空...")
+                            order_res = self.adapter.submit_market_order(ticker, cover_qty, "buy")
+                            if order_res.get("success"):
+                                self.add_log(f"✅ [{ticker}] 空单平仓成功！Alpaca 订单号: {order_res.get('order_id', order_res.get('id'))}")
+                            else:
+                                self.add_log(f"❌ [{ticker}] 空单平仓失败。原因: {order_res.get('error')}")
                                 
                     except Exception as ex:
                         self.add_log(f"⚠️ 扫描 {ticker} 发生错误: {str(ex)}")
