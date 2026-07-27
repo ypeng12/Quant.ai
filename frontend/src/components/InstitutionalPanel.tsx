@@ -196,7 +196,7 @@ export const InstitutionalPanel: React.FC = () => {
               : 'bg-slate-800 text-slate-400 hover:text-white'
           }`}
         >
-          🔬 样本外 Alpha 验证 (Out-of-Sample Alpha CV)
+          🔬 样本外 Alpha 验证 (Out-of-Sample Alpha Lab)
         </button>
 
         <button
@@ -207,7 +207,7 @@ export const InstitutionalPanel: React.FC = () => {
               : 'bg-slate-800 text-slate-400 hover:text-white'
           }`}
         >
-          📈 Almgren-Chriss Execution
+          📈 最优算法执行 (Almgren-Chriss Model)
         </button>
 
         <button
@@ -218,7 +218,7 @@ export const InstitutionalPanel: React.FC = () => {
               : 'bg-slate-800 text-slate-400 hover:text-white'
           }`}
         >
-          ⚖️ Cointegration & StatArb (OU)
+          ⚖️ 协整与统计套利 (StatArb OU)
         </button>
 
         <button
@@ -229,7 +229,7 @@ export const InstitutionalPanel: React.FC = () => {
               : 'bg-slate-800 text-slate-400 hover:text-white'
           }`}
         >
-          🛡️ Risk Parity (ERC + Ledoit-Wolf)
+          🛡️ 风险平价组合 (Risk Parity ERC)
         </button>
 
         <button
@@ -240,7 +240,7 @@ export const InstitutionalPanel: React.FC = () => {
               : 'bg-slate-800 text-slate-400 hover:text-white'
           }`}
         >
-          🔬 Deflated Sharpe Ratio (DSR)
+          🔬 夏普比率过拟合审计 (Deflated Sharpe Ratio)
         </button>
 
         <button
@@ -251,7 +251,7 @@ export const InstitutionalPanel: React.FC = () => {
               : 'bg-slate-800 text-slate-400 hover:text-white'
           }`}
         >
-          ⚡ Zero-Alloc Memory Profiler
+          ⚡ C++ 内存性能分析 (Memory Profiler)
         </button>
 
         <button
@@ -262,7 +262,7 @@ export const InstitutionalPanel: React.FC = () => {
               : 'bg-slate-800 text-slate-400 hover:text-white'
           }`}
         >
-          📊 Order Flow Imbalance (OFI)
+          📊 订单流不平衡度 (Order Flow Imbalance)
         </button>
 
         <button
@@ -273,7 +273,7 @@ export const InstitutionalPanel: React.FC = () => {
               : 'bg-slate-800 text-slate-400 hover:text-white'
           }`}
         >
-          🌐 Multi-Asset Pool Backtest
+          🌐 多资产组合回测 (Multi-Asset Universe)
         </button>
       </div>
 
