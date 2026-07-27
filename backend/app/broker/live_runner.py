@@ -183,7 +183,7 @@ class LiveTradingRunner:
         self.save_trade_history()
 
     def get_today_summary(self) -> dict:
-        """统计今日交易胜负与盈亏（包含已实现盈亏 + 当前持仓未实现浮动盈亏）。"""
+        """统计今日交易胜负与盈亏（今日已实现盈亏与当前持仓未实现浮动盈亏分开计算）。"""
         today = datetime.datetime.now().strftime("%Y-%m-%d")
         today_trades = [t for t in self.trade_history if t["date"] == today]
         
@@ -198,7 +198,7 @@ class LiveTradingRunner:
         losses = [t for t in closed_trades if t["pnl"] < 0]
         realized_pnl = sum(t["pnl"] for t in closed_trades)
 
-        # 实时计算现有持仓的未实现浮动盈亏
+        # 实时计算当前在持有仓位的未实现浮动盈亏（单独统计）
         unrealized_pnl = 0.0
         try:
             open_positions = self.adapter.get_open_positions()
@@ -206,8 +206,6 @@ class LiveTradingRunner:
                 unrealized_pnl += pos.get("unrealized_pnl", 0.0)
         except Exception:
             pass
-
-        total_pnl = realized_pnl + unrealized_pnl
 
         return {
             "date": today,
@@ -218,7 +216,7 @@ class LiveTradingRunner:
             "win_rate": round(len(wins) / len(closed_trades) * 100, 1) if closed_trades else 0.0,
             "realized_pnl": round(realized_pnl, 2),
             "unrealized_pnl": round(unrealized_pnl, 2),
-            "total_pnl": round(total_pnl, 2),
+            "total_pnl": round(realized_pnl, 2), # 今日平仓落袋为安的真实实现盈亏
             "best_trade": round(max((t["pnl"] for t in closed_trades), default=0.0), 2),
             "worst_trade": round(min((t["pnl"] for t in closed_trades), default=0.0), 2)
         }
