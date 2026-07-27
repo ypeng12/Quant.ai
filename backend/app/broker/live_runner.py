@@ -95,11 +95,11 @@ class LiveTradingRunner:
             "profit_target_pct": 0.030,
             "trailing_stop_mode": "atr",
             "trailing_stop_atr_mult": 2.0,
-            "rsi_threshold_buy": 65.0,
+            "rsi_threshold_buy": 70.0,
             "risk_per_trade_pct": 0.01,
             "max_position_size_pct": 0.50,
             "position_sizing_mode": "atr",
-            "market_open_focus": True
+            "market_open_focus": False  # 全天候搜索高概率交易信号
         }
         self.ignore_market_hours = True  # Set to True by default to allow testing anytime
         self.adapter = MockAlpacaAdapter()
@@ -186,7 +186,7 @@ class LiveTradingRunner:
         if self.ignore_market_hours:
             return True
             
-        est = pytz.timezone('US/Eastern')
+        est = pytz.timezone('America/New_York')
         now = datetime.datetime.now(est)
         
         # Check weekday (0-4 is Mon-Fri)

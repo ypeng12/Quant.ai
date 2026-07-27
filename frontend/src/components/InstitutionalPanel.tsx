@@ -178,7 +178,7 @@ export const InstitutionalPanel: React.FC = () => {
             <span>🏛️</span> Institutional Quantitative Architecture Terminal
           </h2>
           <p className="text-xs text-slate-400 mt-1">
-            Proprietary Trading & Quantitative Research Suite (HRT / Jane Street / Citadel Standards)
+            专业量化研究与策略验证终端 (Institutional Quantitative Research Terminal)
           </p>
         </div>
         <span className="px-3 py-1 rounded-full text-xs font-mono bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
@@ -196,7 +196,7 @@ export const InstitutionalPanel: React.FC = () => {
               : 'bg-slate-800 text-slate-400 hover:text-white'
           }`}
         >
-          🏆 10/10 HRT Alpha Research Lab
+          🔬 样本外 Alpha 验证 (Out-of-Sample Alpha CV)
         </button>
 
         <button
@@ -290,7 +290,7 @@ export const InstitutionalPanel: React.FC = () => {
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-sm font-semibold text-amber-300">
-                  🏆 10/10 HRT Purged Walk-Forward Alpha Research Lab
+                  点位时间一致性与 Purged Walk-Forward Alpha 验证
                 </h3>
                 <p className="text-xs text-slate-400 mt-1">
                   Point-in-time universe across 38 liquid ETFs (94,040 rows OHLCV). Zero future leakage, 5d embargo, 5 bps friction.
@@ -587,7 +587,7 @@ export const InstitutionalPanel: React.FC = () => {
           <div className="bg-slate-950/60 border border-slate-800 rounded-xl p-5">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-semibold text-indigo-300">Deflated Sharpe Ratio (DSR) Overfitting Audit</h3>
+                <h3 className="text-sm font-semibold text-indigo-300">Deflated Sharpe Ratio (DSR) 夏普比率衰减与过拟合审计</h3>
                 <p className="text-xs text-slate-400 mt-1">
                   Adjusts observed Sharpe Ratio for non-normal returns, skewness, kurtosis, and multiple testing trial count ($N$).
                 </p>
