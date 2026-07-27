@@ -400,6 +400,137 @@ export function BrokerPanel() {
           </div>
         </div>
       </div>
+
+      {/* ====== 今日实时交易日志 ====== */}
+      {(() => {
+        const today = new Date().toISOString().slice(0, 10);
+        const todayTrades = [...tradeHistory].filter(t => t.date === today).reverse();
+
+        const tickerMap: Record<string, { trades: TradeRecord[]; totalPnl: number; openAction: string | null }> = {};
+        todayTrades.forEach(t => {
+          if (!tickerMap[t.ticker]) tickerMap[t.ticker] = { trades: [], totalPnl: 0, openAction: null };
+          tickerMap[t.ticker].trades.push(t);
+          tickerMap[t.ticker].totalPnl += t.pnl;
+          if (t.action === 'BUY' || t.action === 'SHORT') tickerMap[t.ticker].openAction = t.action;
+          if (t.action === 'SELL' || t.action === 'COVER') tickerMap[t.ticker].openAction = null;
+        });
+
+        return (
+          <div className="card" style={{ marginTop: '1.5rem', padding: '1.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.2rem', flexWrap: 'wrap', gap: '1rem' }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 900, color: '#fff' }}>📒 今日实时交易日志</h3>
+                <p style={{ margin: '4px 0 0', fontSize: '0.78rem', color: 'var(--color-text-secondary)' }}>
+                  每 5 秒自动刷新 · 今日所有买入 / 做空 / 平仓记录 · 收盘可用于复盘分析
+                </p>
+              </div>
+              {todaySummary && (
+                <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--color-text-secondary)' }}>今日操作</div>
+                    <div style={{ fontSize: '1rem', fontWeight: 900, color: '#fff' }}>{todaySummary.total_trades} 笔</div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--color-text-secondary)' }}>盈 / 亏</div>
+                    <div style={{ fontSize: '1rem', fontWeight: 900 }}>
+                      <span style={{ color: 'var(--color-green)' }}>{todaySummary.wins}</span>
+                      <span style={{ color: '#444', margin: '0 4px' }}>/</span>
+                      <span style={{ color: 'var(--color-red)' }}>{todaySummary.losses}</span>
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'right', minWidth: '100px' }}>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--color-text-secondary)' }}>今日净盈亏</div>
+                    <div style={{ fontSize: '1.3rem', fontWeight: 900, color: todaySummary.total_pnl >= 0 ? 'var(--color-green)' : 'var(--color-red)' }}>
+                      {todaySummary.total_pnl >= 0 ? '+' : ''}${todaySummary.total_pnl.toFixed(2)}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {todayTrades.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '3rem 0', color: 'var(--color-text-secondary)', fontSize: '0.85rem' }}>
+                今日暂无交易记录。AI 托管开启后，每笔买入 / 做空 / 平仓都会实时出现在这里。
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                {/* 按 Ticker 分组盈亏卡片 */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(155px, 1fr))', gap: '10px' }}>
+                  {Object.entries(tickerMap).map(([ticker, info]) => {
+                    const isWin  = info.totalPnl > 0;
+                    const isLoss = info.totalPnl < 0;
+                    const isOpen = info.openAction !== null;
+                    return (
+                      <div key={ticker} style={{
+                        background: isWin ? 'rgba(0,200,5,0.06)' : isLoss ? 'rgba(255,59,48,0.06)' : 'rgba(255,255,255,0.03)',
+                        border: `1px solid ${isWin ? 'rgba(0,200,5,0.35)' : isLoss ? 'rgba(255,59,48,0.35)' : 'rgba(255,255,255,0.1)'}`,
+                        borderRadius: '10px', padding: '12px 14px'
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontWeight: 900, fontSize: '1.05rem', color: '#fff' }}>{ticker}</span>
+                          {isOpen && (
+                            <span style={{ fontSize: '0.68rem', padding: '2px 7px', borderRadius: '4px', background: info.openAction === 'BUY' ? 'rgba(0,200,5,0.2)' : 'rgba(255,59,48,0.2)', color: info.openAction === 'BUY' ? '#00c805' : '#ff6b6b', fontWeight: 700 }}>
+                              {info.openAction === 'BUY' ? '持多 ▲' : '持空 ▼'}
+                            </span>
+                          )}
+                        </div>
+                        <div style={{ fontSize: '0.72rem', color: 'var(--color-text-secondary)', marginTop: '4px' }}>
+                          {info.trades.length} 笔交易
+                        </div>
+                        <div style={{ fontSize: '1.15rem', fontWeight: 900, marginTop: '6px', color: isWin ? 'var(--color-green)' : isLoss ? 'var(--color-red)' : '#666' }}>
+                          {info.totalPnl === 0 ? '持仓中...' : `${info.totalPnl > 0 ? '+' : ''}$${info.totalPnl.toFixed(2)}`}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* 完整时间顺序流水 */}
+                <table className="ledger-table" style={{ fontSize: '0.82rem', width: '100%' }}>
+                  <thead>
+                    <tr>
+                      <th style={{ width: '80px' }}>时间</th>
+                      <th>代码</th>
+                      <th>操作</th>
+                      <th>股数</th>
+                      <th>成交价</th>
+                      <th>触发信号</th>
+                      <th style={{ textAlign: 'right' }}>盈亏 (USD)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {todayTrades.map((trade, idx) => {
+                      const st = getActionStyle(trade.action);
+                      const hasPnl = trade.pnl !== 0;
+                      return (
+                        <tr key={idx} style={{ borderLeft: `3px solid ${hasPnl && trade.pnl > 0 ? 'rgba(0,200,5,0.55)' : hasPnl && trade.pnl < 0 ? 'rgba(255,59,48,0.55)' : 'rgba(255,255,255,0.07)'}` }}>
+                          <td style={{ color: 'var(--color-text-secondary)', fontSize: '0.75rem', whiteSpace: 'nowrap', paddingLeft: '10px' }}>
+                            {trade.time.slice(11, 19)}
+                          </td>
+                          <td style={{ fontWeight: 900, fontSize: '0.9rem', color: '#fff' }}>{trade.ticker}</td>
+                          <td>
+                            <span style={{ padding: '3px 9px', borderRadius: '5px', border: st.border, color: st.color, background: st.bg, fontSize: '0.75rem', fontWeight: 700 }}>
+                              {trade.action_cn}
+                            </span>
+                          </td>
+                          <td style={{ fontWeight: 600 }}>{trade.shares} 股</td>
+                          <td style={{ fontWeight: 700, color: '#e5e5e7' }}>${trade.price.toFixed(2)}</td>
+                          <td style={{ fontSize: '0.72rem', color: 'var(--color-text-secondary)', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {trade.reason}
+                          </td>
+                          <td style={{ textAlign: 'right', fontWeight: 900, fontSize: '0.9rem', color: hasPnl ? (trade.pnl >= 0 ? 'var(--color-green)' : 'var(--color-red)') : '#555' }}>
+                            {hasPnl ? `${trade.pnl >= 0 ? '+' : ''}$${trade.pnl.toFixed(2)}` : '持仓中'}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        );
+      })()}
     </div>
   );
 }
