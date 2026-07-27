@@ -74,6 +74,7 @@ class MockAlpacaAdapter:
             if symbol in self.positions:
                 del self.positions[symbol]
         return {"status": "filled", "id": "mock_order_123"}
+        return {"success": True, "status": "filled", "id": "mock_order_123"}
 
     def cancel_all_orders(self) -> Dict:
         return {"success": True, "message": "已成功撤销所有模拟挂单"}
@@ -85,7 +86,9 @@ class MockAlpacaAdapter:
 class LiveTradingRunner:
     def __init__(self):
         self.is_running = False
-        self.logs = []
+        self.logs = []          # 全量日志（含扫描信息）
+        self.action_logs = []   # 仅含实际买卖动作的日志
+        self.trade_history = [] # 持久化交易记录（用于复盘）
         self.active_tickers = WATCHLIST.copy()
         self.highest_prices = {}
         self.loop_task = None
@@ -115,8 +118,60 @@ class LiveTradingRunner:
             except Exception:
                 pass
         self.logs.append(full_msg)
-        if len(self.logs) > 200:  # Restrict log size
+        if len(self.logs) > 500:
             self.logs.pop(0)
+
+    def add_trade_action(self, action: str, ticker: str, shares: int, price: float, reason: str, pnl: float = 0.0):
+        """记录真实买卖动作到 action_logs 和 trade_history，用于 UI 显示与复盘分析。"""
+        now = datetime.datetime.now()
+        timestamp_str = now.strftime("%Y-%m-%d %H:%M:%S")
+        date_str = now.strftime("%Y-%m-%d")
+
+        # Action Feed 条目（精简版，仅展示关键买卖信息）
+        action_emoji = {"BUY": "🟢", "SELL": "🔴", "SHORT": "🔻", "COVER": "🔼"}.get(action, "⚪")
+        action_cn = {"BUY": "做多买入", "SELL": "多单平仓", "SHORT": "融券做空", "COVER": "空单平仓"}.get(action, action)
+        pnl_str = f" | 盈亏: {'+'if pnl>=0 else ''}{pnl:.2f} USD" if pnl != 0.0 else ""
+        feed_msg = f"[{timestamp_str}] {action_emoji} [{ticker}] {action_cn} × {shares}股 @ ${price:.2f}{pnl_str} | {reason}"
+
+        self.action_logs.append(feed_msg)
+        if len(self.action_logs) > 200:
+            self.action_logs.pop(0)
+
+        # 持久化交易记录（用于复盘）
+        self.trade_history.append({
+            "date": date_str,
+            "time": timestamp_str,
+            "action": action,
+            "action_cn": action_cn,
+            "ticker": ticker,
+            "shares": shares,
+            "price": round(price, 4),
+            "pnl": round(pnl, 2),
+            "reason": reason
+        })
+        # 最多保留 1000 条历史记录
+        if len(self.trade_history) > 1000:
+            self.trade_history.pop(0)
+
+    def get_today_summary(self) -> dict:
+        """统计今日交易的胜负与盈亏情况。"""
+        today = datetime.datetime.now().strftime("%Y-%m-%d")
+        today_trades = [t for t in self.trade_history if t["date"] == today]
+        closed_trades = [t for t in today_trades if t["action"] in ("SELL", "COVER") and t["pnl"] != 0.0]
+        wins = [t for t in closed_trades if t["pnl"] > 0]
+        losses = [t for t in closed_trades if t["pnl"] < 0]
+        total_pnl = sum(t["pnl"] for t in closed_trades)
+        return {
+            "date": today,
+            "total_trades": len(today_trades),
+            "closed_trades": len(closed_trades),
+            "wins": len(wins),
+            "losses": len(losses),
+            "win_rate": round(len(wins) / len(closed_trades) * 100, 1) if closed_trades else 0.0,
+            "total_pnl": round(total_pnl, 2),
+            "best_trade": round(max((t["pnl"] for t in closed_trades), default=0.0), 2),
+            "worst_trade": round(min((t["pnl"] for t in closed_trades), default=0.0), 2)
+        }
 
     def start(self, strategy_params: Optional[Dict] = None, ignore_market_hours: bool = True):
         if self.is_running:
@@ -306,13 +361,14 @@ class LiveTradingRunner:
                             cash_shares = int((cash * 0.95) / close_price)
                             shares = max(1, min(shares, cash_shares))
 
-                            self.add_log(f"🛒 [{ticker}] 触发做多信号！发送买单：以市价买入 {shares} 股...")
+                            self.add_log(f"🛒 [{ticker}] 触发做多信号！以市价买入 {shares} 股...")
                             order_res = self.adapter.submit_market_order(ticker, shares, "buy")
                             if order_res.get("success"):
-                                self.add_log(f"✅ [{ticker}] 做多买单提交成功！Alpaca 订单号: {order_res.get('order_id', order_res.get('id'))}")
+                                self.add_log(f"✅ [{ticker}] 做多买单成功！订单号: {order_res.get('order_id', order_res.get('id'))}")
                                 self.highest_prices[ticker] = close_price
+                                self.add_trade_action("BUY", ticker, shares, close_price, reason)
                             else:
-                                self.add_log(f"❌ [{ticker}] 做多买单提交失败。原因: {order_res.get('error')}")
+                                self.add_log(f"❌ [{ticker}] 做多买单失败。原因: {order_res.get('error')}")
 
                         elif action == "SHORT" and current_shares == 0:
                             account = self.adapter.get_account_summary()
@@ -328,18 +384,21 @@ class LiveTradingRunner:
                             max_shares = int((total_equity * max_pct) / close_price)
                             shares = max(1, min(shares, max_shares))
 
-                            self.add_log(f"📉 [{ticker}] 触发做空信号！发送融券卖单：以市价融券做空 {shares} 股...")
+                            self.add_log(f"📉 [{ticker}] 触发做空信号！以市价融券做空 {shares} 股...")
                             order_res = self.adapter.submit_market_order(ticker, shares, "sell")
                             if order_res.get("success"):
-                                self.add_log(f"✅ [{ticker}] 融券做空单提交成功！Alpaca 订单号: {order_res.get('order_id', order_res.get('id'))}")
+                                self.add_log(f"✅ [{ticker}] 融券做空成功！订单号: {order_res.get('order_id', order_res.get('id'))}")
+                                self.add_trade_action("SHORT", ticker, shares, close_price, reason)
                             else:
-                                self.add_log(f"❌ [{ticker}] 融券做空单提交失败。原因: {order_res.get('error')}")
+                                self.add_log(f"❌ [{ticker}] 融券做空失败。原因: {order_res.get('error')}")
 
                         elif action == "SELL" and current_shares > 0:
-                            self.add_log(f"🔔 [{ticker}] 触发多单平仓信号！发送卖单：以市价卖出 {current_shares} 股...")
+                            pnl = (close_price - avg_cost) * current_shares
+                            self.add_log(f"🔔 [{ticker}] 触发多单平仓！以市价卖出 {current_shares} 股（预计盈亏 ${pnl:.2f}）...")
                             order_res = self.adapter.submit_market_order(ticker, current_shares, "sell")
                             if order_res.get("success"):
-                                self.add_log(f"✅ [{ticker}] 多单平仓成功！Alpaca 订单号: {order_res.get('order_id', order_res.get('id'))}")
+                                self.add_log(f"✅ [{ticker}] 多单平仓成功！订单号: {order_res.get('order_id', order_res.get('id'))}")
+                                self.add_trade_action("SELL", ticker, current_shares, close_price, reason, pnl=pnl)
                                 if ticker in self.highest_prices:
                                     del self.highest_prices[ticker]
                             else:
@@ -347,10 +406,12 @@ class LiveTradingRunner:
 
                         elif action == "COVER" and current_shares < 0:
                             cover_qty = abs(current_shares)
-                            self.add_log(f"🔔 [{ticker}] 触发空单平仓信号！发送买入还券单：买入 {cover_qty} 股平空...")
+                            pnl = (avg_cost - close_price) * cover_qty
+                            self.add_log(f"🔔 [{ticker}] 触发空单平仓！买入还券 {cover_qty} 股（预计盈亏 ${pnl:.2f}）...")
                             order_res = self.adapter.submit_market_order(ticker, cover_qty, "buy")
                             if order_res.get("success"):
-                                self.add_log(f"✅ [{ticker}] 空单平仓成功！Alpaca 订单号: {order_res.get('order_id', order_res.get('id'))}")
+                                self.add_log(f"✅ [{ticker}] 空单平仓成功！订单号: {order_res.get('order_id', order_res.get('id'))}")
+                                self.add_trade_action("COVER", ticker, cover_qty, close_price, reason, pnl=pnl)
                             else:
                                 self.add_log(f"❌ [{ticker}] 空单平仓失败。原因: {order_res.get('error')}")
                                 
