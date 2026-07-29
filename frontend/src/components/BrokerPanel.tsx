@@ -64,6 +64,13 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
   const [todaySummary, setTodaySummary] = useState<TodaySummary | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+
+  // Extended hours limit order state
+  const [showExtModal, setShowExtModal] = useState(false);
+  const [extSymbol, setExtSymbol] = useState(watchlist[0] || 'TSLA');
+  const [extSide, setExtSide] = useState<'buy' | 'sell'>('sell');
+  const [extQty, setExtQty] = useState(10);
+  const [extPrice, setExtPrice] = useState(300.0);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<ActiveTab>('analysis');
 
@@ -181,6 +188,34 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
     finally { setActionLoading(null); fetchBrokerData(); }
   };
 
+  const handleSendExtendedHoursOrder = async () => {
+    setActionLoading('ext_order');
+    try {
+      const res = await fetch(`${API_BASE}/api/live/extended_hours_order`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          symbol: extSymbol,
+          qty: Number(extQty),
+          side: extSide,
+          limit_price: Number(extPrice)
+        })
+      });
+      const json = await res.json();
+      if (json.success) {
+        alert(`🌙 [盘前/盘后限价单] 成功下发！${extSymbol} ${extSide.toUpperCase()} ${extQty} 股 @ $${extPrice}`);
+        setShowExtModal(false);
+      } else {
+        alert('下发失败: ' + (json.message || json.error || '未知错误'));
+      }
+    } catch {
+      alert('请求失败');
+    } finally {
+      setActionLoading(null);
+      fetchBrokerData();
+    }
+  };
+
   const getActionStyle = (action: string) => {
     if (action === 'BUY') return { border: '1px solid rgba(0,200,5,0.4)', color: '#00c805', bg: 'rgba(0,200,5,0.04)' };
     if (action === 'SHORT') return { border: '1px solid rgba(255,59,48,0.5)', color: '#ff6b6b', bg: 'rgba(255,59,48,0.05)' };
@@ -231,7 +266,7 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
               : '点击右侧按钮启动 AI 托管。开启后全自动执行多空买卖与动态风控。'}
           </p>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
           {!isBotRunning ? (
             <button onClick={handleStartBot} disabled={actionLoading !== null} style={{ background: 'var(--color-green)', color: '#000', fontWeight: 900, fontSize: '1.05rem', padding: '12px 28px', borderRadius: '8px', border: 'none', cursor: 'pointer', boxShadow: '0 4px 20px rgba(0,200,5,0.3)' }}>
               {actionLoading === 'start' ? '⏳ 启动中...' : '▶️ 开启 AI 托管买卖'}
@@ -241,6 +276,9 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
               {actionLoading === 'stop' ? '⏳ 停止中...' : '⏸️ 暂停 AI 托管'}
             </button>
           )}
+          <button onClick={() => setShowExtModal(true)} disabled={actionLoading !== null} style={{ background: 'linear-gradient(135deg, #2e1065 0%, #3b0764 100%)', color: '#c084fc', fontWeight: 800, fontSize: '0.95rem', padding: '12px 20px', borderRadius: '8px', border: '1px solid rgba(192,132,252,0.4)', cursor: 'pointer', boxShadow: '0 4px 15px rgba(147,51,234,0.25)' }}>
+            🌙 盘前/盘后限价挂单 (Extended-Hours Limit)
+          </button>
         </div>
       </div>
 
@@ -645,6 +683,87 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
           </div>
         );
       })()}
+
+      {/* 盘前/盘后限价挂单 Modal 弹窗 */}
+      {showExtModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 9999 }}>
+          <div className="card fade-in" style={{ width: '460px', padding: '2rem', background: '#09090b', border: '1px solid rgba(192,132,252,0.4)', boxShadow: '0 20px 50px rgba(0,0,0,0.9), 0 0 30px rgba(147,51,234,0.3)', borderRadius: '14px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem' }}>
+              <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 900, color: '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                🌙 盘前/盘后限价挂单 (Extended-Hours)
+              </h3>
+              <button onClick={() => setShowExtModal(false)} style={{ background: 'transparent', border: 'none', color: '#888', fontSize: '1.4rem', cursor: 'pointer' }}>×</button>
+            </div>
+            
+            <p style={{ fontSize: '0.82rem', color: 'var(--color-text-secondary)', marginBottom: '1.5rem', lineHeight: '1.5' }}>
+              美股盘前 (04:00 - 09:30 EST) 及盘后 (16:00 - 20:00 EST) 时段<strong>不支持市价单 (Market Order)</strong>。本功能将向 Alpaca 提交支持扩展时段交易的<strong>限价单 (Limit Order with Extended Hours)</strong>。
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', color: '#aaa', marginBottom: '4px', fontWeight: 700 }}>股票代码 (Ticker)</label>
+                <input
+                  type="text"
+                  value={extSymbol}
+                  onChange={(e) => setExtSymbol(e.target.value.toUpperCase())}
+                  placeholder="如 TSLA, NVDA"
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #333', background: '#141416', color: '#fff', fontSize: '0.95rem', fontWeight: 800 }}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#aaa', marginBottom: '4px', fontWeight: 700 }}>交易方向 (Side)</label>
+                  <select
+                    value={extSide}
+                    onChange={(e) => setExtSide(e.target.value as 'buy' | 'sell')}
+                    style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #333', background: '#141416', color: '#fff', fontSize: '0.9rem', fontWeight: 800 }}
+                  >
+                    <option value="sell">🔴 卖出 / 平仓 (SELL)</option>
+                    <option value="buy">🟢 做多 / 买入 (BUY)</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#aaa', marginBottom: '4px', fontWeight: 700 }}>交易股数 (Shares)</label>
+                  <input
+                    type="number"
+                    value={extQty}
+                    onChange={(e) => setExtQty(Math.max(1, parseInt(e.target.value) || 1))}
+                    style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #333', background: '#141416', color: '#fff', fontSize: '0.95rem', fontWeight: 800 }}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', color: '#aaa', marginBottom: '4px', fontWeight: 700 }}>限价价格 (Limit Price $)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={extPrice}
+                  onChange={(e) => setExtPrice(parseFloat(e.target.value) || 0.0)}
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid rgba(192,132,252,0.5)', background: '#141416', color: '#c084fc', fontSize: '1.1rem', fontWeight: 900 }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px', marginTop: '1rem' }}>
+                <button
+                  onClick={() => setShowExtModal(false)}
+                  style={{ flex: 1, padding: '12px', borderRadius: '8px', border: '1px solid #333', background: '#18181b', color: '#ccc', fontWeight: 700, cursor: 'pointer' }}
+                >
+                  取消
+                </button>
+                <button
+                  onClick={handleSendExtendedHoursOrder}
+                  disabled={actionLoading !== null}
+                  style={{ flex: 2, padding: '12px', borderRadius: '8px', border: 'none', background: 'linear-gradient(135deg, #7c3aed 0%, #9333ea 100%)', color: '#fff', fontWeight: 900, fontSize: '0.95rem', cursor: 'pointer', boxShadow: '0 4px 15px rgba(147,51,234,0.4)' }}
+                >
+                  {actionLoading === 'ext_order' ? '⏳ 正在提交挂单...' : '⚡ 提交盘前/盘后限价单'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

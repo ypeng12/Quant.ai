@@ -56,6 +56,12 @@ class LiveStartRequest(BaseModel):
 class WatchlistSyncRequest(BaseModel):
     tickers: List[str]
 
+class ExtendedHoursOrderRequest(BaseModel):
+    symbol: str
+    qty: int
+    side: str  # "buy" or "sell"
+    limit_price: Optional[float] = None
+
 app = FastAPI(title="Quant.ai API Server")
 
 # Instantiate live trading background runner
@@ -1471,6 +1477,26 @@ def close_all_positions():
         return res
     except Exception as e:
         return {"success": False, "error": str(e)}
+
+
+@app.post("/api/broker/limit_order")
+@app.post("/api/live/extended_hours_order")
+def submit_extended_hours_order(req: ExtendedHoursOrderRequest):
+    symbol = req.symbol.upper().strip()
+    price = req.limit_price
+    
+    if not price or price <= 0:
+        try:
+            quotes = get_batch_quotes([symbol])
+            if quotes and symbol in quotes:
+                price = quotes[symbol].get("price", 100.0)
+            else:
+                price = 100.0
+        except Exception:
+            price = 100.0
+            
+    res = live_runner.submit_extended_hours_order(symbol, req.qty, req.side, limit_price=price)
+    return res
 
 
 @app.get("/api/live/action_feed")
