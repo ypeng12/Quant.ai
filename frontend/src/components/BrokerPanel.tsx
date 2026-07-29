@@ -313,7 +313,10 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
       {todaySummary && (
         <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(5, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
           <div className="stat-card" style={{ background: '#09090b', border: `1px solid ${todayPnlPositive ? 'rgba(0,200,5,0.3)' : 'rgba(255,59,48,0.3)'}`, padding: '1.25rem' }}>
-            <span className="stat-label">今日已实现盈亏 (Realized)</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+              <span className="stat-label">今日已实现盈亏 (Realized)</span>
+              <span style={{ fontSize: '0.68rem', padding: '1px 5px', borderRadius: '3px', background: 'rgba(0,200,5,0.15)', color: '#00c805', fontWeight: 700 }}>Alpaca 实时同步</span>
+            </div>
             <span className="stat-value" style={{ fontSize: '1.4rem', fontWeight: 900, color: todayPnlPositive ? 'var(--color-green)' : 'var(--color-red)' }}>
               {todayPnlPositive ? '+' : ''}${todaySummary.total_pnl.toFixed(2)}
             </span>

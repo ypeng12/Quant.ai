@@ -204,6 +204,18 @@ class LiveTradingRunner:
         except Exception:
             pass
 
+        # 若连接了真实的 Alpaca 接口，同步 Alpaca 官方账户今日总盈亏
+        alpaca_official_today_pnl = None
+        try:
+            if hasattr(self.adapter, "get_account_summary"):
+                acc_info = self.adapter.get_account_summary()
+                if acc_info and acc_info.get("success"):
+                    alpaca_official_today_pnl = acc_info.get("today_pnl")
+        except Exception:
+            pass
+
+        final_today_pnl = round(realized_pnl, 2) if alpaca_official_today_pnl is None else round(alpaca_official_today_pnl, 2)
+
         return {
             "date": today,
             "total_trades": len(today_trades),
@@ -211,9 +223,10 @@ class LiveTradingRunner:
             "wins": len(wins),
             "losses": len(losses),
             "win_rate": round(len(wins) / len(closed_trades) * 100, 1) if closed_trades else 0.0,
-            "realized_pnl": round(realized_pnl, 2),
+            "realized_pnl": final_today_pnl,
+            "alpaca_official_pnl": round(alpaca_official_today_pnl, 2) if alpaca_official_today_pnl is not None else final_today_pnl,
             "unrealized_pnl": round(unrealized_pnl, 2),
-            "total_pnl": round(realized_pnl, 2), # 今日平仓落袋为安的真实实现盈亏
+            "total_pnl": final_today_pnl, # 同步 Alpaca 官方与量化系统的真实已实现盈亏
             "best_trade": round(max((t["pnl"] for t in closed_trades), default=0.0), 2),
             "worst_trade": round(min((t["pnl"] for t in closed_trades), default=0.0), 2)
         }
