@@ -40,10 +40,15 @@ class AlpacaAdapter:
         """
         Fetch broker account details.
         Returns:
-            Dict containing cash, equity, buying power, and account status.
+            Dict containing cash, equity, buying power, today_pnl, and account status.
         """
         account = self.client.get_account()
         status_str = account.status.value if hasattr(account.status, 'value') else str(account.status)
+        equity = float(account.equity)
+        last_equity = float(getattr(account, 'last_equity', equity) or equity)
+        today_pnl = round(equity - last_equity, 2)
+        today_pnl_pct = round((today_pnl / last_equity * 100), 2) if last_equity > 0 else 0.0
+
         return {
             "success": True,
             "account_number": str(account.account_number),
@@ -54,7 +59,10 @@ class AlpacaAdapter:
             "buying_power": float(account.buying_power),
             "multiplier": float(account.multiplier),
             "shorting_enabled": bool(account.shorting_enabled),
-            "equity": float(account.equity),
+            "equity": equity,
+            "last_equity": last_equity,
+            "today_pnl": today_pnl,
+            "today_pnl_pct": today_pnl_pct,
             "initial_margin": float(account.initial_margin),
             "maintenance_margin": float(account.maintenance_margin),
         }
