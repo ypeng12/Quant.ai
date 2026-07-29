@@ -129,6 +129,43 @@ class AlpacaAdapter:
                 "message": f"Failed to submit market order: {str(e)}"
             }
 
+    def submit_limit_order(self, symbol: str, qty: int, side: str, limit_price: float, extended_hours: bool = True) -> Dict:
+        """
+        Submit a Limit order to Alpaca supporting Pre-market (4:00 AM EST) and Post-market (8:00 PM EST).
+        Args:
+            symbol: Ticker symbol (e.g. 'TSLA')
+            qty: Quantity of shares
+            side: 'buy' or 'sell'
+            limit_price: Limit price for execution
+            extended_hours: Allow trading during pre-market / post-market extended hours
+        """
+        order_side = OrderSide.BUY if side.lower() == "buy" else OrderSide.SELL
+        try:
+            order_request = LimitOrderRequest(
+                symbol=symbol.upper(),
+                qty=qty,
+                side=order_side,
+                limit_price=round(limit_price, 2),
+                time_in_force=TimeInForce.DAY,
+                extended_hours=extended_hours
+            )
+            order = self.client.submit_order(order_data=order_request)
+            return {
+                "success": True,
+                "order_id": str(order.id),
+                "client_order_id": str(order.client_order_id),
+                "status": str(order.status.value),
+                "filled_qty": int(order.filled_qty or 0),
+                "filled_avg_price": float(order.filled_avg_price or limit_price),
+                "message": f"Successfully submitted Extended-Hours LIMIT {side.upper()} order for {qty} shares of {symbol} at ${limit_price:.2f}."
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e),
+                "message": f"Failed to submit extended hours limit order: {str(e)}"
+            }
+
     def cancel_all_orders(self) -> Dict:
         """
         Cancel all open/pending orders.

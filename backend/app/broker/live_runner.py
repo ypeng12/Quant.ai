@@ -76,6 +76,9 @@ class MockAlpacaAdapter:
         return {"status": "filled", "id": "mock_order_123"}
         return {"success": True, "status": "filled", "id": "mock_order_123"}
 
+    def submit_limit_order(self, symbol: str, qty: int, side: str, limit_price: float, extended_hours: bool = True) -> Dict:
+        return self.submit_market_order(symbol, qty, side, price=limit_price)
+
     def cancel_all_orders(self) -> Dict:
         return {"success": True, "message": "已成功撤销所有模拟挂单"}
 
@@ -288,6 +291,22 @@ class LiveTradingRunner:
             
         self.add_log("🛑 量化交易机器人已暂停运行。")
         return True
+
+    def submit_extended_hours_order(self, symbol: str, qty: int, side: str, limit_price: float) -> Dict:
+        """下发盘前/盘后扩展时段限价挂单 (Extended-Hours Limit Order)"""
+        try:
+            if hasattr(self.adapter, "submit_limit_order"):
+                res = self.adapter.submit_limit_order(symbol, qty, side, limit_price=limit_price, extended_hours=True)
+            else:
+                res = self.adapter.submit_market_order(symbol, qty, side, price=limit_price)
+                
+            if res.get("success"):
+                action_type = "BUY" if side.lower() == "buy" else "SELL"
+                self.add_log(f"🌙 [盘前/盘后限价单] 成功下发 [{symbol}] {action_type} {qty} 股 @ ${limit_price:.2f} (Extended-Hours Active)")
+                self.add_trade_action(action_type, symbol, qty, limit_price, f"【盘前盘后限价交易】Limit Order @ ${limit_price:.2f}")
+            return res
+        except Exception as e:
+            return {"success": False, "error": str(e)}
 
     def get_status(self) -> Dict:
         return {
