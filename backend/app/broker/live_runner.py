@@ -183,20 +183,14 @@ class LiveTradingRunner:
         self.save_trade_history()
 
     def get_today_summary(self) -> dict:
-        """统计今日交易胜负与盈亏（今日已实现盈亏与当前持仓未实现浮动盈亏分开计算）。"""
+        """统计今日交易胜负与盈亏（严格按今日日期 YYYY-MM-DD 统计真实已实现盈亏与浮动盈亏）。"""
         today = datetime.datetime.now().strftime("%Y-%m-%d")
-        today_trades = [t for t in self.trade_history if t["date"] == today]
-        
-        # 若今日尚未有新记录，但历史库中有记录，回溯最近一天的交易记录
-        if not today_trades and self.trade_history:
-            latest_date = self.trade_history[-1]["date"]
-            today_trades = [t for t in self.trade_history if t["date"] == latest_date]
-            today = latest_date
+        today_trades = [t for t in self.trade_history if t.get("date") == today]
 
-        closed_trades = [t for t in today_trades if t["action"] in ("SELL", "COVER") and t["pnl"] != 0.0]
-        wins = [t for t in closed_trades if t["pnl"] > 0]
-        losses = [t for t in closed_trades if t["pnl"] < 0]
-        realized_pnl = sum(t["pnl"] for t in closed_trades)
+        closed_trades = [t for t in today_trades if t.get("action") in ("SELL", "COVER") and t.get("pnl", 0.0) != 0.0]
+        wins = [t for t in closed_trades if t.get("pnl", 0.0) > 0]
+        losses = [t for t in closed_trades if t.get("pnl", 0.0) < 0]
+        realized_pnl = sum(t.get("pnl", 0.0) for t in closed_trades)
 
         # 实时计算当前在持有仓位的未实现浮动盈亏（单独统计）
         unrealized_pnl = 0.0
