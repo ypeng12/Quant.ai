@@ -152,27 +152,27 @@ class LiveTradingRunner:
             self.logs.pop(0)
 
     def add_trade_action(self, action: str, ticker: str, shares: int, price: float, reason: str, pnl: float = 0.0):
-        """记录真实买卖动作到 action_logs 和 trade_history，用于 UI 显示与复盘分析。"""
+        """Record trade action to action_logs and trade_history for UI display and analysis."""
         now = datetime.datetime.now()
         timestamp_str = now.strftime("%Y-%m-%d %H:%M:%S")
         date_str = now.strftime("%Y-%m-%d")
 
-        # Action Feed 条目（精简版，仅展示关键买卖信息）
+        # Action Feed (English)
         action_emoji = {"BUY": "🟢", "SELL": "🔴", "SHORT": "🔻", "COVER": "🔼"}.get(action, "⚪")
-        action_cn = {"BUY": "做多买入", "SELL": "多单平仓", "SHORT": "融券做空", "COVER": "空单平仓"}.get(action, action)
-        pnl_str = f" | 盈亏: {'+'if pnl>=0 else ''}{pnl:.2f} USD" if pnl != 0.0 else ""
-        feed_msg = f"[{timestamp_str}] {action_emoji} [{ticker}] {action_cn} × {shares}股 @ ${price:.2f}{pnl_str} | {reason}"
+        action_cn = {"BUY": "BUY (Long)", "SELL": "SELL (Exit Long)", "SHORT": "SHORT (Sell Short)", "COVER": "COVER (Exit Short)"}.get(action, action)
+        pnl_str = f" | PnL: {'+'if pnl>=0 else ''}{pnl:.2f} USD" if pnl != 0.0 else ""
+        feed_msg = f"[{timestamp_str}] {action_emoji} [{ticker}] {action} × {shares} shs @ ${price:.2f}{pnl_str} | {reason}"
 
         self.action_logs.append(feed_msg)
         if len(self.action_logs) > 200:
             self.action_logs.pop(0)
 
-        # 持久化交易记录（用于复盘）
+        # Persistent trade history
         self.trade_history.append({
             "date": date_str,
             "time": timestamp_str,
             "action": action,
-            "action_cn": action_cn,
+            "action_cn": action,
             "ticker": ticker,
             "shares": shares,
             "price": round(price, 4),
@@ -182,11 +182,11 @@ class LiveTradingRunner:
         if len(self.trade_history) > 1000:
             self.trade_history.pop(0)
 
-        # 实时写入磁盘
+        # Save to disk
         self.save_trade_history()
 
     def get_today_summary(self) -> dict:
-        """统计今日交易胜负与盈亏（严格按今日日期 YYYY-MM-DD 统计真实已实现盈亏与浮动盈亏）。"""
+        """Calculate today's trade summary and realized/unrealized PnL."""
         today = datetime.datetime.now().strftime("%Y-%m-%d")
         today_trades = [t for t in self.trade_history if t.get("date") == today]
 
@@ -195,7 +195,6 @@ class LiveTradingRunner:
         losses = [t for t in closed_trades if t.get("pnl", 0.0) < 0]
         realized_pnl = sum(t.get("pnl", 0.0) for t in closed_trades)
 
-        # 实时计算当前在持有仓位的未实现浮动盈亏（单独统计）
         unrealized_pnl = 0.0
         try:
             open_positions = self.adapter.get_open_positions()
@@ -204,7 +203,6 @@ class LiveTradingRunner:
         except Exception:
             pass
 
-        # 若连接了真实的 Alpaca 接口，同步 Alpaca 官方账户今日总盈亏
         alpaca_official_today_pnl = None
         try:
             if hasattr(self.adapter, "get_account_summary"):
@@ -226,33 +224,29 @@ class LiveTradingRunner:
             "realized_pnl": final_today_pnl,
             "alpaca_official_pnl": round(alpaca_official_today_pnl, 2) if alpaca_official_today_pnl is not None else final_today_pnl,
             "unrealized_pnl": round(unrealized_pnl, 2),
-            "total_pnl": final_today_pnl, # 同步 Alpaca 官方与量化系统的真实已实现盈亏
+            "total_pnl": final_today_pnl,
             "best_trade": round(max((t["pnl"] for t in closed_trades), default=0.0), 2),
             "worst_trade": round(min((t["pnl"] for t in closed_trades), default=0.0), 2)
         }
 
     def update_tickers(self, new_tickers: List[str]):
-        """动态更新 AI 托管监控与研判股票池（合并用户 Watchlist 与已持有持仓股票）。"""
+        """Dynamically update AI monitoring universe to 100% align with user's Watchlist."""
         if not new_tickers:
             return
-        cleaned = [t.upper().strip() for t in new_tickers if t and isinstance(t, str)]
+        cleaned = []
+        for t in new_tickers:
+            if t and isinstance(t, str):
+                sym = t.upper().strip()
+                if sym and sym not in cleaned:
+                    cleaned.append(sym)
         
-        # 确保当前持仓的股票始终保留在监控池中
-        try:
-            positions = self.adapter.get_open_positions()
-            for pos in positions:
-                if pos['ticker'] not in cleaned:
-                    cleaned.append(pos['ticker'])
-        except Exception:
-            pass
-
-        if set(cleaned) != set(self.active_tickers):
+        if cleaned and cleaned != self.active_tickers:
             self.active_tickers = cleaned
-            self.add_log(f"🔄 AI 实时研判股票池已更新为：{self.active_tickers}")
+            self.add_log(f"🔄 AI 实时研判股票池已与 Watchlist 自动对齐: {self.active_tickers}")
 
     def start(self, strategy_params: Optional[Dict] = None, tickers: Optional[List[str]] = None, ignore_market_hours: bool = True):
         if self.is_running:
-            self.add_log("【警告】量化交易机器人已在运行中。")
+            self.add_log("[Warning] Quant trading bot is already running.")
             return False
             
         if strategy_params:
@@ -272,29 +266,79 @@ class LiveTradingRunner:
                     base_url=ALPACA_BASE_URL
                 )
                 self.adapter.get_account_summary()
-                self.add_log("🟢 已成功连接 Alpaca 实盘/模拟盘 API。")
+                self.add_log("🟢 Connected to Alpaca API successfully.")
+                # Sync historical closed orders from Alpaca to guarantee complete persistent log history
+                self.sync_alpaca_orders_to_history()
             else:
                 self.adapter = MockAlpacaAdapter()
-                self.add_log("💡 未检测到 Alpaca API Key，已自动切换至【本地虚拟模拟盘模式】。")
+                self.add_log("💡 Alpaca API Key missing, switched to [Local Paper Simulation Mode].")
         except Exception as e:
             self.adapter = MockAlpacaAdapter()
-            self.add_log(f"💡 连接 Alpaca 失败 ({str(e)})，已自动平滑切换至【本地虚拟模拟盘模式】。")
+            self.add_log(f"💡 Alpaca connection failed ({str(e)}), switched to [Local Paper Simulation Mode].")
+
+    def sync_alpaca_orders_to_history(self):
+        """自动从 Alpaca 官方接口抓取已成交的历史订单并同步存入 trade_history.json，确保历史交易永久保存。"""
+        if not self.adapter or isinstance(self.adapter, MockAlpacaAdapter):
+            return
+        try:
+            from alpaca.trading.requests import GetOrdersRequest
+            from alpaca.trading.enums import QueryOrderStatus
+            req = GetOrdersRequest(status=QueryOrderStatus.CLOSED, limit=200)
+            closed_orders = self.adapter.client.get_orders(filter=req)
+            
+            existing_ids = {t.get("order_id") for t in self.trade_history if "order_id" in t}
+            added_count = 0
+            for order in closed_orders:
+                order_id_str = str(order.id)
+                if order_id_str in existing_ids:
+                    continue
+                if not getattr(order, "filled_at", None):
+                    continue
+                
+                dt = order.filled_at
+                date_str = dt.strftime("%Y-%m-%d")
+                time_str = dt.strftime("%Y-%m-%d %H:%M:%S")
+                action_str = order.side.value.upper() if hasattr(order.side, "value") else str(order.side).upper()
+                qty = int(order.filled_qty or 0)
+                price = float(order.filled_avg_price or 0.0)
+                
+                trade_record = {
+                    "order_id": order_id_str,
+                    "date": date_str,
+                    "time": time_str,
+                    "action": action_str,
+                    "action_cn": "买入" if action_str == "BUY" else "卖出",
+                    "ticker": str(order.symbol),
+                    "shares": qty,
+                    "price": price,
+                    "pnl": 0.0,
+                    "reason": "Alpaca Broker Executed Sync"
+                }
+                self.trade_history.append(trade_record)
+                existing_ids.add(order_id_str)
+                added_count += 1
+                
+            if added_count > 0:
+                self.trade_history.sort(key=lambda x: x.get("time", ""))
+                self.save_trade_history()
+                self.add_log(f"📥 成功从 Alpaca 云端自动同步 {added_count} 笔历史成交记录到本地磁盘归档！")
+        except Exception as e:
+            print(f"Sync Alpaca orders warning: {e}")
 
         self.is_running = True
-        self.add_log(f"🚀 量化交易机器人已启动！监控股票池 ({len(self.active_tickers)} 支): {self.active_tickers} | 策略模式: {self.strategy_params['strategy_mode']}")
+        self.add_log(f"🚀 Quant trading bot started! Monitored tickers ({len(self.active_tickers)}): {self.active_tickers} | Strategy mode: {self.strategy_params['strategy_mode']}")
         
         # Spawn async loop task safely
         try:
             loop = asyncio.get_running_loop()
             self.loop_task = loop.create_task(self._run_loop())
         except RuntimeError:
-            # Fallback if called outside event loop
             pass
         return True
 
     def stop(self):
         if not self.is_running:
-            self.add_log("【通知】量化交易机器人未处于运行状态。")
+            self.add_log("[Notice] Quant trading bot is not running.")
             return False
             
         self.is_running = False
@@ -302,7 +346,7 @@ class LiveTradingRunner:
             self.loop_task.cancel()
             self.loop_task = None
             
-        self.add_log("🛑 量化交易机器人已暂停运行。")
+        self.add_log("🛑 Quant trading bot paused.")
         return True
 
     def submit_extended_hours_order(self, symbol: str, qty: int, side: str, limit_price: float) -> Dict:
@@ -354,11 +398,11 @@ class LiveTradingRunner:
             try:
                 # 1. Check if market is open
                 if not self.is_market_open():
-                    self.add_log("💤 当前处于非交易时段，机器人处于休眠待机状态...")
+                    self.add_log("💤 Outside market hours, bot sleeping...")
                     await asyncio.sleep(60)
                     continue
 
-                self.add_log(f"📡 [{len(self.active_tickers)} 支股票] 开始本轮分析...")
+                self.add_log(f"📡 Analyzing universe [{len(self.active_tickers)} tickers]...")
                 
                 # 2. Get active positions from Alpaca to sync state
                 try:
@@ -367,9 +411,9 @@ class LiveTradingRunner:
                     for pos_ticker in positions_by_ticker.keys():
                         if pos_ticker not in self.active_tickers:
                             self.active_tickers.append(pos_ticker)
-                            self.add_log(f"📥 检测到持仓股票 [{pos_ticker}]，已自动加入监控池。")
+                            self.add_log(f"📥 Detected active position [{pos_ticker}], added to universe.")
                 except Exception as e:
-                    self.add_log(f"⚠️ 无法获取 Alpaca 持仓：{str(e)}，跳过本轮。")
+                    self.add_log(f"⚠️ Failed to fetch Alpaca positions: {str(e)}, skipping round.")
                     await asyncio.sleep(20)
                     continue
 
@@ -393,7 +437,7 @@ class LiveTradingRunner:
                                 df = None
                         
                         if df is None or df.empty or len(df) < 2:
-                            self.add_log(f"🔍 [{ticker}] 等待 K 线数据更新...")
+                            self.add_log(f"🔍 [{ticker}] Waiting for bar data...")
                             continue
                             
                         row = df.iloc[-1]
@@ -426,7 +470,7 @@ class LiveTradingRunner:
                             params=self.strategy_params
                         )
 
-                        # ── 生成富有信息量的分析快照 ──
+                        # Generate Indicator Snapshot (English)
                         ema_9  = float(row.get('EMA_9',  close_price))
                         ema_21 = float(row.get('EMA_21', close_price))
                         vwap   = float(row.get('VWAP',   close_price))
@@ -435,50 +479,46 @@ class LiveTradingRunner:
                         regime = str(row.get('Regime', 'range_bound'))
 
                         trend_icon = "📈" if ema_9 > ema_21 else "📉"
-                        vwap_pos   = "VWAP上方✅" if close_price >= vwap else "VWAP下方⚠️"
+                        vwap_pos   = "Above VWAP✅" if close_price >= vwap else "Below VWAP⚠️"
                         ema_gap_pct = abs(ema_9 - ema_21) / ema_21 * 100
 
-                        # 持仓状态描述
                         if current_shares > 0:
                             pnl_pct = (close_price - avg_cost) / avg_cost * 100
-                            pos_label = f"多头 {current_shares}股 @ ${avg_cost:.2f} | 浮动: {'+' if pnl_pct>=0 else ''}{pnl_pct:.2f}%"
+                            pos_label = f"LONG {current_shares} shs @ ${avg_cost:.2f} | PnL: {'+' if pnl_pct>=0 else ''}{pnl_pct:.2f}%"
                         elif current_shares < 0:
                             pnl_pct = (avg_cost - close_price) / avg_cost * 100
-                            pos_label = f"空头 {abs(current_shares)}股 @ ${avg_cost:.2f} | 浮动: {'+' if pnl_pct>=0 else ''}{pnl_pct:.2f}%"
+                            pos_label = f"SHORT {abs(current_shares)} shs @ ${avg_cost:.2f} | PnL: {'+' if pnl_pct>=0 else ''}{pnl_pct:.2f}%"
                         else:
-                            pos_label = "空仓观望"
+                            pos_label = "Flat / Watch"
 
-                        # 接近触发的预警信号
                         alerts = []
                         vwap_dist_pct = abs(close_price - vwap) / vwap * 100
                         ema_cross_dist = abs(ema_9 - ema_21) / ema_21 * 100
                         if vwap_dist_pct < 0.15:
-                            alerts.append("🔔 逼近VWAP生命线")
+                            alerts.append("🔔 Near VWAP Line")
                         if ema_cross_dist < 0.08:
-                            alerts.append("⚡ EMA9/21 接近交叉")
+                            alerts.append("⚡ EMA9/21 Near Cross")
                         if rsi > 68:
-                            alerts.append(f"🌡️ RSI={rsi:.0f} 超买区间")
+                            alerts.append(f"🌡️ RSI={rsi:.0f} Overbought")
                         if rsi < 32:
-                            alerts.append(f"🌡️ RSI={rsi:.0f} 超卖区间")
+                            alerts.append(f"🌡️ RSI={rsi:.0f} Oversold")
                         if rvol > 1.8:
-                            alerts.append(f"🔥 RVOL={rvol:.1f}x 异常放量")
+                            alerts.append(f"🔥 RVOL={rvol:.1f}x High Vol")
                         alert_str = " | " + " · ".join(alerts) if alerts else ""
 
-                        # 决策标注
                         if action == "HOLD":
-                            decision_icon = "⏳ 观望"
+                            decision_icon = "⏳ WATCH"
                         elif action in ("BUY", "SHORT"):
-                            decision_icon = f"🚀 触发 {action}"
+                            decision_icon = f"🚀 TRIGGER {action}"
                         else:
-                            decision_icon = f"🔒 平仓 {action}"
+                            decision_icon = f"🔒 EXIT {action}"
 
                         snapshot = (
                             f"{trend_icon} [{ticker}] ${close_price:.2f} | "
-                            f"{vwap_pos} | EMA差={ema_gap_pct:.2f}% | RSI={rsi:.0f} | "
-                            f"市况={regime} | {pos_label}{alert_str} → {decision_icon}"
+                            f"{vwap_pos} | EMA_Diff={ema_gap_pct:.2f}% | RSI={rsi:.0f} | "
+                            f"Regime={regime} | {pos_label}{alert_str} → {decision_icon}"
                         )
                         self.add_log(snapshot)
-
 
                         # 5. Execute action on Alpaca
                         if action == "BUY" and current_shares == 0:
@@ -501,14 +541,14 @@ class LiveTradingRunner:
                             cash_shares = int((cash * 0.95) / close_price)
                             shares = max(1, min(shares, cash_shares))
 
-                            self.add_log(f"🛒 [{ticker}] 触发做多信号！以市价买入 {shares} 股...")
+                            self.add_log(f"🛒 [{ticker}] BUY signal triggered! Market buying {shares} shares...")
                             order_res = self.adapter.submit_market_order(ticker, shares, "buy")
                             if order_res.get("success"):
-                                self.add_log(f"✅ [{ticker}] 做多买单成功！订单号: {order_res.get('order_id', order_res.get('id'))}")
+                                self.add_log(f"✅ [{ticker}] BUY order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
                                 self.highest_prices[ticker] = close_price
                                 self.add_trade_action("BUY", ticker, shares, close_price, reason)
                             else:
-                                self.add_log(f"❌ [{ticker}] 做多买单失败。原因: {order_res.get('error')}")
+                                self.add_log(f"❌ [{ticker}] BUY order failed. Reason: {order_res.get('error')}")
 
                         elif action == "SHORT" and current_shares == 0:
                             account = self.adapter.get_account_summary()
@@ -524,46 +564,45 @@ class LiveTradingRunner:
                             max_shares = int((total_equity * max_pct) / close_price)
                             shares = max(1, min(shares, max_shares))
 
-                            self.add_log(f"📉 [{ticker}] 触发做空信号！以市价融券做空 {shares} 股...")
+                            self.add_log(f"📉 [{ticker}] SHORT signal triggered! Market shorting {shares} shares...")
                             order_res = self.adapter.submit_market_order(ticker, shares, "sell")
                             if order_res.get("success"):
-                                self.add_log(f"✅ [{ticker}] 融券做空成功！订单号: {order_res.get('order_id', order_res.get('id'))}")
+                                self.add_log(f"✅ [{ticker}] SHORT order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
                                 self.add_trade_action("SHORT", ticker, shares, close_price, reason)
                             else:
-                                self.add_log(f"❌ [{ticker}] 融券做空失败。原因: {order_res.get('error')}")
+                                self.add_log(f"❌ [{ticker}] SHORT order failed. Reason: {order_res.get('error')}")
 
                         elif action == "SELL" and current_shares > 0:
                             pnl = (close_price - avg_cost) * current_shares
-                            self.add_log(f"🔔 [{ticker}] 触发多单平仓！以市价卖出 {current_shares} 股（预计盈亏 ${pnl:.2f}）...")
+                            self.add_log(f"🔔 [{ticker}] SELL signal triggered! Market selling {current_shares} shares (Est. PnL ${pnl:.2f})...")
                             order_res = self.adapter.submit_market_order(ticker, current_shares, "sell")
                             if order_res.get("success"):
-                                self.add_log(f"✅ [{ticker}] 多单平仓成功！订单号: {order_res.get('order_id', order_res.get('id'))}")
+                                self.add_log(f"✅ [{ticker}] SELL order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
                                 self.add_trade_action("SELL", ticker, current_shares, close_price, reason, pnl=pnl)
                                 if ticker in self.highest_prices:
                                     del self.highest_prices[ticker]
                             else:
-                                self.add_log(f"❌ [{ticker}] 多单平仓失败。原因: {order_res.get('error')}")
+                                self.add_log(f"❌ [{ticker}] SELL order failed. Reason: {order_res.get('error')}")
 
                         elif action == "COVER" and current_shares < 0:
                             cover_qty = abs(current_shares)
                             pnl = (avg_cost - close_price) * cover_qty
-                            self.add_log(f"🔔 [{ticker}] 触发空单平仓！买入还券 {cover_qty} 股（预计盈亏 ${pnl:.2f}）...")
+                            self.add_log(f"🔔 [{ticker}] COVER signal triggered! Market buying {cover_qty} shares (Est. PnL ${pnl:.2f})...")
                             order_res = self.adapter.submit_market_order(ticker, cover_qty, "buy")
                             if order_res.get("success"):
-                                self.add_log(f"✅ [{ticker}] 空单平仓成功！订单号: {order_res.get('order_id', order_res.get('id'))}")
+                                self.add_log(f"✅ [{ticker}] COVER order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
                                 self.add_trade_action("COVER", ticker, cover_qty, close_price, reason, pnl=pnl)
                             else:
-                                self.add_log(f"❌ [{ticker}] 空单平仓失败。原因: {order_res.get('error')}")
+                                self.add_log(f"❌ [{ticker}] COVER order failed. Reason: {order_res.get('error')}")
                                 
                     except Exception as ex:
-                        self.add_log(f"⚠️ 扫描 {ticker} 发生错误: {str(ex)}")
+                        self.add_log(f"⚠️ Error scanning {ticker}: {str(ex)}")
 
-                # 每 30 秒扫描一次，高频检验交易信号
                 await asyncio.sleep(30)
 
             except asyncio.CancelledError:
                 self.add_log("Background trading loop task cancelled.")
                 break
             except Exception as e:
-                self.add_log(f"⚠️ 交易主循环异常: {str(e)}")
+                self.add_log(f"⚠️ Main loop exception: {str(e)}")
                 await asyncio.sleep(30)
