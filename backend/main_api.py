@@ -25,7 +25,7 @@ def clean_float(val, default=0.0):
         return default
 
 
-from app.config import INITIAL_CASH, WATCHLIST, FORCE_LIQUIDATION_TIME
+from app.config import INITIAL_CASH, WATCHLIST, FORCE_LIQUIDATION_TIME, load_watchlist, save_watchlist
 from app.data_manager import fetch_and_prepare_data, get_company_info, calculate_atr, INTERVAL_TO_PERIOD, get_batch_quotes
 from app.patterns import analyze_patterns
 from app.simulator import run_backtest_sim
@@ -114,9 +114,22 @@ app.add_middleware(
 @app.get("/api/watchlist")
 def get_watchlist_data():
     """
-    获取自选股池的列表
+    获取自选股池的列表 (与 AI 实时研判股票池保持 100% 同步)
     """
-    return {"watchlist": WATCHLIST}
+    current_list = live_runner.active_tickers if (live_runner and live_runner.active_tickers) else load_watchlist()
+    return {"watchlist": current_list}
+
+@app.post("/api/watchlist/update")
+@app.post("/api/watchlist/save")
+def update_watchlist_data(req: WatchlistSyncRequest):
+    """
+    持久化更新自选股列表 (保存到 backend/watchlist.json 并自动对齐 AI 实时研判池)
+    """
+    updated = save_watchlist(req.tickers)
+    if live_runner:
+        live_runner.update_tickers(updated)
+    return {"success": True, "watchlist": updated}
+
 
 @app.get("/api/watchlist_prices")
 def get_watchlist_prices(tickers: Optional[str] = None):
@@ -1434,7 +1447,8 @@ def start_live_trading(req: LiveStartRequest):
 
 @app.post("/api/live/watchlist/sync")
 def sync_watchlist(req: WatchlistSyncRequest):
-    live_runner.update_tickers(req.tickers)
+    updated = save_watchlist(req.tickers)
+    live_runner.update_tickers(updated)
     return {"success": True, "active_tickers": live_runner.active_tickers}
 
 
@@ -1507,11 +1521,17 @@ def get_action_feed(limit: int = 100):
 
 
 @app.get("/api/live/trade_history")
-def get_trade_history(days: int = 7):
+def get_trade_history(days: int = 30):
     """Returns persistent trade records for post-market review and replay."""
     import datetime
     cutoff = (datetime.datetime.now() - datetime.timedelta(days=days)).strftime("%Y-%m-%d")
-    history = [t for t in live_runner.trade_history if t["date"] >= cutoff]
+    live_runner.recalculate_trade_pnls()
+    history = []
+    for t in live_runner.trade_history:
+        d = t.get("date") or (t.get("time", "")[:10] if t.get("time") else "")
+        d = d.strip()
+        if not d or d >= cutoff:
+            history.append(t)
     return {"success": True, "trades": history, "total": len(history)}
 
 
@@ -1835,10 +1855,11 @@ if os.path.exists(_dist_dir):
     if os.path.exists(_assets_dir):
         app.mount("/assets", StaticFiles(directory=_assets_dir), name="assets")
 
+    from fastapi import HTTPException
     @app.get("/{full_path:path}")
     async def serve_spa(full_path: str):
         if full_path.startswith("api/"):
-            return None
+            raise HTTPException(status_code=404, detail="API endpoint not found")
         target_file = os.path.join(_dist_dir, full_path)
         if full_path and os.path.exists(target_file) and os.path.isfile(target_file):
             return FileResponse(target_file)

@@ -9,8 +9,8 @@ from app.strategy import evaluate_market_state
 
 def run_backtest_sim(df, ticker, strategy_params, risk_params, is_intraday=True):
     """
-    通用回测执行引擎，支持日内 (is_intraday=True) 和日线 (is_intraday=False) 级别回测。
-    增强输出：regime_breakdown, drawdown_curve, Sharpe, Calmar, CAGR, Profit Factor
+    Generic backtest execution engine supporting intraday (is_intraday=True) and daily (is_intraday=False) backtesting.
+    Outputs: regime_breakdown, drawdown_curve, Sharpe, Calmar, CAGR, Profit Factor
     """
     df = df.copy()
     if is_intraday:
@@ -39,20 +39,20 @@ def run_backtest_sim(df, ticker, strategy_params, risk_params, is_intraday=True)
         min_commission_per_order=risk_params.get("min_commission_per_order", 1.0)
     )
     
-    # 提取账户风控限制
+    # Extract risk control limits
     soft_dd = risk_params.get("soft_dd", SOFT_DRAWDOWN_LIMIT)
     hard_dd = risk_params.get("hard_dd", HARD_DRAWDOWN_LIMIT)
     max_consecutive_losses = risk_params.get("max_consecutive_losses", MAX_CONSECUTIVE_LOSSES)
     
-    # 提取开盘突击模式参数，默认是 True
+    # Extract market open focus parameter
     market_open_focus = strategy_params.get("market_open_focus", True)
     
     equity_curve = []
     
-    # 记录每笔交易所处的 regime（用于 regime breakdown）
+    # Record regime for each trade
     trade_regime_map = {}  # buy_timestamp -> regime
     
-    # 我们从第2行开始，因为策略需要 prev_row 进行对比
+    # Start loop from index 1 for prev_row access
     for i in range(1, len(df)):
         row = df.iloc[i]
         prev_row = df.iloc[i-1]
@@ -65,12 +65,12 @@ def run_backtest_sim(df, ticker, strategy_params, risk_params, is_intraday=True)
         shares = portfolio.get_position_shares(ticker)
         avg_cost = portfolio.get_position_avg_cost(ticker)
         
-        # 1. 账户级风控指标更新 (含最高权益及回撤计算)
+        # 1. Update account equity & peak drawdown
         equity = portfolio.get_equity(current_prices)
         portfolio.peak_equity = max(portfolio.peak_equity, equity)
         drawdown_pct = (portfolio.peak_equity - equity) / portfolio.peak_equity if portfolio.peak_equity > 0 else 0.0
         
-        # 统计最近 SELL 操作的 realized_pnl
+        # Count consecutive losses
         sell_trades = [t for t in portfolio.ledger if t['action'] == 'SELL']
         consecutive_losses = 0
         for t in reversed(sell_trades):
@@ -80,7 +80,7 @@ def run_backtest_sim(df, ticker, strategy_params, risk_params, is_intraday=True)
                 break
         portfolio.consecutive_losses = consecutive_losses
         
-        # 2. 判定硬/软熔断并更新 risk_multiplier
+        # 2. Risk circuit breaker
         if drawdown_pct >= hard_dd:
             portfolio.risk_multiplier = 0.0
         elif drawdown_pct >= soft_dd or consecutive_losses >= max_consecutive_losses:
@@ -88,36 +88,33 @@ def run_backtest_sim(df, ticker, strategy_params, risk_params, is_intraday=True)
         else:
             portfolio.risk_multiplier = 1.0
             
-        # 3. 更新追踪止损的最高价
+        # 3. Update trailing stop peak price
         if shares > 0:
             portfolio.update_highest_price(ticker, close_price)
             
         highest_price = portfolio.get_position_highest_price(ticker)
         
-        # 记录资产曲线数据
+        # Record equity curve
         equity_curve.append({
             "time": int(timestamp.timestamp()),
             "value": round(equity, 2)
         })
         
-        # 4. 日内清仓检测 (仅限 1分钟、5分钟等日内级别)
+        # 4. Force EOD Liquidation (Intraday only)
         liq_time = FORCE_LIQUIDATION_OPEN_FOCUS if market_open_focus else FORCE_LIQUIDATION_TIME
         if is_intraday and time_str == liq_time and shares > 0:
             portfolio.sell(timestamp, ticker, close_price, shares)
             continue
             
-        # 5. 执行常规策略评估
+        # 5. Evaluate market state and strategy
         is_trading_window = True
         if is_intraday:
             if market_open_focus:
-                # 开盘突击：只在 9:35 - 10:15 之间开新仓
                 import datetime as dt_mod
                 is_trading_window = dt_mod.time(9, 35) <= timestamp.time() <= dt_mod.time(10, 15)
             else:
-                # 日内交易时间窗口：上午 9:35 到 下午 15:54
                 is_trading_window = datetime.time(9, 35) <= timestamp.time() < datetime.time(15, 54)
                 
-        # 如果我们已经持有仓位，为了检查止损止盈等，任何时间（直到强制平仓前）都是交易窗口
         if shares > 0:
             is_trading_window = True
         if is_trading_window:
@@ -128,7 +125,6 @@ def run_backtest_sim(df, ticker, strategy_params, risk_params, is_intraday=True)
             )
             
             if action == "BUY" and shares == 0:
-                # 仓位计算
                 if risk_params.get("position_sizing_mode", "atr") == "atr":
                     shares_to_buy = portfolio.calculate_position_size(
                         ticker, close_price, row['ATR'],
@@ -142,7 +138,6 @@ def run_backtest_sim(df, ticker, strategy_params, risk_params, is_intraday=True)
                     
                 if shares_to_buy > 0:
                     portfolio.buy(timestamp, ticker, close_price, shares_to_buy)
-                    # 记录买入时的 regime
                     trade_regime_map[str(timestamp)] = current_regime
                     
             elif action == "SELL" and shares > 0:

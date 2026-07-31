@@ -147,7 +147,16 @@ const INTERVAL_LABELS: Record<string, string> = {
 type ActiveTab = 'dashboard' | 'research' | 'report' | 'walkforward' | 'experiments' | 'replay' | 'broker' | 'institutional';
 
 function App() {
-  const [watchlist, setWatchlist] = useState<string[]>(["TSLA", "NVDA", "AAPL", "MSFT", "AMD"]);
+  const [watchlist, setWatchlist] = useState<string[]>(() => {
+    const saved = localStorage.getItem("quant_watchlist");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch (e) {}
+    }
+    return ["TSLA", "NVDA", "AAPL", "MSFT", "AMD", "SNDK", "MU", "CRWV"];
+  });
   const [newTickerInput, setNewTickerInput] = useState<string>('');
   
   const [activeTicker, setActiveTicker] = useState<string>('TSLA');
@@ -310,6 +319,34 @@ function App() {
       isMounted = false;
       clearInterval(intervalId);
     };
+  }, [watchlist]);
+
+  // Fetch persisted watchlist from backend API on initial app load
+  useEffect(() => {
+    fetch(`${API_BASE}/api/watchlist`)
+      .then(res => res.json())
+      .then(data => {
+        if (data && Array.isArray(data.watchlist) && data.watchlist.length > 0) {
+          setWatchlist(data.watchlist);
+          localStorage.setItem("quant_watchlist", JSON.stringify(data.watchlist));
+        }
+      })
+      .catch(err => console.error("Failed to fetch initial watchlist from server:", err));
+  }, []);
+
+  // Sync watchlist to localStorage & backend AI live runner automatically whenever watchlist changes
+  useEffect(() => {
+    try {
+      localStorage.setItem("quant_watchlist", JSON.stringify(watchlist));
+    } catch (e) {}
+
+    if (watchlist.length > 0) {
+      fetch(`${API_BASE}/api/live/watchlist/sync`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tickers: watchlist })
+      }).catch(err => console.error('Watchlist live runner sync error:', err));
+    }
   }, [watchlist]);
 
   const handleTickerChange = (ticker: string) => {
