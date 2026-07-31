@@ -1832,18 +1832,22 @@ def get_latest_research_results():
         {"feature": "residual_mom_20d", "psi": 0.0210, "status": "GREEN"}
     ]
 
-    return {
-        "success": True,
-        "experiment_id": "exp_20260727_014922",
-        "universe_size": 38,
-        "total_rows": 94040,
-        "trading_dates": 2508,
-        "holding_days": 5,
-        "cost_bps": 5.0,
-        "cv_scheme": "Purged Walk-Forward CV (3Y Train / 6M Val / 6M Test / 5d Embargo)",
-        "results": results_summary,
-        "drift_audit": feature_drift
-    }
+@app.get("/api/watchlist")
+def get_watchlist():
+    from app.config import load_watchlist
+    tickers = load_watchlist()
+    return {"success": True, "watchlist": tickers, "count": len(tickers)}
+
+
+@app.post("/api/live/watchlist/sync")
+def sync_watchlist(payload: dict):
+    from app.config import save_watchlist
+    tickers = payload.get("tickers", [])
+    if isinstance(tickers, list) and tickers:
+        saved = save_watchlist(tickers)
+        live_runner.update_tickers(saved)
+        return {"success": True, "watchlist": saved}
+    return {"success": False, "error": "Invalid tickers array"}
 
 
 # 静态文件托管（前端 React 构建产物）
