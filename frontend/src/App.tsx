@@ -329,6 +329,7 @@ function App() {
         if (data && Array.isArray(data.watchlist) && data.watchlist.length > 0) {
           setWatchlist(data.watchlist);
           localStorage.setItem("quant_watchlist", JSON.stringify(data.watchlist));
+          setActiveTicker((prev) => (data.watchlist.includes(prev) ? prev : data.watchlist[0]));
         }
       })
       .catch(err => console.error("Failed to fetch initial watchlist from server:", err));
