@@ -2806,6 +2806,83 @@
       "price": 310.1775,
       "pnl": 0.0,
       "reason": "[Bullish-VWAP] Price holding above VWAP ($307.79)."
+    },
+    {
+      "date": "2026-07-31",
+      "time": "2026-07-31 10:30:56",
+      "action": "BUY",
+      "action_cn": "BUY",
+      "ticker": "TSLA",
+      "shares": 137,
+      "price": 310.185,
+      "pnl": 0.0,
+      "reason": "[Bullish-VWAP] Price holding above VWAP ($307.84)."
+    },
+    {
+      "date": "2026-07-31",
+      "time": "2026-07-31 10:32:05",
+      "action": "SHORT",
+      "action_cn": "SHORT",
+      "ticker": "AAPL",
+      "shares": 141,
+      "price": 301.475,
+      "pnl": 0.0,
+      "reason": "[Bearish-VWAP] Price dropped below VWAP ($302.69)."
+    },
+    {
+      "date": "2026-07-31",
+      "time": "2026-07-31 10:32:39",
+      "action": "BUY",
+      "action_cn": "BUY",
+      "ticker": "TSLA",
+      "shares": 137,
+      "price": 310.31,
+      "pnl": 0.0,
+      "reason": "[Bullish-VWAP] Price holding above VWAP ($307.84)."
+    },
+    {
+      "date": "2026-07-31",
+      "time": "2026-07-31 10:33:13",
+      "action": "SHORT",
+      "action_cn": "SHORT",
+      "ticker": "TSLA",
+      "shares": 137,
+      "price": 310.0744,
+      "pnl": 0.0,
+      "reason": "[Bearish-Cross] EMA 9/21 Death Cross formed."
+    },
+    {
+      "date": "2026-07-31",
+      "time": "2026-07-31 10:33:48",
+      "action": "SHORT",
+      "action_cn": "SHORT",
+      "ticker": "AAPL",
+      "shares": 141,
+      "price": 301.2501,
+      "pnl": 0.0,
+      "reason": "[Bearish-VWAP] Price dropped below VWAP ($302.69)."
+    },
+    {
+      "date": "2026-07-31",
+      "time": "2026-07-31 10:33:50",
+      "action": "SHORT",
+      "action_cn": "SHORT",
+      "ticker": "CRWV",
+      "shares": 591,
+      "price": 72.05,
+      "pnl": 0.0,
+      "reason": "[Bearish-VWAP] Price dropped below VWAP ($73.13)."
+    },
+    {
+      "date": "2026-07-31",
+      "time": "2026-07-31 10:34:21",
+      "action": "BUY",
+      "action_cn": "BUY",
+      "ticker": "AAPL",
+      "shares": 135,
+      "price": 301.488,
+      "pnl": 0.0,
+      "reason": "[Bullish-Cross] EMA 9/21 Golden Cross formed."
     }
   ],
   "action_logs": [
@@ -2845,6 +2922,13 @@
     "[2026-07-31 10:13:08] 🟢 [AMD] BUY × 1 shs @ $489.97 | [Bullish-Cross] EMA 9/21 Golden Cross formed.",
     "[2026-07-31 10:18:12] 🔴 [PLTR] SELL × 1 shs @ $122.26 | PnL: -0.03 USD | [Long-TrailingStop] Price pulled back from peak $122.56 to trigger stop $122.27.",
     "[2026-07-31 10:22:04] 🔻 [CRWV] SHORT × 592 shs @ $71.92 | [Bearish-Cross] EMA 9/21 Death Cross formed.",
-    "[2026-07-31 10:22:35] 🟢 [TSLA] BUY × 137 shs @ $310.18 | [Bullish-VWAP] Price holding above VWAP ($307.79)."
+    "[2026-07-31 10:22:35] 🟢 [TSLA] BUY × 137 shs @ $310.18 | [Bullish-VWAP] Price holding above VWAP ($307.79).",
+    "[2026-07-31 10:30:56] 🟢 [TSLA] BUY × 137 shs @ $310.18 | [Bullish-VWAP] Price holding above VWAP ($307.84).",
+    "[2026-07-31 10:32:05] 🔻 [AAPL] SHORT × 141 shs @ $301.48 | [Bearish-VWAP] Price dropped below VWAP ($302.69).",
+    "[2026-07-31 10:32:39] 🟢 [TSLA] BUY × 137 shs @ $310.31 | [Bullish-VWAP] Price holding above VWAP ($307.84).",
+    "[2026-07-31 10:33:13] 🔻 [TSLA] SHORT × 137 shs @ $310.07 | [Bearish-Cross] EMA 9/21 Death Cross formed.",
+    "[2026-07-31 10:33:48] 🔻 [AAPL] SHORT × 141 shs @ $301.25 | [Bearish-VWAP] Price dropped below VWAP ($302.69).",
+    "[2026-07-31 10:33:50] 🔻 [CRWV] SHORT × 591 shs @ $72.05 | [Bearish-VWAP] Price dropped below VWAP ($73.13).",
+    "[2026-07-31 10:34:21] 🟢 [AAPL] BUY × 135 shs @ $301.49 | [Bullish-Cross] EMA 9/21 Golden Cross formed."
   ]
 }

@@ -296,8 +296,6 @@ class LiveTradingRunner:
         update Alpaca's Cloud Watchlist and the live AI monitoring/trading loop.
         -------------------------------------------------------------------------
         """
-        if not new_tickers:
-            return
         cleaned = []
         for t in new_tickers:
             if t and isinstance(t, str):
@@ -305,9 +303,9 @@ class LiveTradingRunner:
                 if sym and sym not in cleaned:
                     cleaned.append(sym)
         
-        if cleaned and cleaned != self.active_tickers:
+        if cleaned != self.active_tickers:
             self.active_tickers = cleaned
-            save_watchlist(cleaned)
+            save_watchlist(cleaned, allow_empty=True)
             self.add_log(f"🔄 AI 实时研判股票池已与 Watchlist 自动对齐并持久化保存: {self.active_tickers}")
 
     def start(self, strategy_params: Optional[Dict] = None, tickers: Optional[List[str]] = None, ignore_market_hours: bool = True):
