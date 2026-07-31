@@ -147,16 +147,7 @@ const INTERVAL_LABELS: Record<string, string> = {
 type ActiveTab = 'dashboard' | 'research' | 'report' | 'walkforward' | 'experiments' | 'replay' | 'broker' | 'institutional';
 
 function App() {
-  const [watchlist, setWatchlist] = useState<string[]>(() => {
-    const saved = localStorage.getItem("quant_watchlist");
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-      } catch (e) {}
-    }
-    return ["NVDA", "SNDK", "TSLA", "AMD", "MSFT", "MU"];
-  });
+  const [watchlist, setWatchlist] = useState<string[]>(["NVDA", "SNDK", "TSLA", "AMD", "MSFT", "MU"]);
   const [newTickerInput, setNewTickerInput] = useState<string>('');
   
   const [activeTicker, setActiveTicker] = useState<string>('TSLA');
