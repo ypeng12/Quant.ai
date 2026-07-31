@@ -1,0 +1,20 @@
+name: Sync to Hugging Face Hub
+
+on:
+  push:
+    branches: [main]
+
+  # Allow manual trigger from GitHub Actions tab
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Push to hub
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: git push --force https://Ypeng12:$HF_TOKEN@huggingface.co/spaces/Ypeng12/quant-ai main
