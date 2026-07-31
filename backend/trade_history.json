@@ -3081,6 +3081,39 @@
       "price": 487.12,
       "pnl": 0.0,
       "reason": "[Bearish-VWAP] Price dropped below VWAP ($494.53)."
+    },
+    {
+      "date": "2026-07-31",
+      "time": "2026-07-31 11:27:25",
+      "action": "SELL",
+      "action_cn": "SELL",
+      "ticker": "TSLA",
+      "shares": 139,
+      "price": 311.09,
+      "pnl": -20.65,
+      "reason": "[Long-TrailingStop] Price pulled back from peak $312.14 to trigger stop $311.49."
+    },
+    {
+      "date": "2026-07-31",
+      "time": "2026-07-31 11:27:27",
+      "action": "SHORT",
+      "action_cn": "SHORT",
+      "ticker": "SNDK",
+      "shares": 34,
+      "price": 1239.1,
+      "pnl": 0.0,
+      "reason": "[Bearish-VWAP] Price dropped below VWAP ($1273.18)."
+    },
+    {
+      "date": "2026-07-31",
+      "time": "2026-07-31 11:30:18",
+      "action": "SHORT",
+      "action_cn": "SHORT",
+      "ticker": "MU",
+      "shares": 51,
+      "price": 835.825,
+      "pnl": 0.0,
+      "reason": "[Bearish-VWAP] Price dropped below VWAP ($859.87)."
     }
   ],
   "action_logs": [
@@ -3145,6 +3178,9 @@
     "[2026-07-31 11:12:07] 🔴 [NVDA] SELL × 217 shs @ $199.22 | PnL: -13.02 USD | [Long-TrailingStop] Price pulled back from peak $199.67 to trigger stop $199.34.",
     "[2026-07-31 11:18:23] 🟢 [TSLA] BUY × 138 shs @ $311.48 | [Bullish-VWAP] Price holding above VWAP ($308.05).",
     "[2026-07-31 11:18:24] 🟢 [MSFT] BUY × 93 shs @ $462.14 | [Bullish-VWAP] Price holding above VWAP ($458.60).",
-    "[2026-07-31 11:18:25] 🔻 [AMD] SHORT × 88 shs @ $487.12 | [Bearish-VWAP] Price dropped below VWAP ($494.53)."
+    "[2026-07-31 11:18:25] 🔻 [AMD] SHORT × 88 shs @ $487.12 | [Bearish-VWAP] Price dropped below VWAP ($494.53).",
+    "[2026-07-31 11:27:25] 🔴 [TSLA] SELL × 139 shs @ $311.09 | PnL: -20.65 USD | [Long-TrailingStop] Price pulled back from peak $312.14 to trigger stop $311.49.",
+    "[2026-07-31 11:27:27] 🔻 [SNDK] SHORT × 34 shs @ $1239.10 | [Bearish-VWAP] Price dropped below VWAP ($1273.18).",
+    "[2026-07-31 11:30:18] 🔻 [MU] SHORT × 51 shs @ $835.83 | [Bearish-VWAP] Price dropped below VWAP ($859.87)."
   ]
 }
