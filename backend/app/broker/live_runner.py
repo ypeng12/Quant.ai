@@ -507,7 +507,16 @@ class LiveTradingRunner:
                     await asyncio.sleep(20)
                     continue
 
-                # 3. Poll and evaluate each stock in our watchlist
+                # 3. Fetch latest user watchlist and prune active_tickers
+                user_watchlist = load_watchlist()
+                pruned_universe = []
+                for t in self.active_tickers:
+                    has_pos = positions_by_ticker.get(t) and positions_by_ticker[t].get('shares', 0) != 0
+                    if t in user_watchlist or has_pos:
+                        pruned_universe.append(t)
+                self.active_tickers = pruned_universe
+
+                # 4. Poll and evaluate each stock in our watchlist
                 for ticker in self.active_tickers:
                     if not self.is_running:
                         break
@@ -549,7 +558,7 @@ class LiveTradingRunner:
                             if ticker in self.highest_prices:
                                 del self.highest_prices[ticker]
 
-                        # 4. Evaluate strategy
+                        # 5. Evaluate strategy
                         action, reason = evaluate_market_state(
                             row=row,
                             prev_row=prev_row,
@@ -559,6 +568,11 @@ class LiveTradingRunner:
                             highest_price=highest_price,
                             params=self.strategy_params
                         )
+
+                        # Enforce Exit-Only Mode for tickers removed from user Watchlist
+                        if ticker not in user_watchlist and action in ("BUY", "SHORT"):
+                            action = "HOLD"
+                            reason = f"[{ticker}] removed from Watchlist (Exit-Only Mode). Blocked new entry order."
 
                         # Generate Indicator Snapshot (English)
                         ema_9  = float(row.get('EMA_9',  close_price))
