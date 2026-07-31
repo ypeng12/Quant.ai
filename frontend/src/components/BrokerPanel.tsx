@@ -62,6 +62,7 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
   const [analysisFeed, setAnalysisFeed] = useState<string[]>([]);
   const [tradeHistory, setTradeHistory] = useState<TradeRecord[]>([]);
   const [todaySummary, setTodaySummary] = useState<TodaySummary | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
@@ -82,13 +83,13 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
         fetch(`${API_BASE}/api/live/status`),
         fetch(`${API_BASE}/api/live/action_feed?limit=50`),
         fetch(`${API_BASE}/api/live/analysis_feed?limit=80`),
-        fetch(`${API_BASE}/api/live/trade_history?days=7`),
+        fetch(`${API_BASE}/api/live/trade_history?days=30`),
         fetch(`${API_BASE}/api/live/today_summary`),
       ]);
 
       const accJson = await accRes.json();
       if (accJson.success !== false) { setAccount(accJson); setErrorMsg(null); }
-      else setErrorMsg(accJson.error || '无法获取账户信息');
+      else setErrorMsg(accJson.error || 'Failed to fetch account info');
 
       const posJson = await posRes.json();
       if (posJson.success) setPositions(posJson.positions);
@@ -120,7 +121,7 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
     }
   };
 
-  // 当侧边栏 Watchlist 变动时，实时自动同步至 AI Live Scanner 研判股票池
+  // Sync watchlist to AI Live Scanner automatically when changed
   useEffect(() => {
     if (watchlist.length > 0) {
       fetch(`${API_BASE}/api/live/watchlist/sync`, {
@@ -151,8 +152,8 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
       });
       const json = await res.json();
       if (json.success) setIsBotRunning(json.status.is_running);
-      else alert('启动失败: ' + (json.status?.logs?.[json.status.logs.length - 1] || '错误。'));
-    } catch { alert('请求失败'); }
+      else alert('Failed to start bot: ' + (json.status?.logs?.[json.status.logs.length - 1] || 'Error.'));
+    } catch { alert('Request failed'); }
     finally { setActionLoading(null); fetchBrokerData(); }
   };
 
@@ -162,29 +163,29 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
       const res = await fetch(`${API_BASE}/api/live/stop`, { method: 'POST' });
       const json = await res.json();
       setIsBotRunning(json.status.is_running);
-    } catch { alert('请求失败'); }
+    } catch { alert('Request failed'); }
     finally { setActionLoading(null); fetchBrokerData(); }
   };
 
   const handleCancelAllOrders = async () => {
-    if (!window.confirm('确定要撤销所有未成交挂单吗？')) return;
+    if (!window.confirm('Are you sure you want to cancel all pending open orders?')) return;
     setActionLoading('cancel_orders');
     try {
       const res = await fetch(`${API_BASE}/api/broker/cancel_orders`, { method: 'POST' });
       const json = await res.json();
-      alert(json.message || '撤单请求已发送');
-    } catch { alert('撤单失败'); }
+      alert(json.message || 'Order cancellation request sent');
+    } catch { alert('Failed to cancel orders'); }
     finally { setActionLoading(null); fetchBrokerData(); }
   };
 
   const handleForceLiquidate = async () => {
-    if (!window.confirm('🚨 这会立即以市价平仓所有持仓！确定继续吗？')) return;
+    if (!window.confirm('🚨 This will immediately close ALL open positions at market price! Continue?')) return;
     setActionLoading('liquidate');
     try {
       const res = await fetch(`${API_BASE}/api/broker/close_positions`, { method: 'POST' });
       const json = await res.json();
-      alert(json.message || '清仓请求已发送');
-    } catch { alert('平仓失败'); }
+      alert(json.message || 'Force liquidation request sent');
+    } catch { alert('Failed to close positions'); }
     finally { setActionLoading(null); fetchBrokerData(); }
   };
 
@@ -203,13 +204,13 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
       });
       const json = await res.json();
       if (json.success) {
-        alert(`🌙 [盘前/盘后限价单] 成功下发！${extSymbol} ${extSide.toUpperCase()} ${extQty} 股 @ $${extPrice}`);
+        alert(`🌙 [Extended-Hours Order] Order submitted! ${extSymbol} ${extSide.toUpperCase()} ${extQty} shares @ $${extPrice}`);
         setShowExtModal(false);
       } else {
-        alert('下发失败: ' + (json.message || json.error || '未知错误'));
+        alert('Order failed: ' + (json.message || json.error || 'Unknown error'));
       }
     } catch {
-      alert('请求失败');
+      alert('Request failed');
     } finally {
       setActionLoading(null);
       fetchBrokerData();
@@ -225,16 +226,16 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
   };
 
   if (loading && !account) {
-    return <div className="loader-container" style={{ padding: '4rem', textAlign: 'center' }}>正在连接 Alpaca 账户...</div>;
+    return <div className="loader-container" style={{ padding: '4rem', textAlign: 'center' }}>Connecting to Alpaca Account...</div>;
   }
 
   if (errorMsg) {
     return (
       <div className="card" style={{ padding: '2.5rem', textAlign: 'center', border: '1px solid var(--color-red)', background: 'rgba(255,59,48,0.05)' }}>
-        <h3 style={{ color: 'var(--color-red)', marginTop: 0 }}>🔌 Alpaca 账户未连接</h3>
+        <h3 style={{ color: 'var(--color-red)', marginTop: 0 }}>🔌 Alpaca Account Disconnected</h3>
         <p style={{ color: '#e5e5e7', fontSize: '0.95rem' }}>{errorMsg}</p>
         <div style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
-          请在 <code style={{ color: '#fff', background: '#111', padding: '2px 6px', borderRadius: '4px' }}>backend/.env</code> 中配置 Alpaca API Key。
+          Please configure your Alpaca API Key in <code style={{ color: '#fff', background: '#111', padding: '2px 6px', borderRadius: '4px' }}>backend/.env</code>.
         </div>
       </div>
     );
@@ -244,7 +245,7 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
 
   return (
     <div className="fade-in">
-      {/* 顶部 AI 托管控制卡 */}
+      {/* Top AI Automated Management Control Card */}
       <div className="card" style={{
         marginBottom: '1.5rem', padding: '1.5rem 2rem',
         background: isBotRunning
@@ -257,32 +258,32 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
             <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: isBotRunning ? 'var(--color-green)' : '#8e8e93', boxShadow: isBotRunning ? '0 0 12px var(--color-green)' : 'none' }} />
             <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 900, color: '#ffffff' }}>
-              {isBotRunning ? '⚡ AI 量化托管交易中' : '⏸️ 托管交易已暂停'}
+              {isBotRunning ? '⚡ AI Quant Bot Running' : '⏸️ AI Automated Trading Paused'}
             </h2>
           </div>
           <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
             {isBotRunning
-              ? '系统每 30 秒高频评估做多/做空信号，满足条件时直接向 Alpaca 提交多空双向订单。'
-              : '点击右侧按钮启动 AI 托管。开启后全自动执行多空买卖与动态风控。'}
+              ? 'Evaluating long/short signals every 30s and submitting orders directly to Alpaca.'
+              : 'Click Start to enable AI execution. Automatically manages trades and risk controls.'}
           </p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
           {!isBotRunning ? (
             <button onClick={handleStartBot} disabled={actionLoading !== null} style={{ background: 'var(--color-green)', color: '#000', fontWeight: 900, fontSize: '1.05rem', padding: '12px 28px', borderRadius: '8px', border: 'none', cursor: 'pointer', boxShadow: '0 4px 20px rgba(0,200,5,0.3)' }}>
-              {actionLoading === 'start' ? '⏳ 启动中...' : '▶️ 开启 AI 托管买卖'}
+              {actionLoading === 'start' ? '⏳ Starting...' : '▶️ Start AI Bot'}
             </button>
           ) : (
             <button onClick={handleStopBot} disabled={actionLoading !== null} style={{ background: '#3a3a3c', color: '#fff', fontWeight: 800, fontSize: '1rem', padding: '12px 24px', borderRadius: '8px', border: '1px solid #48484a', cursor: 'pointer' }}>
-              {actionLoading === 'stop' ? '⏳ 停止中...' : '⏸️ 暂停 AI 托管'}
+              {actionLoading === 'stop' ? '⏳ Stopping...' : '⏸️ Pause AI Bot'}
             </button>
           )}
           <button onClick={() => setShowExtModal(true)} disabled={actionLoading !== null} style={{ background: 'linear-gradient(135deg, #2e1065 0%, #3b0764 100%)', color: '#c084fc', fontWeight: 800, fontSize: '0.95rem', padding: '12px 20px', borderRadius: '8px', border: '1px solid rgba(192,132,252,0.4)', cursor: 'pointer', boxShadow: '0 4px 15px rgba(147,51,234,0.25)' }}>
-            🌙 盘前/盘后限价挂单 (Extended-Hours Limit)
+            🌙 Extended-Hours Limit Order
           </button>
         </div>
       </div>
 
-      {/* AI 研判股票池同步条 */}
+      {/* AI Scanner Watchlist Synchronization Bar */}
       <div style={{
         marginBottom: '1.2rem',
         padding: '10px 16px',
@@ -305,30 +306,30 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
           ))}
         </div>
         <span style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>
-          💡 在左侧 Watchlist 添加/删除股票，AI 研判将实时自动同步
+          💡 在左侧 Watchlist 侧边栏添加/删除股票即可实时无缝同步 AI 研判池
         </span>
       </div>
 
-      {/* 今日盈亏摘要 */}
+      {/* Today PnL Summary */}
       {todaySummary && (
         <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(5, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
           <div className="stat-card" style={{ background: '#09090b', border: `1px solid ${todayPnlPositive ? 'rgba(0,200,5,0.3)' : 'rgba(255,59,48,0.3)'}`, padding: '1.25rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-              <span className="stat-label">今日已实现盈亏 (Realized)</span>
-              <span style={{ fontSize: '0.68rem', padding: '1px 5px', borderRadius: '3px', background: 'rgba(0,200,5,0.15)', color: '#00c805', fontWeight: 700 }}>Alpaca 实时同步</span>
+              <span className="stat-label">Realized PnL</span>
+              <span style={{ fontSize: '0.68rem', padding: '1px 5px', borderRadius: '3px', background: 'rgba(0,200,5,0.15)', color: '#00c805', fontWeight: 700 }}>Alpaca Live</span>
             </div>
             <span className="stat-value" style={{ fontSize: '1.4rem', fontWeight: 900, color: todayPnlPositive ? 'var(--color-green)' : 'var(--color-red)' }}>
               {todayPnlPositive ? '+' : ''}${todaySummary.total_pnl.toFixed(2)}
             </span>
           </div>
           <div className="stat-card" style={{ background: '#09090b', border: '1px solid var(--color-border)', padding: '1.25rem' }}>
-            <span className="stat-label">胜率</span>
+            <span className="stat-label">Win Rate</span>
             <span className="stat-value" style={{ fontSize: '1.4rem', fontWeight: 900, color: todaySummary.win_rate >= 50 ? 'var(--color-green)' : 'var(--color-red)' }}>
               {todaySummary.win_rate.toFixed(1)}%
             </span>
           </div>
           <div className="stat-card" style={{ background: '#09090b', border: '1px solid var(--color-border)', padding: '1.25rem' }}>
-            <span className="stat-label">盈利 / 亏损</span>
+            <span className="stat-label">Wins / Losses</span>
             <span className="stat-value" style={{ fontSize: '1.4rem', fontWeight: 900 }}>
               <span style={{ color: 'var(--color-green)' }}>{todaySummary.wins}</span>
               <span style={{ color: '#555', margin: '0 4px' }}>/</span>
@@ -336,13 +337,13 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
             </span>
           </div>
           <div className="stat-card" style={{ background: '#09090b', border: '1px solid rgba(0,200,5,0.2)', padding: '1.25rem' }}>
-            <span className="stat-label">最佳单笔</span>
+            <span className="stat-label">Best Trade</span>
             <span className="stat-value" style={{ fontSize: '1.3rem', fontWeight: 900, color: 'var(--color-green)' }}>
               +${todaySummary.best_trade.toFixed(2)}
             </span>
           </div>
           <div className="stat-card" style={{ background: '#09090b', border: '1px solid rgba(255,59,48,0.2)', padding: '1.25rem' }}>
-            <span className="stat-label">最差单笔</span>
+            <span className="stat-label">Worst Trade</span>
             <span className="stat-value" style={{ fontSize: '1.3rem', fontWeight: 900, color: 'var(--color-red)' }}>
               ${todaySummary.worst_trade.toFixed(2)}
             </span>
@@ -350,14 +351,14 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
         </div>
       )}
 
-      {/* 资产概况 */}
+      {/* Account Overview */}
       {account && (
         <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
           {[
-            { label: '总资产净值', value: `$${account.equity.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, color: undefined },
-            { label: '可用现金', value: `$${account.cash.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, color: 'var(--color-green)' },
-            { label: '持仓总额', value: `$${(account.equity - account.cash).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, color: undefined },
-            { label: '可用购买力', value: `$${account.buying_power.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, color: '#e5e5e7' },
+            { label: 'Net Equity', value: `$${account.equity.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, color: undefined },
+            { label: 'Available Cash', value: `$${account.cash.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, color: 'var(--color-green)' },
+            { label: 'Position Value', value: `$${(account.equity - account.cash).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, color: undefined },
+            { label: 'Buying Power', value: `$${account.buying_power.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, color: '#e5e5e7' },
           ].map(({ label, value, color }) => (
             <div key={label} className="stat-card" style={{ background: '#09090b', border: '1px solid var(--color-border)', padding: '1.25rem' }}>
               <span className="stat-label">{label}</span>
@@ -367,23 +368,23 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
         </div>
       )}
 
-      {/* 持仓 + 交易面板 */}
+      {/* Positions + Trading Feed Panel */}
       <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '1.5rem' }}>
-        {/* 持仓表格 */}
+        {/* Positions Table */}
         <div className="card" style={{ padding: '1.25rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-            <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 800, color: '#fff' }}>📋 当前持仓 (Live Positions)</h3>
-            <span style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>账号: <strong>{account?.account_number}</strong></span>
+            <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 800, color: '#fff' }}>📋 Live Positions</h3>
+            <span style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>Account: <strong>{account?.account_number}</strong></span>
           </div>
           {positions.length === 0 ? (
             <div style={{ textAlign: 'center', color: 'var(--color-text-secondary)', padding: '3.5rem 0', fontSize: '0.85rem' }}>
-              目前空仓防守中。AI 检测到买入/做空信号时将自动建仓并在此展示。
+              No active positions. AI signals will trigger new orders automatically.
             </div>
           ) : (
             <table className="ledger-table" style={{ fontSize: '0.85rem' }}>
               <thead>
                 <tr>
-                  <th>代码</th><th>方向</th><th>持股数</th><th>建仓均价</th><th>最新价</th><th style={{ textAlign: 'right' }}>浮动盈亏</th>
+                  <th>Ticker</th><th>Side</th><th>Shares</th><th>Avg Price</th><th>Current Price</th><th style={{ textAlign: 'right' }}>Unrealized PnL</th>
                 </tr>
               </thead>
               <tbody>
@@ -393,8 +394,8 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
                   return (
                     <tr key={pos.ticker}>
                       <td style={{ fontWeight: 900, color: '#fff' }}>{pos.ticker}</td>
-                      <td><span style={{ fontSize: '0.75rem', padding: '2px 6px', borderRadius: '4px', background: isShort ? 'rgba(255,59,48,0.15)' : 'rgba(0,200,5,0.12)', color: isShort ? '#ff6b6b' : '#00c805', fontWeight: 700 }}>{isShort ? '做空' : '做多'}</span></td>
-                      <td>{Math.abs(pos.shares)} 股</td>
+                      <td><span style={{ fontSize: '0.75rem', padding: '2px 6px', borderRadius: '4px', background: isShort ? 'rgba(255,59,48,0.15)' : 'rgba(0,200,5,0.12)', color: isShort ? '#ff6b6b' : '#00c805', fontWeight: 700 }}>{isShort ? 'SHORT' : 'LONG'}</span></td>
+                      <td>{Math.abs(pos.shares)} shs</td>
                       <td>${pos.avg_entry_price.toFixed(2)}</td>
                       <td>${pos.current_price.toFixed(2)}</td>
                       <td style={{ textAlign: 'right', fontWeight: 800, color: isUp ? 'var(--color-green)' : 'var(--color-red)' }}>
@@ -408,14 +409,14 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
           )}
         </div>
 
-        {/* 交易动态 / 历史记录 */}
+        {/* Live Feed / History Panel */}
         <div className="card" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column' }}>
-          {/* Tab 切换 */}
+          {/* Tabs */}
           <div style={{ display: 'flex', gap: '8px', marginBottom: '1rem', borderBottom: '1px solid var(--color-border)', paddingBottom: '10px' }}>
             {([
-              { id: 'analysis', label: '🧠 AI 实时研判与预警' },
-              { id: 'actions', label: '⚡ 真实买卖动作' },
-              { id: 'history', label: '📅 历史交易记录' },
+              { id: 'analysis', label: '🧠 AI Live Analysis & Alerts' },
+              { id: 'actions', label: '⚡ Execution Activity' },
+              { id: 'history', label: '📅 Trade History' },
             ] as { id: ActiveTab; label: string }[]).map((tab) => (
               <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{
                 background: activeTab === tab.id ? 'rgba(255,255,255,0.08)' : 'transparent',
@@ -428,19 +429,19 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
             ))}
           </div>
 
-          {/* 1. AI 实时研判与预警 Tab (默认展示) */}
+          {/* 1. AI Analysis & Alerts Tab */}
           {activeTab === 'analysis' && (
             <div style={{ flex: 1, overflowY: 'auto', maxHeight: '380px' }}>
               {analysisFeed.length === 0 ? (
                 <div style={{ color: 'var(--color-text-secondary)', fontSize: '0.85rem', padding: '2.5rem 0', textAlign: 'center' }}>
-                  启动 AI 托管后，机器人每轮针对监控股票的**指标快照、形态研判与突破预警**将实时呈现于此。
+                  When AI Bot is active, real-time indicator snapshots and pattern alerts will appear here.
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {analysisFeed.map((log, idx) => {
-                    const isBuyOrShort = log.includes('触发 BUY') || log.includes('触发 SHORT');
+                    const isBuyOrShort = log.includes('BUY') || log.includes('SHORT');
                     const isAlert = log.includes('🔔') || log.includes('⚡') || log.includes('🔥') || log.includes('🌡️');
-                    const isSell = log.includes('平仓');
+                    const isSell = log.includes('SELL') || log.includes('COVER') || log.includes('Close');
                     
                     let bg = '#141416';
                     let border = '1px solid #27272a';
@@ -480,19 +481,19 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
             </div>
           )}
 
-          {/* 2. 真实买卖动作 Tab */}
+          {/* 2. Execution Activity Tab */}
           {activeTab === 'actions' && (
             <div style={{ flex: 1, overflowY: 'auto', maxHeight: '380px' }}>
               {actionFeed.length === 0 ? (
                 <div style={{ color: 'var(--color-text-secondary)', fontSize: '0.85rem', padding: '2.5rem 0', textAlign: 'center' }}>
-                  暂无已执行订单。<br />
-                  <span style={{ fontSize: '0.75rem', opacity: 0.6 }}>当 AI 研判触发做多 / 做空 / 平仓条件时，实盘订单记录将展示在此</span>
+                  No executed orders yet.<br />
+                  <span style={{ fontSize: '0.75rem', opacity: 0.6 }}>Order execution logs will be listed here.</span>
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {actionFeed.map((feed, idx) => {
                     const actionMatch = feed.match(/\[([A-Z]+)\]/);
-                    const action = actionMatch ? ['BUY','SHORT','SELL','COVER'].find(a => feed.includes(a === 'BUY' ? '做多买入' : a === 'SHORT' ? '融券做空' : a === 'SELL' ? '多单平仓' : '空单平仓')) || '' : '';
+                    const action = actionMatch ? ['BUY','SHORT','SELL','COVER'].find(a => feed.includes(a)) || '' : '';
                     const style = getActionStyle(action);
                     return (
                       <div key={idx} style={{ background: style.bg, border: style.border, borderRadius: '8px', padding: '10px 14px', fontSize: '0.79rem', color: style.color, lineHeight: 1.5 }}>
@@ -505,19 +506,19 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
             </div>
           )}
 
-          {/* 3. 历史交易记录 Tab */}
+          {/* 3. Trade History Tab */}
           {activeTab === 'history' && (
             <div style={{ flex: 1, overflowY: 'auto', maxHeight: '380px' }}>
               {tradeHistory.length === 0 ? (
                 <div style={{ color: 'var(--color-text-secondary)', fontSize: '0.85rem', padding: '2.5rem 0', textAlign: 'center' }}>
-                  近 7 天暂无历史记录。<br />
-                  <span style={{ fontSize: '0.75rem', opacity: 0.6 }}>交易成功后可在此复盘每笔买卖</span>
+                  No historical trade records in the last 7 days.<br />
+                  <span style={{ fontSize: '0.75rem', opacity: 0.6 }}>Executed trades will be recorded here for review.</span>
                 </div>
               ) : (
                 <table className="ledger-table" style={{ fontSize: '0.78rem', width: '100%' }}>
                   <thead>
                     <tr>
-                      <th>时间</th><th>代码</th><th>操作</th><th>股数</th><th>成交价</th><th style={{ textAlign: 'right' }}>盈亏</th>
+                      <th>Time</th><th>Ticker</th><th>Action</th><th>Shares</th><th>Price</th><th style={{ textAlign: 'right' }}>PnL</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -528,7 +529,7 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
                         <tr key={idx}>
                           <td style={{ color: 'var(--color-text-secondary)', fontSize: '0.72rem', whiteSpace: 'nowrap' }}>{trade.time.slice(5)}</td>
                           <td style={{ fontWeight: 900, color: '#fff' }}>{trade.ticker}</td>
-                          <td><span style={{ padding: '2px 7px', borderRadius: '4px', border: st.border, color: st.color, fontSize: '0.72rem', fontWeight: 700 }}>{trade.action_cn}</span></td>
+                          <td><span style={{ padding: '2px 7px', borderRadius: '4px', border: st.border, color: st.color, fontSize: '0.72rem', fontWeight: 700 }}>{trade.action}</span></td>
                           <td>{trade.shares}</td>
                           <td>${trade.price.toFixed(2)}</td>
                           <td style={{ textAlign: 'right', fontWeight: 800, color: hasPnl ? (trade.pnl >= 0 ? 'var(--color-green)' : 'var(--color-red)') : '#555' }}>
@@ -543,26 +544,37 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
             </div>
           )}
 
-          {/* 底部应急按钮 */}
+          {/* Emergency Action Buttons */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--color-border)' }}>
             <button onClick={handleCancelAllOrders} disabled={actionLoading !== null} style={{ background: 'rgba(255,149,0,0.1)', border: '1px solid #ff9500', color: '#ff9500', padding: '8px 12px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer' }}>
-              📯 撤销所有挂单
+              📯 Cancel All Open Orders
             </button>
             <button onClick={handleForceLiquidate} disabled={actionLoading !== null} style={{ background: 'rgba(255,59,48,0.15)', border: '1px solid var(--color-red)', color: 'var(--color-red)', padding: '8px 12px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 800, cursor: 'pointer' }}>
-              🚨 一键紧急全平仓
+              🚨 Emergency Close All Positions
             </button>
           </div>
         </div>
       </div>
 
-      {/* ====== 今日实时交易日志 ====== */}
+      {/* ====== Execution Log with Date Selector ====== */}
       {(() => {
-        // 使用后端返回的日期，避免 UTC 与本地美东时区不匹配导致找不到日志
-        const activeDate = todaySummary?.date || new Date().toLocaleDateString('sv-SE');
-        const todayTrades = [...tradeHistory].filter(t => t.date === activeDate).reverse();
+        const todayStr = todaySummary?.date || new Date().toLocaleDateString('sv-SE');
+        const availableDates = Array.from(new Set(tradeHistory.map(t => t.date))).sort().reverse();
+        if (todayStr && !availableDates.includes(todayStr)) {
+          availableDates.unshift(todayStr);
+        }
+
+        const effectiveDate = selectedDate || todayStr;
+        const displayTrades = [...tradeHistory].filter(t => t.date === effectiveDate).reverse();
+
+        // Calculate metrics for selected date
+        const totalTradesCount = displayTrades.length;
+        const winsCount = displayTrades.filter(t => t.pnl > 0).length;
+        const lossesCount = displayTrades.filter(t => t.pnl < 0).length;
+        const netPnl = displayTrades.reduce((sum, t) => sum + (t.pnl || 0), 0);
 
         const tickerMap: Record<string, { trades: TradeRecord[]; totalPnl: number; openAction: string | null }> = {};
-        todayTrades.forEach(t => {
+        displayTrades.forEach(t => {
           if (!tickerMap[t.ticker]) tickerMap[t.ticker] = { trades: [], totalPnl: 0, openAction: null };
           tickerMap[t.ticker].trades.push(t);
           tickerMap[t.ticker].totalPnl += t.pnl;
@@ -574,42 +586,65 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
           <div className="card" style={{ marginTop: '1.5rem', padding: '1.5rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.2rem', flexWrap: 'wrap', gap: '1rem' }}>
               <div>
-                <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 900, color: '#fff' }}>📒 今日实时交易日志</h3>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 900, color: '#fff' }}>📒 Execution & Review Log</h3>
+                  {/* Date Picker Selector */}
+                  <select
+                    value={effectiveDate}
+                    onChange={(e) => setSelectedDate(e.target.value)}
+                    style={{
+                      background: 'rgba(255,255,255,0.08)',
+                      border: '1px solid var(--color-border)',
+                      color: '#00e5ff',
+                      borderRadius: '6px',
+                      padding: '4px 10px',
+                      fontSize: '0.82rem',
+                      fontWeight: 800,
+                      cursor: 'pointer',
+                      outline: 'none'
+                    }}
+                  >
+                    {availableDates.map(d => (
+                      <option key={d} value={d} style={{ background: '#1c1c1e', color: '#fff' }}>
+                        {d === todayStr ? `📅 Today (${d})` : `📅 ${d}`}
+                      </option>
+                    ))}
+                  </select>
+                </div>
                 <p style={{ margin: '4px 0 0', fontSize: '0.78rem', color: 'var(--color-text-secondary)' }}>
-                  每 5 秒自动刷新 · 今日所有买入 / 做空 / 平仓记录 · 收盘可用于复盘分析
+                  {effectiveDate === todayStr ? 'Refreshes every 5s · Real-time record of all orders' : `Historical review for date: ${effectiveDate}`}
                 </p>
               </div>
-              {todaySummary && (
-                <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '0.72rem', color: 'var(--color-text-secondary)' }}>今日操作</div>
-                    <div style={{ fontSize: '1rem', fontWeight: 900, color: '#fff' }}>{todaySummary.total_trades} 笔</div>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '0.72rem', color: 'var(--color-text-secondary)' }}>盈 / 亏</div>
-                    <div style={{ fontSize: '1rem', fontWeight: 900 }}>
-                      <span style={{ color: 'var(--color-green)' }}>{todaySummary.wins}</span>
-                      <span style={{ color: '#444', margin: '0 4px' }}>/</span>
-                      <span style={{ color: 'var(--color-red)' }}>{todaySummary.losses}</span>
-                    </div>
-                  </div>
-                  <div style={{ textAlign: 'right', minWidth: '100px' }}>
-                    <div style={{ fontSize: '0.72rem', color: 'var(--color-text-secondary)' }}>今日净盈亏</div>
-                    <div style={{ fontSize: '1.3rem', fontWeight: 900, color: todaySummary.total_pnl >= 0 ? 'var(--color-green)' : 'var(--color-red)' }}>
-                      {todaySummary.total_pnl >= 0 ? '+' : ''}${todaySummary.total_pnl.toFixed(2)}
-                    </div>
+
+              <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--color-text-secondary)' }}>Total Trades</div>
+                  <div style={{ fontSize: '1rem', fontWeight: 900, color: '#fff' }}>{totalTradesCount} orders</div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--color-text-secondary)' }}>Wins / Losses</div>
+                  <div style={{ fontSize: '1rem', fontWeight: 900 }}>
+                    <span style={{ color: 'var(--color-green)' }}>{winsCount}</span>
+                    <span style={{ color: '#444', margin: '0 4px' }}>/</span>
+                    <span style={{ color: 'var(--color-red)' }}>{lossesCount}</span>
                   </div>
                 </div>
-              )}
+                <div style={{ textAlign: 'right', minWidth: '100px' }}>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--color-text-secondary)' }}>Net PnL ({effectiveDate})</div>
+                  <div style={{ fontSize: '1.3rem', fontWeight: 900, color: netPnl >= 0 ? 'var(--color-green)' : 'var(--color-red)' }}>
+                    {netPnl >= 0 ? '+' : ''}${netPnl.toFixed(2)}
+                  </div>
+                </div>
+              </div>
             </div>
 
-            {todayTrades.length === 0 ? (
+            {displayTrades.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '3rem 0', color: 'var(--color-text-secondary)', fontSize: '0.85rem' }}>
-                今日暂无交易记录。AI 托管开启后，每笔买入 / 做空 / 平仓都会实时出现在这里。
+                No executed trades found for {effectiveDate}. All executed buy, short, and exit orders for this date will be recorded here.
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                {/* 按 Ticker 分组盈亏卡片 */}
+                {/* Ticker Group Cards */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(155px, 1fr))', gap: '10px' }}>
                   {Object.entries(tickerMap).map(([ticker, info]) => {
                     const isWin  = info.totalPnl > 0;
@@ -625,32 +660,32 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
                           <span style={{ fontWeight: 900, fontSize: '1.05rem', color: '#fff' }}>{ticker}</span>
                           {isOpen && (
                             <span style={{ fontSize: '0.68rem', padding: '2px 7px', borderRadius: '4px', background: info.openAction === 'BUY' ? 'rgba(0,200,5,0.2)' : 'rgba(255,59,48,0.2)', color: info.openAction === 'BUY' ? '#00c805' : '#ff6b6b', fontWeight: 700 }}>
-                              {info.openAction === 'BUY' ? '持多 ▲' : '持空 ▼'}
+                              {info.openAction === 'BUY' ? 'LONG ▲' : 'SHORT ▼'}
                             </span>
                           )}
                         </div>
                         <div style={{ fontSize: '0.72rem', color: 'var(--color-text-secondary)', marginTop: '4px' }}>
-                          {info.trades.length} 笔交易
+                          {info.trades.length} trades
                         </div>
                         <div style={{ fontSize: '1.15rem', fontWeight: 900, marginTop: '6px', color: isWin ? 'var(--color-green)' : isLoss ? 'var(--color-red)' : '#666' }}>
-                          {info.totalPnl === 0 ? '持仓中...' : `${info.totalPnl > 0 ? '+' : ''}$${info.totalPnl.toFixed(2)}`}
+                          {info.totalPnl === 0 ? 'Open...' : `${info.totalPnl > 0 ? '+' : ''}$${info.totalPnl.toFixed(2)}`}
                         </div>
                       </div>
                     );
                   })}
                 </div>
 
-                {/* 完整时间顺序流水 */}
+                {/* Stream Table */}
                 <table className="ledger-table" style={{ fontSize: '0.82rem', width: '100%' }}>
                   <thead>
                     <tr>
-                      <th style={{ width: '80px' }}>时间</th>
-                      <th>代码</th>
-                      <th>操作</th>
-                      <th>股数</th>
-                      <th>成交价</th>
-                      <th>触发信号</th>
-                      <th style={{ textAlign: 'right' }}>盈亏 (USD)</th>
+                      <th style={{ width: '80px' }}>Time</th>
+                      <th>Ticker</th>
+                      <th>Action</th>
+                      <th>Shares</th>
+                      <th>Price</th>
+                      <th>Trigger Signal</th>
+                      <th style={{ textAlign: 'right' }}>PnL (USD)</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -665,16 +700,16 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
                           <td style={{ fontWeight: 900, fontSize: '0.9rem', color: '#fff' }}>{trade.ticker}</td>
                           <td>
                             <span style={{ padding: '3px 9px', borderRadius: '5px', border: st.border, color: st.color, background: st.bg, fontSize: '0.75rem', fontWeight: 700 }}>
-                              {trade.action_cn}
+                              {trade.action}
                             </span>
                           </td>
-                          <td style={{ fontWeight: 600 }}>{trade.shares} 股</td>
+                          <td style={{ fontWeight: 600 }}>{trade.shares} shs</td>
                           <td style={{ fontWeight: 700, color: '#e5e5e7' }}>${trade.price.toFixed(2)}</td>
                           <td style={{ fontSize: '0.72rem', color: 'var(--color-text-secondary)', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {trade.reason}
                           </td>
                           <td style={{ textAlign: 'right', fontWeight: 900, fontSize: '0.9rem', color: hasPnl ? (trade.pnl >= 0 ? 'var(--color-green)' : 'var(--color-red)') : '#555' }}>
-                            {hasPnl ? `${trade.pnl >= 0 ? '+' : ''}$${trade.pnl.toFixed(2)}` : '持仓中'}
+                            {hasPnl ? `${trade.pnl >= 0 ? '+' : ''}$${trade.pnl.toFixed(2)}` : 'Open'}
                           </td>
                         </tr>
                       );
@@ -687,47 +722,47 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
         );
       })()}
 
-      {/* 盘前/盘后限价挂单 Modal 弹窗 */}
+      {/* Extended-Hours Modal */}
       {showExtModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 9999 }}>
           <div className="card fade-in" style={{ width: '460px', padding: '2rem', background: '#09090b', border: '1px solid rgba(192,132,252,0.4)', boxShadow: '0 20px 50px rgba(0,0,0,0.9), 0 0 30px rgba(147,51,234,0.3)', borderRadius: '14px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem' }}>
               <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 900, color: '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                🌙 盘前/盘后限价挂单 (Extended-Hours)
+                🌙 Extended-Hours Limit Order
               </h3>
               <button onClick={() => setShowExtModal(false)} style={{ background: 'transparent', border: 'none', color: '#888', fontSize: '1.4rem', cursor: 'pointer' }}>×</button>
             </div>
             
             <p style={{ fontSize: '0.82rem', color: 'var(--color-text-secondary)', marginBottom: '1.5rem', lineHeight: '1.5' }}>
-              美股盘前 (04:00 - 09:30 EST) 及盘后 (16:00 - 20:00 EST) 时段<strong>不支持市价单 (Market Order)</strong>。本功能将向 Alpaca 提交支持扩展时段交易的<strong>限价单 (Limit Order with Extended Hours)</strong>。
+              Pre-market (04:00 - 09:30 EST) and After-hours (16:00 - 20:00 EST) <strong>do not support Market Orders</strong>. This submits a Limit Order with Extended-Hours support directly to Alpaca.
             </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', color: '#aaa', marginBottom: '4px', fontWeight: 700 }}>股票代码 (Ticker)</label>
+                <label style={{ display: 'block', fontSize: '0.8rem', color: '#aaa', marginBottom: '4px', fontWeight: 700 }}>Ticker Symbol</label>
                 <input
                   type="text"
                   value={extSymbol}
                   onChange={(e) => setExtSymbol(e.target.value.toUpperCase())}
-                  placeholder="如 TSLA, NVDA"
+                  placeholder="e.g. TSLA, NVDA"
                   style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #333', background: '#141416', color: '#fff', fontSize: '0.95rem', fontWeight: 800 }}
                 />
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#aaa', marginBottom: '4px', fontWeight: 700 }}>交易方向 (Side)</label>
+                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#aaa', marginBottom: '4px', fontWeight: 700 }}>Order Side</label>
                   <select
                     value={extSide}
                     onChange={(e) => setExtSide(e.target.value as 'buy' | 'sell')}
                     style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #333', background: '#141416', color: '#fff', fontSize: '0.9rem', fontWeight: 800 }}
                   >
-                    <option value="sell">🔴 卖出 / 平仓 (SELL)</option>
-                    <option value="buy">🟢 做多 / 买入 (BUY)</option>
+                    <option value="sell">🔴 SELL / CLOSE</option>
+                    <option value="buy">🟢 BUY / LONG</option>
                   </select>
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#aaa', marginBottom: '4px', fontWeight: 700 }}>交易股数 (Shares)</label>
+                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#aaa', marginBottom: '4px', fontWeight: 700 }}>Share Quantity</label>
                   <input
                     type="number"
                     value={extQty}
@@ -738,7 +773,7 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', color: '#aaa', marginBottom: '4px', fontWeight: 700 }}>限价价格 (Limit Price $)</label>
+                <label style={{ display: 'block', fontSize: '0.8rem', color: '#aaa', marginBottom: '4px', fontWeight: 700 }}>Limit Price ($)</label>
                 <input
                   type="number"
                   step="0.01"
@@ -753,14 +788,14 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
                   onClick={() => setShowExtModal(false)}
                   style={{ flex: 1, padding: '12px', borderRadius: '8px', border: '1px solid #333', background: '#18181b', color: '#ccc', fontWeight: 700, cursor: 'pointer' }}
                 >
-                  取消
+                  Cancel
                 </button>
                 <button
                   onClick={handleSendExtendedHoursOrder}
                   disabled={actionLoading !== null}
                   style={{ flex: 2, padding: '12px', borderRadius: '8px', border: 'none', background: 'linear-gradient(135deg, #7c3aed 0%, #9333ea 100%)', color: '#fff', fontWeight: 900, fontSize: '0.95rem', cursor: 'pointer', boxShadow: '0 4px 15px rgba(147,51,234,0.4)' }}
                 >
-                  {actionLoading === 'ext_order' ? '⏳ 正在提交挂单...' : '⚡ 提交盘前/盘后限价单'}
+                  {actionLoading === 'ext_order' ? '⏳ Submitting...' : '⚡ Submit Extended-Hours Limit Order'}
                 </button>
               </div>
             </div>
