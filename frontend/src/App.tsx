@@ -567,6 +567,15 @@ function App() {
     fetch(`${API_BASE}/api/watchlist/reset`, { method: 'POST' }).catch(() => {});
   };
 
+  const handleClearWatchlist = () => {
+    setWatchlist([]);
+    fetch(`${API_BASE}/api/live/watchlist/sync`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tickers: [] })
+    }).catch(() => {});
+  };
+
   const resetStrategyParams = () => {
     setStrategyParams(DEFAULT_STRATEGY_PARAMS);
   };
@@ -946,23 +955,40 @@ function App() {
         <aside className="sidebar">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
             <h4 className="sidebar-title" style={{ margin: 0 }}>Watchlist</h4>
-            <button
-              onClick={handleResetDefaultWatchlist}
-              title="恢复为默认 8 支核心自选股池"
-              style={{
-                background: 'rgba(255,255,255,0.06)',
-                border: '1px solid rgba(255,255,255,0.15)',
-                color: '#00e5ff',
-                borderRadius: '5px',
-                padding: '3px 9px',
-                fontSize: '0.73rem',
-                fontWeight: 700,
-                cursor: 'pointer',
-                transition: 'all 0.2s ease'
-              }}
-            >
-              ↺ Reset Default
-            </button>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              <button
+                onClick={handleResetDefaultWatchlist}
+                title="恢复为默认推荐自选股池"
+                style={{
+                  background: 'rgba(255,255,255,0.06)',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  color: '#00e5ff',
+                  borderRadius: '5px',
+                  padding: '3px 8px',
+                  fontSize: '0.73rem',
+                  fontWeight: 700,
+                  cursor: 'pointer'
+                }}
+              >
+                ↺ Default
+              </button>
+              <button
+                onClick={handleClearWatchlist}
+                title="清空自选股列表"
+                style={{
+                  background: 'rgba(255,59,48,0.1)',
+                  border: '1px solid rgba(255,59,48,0.3)',
+                  color: '#ff6b6b',
+                  borderRadius: '5px',
+                  padding: '3px 8px',
+                  fontSize: '0.73rem',
+                  fontWeight: 700,
+                  cursor: 'pointer'
+                }}
+              >
+                🗑️ Clear
+              </button>
+            </div>
           </div>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>

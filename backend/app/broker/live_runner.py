@@ -287,7 +287,15 @@ class LiveTradingRunner:
         }
 
     def update_tickers(self, new_tickers: List[str]):
-        """Dynamically update AI monitoring universe to 100% align with user's Watchlist."""
+        """Dynamically update AI monitoring universe to 100% align with user's Watchlist (Alpaca Cloud API).
+        
+        -------------------------------------------------------------------------
+        TODO: Future AI Stock Selection Module (AI Agent Screener)
+        When an AI Stock Selection agent is triggered in future releases,
+        dynamically selected high-alpha stocks will be passed here to automatically
+        update Alpaca's Cloud Watchlist and the live AI monitoring/trading loop.
+        -------------------------------------------------------------------------
+        """
         if not new_tickers:
             return
         cleaned = []

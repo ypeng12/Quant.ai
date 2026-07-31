@@ -2773,6 +2773,39 @@
       "price": 489.97,
       "pnl": 0.0,
       "reason": "[Bullish-Cross] EMA 9/21 Golden Cross formed."
+    },
+    {
+      "date": "2026-07-31",
+      "time": "2026-07-31 10:18:12",
+      "action": "SELL",
+      "action_cn": "SELL",
+      "ticker": "PLTR",
+      "shares": 1,
+      "price": 122.26,
+      "pnl": -0.03,
+      "reason": "[Long-TrailingStop] Price pulled back from peak $122.56 to trigger stop $122.27."
+    },
+    {
+      "date": "2026-07-31",
+      "time": "2026-07-31 10:22:04",
+      "action": "SHORT",
+      "action_cn": "SHORT",
+      "ticker": "CRWV",
+      "shares": 592,
+      "price": 71.92,
+      "pnl": 0.0,
+      "reason": "[Bearish-Cross] EMA 9/21 Death Cross formed."
+    },
+    {
+      "date": "2026-07-31",
+      "time": "2026-07-31 10:22:35",
+      "action": "BUY",
+      "action_cn": "BUY",
+      "ticker": "TSLA",
+      "shares": 137,
+      "price": 310.1775,
+      "pnl": 0.0,
+      "reason": "[Bullish-VWAP] Price holding above VWAP ($307.79)."
     }
   ],
   "action_logs": [
@@ -2809,6 +2842,9 @@
     "[2026-07-31 10:08:08] 🔻 [PLTR] SHORT × 350 shs @ $122.09 | [Bearish-Support] Price broke below pre-market/yesterday support.",
     "[2026-07-31 10:10:20] 🔴 [TSLA] SELL × 137 shs @ $309.96 | PnL: +8.63 USD | [Long-TrailingStop] Price pulled back from peak $310.77 to trigger stop $310.01.",
     "[2026-07-31 10:12:35] 🔻 [AMD] SHORT × 87 shs @ $489.75 | [Bearish-VWAP] Price dropped below VWAP ($495.08).",
-    "[2026-07-31 10:13:08] 🟢 [AMD] BUY × 1 shs @ $489.97 | [Bullish-Cross] EMA 9/21 Golden Cross formed."
+    "[2026-07-31 10:13:08] 🟢 [AMD] BUY × 1 shs @ $489.97 | [Bullish-Cross] EMA 9/21 Golden Cross formed.",
+    "[2026-07-31 10:18:12] 🔴 [PLTR] SELL × 1 shs @ $122.26 | PnL: -0.03 USD | [Long-TrailingStop] Price pulled back from peak $122.56 to trigger stop $122.27.",
+    "[2026-07-31 10:22:04] 🔻 [CRWV] SHORT × 592 shs @ $71.92 | [Bearish-Cross] EMA 9/21 Death Cross formed.",
+    "[2026-07-31 10:22:35] 🟢 [TSLA] BUY × 137 shs @ $310.18 | [Bullish-VWAP] Price holding above VWAP ($307.79)."
   ]
 }
