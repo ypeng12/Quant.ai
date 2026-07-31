@@ -83,9 +83,9 @@ def auto_start_live_runner():
                 "rsi_threshold_buy": 70.0,
                 "market_open_focus": False
             },
-            ignore_market_hours=True
+            ignore_market_hours=False
         )
-        print("[System Startup] 🚀 AI 量化托管交易机器人已在后台自动启动上线！")
+        print("[System Startup] 🚀 AI 量化托管交易机器人已在后台自动启动上线 (严格遵循美股常规交易时段与尾盘 15:55 清仓风控)！")
     except Exception as e:
         print(f"[System Startup Warning] 自动启动交易机器人异常: {e}")
 
@@ -1486,8 +1486,11 @@ def close_all_positions():
     from app.broker.alpaca_adapter import AlpacaAdapter
     try:
         adapter = AlpacaAdapter(ALPACA_API_KEY, ALPACA_SECRET_KEY, ALPACA_BASE_URL)
+        # Step 1: 先全量撤销挂单，彻底绝后患
+        adapter.cancel_all_orders()
+        # Step 2: 强行全平所有持仓
         res = adapter.close_all_positions()
-        live_runner.add_log("🚨 用户手动触发：一键紧急平仓所有持仓！")
+        live_runner.add_log("🚨 用户手动触发：【双重清场】全量撤销挂单 + 一键紧急全平所有持仓！")
         return res
     except Exception as e:
         return {"success": False, "error": str(e)}

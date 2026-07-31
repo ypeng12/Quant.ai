@@ -489,49 +489,67 @@ class LiveTradingRunner:
 
     def is_market_open(self) -> bool:
         """
-        Check if US market is currently open (9:30 - 16:00 EST, Mon-Fri)
+        Check if US stock market is currently open.
+        First attempts to query Alpaca's official exchange API (`client.get_clock()`).
+        Fallback to NYSE exchange calendar math (9:30 AM - 4:00 PM EST).
         """
         if self.ignore_market_hours:
             return True
-            
+
+        if hasattr(self.adapter, "get_clock"):
+            clock_res = self.adapter.get_clock()
+            if clock_res.get("success"):
+                return clock_res.get("is_open", False)
+
+        # High-precision fallback
         est = pytz.timezone('America/New_York')
-        now = datetime.datetime.now(est)
-        
-        # Check weekday (0-4 is Mon-Fri)
-        if now.weekday() > 4:
+        now_ny = datetime.datetime.now(est)
+        if now_ny.weekday() > 4:
             return False
-            
-        market_open = now.replace(hour=9, minute=30, second=0, microsecond=0)
-        market_close = now.replace(hour=16, minute=0, second=0, microsecond=0)
-        
-        return market_open <= now <= market_close
+        ny_time = now_ny.hour + now_ny.minute / 60.0 + now_ny.second / 3600.0
+        return 9.5 <= ny_time < 16.0
 
     def check_and_trigger_eod_close(self, positions_list: list) -> bool:
         """
         日内收盘前自动强行全平持仓风控 (EOD Auto Close-All Strategy).
-        在美东时间 15:55 EST (关盘前 5 分钟)，自动强行平掉所有持仓，确保零持仓不过夜！
+        Queries official exchange API `get_clock()`.
+        If remaining time to official market close <= 300 seconds (5 mins):
+        Triggers `close_all_positions()` for 0 overnight position risk!
         """
         if not positions_list:
             return False
 
-        if self.ignore_market_hours:
-            return False
+        seconds_left = None
+        if hasattr(self.adapter, "get_clock"):
+            clock_res = self.adapter.get_clock()
+            if clock_res.get("success"):
+                if not clock_res.get("is_open"):
+                    return False
+                seconds_left = clock_res.get("seconds_to_close", 99999)
 
-        est = pytz.timezone('America/New_York')
-        now = datetime.datetime.now(est)
+        # Fallback to local exchange clock math if API clock is unavailable
+        if seconds_left is None:
+            est = pytz.timezone('America/New_York')
+            now_ny = datetime.datetime.now(est)
+            if now_ny.weekday() > 4:
+                return False
+            ny_time = now_ny.hour + now_ny.minute / 60.0 + now_ny.second / 3600.0
+            if 15.9166 <= ny_time <= 16.0833:
+                seconds_left = max(0.0, (16.0 - ny_time) * 3600.0)
 
-        if now.weekday() > 4:
-            return False
-
-        cutoff_time = now.replace(hour=15, minute=55, second=0, microsecond=0)
-        market_close_buffer = now.replace(hour=16, minute=5, second=0, microsecond=0)
-
-        if cutoff_time <= now <= market_close_buffer:
-            self.add_log(f"🌇 [尾盘强行清仓风控] 美东时间 {now.strftime('%H:%M:%S')} 距 16:00 关盘不足 5 分钟！正在强行全平 {len(positions_list)} 笔持仓，确保 0 持仓不过夜...")
+        if seconds_left is not None and 0.0 <= seconds_left <= 300.0:
+            mins_left = seconds_left / 60.0
+            self.add_log(f"🌇 [交易所官方尾盘双重清场风控] 距关盘仅剩 {mins_left:.1f} 分钟！执行【双重清场】：全量撤销所有挂单 + 强行全平 {len(positions_list)} 笔持仓，确保零挂单零持仓过夜...")
             try:
+                # Step 1: 撤销所有挂单，防止挂单意外成交再买入
+                if hasattr(self.adapter, "cancel_all_orders"):
+                    c_res = self.adapter.cancel_all_orders()
+                    self.add_log(f"🧹 [双重清场 Step 1/2] 已全量撤销挂单: {c_res.get('message', 'All pending orders canceled.')}")
+
+                # Step 2: 强行平仓所有持仓
                 if hasattr(self.adapter, "close_all_positions"):
                     res = self.adapter.close_all_positions()
-                    self.add_log(f"✅ [日内结清成功] {res.get('message', 'All positions liquidated for EOD zero overnight risk.')}")
+                    self.add_log(f"✅ [双重清场 Step 2/2] 已强行全平持仓: {res.get('message', 'All positions liquidated.')}")
                 
                 for pos in positions_list:
                     sym = pos.get("ticker")
@@ -542,11 +560,11 @@ class LiveTradingRunner:
                             ticker=sym,
                             shares=abs(shares),
                             price=pos.get("current_price", 0.0),
-                            reason="EOD Market-Close Auto Liquidation (日内收盘强制清仓不过夜)"
+                            reason="EOD Dual Liquidation (日内收盘撤单+全平彻底不过夜)"
                         )
                 return True
             except Exception as e:
-                self.add_log(f"⚠️ [尾盘清仓异常]: {str(e)}")
+                self.add_log(f"⚠️ [尾盘双重清场异常]: {str(e)}")
         return False
 
     async def _run_loop(self):

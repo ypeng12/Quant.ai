@@ -225,3 +225,24 @@ class AlpacaAdapter:
                 "error": str(e),
                 "message": f"Failed to close position for {symbol.upper()}: {str(e)}"
             }
+
+    def get_clock(self) -> Dict:
+        """
+        Get official exchange market clock directly from Alpaca API.
+        Accounts for all US holidays, early closes, and real-time exchange status.
+        """
+        try:
+            clock = self.client.get_clock()
+            seconds_to_close = 0.0
+            if clock.is_open and clock.next_close and clock.timestamp:
+                seconds_to_close = (clock.next_close - clock.timestamp).total_seconds()
+            return {
+                "success": True,
+                "is_open": bool(clock.is_open),
+                "timestamp": str(clock.timestamp),
+                "next_open": str(clock.next_open),
+                "next_close": str(clock.next_close),
+                "seconds_to_close": seconds_to_close
+            }
+        except Exception as e:
+            return {"success": False, "error": str(e), "is_open": False, "seconds_to_close": 0.0}
