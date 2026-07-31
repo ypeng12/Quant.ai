@@ -303,6 +303,29 @@ class LiveTradingRunner:
                 if sym and sym not in cleaned:
                     cleaned.append(sym)
         
+        # 识别出被移除的股票，立刻自动发起 Alpaca 强行平仓全卖
+        removed_tickers = [t for t in self.active_tickers if t not in cleaned]
+        if removed_tickers and self.adapter:
+            try:
+                positions_list = self.adapter.get_open_positions()
+                open_tickers = {pos['ticker']: pos for pos in positions_list}
+                for r_sym in removed_tickers:
+                    if r_sym in open_tickers:
+                        pos = open_tickers[r_sym]
+                        shares = pos.get('shares', 0)
+                        self.add_log(f"🗑️ [自选股移除清仓] 检测到 [{r_sym}] 已从 Watchlist 移除，立刻自动提交 Alpaca 强行全卖清仓指令！")
+                        if hasattr(self.adapter, "close_position"):
+                            self.adapter.close_position(r_sym)
+                        self.add_trade_action(
+                            action="SELL" if shares > 0 else "COVER",
+                            ticker=r_sym,
+                            shares=abs(shares),
+                            price=pos.get("current_price", 0.0),
+                            reason="Watchlist Removal Auto Liquidation (自选股移除自动强行清仓)"
+                        )
+            except Exception as e:
+                self.add_log(f"⚠️ 自选股移除自动清仓警告: {e}")
+
         if cleaned != self.active_tickers:
             self.active_tickers = cleaned
             save_watchlist(cleaned, allow_empty=True)
@@ -483,6 +506,49 @@ class LiveTradingRunner:
         
         return market_open <= now <= market_close
 
+    def check_and_trigger_eod_close(self, positions_list: list) -> bool:
+        """
+        日内收盘前自动强行全平持仓风控 (EOD Auto Close-All Strategy).
+        在美东时间 15:55 EST (关盘前 5 分钟)，自动强行平掉所有持仓，确保零持仓不过夜！
+        """
+        if not positions_list:
+            return False
+
+        if self.ignore_market_hours:
+            return False
+
+        est = pytz.timezone('America/New_York')
+        now = datetime.datetime.now(est)
+
+        if now.weekday() > 4:
+            return False
+
+        cutoff_time = now.replace(hour=15, minute=55, second=0, microsecond=0)
+        market_close_buffer = now.replace(hour=16, minute=5, second=0, microsecond=0)
+
+        if cutoff_time <= now <= market_close_buffer:
+            self.add_log(f"🌇 [尾盘强行清仓风控] 美东时间 {now.strftime('%H:%M:%S')} 距 16:00 关盘不足 5 分钟！正在强行全平 {len(positions_list)} 笔持仓，确保 0 持仓不过夜...")
+            try:
+                if hasattr(self.adapter, "close_all_positions"):
+                    res = self.adapter.close_all_positions()
+                    self.add_log(f"✅ [日内结清成功] {res.get('message', 'All positions liquidated for EOD zero overnight risk.')}")
+                
+                for pos in positions_list:
+                    sym = pos.get("ticker")
+                    shares = pos.get("shares", 0)
+                    if sym and shares != 0:
+                        self.add_trade_action(
+                            action="SELL" if shares > 0 else "COVER",
+                            ticker=sym,
+                            shares=abs(shares),
+                            price=pos.get("current_price", 0.0),
+                            reason="EOD Market-Close Auto Liquidation (日内收盘强制清仓不过夜)"
+                        )
+                return True
+            except Exception as e:
+                self.add_log(f"⚠️ [尾盘清仓异常]: {str(e)}")
+        return False
+
     async def _run_loop(self):
         while self.is_running:
             try:
@@ -498,6 +564,12 @@ class LiveTradingRunner:
                 try:
                     positions_list = self.adapter.get_open_positions()
                     positions_by_ticker = {pos['ticker']: pos for pos in positions_list}
+                    
+                    # 关盘前 15:55 EST 强行清仓不过夜
+                    if self.check_and_trigger_eod_close(positions_list):
+                        await asyncio.sleep(30)
+                        continue
+
                     for pos_ticker in positions_by_ticker.keys():
                         if pos_ticker not in self.active_tickers:
                             self.active_tickers.append(pos_ticker)
