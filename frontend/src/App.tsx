@@ -557,6 +557,16 @@ function App() {
     }
   };
 
+  const DEFAULT_WATCHLIST_STOCKS = ["TSLA", "NVDA", "AAPL", "MSFT", "AMD", "SNDK", "MU", "CRWV"];
+
+  const handleResetDefaultWatchlist = () => {
+    setWatchlist(DEFAULT_WATCHLIST_STOCKS);
+    if (!DEFAULT_WATCHLIST_STOCKS.includes(activeTicker)) {
+      setActiveTicker(DEFAULT_WATCHLIST_STOCKS[0]);
+    }
+    fetch(`${API_BASE}/api/watchlist/reset`, { method: 'POST' }).catch(() => {});
+  };
+
   const resetStrategyParams = () => {
     setStrategyParams(DEFAULT_STRATEGY_PARAMS);
   };
@@ -934,7 +944,26 @@ function App() {
 
         {/* 右侧边栏自选股列表 & 公司档案 */}
         <aside className="sidebar">
-          <h4 className="sidebar-title">Watchlist</h4>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
+            <h4 className="sidebar-title" style={{ margin: 0 }}>Watchlist</h4>
+            <button
+              onClick={handleResetDefaultWatchlist}
+              title="恢复为默认 8 支核心自选股池"
+              style={{
+                background: 'rgba(255,255,255,0.06)',
+                border: '1px solid rgba(255,255,255,0.15)',
+                color: '#00e5ff',
+                borderRadius: '5px',
+                padding: '3px 9px',
+                fontSize: '0.73rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              ↺ Reset Default
+            </button>
+          </div>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
             {watchlist.map((ticker) => {
