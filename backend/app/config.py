@@ -108,15 +108,14 @@ def load_watchlist() -> list:
             watchlists = client.get_watchlists()
             if watchlists:
                 qw = next((w for w in watchlists if w.name == "PRIMARY_QUANT"), watchlists[0])
-                if qw and getattr(qw, "assets", None):
-                    alpaca_symbols = [str(a.symbol).upper().strip() for a in qw.assets if getattr(a, "symbol", None)]
-                    if alpaca_symbols:
-                        try:
-                            with open(WATCHLIST_FILE, 'w', encoding='utf-8') as f:
-                                json.dump(alpaca_symbols, f, ensure_ascii=False, indent=2)
-                        except Exception:
-                            pass
-                        return alpaca_symbols
+                if qw is not None:
+                    alpaca_symbols = [str(a.symbol).upper().strip() for a in (qw.assets or []) if getattr(a, "symbol", None)]
+                    try:
+                        with open(WATCHLIST_FILE, 'w', encoding='utf-8') as f:
+                            json.dump(alpaca_symbols, f, ensure_ascii=False, indent=2)
+                    except Exception:
+                        pass
+                    return alpaca_symbols
     except Exception as e:
         print(f"Alpaca cloud watchlist fetch warning: {e}")
 
@@ -124,17 +123,15 @@ def load_watchlist() -> list:
         if os.path.exists(WATCHLIST_FILE):
             with open(WATCHLIST_FILE, 'r', encoding='utf-8') as f:
                 data = json.load(f)
-                if isinstance(data, list) and len(data) > 0:
-                    cleaned = [str(t).upper().strip() for t in data if t]
-                    if cleaned:
-                        return cleaned
+                if isinstance(data, list):
+                    return [str(t).upper().strip() for t in data if t]
     except Exception as e:
         print(f"Error loading watchlist.json: {e}")
     return DEFAULT_WATCHLIST.copy()
 
 
-def save_watchlist(tickers: list) -> list:
-    """同步保存 Watchlist 到本地磁盘 watchlist.json 并且双向同步到 Alpaca 官方云端 Watchlist。"""
+def save_watchlist(tickers: list, allow_empty: bool = True) -> list:
+    """同步保存 Watchlist 到本地磁盘 watchlist.json 并且 100% 双向实时同步到 Alpaca 官方云端 Watchlist。"""
     import json
     cleaned = []
     for t in tickers:
@@ -142,7 +139,8 @@ def save_watchlist(tickers: list) -> list:
             sym = t.upper().strip()
             if sym and sym not in cleaned:
                 cleaned.append(sym)
-    if not cleaned:
+
+    if not cleaned and not allow_empty:
         cleaned = DEFAULT_WATCHLIST.copy()
 
     # 1. 保存到本地磁盘
@@ -152,7 +150,7 @@ def save_watchlist(tickers: list) -> list:
     except Exception as e:
         print(f"Error saving watchlist.json: {e}")
 
-    # 2. 双向同步到 Alpaca 官方云端账户
+    # 2. 100% 双向实时同步到 Alpaca 官方云端账户
     try:
         from app.config import ALPACA_API_KEY, ALPACA_SECRET_KEY
         if ALPACA_API_KEY and "your_paper_api_key_here" not in ALPACA_API_KEY:
