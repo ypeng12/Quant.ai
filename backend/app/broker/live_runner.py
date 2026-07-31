@@ -308,6 +308,29 @@ class LiveTradingRunner:
             save_watchlist(cleaned, allow_empty=True)
             self.add_log(f"🔄 AI 实时研判股票池已与 Watchlist 自动对齐并持久化保存: {self.active_tickers}")
 
+    def close_individual_position(self, ticker: str) -> dict:
+        """User force closes a single ticker position."""
+        sym = ticker.upper().strip()
+        try:
+            if hasattr(self.adapter, "close_position"):
+                res = self.adapter.close_position(sym)
+                if res.get("success"):
+                    self.add_log(f"⚡ [用户手动平仓] 已成功发起 {sym} 的强行卖出/平仓指令")
+                    self.add_trade_action(
+                        action="SELL",
+                        ticker=sym,
+                        shares=0,
+                        price=0.0,
+                        reason="User Manual Force Sell/Close"
+                    )
+                    return {"success": True, "message": f"Successfully submitted close order for {sym}."}
+                else:
+                    return {"success": False, "error": res.get("error", f"Failed to close position for {sym}")}
+            else:
+                return {"success": False, "error": "Broker adapter does not support closing individual positions."}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
     def start(self, strategy_params: Optional[Dict] = None, tickers: Optional[List[str]] = None, ignore_market_hours: bool = True):
         if self.is_running:
             self.add_log("[Warning] Quant trading bot is already running.")

@@ -117,7 +117,7 @@
       "ticker": "AAPL",
       "shares": 142,
       "price": 331.73,
-      "pnl": -58.75,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -141,7 +141,7 @@
       "ticker": "MSFT",
       "shares": 104,
       "price": 454.727692,
-      "pnl": 7.04,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -153,7 +153,7 @@
       "ticker": "AMD",
       "shares": 97,
       "price": 484.465155,
-      "pnl": -111.05,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -165,7 +165,7 @@
       "ticker": "NVDA",
       "shares": 245,
       "price": 193.38,
-      "pnl": -19.5,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -249,7 +249,7 @@
       "ticker": "TSLA",
       "shares": 155,
       "price": 305.62,
-      "pnl": -34.24,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -273,7 +273,7 @@
       "ticker": "AAPL",
       "shares": 1,
       "price": 332.41,
-      "pnl": 0.33,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -285,7 +285,7 @@
       "ticker": "TSLA",
       "shares": 147,
       "price": 305.65,
-      "pnl": -48.51,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -309,7 +309,7 @@
       "ticker": "AMD",
       "shares": 97,
       "price": 485.474227,
-      "pnl": 88.68,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -321,7 +321,7 @@
       "ticker": "MSFT",
       "shares": 104,
       "price": 455.4325,
-      "pnl": 80.34,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -405,7 +405,7 @@
       "ticker": "TSLA",
       "shares": 154,
       "price": 305.87,
-      "pnl": -1.11,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -417,7 +417,7 @@
       "ticker": "NVDA",
       "shares": 245,
       "price": 193.50049,
-      "pnl": -4.78,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -429,7 +429,7 @@
       "ticker": "TSLA",
       "shares": 155,
       "price": 305.8,
-      "pnl": -20.02,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -489,7 +489,7 @@
       "ticker": "AAPL",
       "shares": 142,
       "price": 332.18669,
-      "pnl": 15.15,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -513,7 +513,7 @@
       "ticker": "MSFT",
       "shares": 104,
       "price": 455.24,
-      "pnl": 30.89,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -525,7 +525,7 @@
       "ticker": "SNDK",
       "shares": 1,
       "price": 1262.4,
-      "pnl": -0.02,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -537,7 +537,7 @@
       "ticker": "MSFT",
       "shares": 104,
       "price": 455.247308,
-      "pnl": -25.66,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -585,7 +585,7 @@
       "ticker": "NVDA",
       "shares": 1,
       "price": 193.59,
-      "pnl": -0.09,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -597,7 +597,7 @@
       "ticker": "AAPL",
       "shares": 1,
       "price": 331.99,
-      "pnl": -0.1,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -609,7 +609,7 @@
       "ticker": "MU",
       "shares": 1,
       "price": 870.07,
-      "pnl": 13.19,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -633,7 +633,7 @@
       "ticker": "NVDA",
       "shares": 244,
       "price": 193.49,
-      "pnl": -47.01,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -645,7 +645,7 @@
       "ticker": "SNDK",
       "shares": 37,
       "price": 1259.405405,
-      "pnl": -131.89,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -669,7 +669,7 @@
       "ticker": "AAPL",
       "shares": 142,
       "price": 331.891338,
-      "pnl": -68.37,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -681,7 +681,7 @@
       "ticker": "SNDK",
       "shares": 37,
       "price": 1260.041351,
-      "pnl": -97.52,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -693,7 +693,7 @@
       "ticker": "MU",
       "shares": 1,
       "price": 870.6,
-      "pnl": 13.72,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -717,7 +717,7 @@
       "ticker": "AMD",
       "shares": 97,
       "price": 487.14,
-      "pnl": 218.25,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -741,7 +741,7 @@
       "ticker": "MSFT",
       "shares": 1,
       "price": 456.72,
-      "pnl": 1.05,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -777,7 +777,7 @@
       "ticker": "AMD",
       "shares": 97,
       "price": 487.0,
-      "pnl": 99.07,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -789,7 +789,7 @@
       "ticker": "AMD",
       "shares": 97,
       "price": 486.72,
-      "pnl": -25.22,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -897,7 +897,7 @@
       "ticker": "SNDK",
       "shares": 1,
       "price": 1259.52,
-      "pnl": -5.93,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -909,7 +909,7 @@
       "ticker": "MU",
       "shares": 54,
       "price": 871.39,
-      "pnl": 772.76,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -933,7 +933,7 @@
       "ticker": "SNDK",
       "shares": 37,
       "price": 1259.27,
-      "pnl": -228.57,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -945,7 +945,7 @@
       "ticker": "MU",
       "shares": 1,
       "price": 869.16,
-      "pnl": -2.79,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -957,7 +957,7 @@
       "ticker": "MU",
       "shares": 53,
       "price": 869.75,
-      "pnl": -68.37,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -981,7 +981,7 @@
       "ticker": "MSFT",
       "shares": 103,
       "price": 455.849903,
-      "pnl": 18.45,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -993,7 +993,7 @@
       "ticker": "MU",
       "shares": 53,
       "price": 870.196226,
-      "pnl": -15.56,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1005,7 +1005,7 @@
       "ticker": "MSFT",
       "shares": 102,
       "price": 455.93,
-      "pnl": -80.67,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1041,7 +1041,7 @@
       "ticker": "AAPL",
       "shares": 141,
       "price": 333.215958,
-      "pnl": 102.17,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1053,7 +1053,7 @@
       "ticker": "TSLA",
       "shares": 1,
       "price": 307.4,
-      "pnl": 0.94,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1077,7 +1077,7 @@
       "ticker": "TSLA",
       "shares": 152,
       "price": 307.06,
-      "pnl": 90.84,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1113,7 +1113,7 @@
       "ticker": "NVDA",
       "shares": 1,
       "price": 193.63,
-      "pnl": -0.12,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1125,7 +1125,7 @@
       "ticker": "MU",
       "shares": 53,
       "price": 871.291321,
-      "pnl": -155.91,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1137,7 +1137,7 @@
       "ticker": "NVDA",
       "shares": 242,
       "price": 193.58748,
-      "pnl": -46.59,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1161,7 +1161,7 @@
       "ticker": "AMD",
       "shares": 90,
       "price": 487.35,
-      "pnl": -56.05,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1173,7 +1173,7 @@
       "ticker": "MU",
       "shares": 53,
       "price": 870.619246,
-      "pnl": -224.32,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1197,7 +1197,7 @@
       "ticker": "AAPL",
       "shares": 140,
       "price": 333.257429,
-      "pnl": 108.56,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1221,7 +1221,7 @@
       "ticker": "AAPL",
       "shares": 140,
       "price": 333.06,
-      "pnl": -36.77,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1245,7 +1245,7 @@
       "ticker": "AAPL",
       "shares": 139,
       "price": 332.897266,
-      "pnl": -56.1,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1269,7 +1269,7 @@
       "ticker": "MSFT",
       "shares": 102,
       "price": 457.42,
-      "pnl": 81.38,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1329,7 +1329,7 @@
       "ticker": "MU",
       "shares": 53,
       "price": 871.77,
-      "pnl": -86.27,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1353,7 +1353,7 @@
       "ticker": "MU",
       "shares": 50,
       "price": 871.1424,
-      "pnl": -108.49,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1389,7 +1389,7 @@
       "ticker": "AMD",
       "shares": 1,
       "price": 487.69,
-      "pnl": -0.28,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1401,7 +1401,7 @@
       "ticker": "MU",
       "shares": 53,
       "price": 867.66,
-      "pnl": -252.62,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1413,7 +1413,7 @@
       "ticker": "SNDK",
       "shares": 37,
       "price": 1252.18,
-      "pnl": -178.34,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1437,7 +1437,7 @@
       "ticker": "SNDK",
       "shares": 37,
       "price": 1250.8,
-      "pnl": -283.05,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1449,7 +1449,7 @@
       "ticker": "MSFT",
       "shares": 101,
       "price": 457.31,
-      "pnl": 71.72,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1461,7 +1461,7 @@
       "ticker": "AMD",
       "shares": 94,
       "price": 487.27,
-      "pnl": -71.1,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1497,7 +1497,7 @@
       "ticker": "TSLA",
       "shares": 151,
       "price": 307.29,
-      "pnl": -96.89,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1509,7 +1509,7 @@
       "ticker": "TSLA",
       "shares": 150,
       "price": 307.2,
-      "pnl": -105.24,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1521,7 +1521,7 @@
       "ticker": "MSFT",
       "shares": 101,
       "price": 456.16,
-      "pnl": -147.64,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1545,7 +1545,7 @@
       "ticker": "MSFT",
       "shares": 101,
       "price": 456.100693,
-      "pnl": -125.68,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1593,7 +1593,7 @@
       "ticker": "AMD",
       "shares": 94,
       "price": 486.259894,
-      "pnl": -175.81,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1629,7 +1629,7 @@
       "ticker": "NVDA",
       "shares": 238,
       "price": 193.47,
-      "pnl": -38.79,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1641,7 +1641,7 @@
       "ticker": "NVDA",
       "shares": 238,
       "price": 193.38,
-      "pnl": -59.51,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1653,7 +1653,7 @@
       "ticker": "AAPL",
       "shares": 1,
       "price": 333.51,
-      "pnl": 0.21,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1737,7 +1737,7 @@
       "ticker": "AAPL",
       "shares": 138,
       "price": 333.559855,
-      "pnl": 12.91,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1761,7 +1761,7 @@
       "ticker": "AAPL",
       "shares": 127,
       "price": 333.580945,
-      "pnl": -20.48,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1773,7 +1773,7 @@
       "ticker": "AAPL",
       "shares": 138,
       "price": 333.55,
-      "pnl": -29.42,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1809,7 +1809,7 @@
       "ticker": "AMD",
       "shares": 1,
       "price": 489.55,
-      "pnl": 1.42,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1821,7 +1821,7 @@
       "ticker": "TSLA",
       "shares": 150,
       "price": 309.2244,
-      "pnl": 226.54,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1869,7 +1869,7 @@
       "ticker": "AMD",
       "shares": 6,
       "price": 489.06,
-      "pnl": 7.3,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1881,7 +1881,7 @@
       "ticker": "NVDA",
       "shares": 2,
       "price": 194.49,
-      "pnl": 1.72,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1905,7 +1905,7 @@
       "ticker": "AAPL",
       "shares": 124,
       "price": 333.611774,
-      "pnl": -25.54,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1929,7 +1929,7 @@
       "ticker": "AAPL",
       "shares": 138,
       "price": 333.385724,
-      "pnl": -57.55,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1965,7 +1965,7 @@
       "ticker": "SNDK",
       "shares": 36,
       "price": 1265.25,
-      "pnl": 405.0,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1989,7 +1989,7 @@
       "ticker": "AMD",
       "shares": 16,
       "price": 487.62,
-      "pnl": -1.28,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -2001,7 +2001,7 @@
       "ticker": "MU",
       "shares": 2,
       "price": 877.19,
-      "pnl": 9.71,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -2025,7 +2025,7 @@
       "ticker": "NVDA",
       "shares": 181,
       "price": 194.08989,
-      "pnl": 96.26,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -2037,7 +2037,7 @@
       "ticker": "NVDA",
       "shares": 238,
       "price": 194.103277,
-      "pnl": -28.95,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -2061,7 +2061,7 @@
       "ticker": "NVDA",
       "shares": 238,
       "price": 194.019874,
-      "pnl": -10.11,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -2073,7 +2073,7 @@
       "ticker": "MU",
       "shares": 13,
       "price": 875.301539,
-      "pnl": 70.72,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -2085,7 +2085,7 @@
       "ticker": "MU",
       "shares": 52,
       "price": 874.528846,
-      "pnl": 156.93,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -2097,7 +2097,7 @@
       "ticker": "SNDK",
       "shares": 34,
       "price": 1266.2,
-      "pnl": 455.39,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -2121,7 +2121,7 @@
       "ticker": "SNDK",
       "shares": 36,
       "price": 1266.34,
-      "pnl": 48.96,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -2133,7 +2133,7 @@
       "ticker": "MSFT",
       "shares": 4,
       "price": 456.34,
-      "pnl": -2.66,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -2193,7 +2193,7 @@
       "ticker": "MSFT",
       "shares": 101,
       "price": 455.640792,
-      "pnl": -38.7,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -2205,7 +2205,7 @@
       "ticker": "MSFT",
       "shares": 101,
       "price": 456.17,
-      "pnl": -20.44,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -2217,7 +2217,7 @@
       "ticker": "TSLA",
       "shares": 149,
       "price": 309.8,
-      "pnl": 317.18,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -2241,7 +2241,7 @@
       "ticker": "TSLA",
       "shares": 149,
       "price": 309.74,
-      "pnl": 56.75,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -2253,7 +2253,7 @@
       "ticker": "TSLA",
       "shares": 148,
       "price": 309.85,
-      "pnl": 7.81,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -2265,7 +2265,7 @@
       "ticker": "NVDA",
       "shares": 223,
       "price": 194.629283,
-      "pnl": -2.58,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -2313,6 +2313,90 @@
       "ticker": "MU",
       "shares": 52,
       "price": 876.343077,
+      "pnl": 0.0,
+      "reason": "Alpaca Broker Executed Sync"
+    },
+    {
+      "order_id": "d89be720-9d81-4692-8677-2541ea853308",
+      "date": "2026-07-31",
+      "time": "2026-07-31 13:33:18",
+      "action": "SELL",
+      "action_cn": "卖出",
+      "ticker": "SNDK",
+      "shares": 36,
+      "price": 1371.563056,
+      "pnl": 0.0,
+      "reason": "Alpaca Broker Executed Sync"
+    },
+    {
+      "order_id": "1ad17e4b-4c19-4e16-a71e-e8cffdd19e2b",
+      "date": "2026-07-31",
+      "time": "2026-07-31 13:35:22",
+      "action": "BUY",
+      "action_cn": "买入",
+      "ticker": "MU",
+      "shares": 49,
+      "price": 926.65102,
+      "pnl": 0.0,
+      "reason": "Alpaca Broker Executed Sync"
+    },
+    {
+      "order_id": "787047f2-3162-436b-97ed-1bb949de6de5",
+      "date": "2026-07-31",
+      "time": "2026-07-31 16:30:54",
+      "action": "SELL",
+      "action_cn": "卖出",
+      "ticker": "AAPL",
+      "shares": 139,
+      "price": 300.42,
+      "pnl": 0.0,
+      "reason": "Alpaca Broker Executed Sync"
+    },
+    {
+      "order_id": "99c2a33e-9905-4442-a9f0-ad60ee9a800a",
+      "date": "2026-07-31",
+      "time": "2026-07-31 16:30:55",
+      "action": "SELL",
+      "action_cn": "卖出",
+      "ticker": "NVDA",
+      "shares": 237,
+      "price": 197.768228,
+      "pnl": 0.0,
+      "reason": "Alpaca Broker Executed Sync"
+    },
+    {
+      "order_id": "32e852af-0172-491b-904a-3291deb39259",
+      "date": "2026-07-31",
+      "time": "2026-07-31 16:30:55",
+      "action": "SELL",
+      "action_cn": "卖出",
+      "ticker": "MU",
+      "shares": 49,
+      "price": 835.41,
+      "pnl": 0.0,
+      "reason": "Alpaca Broker Executed Sync"
+    },
+    {
+      "order_id": "dd4ff982-6fcf-45c3-bf86-ba9073607d66",
+      "date": "2026-07-31",
+      "time": "2026-07-31 16:30:56",
+      "action": "BUY",
+      "action_cn": "买入",
+      "ticker": "MSFT",
+      "shares": 101,
+      "price": 463.314752,
+      "pnl": 0.0,
+      "reason": "Alpaca Broker Executed Sync"
+    },
+    {
+      "order_id": "f1a4c78e-3961-41a2-b94d-ba280ae68df0",
+      "date": "2026-07-31",
+      "time": "2026-07-31 16:30:57",
+      "action": "BUY",
+      "action_cn": "买入",
+      "ticker": "TSLA",
+      "shares": 148,
+      "price": 309.174392,
       "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
@@ -2368,7 +2452,7 @@
       "ticker": "MSFT",
       "shares": 20,
       "price": 462.745,
-      "pnl": 5.09,
+      "pnl": -28.1,
       "reason": "[Long-TrailingStop] Price pulled back from peak $464.15 to trigger stop $462.81."
     },
     {
@@ -2384,84 +2468,216 @@
     },
     {
       "date": "2026-07-31",
-      "time": "2026-07-31 09:37:03",
-      "action": "BUY",
-      "action_cn": "BUY",
-      "ticker": "PLTR",
+      "time": "2026-07-31 09:39:18",
+      "action": "SELL",
+      "action_cn": "SELL",
+      "ticker": "MSFT",
       "shares": 1,
-      "price": 122.38,
-      "pnl": 0.0,
-      "reason": "[Bullish-VWAP] Price holding above VWAP ($121.28)."
+      "price": 462.77,
+      "pnl": -0.05,
+      "reason": "[Long-Reversal] EMA Death Cross and below VWAP."
     },
     {
       "date": "2026-07-31",
-      "time": "2026-07-31 09:39:57",
+      "time": "2026-07-31 09:39:51",
+      "action": "BUY",
+      "action_cn": "BUY",
+      "ticker": "TSLA",
+      "shares": 139,
+      "price": 309.452,
+      "pnl": 0.0,
+      "reason": "[Bullish-VWAP] Price holding above VWAP ($307.54)."
+    },
+    {
+      "date": "2026-07-31",
+      "time": "2026-07-31 09:39:51",
+      "action": "BUY",
+      "action_cn": "BUY",
+      "ticker": "NVDA",
+      "shares": 218,
+      "price": 197.875,
+      "pnl": 0.0,
+      "reason": "[Bullish-VWAP] Price holding above VWAP ($197.38)."
+    },
+    {
+      "date": "2026-07-31",
+      "time": "2026-07-31 09:39:52",
+      "action": "SHORT",
+      "action_cn": "SHORT",
+      "ticker": "AAPL",
+      "shares": 143,
+      "price": 300.55,
+      "pnl": 0.0,
+      "reason": "[Bearish-VWAP] Price dropped below VWAP ($302.84)."
+    },
+    {
+      "date": "2026-07-31",
+      "time": "2026-07-31 09:39:54",
       "action": "BUY",
       "action_cn": "BUY",
       "ticker": "PLTR",
-      "shares": 77,
+      "shares": 271,
       "price": 122.47,
       "pnl": 0.0,
       "reason": "[Bullish-VWAP] Price holding above VWAP ($121.28)."
     },
     {
       "date": "2026-07-31",
-      "time": "2026-07-31 09:41:06",
+      "time": "2026-07-31 09:40:58",
+      "action": "BUY",
+      "action_cn": "BUY",
+      "ticker": "TSLA",
+      "shares": 139,
+      "price": 309.71,
+      "pnl": 0.0,
+      "reason": "[Bullish-VWAP] Price holding above VWAP ($307.55)."
+    },
+    {
+      "date": "2026-07-31",
+      "time": "2026-07-31 09:40:59",
+      "action": "BUY",
+      "action_cn": "BUY",
+      "ticker": "NVDA",
+      "shares": 218,
+      "price": 197.94,
+      "pnl": 0.0,
+      "reason": "[Bullish-VWAP] Price holding above VWAP ($197.38)."
+    },
+    {
+      "date": "2026-07-31",
+      "time": "2026-07-31 09:41:00",
+      "action": "SHORT",
+      "action_cn": "SHORT",
+      "ticker": "AAPL",
+      "shares": 143,
+      "price": 300.8899,
+      "pnl": 0.0,
+      "reason": "[Bearish-VWAP] Price dropped below VWAP ($302.83)."
+    },
+    {
+      "date": "2026-07-31",
+      "time": "2026-07-31 09:41:02",
       "action": "BUY",
       "action_cn": "BUY",
       "ticker": "PLTR",
-      "shares": 17,
+      "shares": 334,
       "price": 122.5111,
       "pnl": 0.0,
       "reason": "[Bullish-VWAP] Price holding above VWAP ($121.28)."
     },
     {
       "date": "2026-07-31",
-      "time": "2026-07-31 09:52:25",
-      "action": "BUY",
-      "action_cn": "BUY",
-      "ticker": "AAPL",
-      "shares": 1,
-      "price": 301.08,
-      "pnl": 0.0,
-      "reason": "[Bullish-Cross] EMA 9/21 Golden Cross formed."
-    },
-    {
-      "date": "2026-07-31",
-      "time": "2026-07-31 09:52:26",
-      "action": "BUY",
-      "action_cn": "BUY",
-      "ticker": "MSFT",
-      "shares": 1,
-      "price": 462.81,
-      "pnl": 0.0,
-      "reason": "[Bullish-VWAP] Price holding above VWAP ($457.99)."
-    },
-    {
-      "date": "2026-07-31",
-      "time": "2026-07-31 09:52:59",
+      "time": "2026-07-31 09:43:17",
       "action": "SHORT",
       "action_cn": "SHORT",
-      "ticker": "MSFT",
-      "shares": 93,
-      "price": 462.68,
+      "ticker": "AMD",
+      "shares": 88,
+      "price": 488.72,
       "pnl": 0.0,
       "reason": "[Bearish-Cross] EMA 9/21 Death Cross formed."
     },
     {
       "date": "2026-07-31",
-      "time": "2026-07-31 09:53:01",
+      "time": "2026-07-31 09:44:57",
+      "action": "BUY",
+      "action_cn": "BUY",
+      "ticker": "MSFT",
+      "shares": 88,
+      "price": 463.535,
+      "pnl": 0.0,
+      "reason": "[Bullish-Cross] EMA 9/21 Golden Cross formed."
+    },
+    {
+      "date": "2026-07-31",
+      "time": "2026-07-31 09:51:13",
+      "action": "BUY",
+      "action_cn": "BUY",
+      "ticker": "SNDK",
+      "shares": 1,
+      "price": 1240.26,
+      "pnl": 0.0,
+      "reason": "[Bullish-Cross] EMA 9/21 Golden Cross formed."
+    },
+    {
+      "date": "2026-07-31",
+      "time": "2026-07-31 09:51:14",
+      "action": "BUY",
+      "action_cn": "BUY",
+      "ticker": "MU",
+      "shares": 1,
+      "price": 835.795,
+      "pnl": 0.0,
+      "reason": "[Bullish-Cross] EMA 9/21 Golden Cross formed."
+    },
+    {
+      "date": "2026-07-31",
+      "time": "2026-07-31 09:52:20",
+      "action": "COVER",
+      "action_cn": "COVER",
+      "ticker": "AAPL",
+      "shares": 143,
+      "price": 301.08,
+      "pnl": -55.77,
+      "reason": "[Short-Reversal] EMA Golden Cross and reclaimed VWAP."
+    },
+    {
+      "date": "2026-07-31",
+      "time": "2026-07-31 09:52:20",
+      "action": "SELL",
+      "action_cn": "SELL",
+      "ticker": "MSFT",
+      "shares": 88,
+      "price": 462.81,
+      "pnl": -66.0,
+      "reason": "[Long-TrailingStop] Price pulled back from peak $463.99 to trigger stop $462.89."
+    },
+    {
+      "date": "2026-07-31",
+      "time": "2026-07-31 09:52:54",
+      "action": "SELL",
+      "action_cn": "SELL",
+      "ticker": "MSFT",
+      "shares": 1,
+      "price": 462.68,
+      "pnl": -0.16,
+      "reason": "[Long-Reversal] EMA Death Cross and below VWAP."
+    },
+    {
+      "date": "2026-07-31",
+      "time": "2026-07-31 09:52:56",
       "action": "SELL",
       "action_cn": "SELL",
       "ticker": "PLTR",
-      "shares": 49,
+      "shares": 351,
       "price": 122.305,
-      "pnl": -7.99,
+      "pnl": -78.97,
       "reason": "[Long-TrailingStop] Price pulled back from peak $122.54 to trigger stop $122.32."
     },
     {
       "date": "2026-07-31",
-      "time": "2026-07-31 09:55:46",
+      "time": "2026-07-31 09:55:42",
+      "action": "BUY",
+      "action_cn": "BUY",
+      "ticker": "TSLA",
+      "shares": 139,
+      "price": 309.7606,
+      "pnl": 0.0,
+      "reason": "[Bullish-VWAP] Price holding above VWAP ($307.65)."
+    },
+    {
+      "date": "2026-07-31",
+      "time": "2026-07-31 09:55:42",
+      "action": "BUY",
+      "action_cn": "BUY",
+      "ticker": "NVDA",
+      "shares": 213,
+      "price": 198.115,
+      "pnl": 0.0,
+      "reason": "[Bullish-VWAP] Price holding above VWAP ($197.40)."
+    },
+    {
+      "date": "2026-07-31",
+      "time": "2026-07-31 09:55:44",
       "action": "SHORT",
       "action_cn": "SHORT",
       "ticker": "AMD",
@@ -2471,805 +2687,74 @@
       "reason": "[Bearish-VWAP] Price dropped below VWAP ($495.29)."
     },
     {
-      "order_id": "7fa9430a-3547-4728-a57e-aba0b333c47f",
       "date": "2026-07-31",
-      "time": "2026-07-31 12:39:26",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "MSFT",
-      "shares": 1,
-      "price": 462.62,
-      "pnl": -0.12,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "6a649477-9264-4be5-8f17-b60bbddb6b1c",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:39:40",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "TSLA",
-      "shares": 278,
-      "price": 309.3,
-      "pnl": 21.43,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "84940d9d-c825-485f-81af-07427e8e214e",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:39:40",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "PLTR",
-      "shares": 1,
-      "price": 122.44,
-      "pnl": -0.03,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "b76dc3e8-8453-41aa-a88b-55370674b944",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:39:41",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "NVDA",
-      "shares": 436,
-      "price": 197.93,
-      "pnl": 1297.53,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "dba747de-436b-4b4b-a81d-386aa8145ab1",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:39:41",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "AAPL",
-      "shares": 144,
-      "price": 300.66,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "a317444c-ceba-4979-81b7-ee63ceea48b2",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:40:00",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "NVDA",
-      "shares": 218,
-      "price": 197.98,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "3e284508-bbd1-42ff-840a-60db0b915d42",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:40:00",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "TSLA",
-      "shares": 139,
-      "price": 309.36,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "23b81965-c55b-42e9-88db-d23275ab041f",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:40:03",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "AAPL",
-      "shares": 143,
-      "price": 300.53,
-      "pnl": -4770.03,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "a844b435-34f4-4bc2-acfd-3addd2988768",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:40:05",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "PLTR",
-      "shares": 271,
-      "price": 122.49,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "db265746-bcbe-44d3-865b-3c4142212f8c",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:40:06",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "PLTR",
-      "shares": 77,
-      "price": 122.476494,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "afcaa753-c8cd-4ee0-9bc3-025550c3391d",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:40:58",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "PLTR",
-      "shares": 348,
-      "price": 122.5,
-      "pnl": 4.11,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "80e0040f-8520-4a6d-b90f-c789095c5cf7",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:40:59",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "TSLA",
-      "shares": 139,
-      "price": 309.7,
-      "pnl": 47.26,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "221dc3e6-754d-40af-8111-38e9b816ad41",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:40:59",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "AAPL",
-      "shares": 143,
-      "price": 300.883846,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "c296eb6d-1e1c-42c9-95de-7386fa21066f",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:41:00",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "NVDA",
-      "shares": 218,
-      "price": 197.935137,
-      "pnl": 102.71,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "5ce310c5-ae1d-4b68-883c-4870bb40810e",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:41:07",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "TSLA",
-      "shares": 139,
-      "price": 309.44,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "2f693d61-c1e4-4fca-949c-b2f87ee73d5b",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:41:08",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "NVDA",
-      "shares": 218,
-      "price": 197.91,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "b0c9f13b-824e-471b-b99b-30c1ffe2ec22",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:41:09",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "AAPL",
-      "shares": 143,
-      "price": 300.69,
-      "pnl": -4714.68,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "f7be5a1c-0986-41cd-856e-50b48e7f5d0b",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:41:12",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "PLTR",
-      "shares": 334,
-      "price": 122.53,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "f9d2b677-df87-42b7-9d5f-a6537c7d4339",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:41:16",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "PLTR",
-      "shares": 17,
-      "price": 122.53,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "295f7511-ec23-46ac-89cc-f06ccb5455a2",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:43:27",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "AMD",
-      "shares": 88,
-      "price": 488.14,
-      "pnl": 16.9,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "d5a75f83-5125-4ddd-822a-792171983579",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:45:07",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "MSFT",
-      "shares": 88,
-      "price": 463.56,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "82d97437-5616-4f83-9419-30aa335f575a",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:51:21",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "SNDK",
-      "shares": 1,
-      "price": 1242.21,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "662e0a9b-57be-40af-a42b-9593350ee716",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:51:22",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "MU",
-      "shares": 1,
-      "price": 837.39,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "ee29fbdd-6eff-4a09-9d95-042c21c515a4",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:52:28",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "AAPL",
-      "shares": 143,
-      "price": 301.13,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "4adccae6-8f56-4f0d-964c-7d858d1134ab",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:52:30",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "MSFT",
-      "shares": 88,
-      "price": 462.65,
-      "pnl": -77.45,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "dba5df8c-02a7-468c-9d70-dfba523e1cc6",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:52:33",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "AAPL",
-      "shares": 1,
-      "price": 301.12,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "1828d6b5-b76b-4495-8254-2ba23dcbc506",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:52:34",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "MSFT",
-      "shares": 1,
-      "price": 462.84,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "d217ccb2-60b0-4ee9-bed5-15d907cff707",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:53:03",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "MSFT",
-      "shares": 1,
-      "price": 462.6,
-      "pnl": -0.24,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "ff572f92-3811-467b-87cb-8590872b7cfd",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:53:07",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "PLTR",
-      "shares": 351,
-      "price": 122.26,
-      "pnl": -92.36,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "33895f46-ef38-4e72-87b7-acf01352ced1",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:53:10",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "MSFT",
-      "shares": 93,
-      "price": 462.62914,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "f2f5889c-56c3-4516-97a0-1b42439e12a1",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:53:13",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "PLTR",
-      "shares": 49,
-      "price": 122.26,
-      "pnl": -12.15,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "6a5aa1af-d9fd-4f96-928d-18b43dd868aa",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:55:31",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "TSLA",
-      "shares": 139,
-      "price": 309.72,
-      "pnl": 38.92,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "4a57251b-15cb-4e61-9ed1-ee6be57322e4",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:55:31",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "SNDK",
-      "shares": 1,
-      "price": 1236.4,
-      "pnl": -29.69,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "8078978c-ccda-4859-877a-9115796e22fc",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:55:31",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "MU",
-      "shares": 1,
-      "price": 835.32,
-      "pnl": -42.28,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "30dd8e19-8555-463d-835c-746cb425d1e0",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:55:31",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "MSFT",
-      "shares": 93,
-      "price": 462.32,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "157f46e4-5766-4d97-b0ff-b0ed4087d75f",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:55:31",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "AMD",
-      "shares": 88,
-      "price": 489.25,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "dfc1e502-10c1-4bb0-995c-b2c0002fb5cd",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:55:31",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "AAPL",
-      "shares": 1,
-      "price": 300.7,
-      "pnl": -0.18,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "7e4c5650-1d6e-4f9b-a3dd-48b3a34facf4",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:55:32",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "PLTR",
-      "shares": 49,
-      "price": 122.25,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "7056cea1-ccf7-4855-8f16-1f025bf7064b",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:55:34",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "NVDA",
-      "shares": 218,
-      "price": 198.160918,
-      "pnl": 36.22,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "5a7dd747-0322-4a0d-a83e-f2c0b2291b3b",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:55:50",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "TSLA",
-      "shares": 139,
-      "price": 309.791439,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "4d206edf-9b12-4f6b-838c-109338a8db4b",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:55:53",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "AMD",
-      "shares": 88,
-      "price": 488.94,
-      "pnl": -50.64,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "52fa3874-8f53-4e5c-a456-ddbe8b481e65",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:55:55",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "NVDA",
-      "shares": 213,
-      "price": 198.229765,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "6200ecf8-003d-4deb-86da-8220e52c413a",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:55:57",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "AMD",
-      "shares": 88,
-      "price": 488.946137,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "d89be720-9d81-4692-8677-2541ea853308",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:33:18",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "SNDK",
-      "shares": 36,
-      "price": 1371.563056,
-      "pnl": 3728.99,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "1ad17e4b-4c19-4e16-a71e-e8cffdd19e2b",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:35:22",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "MU",
-      "shares": 49,
-      "price": 926.65102,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "787047f2-3162-436b-97ed-1bb949de6de5",
-      "date": "2026-07-31",
-      "time": "2026-07-31 16:30:54",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "AAPL",
-      "shares": 139,
-      "price": 300.42,
-      "pnl": -64.47,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "99c2a33e-9905-4442-a9f0-ad60ee9a800a",
-      "date": "2026-07-31",
-      "time": "2026-07-31 16:30:55",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "NVDA",
-      "shares": 237,
-      "price": 197.768228,
-      "pnl": -36.82,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "32e852af-0172-491b-904a-3291deb39259",
-      "date": "2026-07-31",
-      "time": "2026-07-31 16:30:55",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "MU",
-      "shares": 49,
-      "price": 835.41,
-      "pnl": -2008.24,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "dd4ff982-6fcf-45c3-bf86-ba9073607d66",
-      "date": "2026-07-31",
-      "time": "2026-07-31 16:30:56",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "MSFT",
-      "shares": 101,
-      "price": 463.314752,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "f1a4c78e-3961-41a2-b94d-ba280ae68df0",
-      "date": "2026-07-31",
-      "time": "2026-07-31 16:30:57",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "TSLA",
-      "shares": 148,
-      "price": 309.174392,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "84b7099c-1742-44e3-99c0-0f05d9fdc80d",
-      "date": "2026-07-31",
-      "time": "2026-07-31 16:33:11",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "TSLA",
-      "shares": 139,
-      "price": 309.24,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "821762ba-f945-4444-9c8f-bb38e5edd342",
-      "date": "2026-07-31",
-      "time": "2026-07-31 16:33:12",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "MSFT",
-      "shares": 10,
-      "price": 464.15,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "597ca0f6-6103-4dc3-8b26-dfb19234e1cc",
-      "date": "2026-07-31",
-      "time": "2026-07-31 16:33:12",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "NVDA",
-      "shares": 218,
-      "price": 198.064954,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "49fe2150-83dd-415b-947c-aa6d17e9d64f",
-      "date": "2026-07-31",
-      "time": "2026-07-31 16:33:12",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "TSLA",
-      "shares": 139,
-      "price": 309.24036,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "64beb98a-95e2-4bb6-8e9d-d40b7f898657",
-      "date": "2026-07-31",
-      "time": "2026-07-31 16:33:13",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "MSFT",
-      "shares": 10,
-      "price": 464.15,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "c1555778-567b-4c47-a328-a2d37ba07f4c",
-      "date": "2026-07-31",
-      "time": "2026-07-31 16:33:13",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "AAPL",
-      "shares": 144,
-      "price": 300.130486,
-      "pnl": -143.92,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "73076234-bc86-48ca-9a4a-05f955229f34",
-      "date": "2026-07-31",
-      "time": "2026-07-31 16:33:13",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "NVDA",
-      "shares": 218,
-      "price": 198.059083,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "95d038b6-874f-4194-9919-6ccd67f740bf",
-      "date": "2026-07-31",
-      "time": "2026-07-31 16:36:03",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "MSFT",
-      "shares": 20,
-      "price": 462.65,
-      "pnl": 6.6,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "f5d1e798-f6e9-468d-b4bb-07be87d44c1a",
-      "date": "2026-07-31",
-      "time": "2026-07-31 16:36:36",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "MSFT",
-      "shares": 1,
-      "price": 462.82,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "79c392ab-661d-47af-b151-0632e82c5d3d",
-      "date": "2026-07-31",
-      "time": "2026-07-31 16:37:11",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "PLTR",
-      "shares": 1,
-      "price": 122.41,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:58:23",
-      "action": "BUY",
-      "action_cn": "BUY",
-      "ticker": "AMD",
-      "shares": 83,
-      "price": 490.41,
-      "pnl": 0.0,
-      "reason": "[Bullish-Cross] EMA 9/21 Golden Cross formed."
-    },
-    {
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:01:13",
+      "time": "2026-07-31 09:57:58",
       "action": "SHORT",
       "action_cn": "SHORT",
       "ticker": "AAPL",
       "shares": 142,
-      "price": 300.9401,
-      "pnl": 0.0,
-      "reason": "[Bearish-VWAP] Price dropped below VWAP ($302.75)."
-    },
-    {
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:01:47",
-      "action": "SHORT",
-      "action_cn": "SHORT",
-      "ticker": "AAPL",
-      "shares": 142,
-      "price": 300.9401,
-      "pnl": 0.0,
-      "reason": "[Bearish-VWAP] Price dropped below VWAP ($302.75)."
-    },
-    {
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:02:20",
-      "action": "BUY",
-      "action_cn": "BUY",
-      "ticker": "AAPL",
-      "shares": 1,
-      "price": 301.165,
-      "pnl": 0.0,
-      "reason": "[Bullish-Cross] EMA 9/21 Golden Cross formed."
-    },
-    {
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:07:53",
-      "action": "SELL",
-      "action_cn": "SELL",
-      "ticker": "NVDA",
-      "shares": 213,
-      "price": 198.235,
-      "pnl": 1.12,
-      "reason": "[Long-TrailingStop] Price pulled back from peak $198.59 to trigger stop $198.25."
-    },
-    {
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:07:55",
-      "action": "SHORT",
-      "action_cn": "SHORT",
-      "ticker": "AMD",
-      "shares": 87,
-      "price": 488.84,
+      "price": 300.4599,
       "pnl": 0.0,
       "reason": "[Bearish-Cross] EMA 9/21 Death Cross formed."
     },
     {
       "date": "2026-07-31",
-      "time": "2026-07-31 13:09:33",
-      "action": "BUY",
-      "action_cn": "BUY",
-      "ticker": "TSLA",
-      "shares": 137,
-      "price": 310.185,
-      "pnl": 0.0,
-      "reason": "[Bullish-VWAP] Price holding above VWAP ($307.73)."
+      "time": "2026-07-31 09:57:59",
+      "action": "COVER",
+      "action_cn": "COVER",
+      "ticker": "AMD",
+      "shares": 176,
+      "price": 490.41,
+      "pnl": -258.18,
+      "reason": "[Short-Reversal] EMA Golden Cross and reclaimed VWAP."
     },
     {
       "date": "2026-07-31",
-      "time": "2026-07-31 13:12:21",
+      "time": "2026-07-31 10:01:58",
+      "action": "COVER",
+      "action_cn": "COVER",
+      "ticker": "AAPL",
+      "shares": 142,
+      "price": 301.165,
+      "pnl": 7.81,
+      "reason": "[Short-Reversal] EMA Golden Cross and reclaimed VWAP."
+    },
+    {
+      "date": "2026-07-31",
+      "time": "2026-07-31 10:08:05",
+      "action": "BUY",
+      "action_cn": "BUY",
+      "ticker": "NVDA",
+      "shares": 215,
+      "price": 198.235,
+      "pnl": 0.0,
+      "reason": "[Bullish-VWAP] Price holding above VWAP ($197.43)."
+    },
+    {
+      "date": "2026-07-31",
+      "time": "2026-07-31 10:08:08",
+      "action": "SHORT",
+      "action_cn": "SHORT",
+      "ticker": "PLTR",
+      "shares": 350,
+      "price": 122.09,
+      "pnl": 0.0,
+      "reason": "[Bearish-Support] Price broke below pre-market/yesterday support."
+    },
+    {
+      "date": "2026-07-31",
+      "time": "2026-07-31 10:10:20",
+      "action": "SELL",
+      "action_cn": "SELL",
+      "ticker": "TSLA",
+      "shares": 137,
+      "price": 309.963,
+      "pnl": 8.63,
+      "reason": "[Long-TrailingStop] Price pulled back from peak $310.77 to trigger stop $310.01."
+    },
+    {
+      "date": "2026-07-31",
+      "time": "2026-07-31 10:12:35",
       "action": "SHORT",
       "action_cn": "SHORT",
       "ticker": "AMD",
@@ -3280,161 +2765,249 @@
     },
     {
       "date": "2026-07-31",
-      "time": "2026-07-31 13:12:54",
-      "action": "COVER",
-      "action_cn": "COVER",
+      "time": "2026-07-31 10:13:08",
+      "action": "BUY",
+      "action_cn": "BUY",
       "ticker": "AMD",
-      "shares": 87,
+      "shares": 1,
       "price": 489.97,
-      "pnl": 26.1,
-      "reason": "[Short-Reversal] EMA Golden Cross and reclaimed VWAP."
+      "pnl": 0.0,
+      "reason": "[Bullish-Cross] EMA 9/21 Golden Cross formed."
     },
     {
       "date": "2026-07-31",
-      "time": "2026-07-31 13:17:57",
-      "action": "BUY",
-      "action_cn": "BUY",
+      "time": "2026-07-31 10:18:12",
+      "action": "SELL",
+      "action_cn": "SELL",
       "ticker": "PLTR",
       "shares": 1,
       "price": 122.26,
-      "pnl": 0.0,
-      "reason": "[Bullish-VWAP] Price holding above VWAP ($121.36)."
+      "pnl": -0.03,
+      "reason": "[Long-TrailingStop] Price pulled back from peak $122.56 to trigger stop $122.27."
     },
     {
       "date": "2026-07-31",
-      "time": "2026-07-31 13:27:23",
+      "time": "2026-07-31 10:22:04",
       "action": "SHORT",
       "action_cn": "SHORT",
       "ticker": "CRWV",
       "shares": 592,
-      "price": 72.03,
+      "price": 71.92,
       "pnl": 0.0,
-      "reason": "[Bearish-VWAP] Price dropped below VWAP ($73.14)."
+      "reason": "[Bearish-Cross] EMA 9/21 Death Cross formed."
     },
     {
       "date": "2026-07-31",
-      "time": "2026-07-31 13:32:56",
-      "action": "SELL",
-      "action_cn": "SELL",
+      "time": "2026-07-31 10:22:35",
+      "action": "BUY",
+      "action_cn": "BUY",
+      "ticker": "TSLA",
+      "shares": 137,
+      "price": 310.1775,
+      "pnl": 0.0,
+      "reason": "[Bullish-VWAP] Price holding above VWAP ($307.79)."
+    },
+    {
+      "date": "2026-07-31",
+      "time": "2026-07-31 10:30:56",
+      "action": "BUY",
+      "action_cn": "BUY",
+      "ticker": "TSLA",
+      "shares": 137,
+      "price": 310.185,
+      "pnl": 0.0,
+      "reason": "[Bullish-VWAP] Price holding above VWAP ($307.84)."
+    },
+    {
+      "date": "2026-07-31",
+      "time": "2026-07-31 10:32:05",
+      "action": "SHORT",
+      "action_cn": "SHORT",
+      "ticker": "AAPL",
+      "shares": 141,
+      "price": 301.475,
+      "pnl": 0.0,
+      "reason": "[Bearish-VWAP] Price dropped below VWAP ($302.69)."
+    },
+    {
+      "date": "2026-07-31",
+      "time": "2026-07-31 10:32:39",
+      "action": "BUY",
+      "action_cn": "BUY",
+      "ticker": "TSLA",
+      "shares": 137,
+      "price": 310.31,
+      "pnl": 0.0,
+      "reason": "[Bullish-VWAP] Price holding above VWAP ($307.84)."
+    },
+    {
+      "date": "2026-07-31",
+      "time": "2026-07-31 10:33:13",
+      "action": "SHORT",
+      "action_cn": "SHORT",
       "ticker": "TSLA",
       "shares": 137,
       "price": 310.0744,
-      "pnl": -20.19,
-      "reason": "[Long-TrailingStop] Price pulled back from peak $310.82 to trigger stop $310.12."
+      "pnl": 0.0,
+      "reason": "[Bearish-Cross] EMA 9/21 Death Cross formed."
     },
     {
       "date": "2026-07-31",
-      "time": "2026-07-31 13:34:03",
-      "action": "COVER",
-      "action_cn": "COVER",
+      "time": "2026-07-31 10:33:48",
+      "action": "SHORT",
+      "action_cn": "SHORT",
       "ticker": "AAPL",
       "shares": 141,
-      "price": 301.488,
-      "pnl": -1.13,
-      "reason": "[Short-Reversal] EMA Golden Cross and reclaimed VWAP."
+      "price": 301.2501,
+      "pnl": 0.0,
+      "reason": "[Bearish-VWAP] Price dropped below VWAP ($302.69)."
     },
     {
       "date": "2026-07-31",
-      "time": "2026-07-31 13:34:05",
-      "action": "COVER",
-      "action_cn": "COVER",
+      "time": "2026-07-31 10:33:50",
+      "action": "SHORT",
+      "action_cn": "SHORT",
       "ticker": "CRWV",
       "shares": 591,
-      "price": 72.17,
-      "pnl": -17.73,
-      "reason": "[Short-Reversal] EMA Golden Cross and reclaimed VWAP."
+      "price": 72.05,
+      "pnl": 0.0,
+      "reason": "[Bearish-VWAP] Price dropped below VWAP ($73.13)."
     },
     {
       "date": "2026-07-31",
-      "time": "2026-07-31 13:37:24",
+      "time": "2026-07-31 10:34:21",
+      "action": "BUY",
+      "action_cn": "BUY",
+      "ticker": "AAPL",
+      "shares": 135,
+      "price": 301.488,
+      "pnl": 0.0,
+      "reason": "[Bullish-Cross] EMA 9/21 Golden Cross formed."
+    },
+    {
+      "date": "2026-07-31",
+      "time": "2026-07-31 10:34:23",
+      "action": "BUY",
+      "action_cn": "BUY",
+      "ticker": "CRWV",
+      "shares": 30,
+      "price": 72.17,
+      "pnl": 0.0,
+      "reason": "[Bullish-Cross] EMA 9/21 Golden Cross formed."
+    },
+    {
+      "date": "2026-07-31",
+      "time": "2026-07-31 10:37:08",
       "action": "SELL",
       "action_cn": "SELL",
       "ticker": "MSFT",
       "shares": 1,
       "price": 462.4425,
-      "pnl": -0.01,
+      "pnl": -0.13,
       "reason": "[Long-TrailingStop] Price pulled back from peak $463.65 to trigger stop $462.67."
     },
     {
       "date": "2026-07-31",
-      "time": "2026-07-31 13:37:26",
+      "time": "2026-07-31 10:37:10",
       "action": "SELL",
       "action_cn": "SELL",
       "ticker": "PLTR",
       "shares": 1,
       "price": 122.666,
-      "pnl": 0.01,
+      "pnl": 0.34,
       "reason": "[Long-TrailingStop] Price pulled back from peak $123.03 to trigger stop $122.70."
     },
     {
       "date": "2026-07-31",
-      "time": "2026-07-31 13:39:04",
-      "action": "SELL",
-      "action_cn": "SELL",
-      "ticker": "NVDA",
-      "shares": 215,
-      "price": 199.525,
-      "pnl": 258.12,
-      "reason": "[Long-TrailingStop] Price pulled back from peak $199.92 to trigger stop $199.56."
+      "time": "2026-07-31 10:37:42",
+      "action": "BUY",
+      "action_cn": "BUY",
+      "ticker": "MSFT",
+      "shares": 1,
+      "price": 462.4425,
+      "pnl": 0.0,
+      "reason": "[Bullish-VWAP] Price holding above VWAP ($458.40)."
     },
     {
       "date": "2026-07-31",
-      "time": "2026-07-31 13:39:05",
+      "time": "2026-07-31 10:37:44",
+      "action": "BUY",
+      "action_cn": "BUY",
+      "ticker": "PLTR",
+      "shares": 1,
+      "price": 122.666,
+      "pnl": 0.0,
+      "reason": "[Bullish-VWAP] Price holding above VWAP ($121.42)."
+    },
+    {
+      "date": "2026-07-31",
+      "time": "2026-07-31 10:39:22",
+      "action": "BUY",
+      "action_cn": "BUY",
+      "ticker": "NVDA",
+      "shares": 3,
+      "price": 199.525,
+      "pnl": 0.0,
+      "reason": "[Bullish-VWAP] Price holding above VWAP ($197.56)."
+    },
+    {
+      "date": "2026-07-31",
+      "time": "2026-07-31 10:39:23",
+      "action": "SHORT",
+      "action_cn": "SHORT",
+      "ticker": "MSFT",
+      "shares": 92,
+      "price": 462.4895,
+      "pnl": 0.0,
+      "reason": "[Bearish-Cross] EMA 9/21 Death Cross formed."
+    },
+    {
+      "date": "2026-07-31",
+      "time": "2026-07-31 10:39:55",
       "action": "SELL",
       "action_cn": "SELL",
-      "ticker": "MSFT",
+      "ticker": "TSLA",
       "shares": 1,
-      "price": 462.4895,
-      "pnl": 0.18,
+      "price": 310.08,
+      "pnl": -0.5,
       "reason": "[Long-Reversal] EMA Death Cross and below VWAP."
     },
     {
       "date": "2026-07-31",
-      "time": "2026-07-31 13:40:11",
-      "action": "SHORT",
-      "action_cn": "SHORT",
-      "ticker": "TSLA",
-      "shares": 137,
-      "price": 310.08,
-      "pnl": 0.0,
-      "reason": "[Bearish-Cross] EMA 9/21 Death Cross formed."
-    },
-    {
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:40:14",
-      "action": "BUY",
-      "action_cn": "BUY",
-      "ticker": "PLTR",
-      "shares": 348,
-      "price": 122.46,
-      "pnl": 0.0,
-      "reason": "[Bullish-VWAP] Price holding above VWAP ($121.43)."
-    },
-    {
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:40:48",
-      "action": "BUY",
-      "action_cn": "BUY",
-      "ticker": "PLTR",
-      "shares": 348,
-      "price": 122.46,
-      "pnl": 0.0,
-      "reason": "[Bullish-VWAP] Price holding above VWAP ($121.43)."
-    },
-    {
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:41:21",
-      "action": "SHORT",
-      "action_cn": "SHORT",
+      "time": "2026-07-31 10:41:05",
+      "action": "SELL",
+      "action_cn": "SELL",
       "ticker": "PLTR",
       "shares": 348,
       "price": 122.57,
+      "pnl": -3.48,
+      "reason": "[Long-Reversal] EMA Death Cross and below VWAP."
+    },
+    {
+      "date": "2026-07-31",
+      "time": "2026-07-31 10:46:04",
+      "action": "SHORT",
+      "action_cn": "SHORT",
+      "ticker": "AAPL",
+      "shares": 142,
+      "price": 301.21,
       "pnl": 0.0,
       "reason": "[Bearish-Cross] EMA 9/21 Death Cross formed."
     },
     {
       "date": "2026-07-31",
-      "time": "2026-07-31 13:49:09",
+      "time": "2026-07-31 10:48:53",
+      "action": "SELL",
+      "action_cn": "SELL",
+      "ticker": "SNDK",
+      "shares": 31,
+      "price": 1260.38,
+      "pnl": 340.88,
+      "reason": "[Long-TrailingStop] Price pulled back from peak $1270.95 to trigger stop $1260.68."
+    },
+    {
+      "date": "2026-07-31",
+      "time": "2026-07-31 10:49:25",
       "action": "BUY",
       "action_cn": "BUY",
       "ticker": "NVDA",
@@ -3445,47 +3018,25 @@
     },
     {
       "date": "2026-07-31",
-      "time": "2026-07-31 13:54:47",
+      "time": "2026-07-31 11:06:24",
       "action": "BUY",
       "action_cn": "BUY",
       "ticker": "TSLA",
       "shares": 137,
-      "price": 311.195,
+      "price": 311.12,
       "pnl": 0.0,
-      "reason": "[Bullish-VWAP] Price holding above VWAP ($307.94)."
+      "reason": "[Bullish-VWAP] Price holding above VWAP ($308.00)."
     },
     {
       "date": "2026-07-31",
-      "time": "2026-07-31 13:54:48",
+      "time": "2026-07-31 11:06:25",
       "action": "BUY",
       "action_cn": "BUY",
       "ticker": "NVDA",
       "shares": 214,
-      "price": 199.42,
+      "price": 199.49,
       "pnl": 0.0,
-      "reason": "[Bullish-VWAP] Price holding above VWAP ($197.62)."
-    },
-    {
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:54:49",
-      "action": "SHORT",
-      "action_cn": "SHORT",
-      "ticker": "AAPL",
-      "shares": 142,
-      "price": 300.615,
-      "pnl": 0.0,
-      "reason": "[Bearish-VWAP] Price dropped below VWAP ($302.59)."
-    },
-    {
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:54:50",
-      "action": "SHORT",
-      "action_cn": "SHORT",
-      "ticker": "AMD",
-      "shares": 87,
-      "price": 490.27,
-      "pnl": 0.0,
-      "reason": "[Bearish-VWAP] Price dropped below VWAP ($494.75)."
+      "reason": "[Bullish-VWAP] Price holding above VWAP ($197.66)."
     }
   ],
   "action_logs": [
@@ -3495,40 +3046,57 @@
     "[2026-07-31 09:33:04] 🟢 [MSFT] BUY × 10 shs @ $464.15 | [Bullish-VWAP] Price holding above VWAP ($457.76).",
     "[2026-07-31 09:35:54] 🔴 [MSFT] SELL × 20 shs @ $462.74 | PnL: -28.10 USD | [Long-TrailingStop] Price pulled back from peak $464.15 to trigger stop $462.81.",
     "[2026-07-31 09:36:28] 🟢 [MSFT] BUY × 1 shs @ $462.74 | [Bullish-VWAP] Price holding above VWAP ($457.81).",
-    "[2026-07-31 09:37:03] 🟢 [PLTR] BUY × 1 shs @ $122.38 | [Bullish-VWAP] Price holding above VWAP ($121.28).",
-    "[2026-07-31 09:39:57] 🟢 [PLTR] BUY × 77 shs @ $122.47 | [Bullish-VWAP] Price holding above VWAP ($121.28).",
-    "[2026-07-31 09:41:06] 🟢 [PLTR] BUY × 17 shs @ $122.51 | [Bullish-VWAP] Price holding above VWAP ($121.28).",
-    "[2026-07-31 09:52:25] 🟢 [AAPL] BUY × 1 shs @ $301.08 | [Bullish-Cross] EMA 9/21 Golden Cross formed.",
-    "[2026-07-31 09:52:26] 🟢 [MSFT] BUY × 1 shs @ $462.81 | [Bullish-VWAP] Price holding above VWAP ($457.99).",
-    "[2026-07-31 09:52:59] 🔻 [MSFT] SHORT × 93 shs @ $462.68 | [Bearish-Cross] EMA 9/21 Death Cross formed.",
-    "[2026-07-31 09:53:01] 🔴 [PLTR] SELL × 49 shs @ $122.31 | PnL: -11.02 USD | [Long-TrailingStop] Price pulled back from peak $122.54 to trigger stop $122.32.",
-    "[2026-07-31 09:55:46] 🔻 [AMD] SHORT × 88 shs @ $488.65 | [Bearish-VWAP] Price dropped below VWAP ($495.29).",
-    "[2026-07-31 12:58:23] 🟢 [AMD] BUY × 83 shs @ $490.41 | [Bullish-Cross] EMA 9/21 Golden Cross formed.",
-    "[2026-07-31 13:01:13] 🔻 [AAPL] SHORT × 142 shs @ $300.94 | [Bearish-VWAP] Price dropped below VWAP ($302.75).",
-    "[2026-07-31 13:01:47] 🔻 [AAPL] SHORT × 142 shs @ $300.94 | [Bearish-VWAP] Price dropped below VWAP ($302.75).",
-    "[2026-07-31 13:02:20] 🟢 [AAPL] BUY × 1 shs @ $301.17 | [Bullish-Cross] EMA 9/21 Golden Cross formed.",
-    "[2026-07-31 13:07:53] 🔴 [NVDA] SELL × 213 shs @ $198.24 | PnL: +1.12 USD | [Long-TrailingStop] Price pulled back from peak $198.59 to trigger stop $198.25.",
-    "[2026-07-31 13:07:55] 🔻 [AMD] SHORT × 87 shs @ $488.84 | [Bearish-Cross] EMA 9/21 Death Cross formed.",
-    "[2026-07-31 13:09:33] 🟢 [TSLA] BUY × 137 shs @ $310.18 | [Bullish-VWAP] Price holding above VWAP ($307.73).",
-    "[2026-07-31 13:12:21] 🔻 [AMD] SHORT × 87 shs @ $489.75 | [Bearish-VWAP] Price dropped below VWAP ($495.08).",
-    "[2026-07-31 13:12:54] 🔼 [AMD] COVER × 87 shs @ $489.97 | PnL: +26.10 USD | [Short-Reversal] EMA Golden Cross and reclaimed VWAP.",
-    "[2026-07-31 13:17:57] 🟢 [PLTR] BUY × 1 shs @ $122.26 | [Bullish-VWAP] Price holding above VWAP ($121.36).",
-    "[2026-07-31 13:27:23] 🔻 [CRWV] SHORT × 592 shs @ $72.03 | [Bearish-VWAP] Price dropped below VWAP ($73.14).",
-    "[2026-07-31 13:32:56] 🔴 [TSLA] SELL × 137 shs @ $310.07 | PnL: -20.19 USD | [Long-TrailingStop] Price pulled back from peak $310.82 to trigger stop $310.12.",
-    "[2026-07-31 13:34:03] 🔼 [AAPL] COVER × 141 shs @ $301.49 | PnL: -1.13 USD | [Short-Reversal] EMA Golden Cross and reclaimed VWAP.",
-    "[2026-07-31 13:34:05] 🔼 [CRWV] COVER × 591 shs @ $72.17 | PnL: -17.73 USD | [Short-Reversal] EMA Golden Cross and reclaimed VWAP.",
-    "[2026-07-31 13:37:24] 🔴 [MSFT] SELL × 1 shs @ $462.44 | PnL: -0.01 USD | [Long-TrailingStop] Price pulled back from peak $463.65 to trigger stop $462.67.",
-    "[2026-07-31 13:37:26] 🔴 [PLTR] SELL × 1 shs @ $122.67 | PnL: +0.01 USD | [Long-TrailingStop] Price pulled back from peak $123.03 to trigger stop $122.70.",
-    "[2026-07-31 13:39:04] 🔴 [NVDA] SELL × 215 shs @ $199.52 | PnL: +258.12 USD | [Long-TrailingStop] Price pulled back from peak $199.92 to trigger stop $199.56.",
-    "[2026-07-31 13:39:05] 🔴 [MSFT] SELL × 1 shs @ $462.49 | PnL: +0.18 USD | [Long-Reversal] EMA Death Cross and below VWAP.",
-    "[2026-07-31 13:40:11] 🔻 [TSLA] SHORT × 137 shs @ $310.08 | [Bearish-Cross] EMA 9/21 Death Cross formed.",
-    "[2026-07-31 13:40:14] 🟢 [PLTR] BUY × 348 shs @ $122.46 | [Bullish-VWAP] Price holding above VWAP ($121.43).",
-    "[2026-07-31 13:40:48] 🟢 [PLTR] BUY × 348 shs @ $122.46 | [Bullish-VWAP] Price holding above VWAP ($121.43).",
-    "[2026-07-31 13:41:21] 🔻 [PLTR] SHORT × 348 shs @ $122.57 | [Bearish-Cross] EMA 9/21 Death Cross formed.",
-    "[2026-07-31 13:49:09] 🟢 [NVDA] BUY × 214 shs @ $199.12 | [Bullish-VWAP] Price holding above VWAP ($197.60).",
-    "[2026-07-31 13:54:47] 🟢 [TSLA] BUY × 137 shs @ $311.20 | [Bullish-VWAP] Price holding above VWAP ($307.94).",
-    "[2026-07-31 13:54:48] 🟢 [NVDA] BUY × 214 shs @ $199.42 | [Bullish-VWAP] Price holding above VWAP ($197.62).",
-    "[2026-07-31 13:54:49] 🔻 [AAPL] SHORT × 142 shs @ $300.61 | [Bearish-VWAP] Price dropped below VWAP ($302.59).",
-    "[2026-07-31 13:54:50] 🔻 [AMD] SHORT × 87 shs @ $490.27 | [Bearish-VWAP] Price dropped below VWAP ($494.75)."
+    "[2026-07-31 09:39:18] 🔴 [MSFT] SELL × 1 shs @ $462.77 | PnL: -0.05 USD | [Long-Reversal] EMA Death Cross and below VWAP.",
+    "[2026-07-31 09:39:51] 🟢 [TSLA] BUY × 139 shs @ $309.45 | [Bullish-VWAP] Price holding above VWAP ($307.54).",
+    "[2026-07-31 09:39:51] 🟢 [NVDA] BUY × 218 shs @ $197.88 | [Bullish-VWAP] Price holding above VWAP ($197.38).",
+    "[2026-07-31 09:39:52] 🔻 [AAPL] SHORT × 143 shs @ $300.55 | [Bearish-VWAP] Price dropped below VWAP ($302.84).",
+    "[2026-07-31 09:39:54] 🟢 [PLTR] BUY × 271 shs @ $122.47 | [Bullish-VWAP] Price holding above VWAP ($121.28).",
+    "[2026-07-31 09:40:58] 🟢 [TSLA] BUY × 139 shs @ $309.71 | [Bullish-VWAP] Price holding above VWAP ($307.55).",
+    "[2026-07-31 09:40:59] 🟢 [NVDA] BUY × 218 shs @ $197.94 | [Bullish-VWAP] Price holding above VWAP ($197.38).",
+    "[2026-07-31 09:41:00] 🔻 [AAPL] SHORT × 143 shs @ $300.89 | [Bearish-VWAP] Price dropped below VWAP ($302.83).",
+    "[2026-07-31 09:41:02] 🟢 [PLTR] BUY × 334 shs @ $122.51 | [Bullish-VWAP] Price holding above VWAP ($121.28).",
+    "[2026-07-31 09:43:17] 🔻 [AMD] SHORT × 88 shs @ $488.72 | [Bearish-Cross] EMA 9/21 Death Cross formed.",
+    "[2026-07-31 09:44:57] 🟢 [MSFT] BUY × 88 shs @ $463.54 | [Bullish-Cross] EMA 9/21 Golden Cross formed.",
+    "[2026-07-31 09:51:13] 🟢 [SNDK] BUY × 1 shs @ $1240.26 | [Bullish-Cross] EMA 9/21 Golden Cross formed.",
+    "[2026-07-31 09:51:14] 🟢 [MU] BUY × 1 shs @ $835.79 | [Bullish-Cross] EMA 9/21 Golden Cross formed.",
+    "[2026-07-31 09:52:20] 🔼 [AAPL] COVER × 143 shs @ $301.08 | PnL: -55.77 USD | [Short-Reversal] EMA Golden Cross and reclaimed VWAP.",
+    "[2026-07-31 09:52:20] 🔴 [MSFT] SELL × 88 shs @ $462.81 | PnL: -66.00 USD | [Long-TrailingStop] Price pulled back from peak $463.99 to trigger stop $462.89.",
+    "[2026-07-31 09:52:54] 🔴 [MSFT] SELL × 1 shs @ $462.68 | PnL: -0.16 USD | [Long-Reversal] EMA Death Cross and below VWAP.",
+    "[2026-07-31 09:52:56] 🔴 [PLTR] SELL × 351 shs @ $122.31 | PnL: -78.97 USD | [Long-TrailingStop] Price pulled back from peak $122.54 to trigger stop $122.32.",
+    "[2026-07-31 09:55:42] 🟢 [TSLA] BUY × 139 shs @ $309.76 | [Bullish-VWAP] Price holding above VWAP ($307.65).",
+    "[2026-07-31 09:55:42] 🟢 [NVDA] BUY × 213 shs @ $198.12 | [Bullish-VWAP] Price holding above VWAP ($197.40).",
+    "[2026-07-31 09:55:44] 🔻 [AMD] SHORT × 88 shs @ $488.65 | [Bearish-VWAP] Price dropped below VWAP ($495.29).",
+    "[2026-07-31 09:57:58] 🔻 [AAPL] SHORT × 142 shs @ $300.46 | [Bearish-Cross] EMA 9/21 Death Cross formed.",
+    "[2026-07-31 09:57:59] 🔼 [AMD] COVER × 176 shs @ $490.41 | PnL: -258.18 USD | [Short-Reversal] EMA Golden Cross and reclaimed VWAP.",
+    "[2026-07-31 10:01:58] 🔼 [AAPL] COVER × 142 shs @ $301.17 | PnL: +7.81 USD | [Short-Reversal] EMA Golden Cross and reclaimed VWAP.",
+    "[2026-07-31 10:08:05] 🟢 [NVDA] BUY × 215 shs @ $198.24 | [Bullish-VWAP] Price holding above VWAP ($197.43).",
+    "[2026-07-31 10:08:08] 🔻 [PLTR] SHORT × 350 shs @ $122.09 | [Bearish-Support] Price broke below pre-market/yesterday support.",
+    "[2026-07-31 10:10:20] 🔴 [TSLA] SELL × 137 shs @ $309.96 | PnL: +8.63 USD | [Long-TrailingStop] Price pulled back from peak $310.77 to trigger stop $310.01.",
+    "[2026-07-31 10:12:35] 🔻 [AMD] SHORT × 87 shs @ $489.75 | [Bearish-VWAP] Price dropped below VWAP ($495.08).",
+    "[2026-07-31 10:13:08] 🟢 [AMD] BUY × 1 shs @ $489.97 | [Bullish-Cross] EMA 9/21 Golden Cross formed.",
+    "[2026-07-31 10:18:12] 🔴 [PLTR] SELL × 1 shs @ $122.26 | PnL: -0.03 USD | [Long-TrailingStop] Price pulled back from peak $122.56 to trigger stop $122.27.",
+    "[2026-07-31 10:22:04] 🔻 [CRWV] SHORT × 592 shs @ $71.92 | [Bearish-Cross] EMA 9/21 Death Cross formed.",
+    "[2026-07-31 10:22:35] 🟢 [TSLA] BUY × 137 shs @ $310.18 | [Bullish-VWAP] Price holding above VWAP ($307.79).",
+    "[2026-07-31 10:30:56] 🟢 [TSLA] BUY × 137 shs @ $310.18 | [Bullish-VWAP] Price holding above VWAP ($307.84).",
+    "[2026-07-31 10:32:05] 🔻 [AAPL] SHORT × 141 shs @ $301.48 | [Bearish-VWAP] Price dropped below VWAP ($302.69).",
+    "[2026-07-31 10:32:39] 🟢 [TSLA] BUY × 137 shs @ $310.31 | [Bullish-VWAP] Price holding above VWAP ($307.84).",
+    "[2026-07-31 10:33:13] 🔻 [TSLA] SHORT × 137 shs @ $310.07 | [Bearish-Cross] EMA 9/21 Death Cross formed.",
+    "[2026-07-31 10:33:48] 🔻 [AAPL] SHORT × 141 shs @ $301.25 | [Bearish-VWAP] Price dropped below VWAP ($302.69).",
+    "[2026-07-31 10:33:50] 🔻 [CRWV] SHORT × 591 shs @ $72.05 | [Bearish-VWAP] Price dropped below VWAP ($73.13).",
+    "[2026-07-31 10:34:21] 🟢 [AAPL] BUY × 135 shs @ $301.49 | [Bullish-Cross] EMA 9/21 Golden Cross formed.",
+    "[2026-07-31 10:34:23] 🟢 [CRWV] BUY × 30 shs @ $72.17 | [Bullish-Cross] EMA 9/21 Golden Cross formed.",
+    "[2026-07-31 10:37:08] 🔴 [MSFT] SELL × 1 shs @ $462.44 | PnL: -0.13 USD | [Long-TrailingStop] Price pulled back from peak $463.65 to trigger stop $462.67.",
+    "[2026-07-31 10:37:10] 🔴 [PLTR] SELL × 1 shs @ $122.67 | PnL: +0.34 USD | [Long-TrailingStop] Price pulled back from peak $123.03 to trigger stop $122.70.",
+    "[2026-07-31 10:37:42] 🟢 [MSFT] BUY × 1 shs @ $462.44 | [Bullish-VWAP] Price holding above VWAP ($458.40).",
+    "[2026-07-31 10:37:44] 🟢 [PLTR] BUY × 1 shs @ $122.67 | [Bullish-VWAP] Price holding above VWAP ($121.42).",
+    "[2026-07-31 10:39:22] 🟢 [NVDA] BUY × 3 shs @ $199.52 | [Bullish-VWAP] Price holding above VWAP ($197.56).",
+    "[2026-07-31 10:39:23] 🔻 [MSFT] SHORT × 92 shs @ $462.49 | [Bearish-Cross] EMA 9/21 Death Cross formed.",
+    "[2026-07-31 10:39:55] 🔴 [TSLA] SELL × 1 shs @ $310.08 | PnL: -0.50 USD | [Long-Reversal] EMA Death Cross and below VWAP.",
+    "[2026-07-31 10:41:05] 🔴 [PLTR] SELL × 348 shs @ $122.57 | PnL: -3.48 USD | [Long-Reversal] EMA Death Cross and below VWAP.",
+    "[2026-07-31 10:46:04] 🔻 [AAPL] SHORT × 142 shs @ $301.21 | [Bearish-Cross] EMA 9/21 Death Cross formed.",
+    "[2026-07-31 10:48:53] 🔴 [SNDK] SELL × 31 shs @ $1260.38 | PnL: +340.88 USD | [Long-TrailingStop] Price pulled back from peak $1270.95 to trigger stop $1260.68.",
+    "[2026-07-31 10:49:25] 🟢 [NVDA] BUY × 214 shs @ $199.12 | [Bullish-VWAP] Price holding above VWAP ($197.60).",
+    "[2026-07-31 11:06:24] 🟢 [TSLA] BUY × 137 shs @ $311.12 | [Bullish-VWAP] Price holding above VWAP ($308.00).",
+    "[2026-07-31 11:06:25] 🟢 [NVDA] BUY × 214 shs @ $199.49 | [Bullish-VWAP] Price holding above VWAP ($197.66)."
   ]
 }
