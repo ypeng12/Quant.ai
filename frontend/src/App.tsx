@@ -155,7 +155,7 @@ function App() {
         if (Array.isArray(parsed) && parsed.length > 0) return parsed;
       } catch (e) {}
     }
-    return ["NVDA", "PLTR", "SNDK", "TSLA", "AMD", "MSFT", "AAPL", "MU"];
+    return ["NVDA", "SNDK", "TSLA", "AMD", "MSFT", "MU"];
   });
   const [newTickerInput, setNewTickerInput] = useState<string>('');
   
@@ -557,7 +557,7 @@ function App() {
     }
   };
 
-  const DEFAULT_WATCHLIST_STOCKS = ["NVDA", "PLTR", "SNDK", "TSLA", "AMD", "MSFT", "AAPL", "MU"];
+  const DEFAULT_WATCHLIST_STOCKS = ["NVDA", "SNDK", "TSLA", "AMD", "MSFT", "MU"];
 
   const handleResetDefaultWatchlist = () => {
     setWatchlist(DEFAULT_WATCHLIST_STOCKS);
