@@ -1850,6 +1850,14 @@ def sync_watchlist(payload: dict):
     return {"success": False, "error": "Invalid tickers array"}
 
 
+@app.post("/api/watchlist/reset")
+def reset_watchlist_endpoint():
+    from app.config import DEFAULT_WATCHLIST, save_watchlist
+    saved = save_watchlist(DEFAULT_WATCHLIST)
+    live_runner.update_tickers(saved)
+    return {"success": True, "watchlist": saved}
+
+
 # 静态文件托管（前端 React 构建产物）
 _backend_dir = os.path.dirname(os.path.abspath(__file__))
 _dist_dir = os.path.join(os.path.dirname(_backend_dir), "frontend", "dist")
