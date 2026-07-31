@@ -2883,6 +2883,116 @@
       "price": 301.488,
       "pnl": 0.0,
       "reason": "[Bullish-Cross] EMA 9/21 Golden Cross formed."
+    },
+    {
+      "date": "2026-07-31",
+      "time": "2026-07-31 10:34:23",
+      "action": "BUY",
+      "action_cn": "BUY",
+      "ticker": "CRWV",
+      "shares": 30,
+      "price": 72.17,
+      "pnl": 0.0,
+      "reason": "[Bullish-Cross] EMA 9/21 Golden Cross formed."
+    },
+    {
+      "date": "2026-07-31",
+      "time": "2026-07-31 10:37:08",
+      "action": "SELL",
+      "action_cn": "SELL",
+      "ticker": "MSFT",
+      "shares": 1,
+      "price": 462.4425,
+      "pnl": -0.13,
+      "reason": "[Long-TrailingStop] Price pulled back from peak $463.65 to trigger stop $462.67."
+    },
+    {
+      "date": "2026-07-31",
+      "time": "2026-07-31 10:37:10",
+      "action": "SELL",
+      "action_cn": "SELL",
+      "ticker": "PLTR",
+      "shares": 1,
+      "price": 122.666,
+      "pnl": 0.34,
+      "reason": "[Long-TrailingStop] Price pulled back from peak $123.03 to trigger stop $122.70."
+    },
+    {
+      "date": "2026-07-31",
+      "time": "2026-07-31 10:37:42",
+      "action": "BUY",
+      "action_cn": "BUY",
+      "ticker": "MSFT",
+      "shares": 1,
+      "price": 462.4425,
+      "pnl": 0.0,
+      "reason": "[Bullish-VWAP] Price holding above VWAP ($458.40)."
+    },
+    {
+      "date": "2026-07-31",
+      "time": "2026-07-31 10:37:44",
+      "action": "BUY",
+      "action_cn": "BUY",
+      "ticker": "PLTR",
+      "shares": 1,
+      "price": 122.666,
+      "pnl": 0.0,
+      "reason": "[Bullish-VWAP] Price holding above VWAP ($121.42)."
+    },
+    {
+      "date": "2026-07-31",
+      "time": "2026-07-31 10:39:22",
+      "action": "BUY",
+      "action_cn": "BUY",
+      "ticker": "NVDA",
+      "shares": 3,
+      "price": 199.525,
+      "pnl": 0.0,
+      "reason": "[Bullish-VWAP] Price holding above VWAP ($197.56)."
+    },
+    {
+      "date": "2026-07-31",
+      "time": "2026-07-31 10:39:23",
+      "action": "SHORT",
+      "action_cn": "SHORT",
+      "ticker": "MSFT",
+      "shares": 92,
+      "price": 462.4895,
+      "pnl": 0.0,
+      "reason": "[Bearish-Cross] EMA 9/21 Death Cross formed."
+    },
+    {
+      "date": "2026-07-31",
+      "time": "2026-07-31 10:39:55",
+      "action": "SELL",
+      "action_cn": "SELL",
+      "ticker": "TSLA",
+      "shares": 1,
+      "price": 310.08,
+      "pnl": -0.5,
+      "reason": "[Long-Reversal] EMA Death Cross and below VWAP."
+    },
+    {
+      "date": "2026-07-31",
+      "time": "2026-07-31 10:41:05",
+      "action": "SELL",
+      "action_cn": "SELL",
+      "ticker": "PLTR",
+      "shares": 348,
+      "price": 122.57,
+      "pnl": -3.48,
+      "reason": "[Long-Reversal] EMA Death Cross and below VWAP."
+    },
+    {
+      "date": "2026-07-31",
+      "time": "2026-07-31 10:46:04",
+      "action": "SHORT",
+      "action_cn": "SHORT",
+      "ticker": "AAPL",
+      "shares": 142,
+      "price": 301.21,
+      "pnl": 0.0,
+      "reason": "[Bearish-Cross] EMA 9/21 Death Cross formed."
     }
   ],
   "action_logs": [
@@ -2929,6 +3039,16 @@
     "[2026-07-31 10:33:13] 🔻 [TSLA] SHORT × 137 shs @ $310.07 | [Bearish-Cross] EMA 9/21 Death Cross formed.",
     "[2026-07-31 10:33:48] 🔻 [AAPL] SHORT × 141 shs @ $301.25 | [Bearish-VWAP] Price dropped below VWAP ($302.69).",
     "[2026-07-31 10:33:50] 🔻 [CRWV] SHORT × 591 shs @ $72.05 | [Bearish-VWAP] Price dropped below VWAP ($73.13).",
-    "[2026-07-31 10:34:21] 🟢 [AAPL] BUY × 135 shs @ $301.49 | [Bullish-Cross] EMA 9/21 Golden Cross formed."
+    "[2026-07-31 10:34:21] 🟢 [AAPL] BUY × 135 shs @ $301.49 | [Bullish-Cross] EMA 9/21 Golden Cross formed.",
+    "[2026-07-31 10:34:23] 🟢 [CRWV] BUY × 30 shs @ $72.17 | [Bullish-Cross] EMA 9/21 Golden Cross formed.",
+    "[2026-07-31 10:37:08] 🔴 [MSFT] SELL × 1 shs @ $462.44 | PnL: -0.13 USD | [Long-TrailingStop] Price pulled back from peak $463.65 to trigger stop $462.67.",
+    "[2026-07-31 10:37:10] 🔴 [PLTR] SELL × 1 shs @ $122.67 | PnL: +0.34 USD | [Long-TrailingStop] Price pulled back from peak $123.03 to trigger stop $122.70.",
+    "[2026-07-31 10:37:42] 🟢 [MSFT] BUY × 1 shs @ $462.44 | [Bullish-VWAP] Price holding above VWAP ($458.40).",
+    "[2026-07-31 10:37:44] 🟢 [PLTR] BUY × 1 shs @ $122.67 | [Bullish-VWAP] Price holding above VWAP ($121.42).",
+    "[2026-07-31 10:39:22] 🟢 [NVDA] BUY × 3 shs @ $199.52 | [Bullish-VWAP] Price holding above VWAP ($197.56).",
+    "[2026-07-31 10:39:23] 🔻 [MSFT] SHORT × 92 shs @ $462.49 | [Bearish-Cross] EMA 9/21 Death Cross formed.",
+    "[2026-07-31 10:39:55] 🔴 [TSLA] SELL × 1 shs @ $310.08 | PnL: -0.50 USD | [Long-Reversal] EMA Death Cross and below VWAP.",
+    "[2026-07-31 10:41:05] 🔴 [PLTR] SELL × 348 shs @ $122.57 | PnL: -3.48 USD | [Long-Reversal] EMA Death Cross and below VWAP.",
+    "[2026-07-31 10:46:04] 🔻 [AAPL] SHORT × 142 shs @ $301.21 | [Bearish-Cross] EMA 9/21 Death Cross formed."
   ]
 }

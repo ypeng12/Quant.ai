@@ -95,7 +95,7 @@ HOT_SECTORS = {
 
 # Persistent Watchlist File Path (backend/watchlist.json)
 WATCHLIST_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "watchlist.json")
-DEFAULT_WATCHLIST = ["TSLA", "NVDA", "AAPL", "MSFT", "AMD", "SNDK", "MU", "CRWV"]
+DEFAULT_WATCHLIST = ["NVDA", "PLTR", "SNDK", "CRCL", "TSLA", "AMD"]
 
 def load_watchlist() -> list:
     """拉取 Watchlist 优先级: 1) Alpaca 官方云端 Watchlist -> 2) 本地 watchlist.json -> 3) 默认 8 支股票"""
