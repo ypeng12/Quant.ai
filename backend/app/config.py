@@ -77,6 +77,22 @@ HOT_SECTORS = {
     }
 }
 
+# =========================================================================
+# 🎯 WATCHLIST & AI AGENT UNIVERSE ARCHITECTURE
+# -------------------------------------------------------------------------
+# 1. Single Source of Truth: Alpaca's Official Cloud Watchlist (PRIMARY_QUANT)
+#    is the SOLE universe monitored, analyzed, and traded by the AI Bot.
+# 2. Synchronized User Control: Any add, delete, clear, or preset action in UI
+#    instantly updates Alpaca Cloud Watchlist via REST API.
+# 3. Strategy Mode Presets: Different trading profiles (Sniper, Momentum, Tech)
+#    can recommend specialized stock pools that fill directly into Watchlist.
+# -------------------------------------------------------------------------
+# TODO: Future AI Stock Selector Module (AI Agent Screener)
+# In future releases, an autonomous AI Stock Selector agent will scan the US
+# market (RVOL, Gap %, Sentiment, Technical Breakouts, News Catalyst) and
+# dynamically recommend & inject high-beta tickers into Alpaca's Watchlist!
+# =========================================================================
+
 # Persistent Watchlist File Path (backend/watchlist.json)
 WATCHLIST_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "watchlist.json")
 DEFAULT_WATCHLIST = ["TSLA", "NVDA", "AAPL", "MSFT", "AMD", "SNDK", "MU", "CRWV"]
