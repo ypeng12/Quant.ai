@@ -82,7 +82,28 @@ WATCHLIST_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__
 DEFAULT_WATCHLIST = ["TSLA", "NVDA", "AAPL", "MSFT", "AMD", "SNDK", "MU", "CRWV"]
 
 def load_watchlist() -> list:
+    """拉取 Watchlist 优先级: 1) Alpaca 官方云端 Watchlist -> 2) 本地 watchlist.json -> 3) 默认 8 支股票"""
     import json
+    try:
+        from app.config import ALPACA_API_KEY, ALPACA_SECRET_KEY
+        if ALPACA_API_KEY and "your_paper_api_key_here" not in ALPACA_API_KEY:
+            from alpaca.trading.client import TradingClient
+            client = TradingClient(ALPACA_API_KEY, ALPACA_SECRET_KEY, paper=True)
+            watchlists = client.get_watchlists()
+            if watchlists:
+                qw = next((w for w in watchlists if w.name == "PRIMARY_QUANT"), watchlists[0])
+                if qw and getattr(qw, "assets", None):
+                    alpaca_symbols = [str(a.symbol).upper().strip() for a in qw.assets if getattr(a, "symbol", None)]
+                    if alpaca_symbols:
+                        try:
+                            with open(WATCHLIST_FILE, 'w', encoding='utf-8') as f:
+                                json.dump(alpaca_symbols, f, ensure_ascii=False, indent=2)
+                        except Exception:
+                            pass
+                        return alpaca_symbols
+    except Exception as e:
+        print(f"Alpaca cloud watchlist fetch warning: {e}")
+
     try:
         if os.path.exists(WATCHLIST_FILE):
             with open(WATCHLIST_FILE, 'r', encoding='utf-8') as f:
@@ -95,25 +116,45 @@ def load_watchlist() -> list:
         print(f"Error loading watchlist.json: {e}")
     return DEFAULT_WATCHLIST.copy()
 
+
 def save_watchlist(tickers: list) -> list:
+    """同步保存 Watchlist 到本地磁盘 watchlist.json 并且双向同步到 Alpaca 官方云端 Watchlist。"""
     import json
+    cleaned = []
+    for t in tickers:
+        if t and isinstance(t, str):
+            sym = t.upper().strip()
+            if sym and sym not in cleaned:
+                cleaned.append(sym)
+    if not cleaned:
+        cleaned = DEFAULT_WATCHLIST.copy()
+
+    # 1. 保存到本地磁盘
     try:
-        cleaned = []
-        for t in tickers:
-            if t and isinstance(t, str):
-                sym = t.upper().strip()
-                if sym and sym not in cleaned:
-                    cleaned.append(sym)
-        if not cleaned:
-            cleaned = DEFAULT_WATCHLIST.copy()
         with open(WATCHLIST_FILE, 'w', encoding='utf-8') as f:
             json.dump(cleaned, f, ensure_ascii=False, indent=2)
-        global WATCHLIST
-        WATCHLIST = cleaned
-        return cleaned
     except Exception as e:
         print(f"Error saving watchlist.json: {e}")
-        return tickers
+
+    # 2. 双向同步到 Alpaca 官方云端账户
+    try:
+        from app.config import ALPACA_API_KEY, ALPACA_SECRET_KEY
+        if ALPACA_API_KEY and "your_paper_api_key_here" not in ALPACA_API_KEY:
+            from alpaca.trading.client import TradingClient
+            from alpaca.trading.requests import CreateWatchlistRequest, UpdateWatchlistRequest
+            client = TradingClient(ALPACA_API_KEY, ALPACA_SECRET_KEY, paper=True)
+            watchlists = client.get_watchlists()
+            qw = next((w for w in watchlists if w.name == "PRIMARY_QUANT"), None)
+            if qw:
+                req = UpdateWatchlistRequest(name="PRIMARY_QUANT", symbols=cleaned)
+                client.update_watchlist_by_id(qw.id, req)
+            else:
+                req = CreateWatchlistRequest(name="PRIMARY_QUANT", symbols=cleaned)
+                client.create_watchlist(req)
+    except Exception as e:
+        print(f"Sync Alpaca cloud watchlist error: {e}")
+
+    return cleaned
 
 # Default monitored core watchlist (loaded from disk)
 WATCHLIST = load_watchlist()
