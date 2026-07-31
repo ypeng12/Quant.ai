@@ -98,7 +98,7 @@ WATCHLIST_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__
 DEFAULT_WATCHLIST = ["NVDA", "PLTR", "SNDK", "CRCL", "TSLA", "AMD"]
 
 def load_watchlist() -> list:
-    """拉取 Watchlist 优先级: 1) Alpaca 官方云端 Watchlist -> 2) 本地 watchlist.json -> 3) 默认 8 支股票"""
+    """拉取 Watchlist 优先级: 1) Alpaca 官方云端 Watchlist -> 2) 本地 watchlist.json -> 3) 默认股票"""
     import json
     try:
         from app.config import ALPACA_API_KEY, ALPACA_SECRET_KEY
@@ -109,7 +109,9 @@ def load_watchlist() -> list:
             if watchlists:
                 qw = next((w for w in watchlists if w.name == "PRIMARY_QUANT"), watchlists[0])
                 if qw is not None:
-                    alpaca_symbols = [str(a.symbol).upper().strip() for a in (qw.assets or []) if getattr(a, "symbol", None)]
+                    # 必须调用 get_watchlist_by_id 才能获取到云端最新的实盘 assets 数组
+                    full_w = client.get_watchlist_by_id(qw.id)
+                    alpaca_symbols = [str(a.symbol).upper().strip() for a in (full_w.assets or []) if getattr(a, "symbol", None)]
                     try:
                         with open(WATCHLIST_FILE, 'w', encoding='utf-8') as f:
                             json.dump(alpaca_symbols, f, ensure_ascii=False, indent=2)
