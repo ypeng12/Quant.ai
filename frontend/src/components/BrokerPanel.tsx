@@ -484,21 +484,33 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
                         <button
                           onClick={() => handleClosePosition(pos.ticker)}
                           disabled={closingTicker === pos.ticker}
-                          title={isShort ? "强制买入平空仓 (Close Short)" : "强制卖出/平多仓 (Close Long / Sell)"}
+                          title={isShort ? `强行平空仓 (Close Short ${pos.ticker})` : `强行卖出/平仓 (Sell ${pos.ticker})`}
                           style={{
-                            background: isShort ? 'rgba(0,200,5,0.15)' : 'rgba(255,59,48,0.15)',
-                            border: isShort ? '1px solid rgba(0,200,5,0.35)' : '1px solid rgba(255,59,48,0.35)',
-                            color: isShort ? '#00c805' : '#ff4d4d',
-                            padding: '3px 9px',
-                            borderRadius: '4px',
-                            fontWeight: 800,
-                            fontSize: '0.73rem',
+                            background: 'transparent',
+                            border: '1px solid rgba(255, 59, 48, 0.35)',
+                            color: '#ff4d4d',
+                            width: '26px',
+                            height: '26px',
+                            borderRadius: '50%',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontWeight: 900,
+                            fontSize: '0.85rem',
                             cursor: 'pointer',
                             transition: 'all 0.2s ease',
-                            boxShadow: '0 2px 6px rgba(0,0,0,0.2)'
+                            padding: 0
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = 'rgba(255, 59, 48, 0.2)';
+                            e.currentTarget.style.borderColor = 'rgba(255, 59, 48, 0.7)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = 'transparent';
+                            e.currentTarget.style.borderColor = 'rgba(255, 59, 48, 0.35)';
                           }}
                         >
-                          {closingTicker === pos.ticker ? '⏳ 平仓中' : isShort ? '买平 Cover' : '卖出 Sell'}
+                          {closingTicker === pos.ticker ? '⏳' : '✕'}
                         </button>
                       </td>
                     </tr>
