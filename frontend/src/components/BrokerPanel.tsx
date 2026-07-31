@@ -689,7 +689,7 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
                     </tr>
                   </thead>
                   <tbody>
-                    {todayTrades.map((trade, idx) => {
+                    {displayTrades.map((trade: TradeRecord, idx: number) => {
                       const st = getActionStyle(trade.action);
                       const hasPnl = trade.pnl !== 0;
                       return (
