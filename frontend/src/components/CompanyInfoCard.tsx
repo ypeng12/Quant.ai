@@ -20,7 +20,7 @@ export const CompanyInfoCard: React.FC<CompanyInfoCardProps> = ({ ticker, info, 
   if (loading) {
     return (
       <div className="card" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '120px' }}>
-        <span style={{ color: 'var(--color-text-secondary)' }}>正在加载 {ticker} 公司档案数据...</span>
+        <span style={{ color: 'var(--color-text-secondary)' }}>Loading {ticker} company profile data...</span>
       </div>
     );
   }
@@ -28,8 +28,8 @@ export const CompanyInfoCard: React.FC<CompanyInfoCardProps> = ({ ticker, info, 
   if (!info) {
     return (
       <div className="card">
-        <h3 className="card-title">公司档案：{ticker}</h3>
-        <p style={{ color: 'var(--color-text-secondary)', margin: 0 }}>暂无该公司档案信息。</p>
+        <h3 className="card-title">Company Profile: {ticker}</h3>
+        <p style={{ color: 'var(--color-text-secondary)', margin: 0 }}>No profile information available for this ticker.</p>
       </div>
     );
   }
@@ -51,9 +51,9 @@ export const CompanyInfoCard: React.FC<CompanyInfoCardProps> = ({ ticker, info, 
           </span>
         </div>
         <div style={{ textAlign: 'right' }}>
-          <span style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', display: 'block' }}>总估值 (Market Cap)</span>
+          <span style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', display: 'block' }}>Market Cap</span>
           <strong style={{ fontSize: '1.1rem', color: '#ffffff' }}>
-            {info.market_cap > 0 ? `$${(info.market_cap / 1e9).toLocaleString(undefined, { maximumFractionDigits: 1 })}B` : '估算中'}
+            {info.market_cap > 0 ? `$${(info.market_cap / 1e9).toLocaleString(undefined, { maximumFractionDigits: 1 })}B` : 'N/A'}
           </strong>
         </div>
       </div>
@@ -69,17 +69,17 @@ export const CompanyInfoCard: React.FC<CompanyInfoCardProps> = ({ ticker, info, 
         marginBottom: '0.75rem'
       }}>
         <div>
-          <span style={{ color: 'var(--color-text-secondary)', display: 'block' }}>板块 (Sector)</span>
+          <span style={{ color: 'var(--color-text-secondary)', display: 'block' }}>Sector</span>
           <span style={{ color: '#ffffff', fontWeight: 600 }}>{info.sector}</span>
         </div>
         <div>
-          <span style={{ color: 'var(--color-text-secondary)', display: 'block' }}>细分行业 (Industry)</span>
+          <span style={{ color: 'var(--color-text-secondary)', display: 'block' }}>Industry</span>
           <span style={{ color: '#ffffff', fontWeight: 600 }}>{info.industry}</span>
         </div>
       </div>
 
       <div style={{ fontSize: '0.85rem', lineHeight: '1.5', color: 'var(--color-text-secondary)' }}>
-        <strong style={{ color: '#ffffff', display: 'block', marginBottom: '4px' }}>公司简介：</strong>
+        <strong style={{ color: '#ffffff', display: 'block', marginBottom: '4px' }}>Company Summary:</strong>
         {info.description}
       </div>
     </div>

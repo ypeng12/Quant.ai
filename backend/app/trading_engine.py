@@ -9,9 +9,9 @@ class Portfolio:
         self.slippage_rate = slippage_rate
         self.commission_per_share = commission_per_share
         self.min_commission_per_order = min_commission_per_order
-        self.positions = {}  # 格式: { TICKER: {"shares": int, "avg_cost": float, "highest_price": float} }
-        self.ledger = []     # 详细的交易流水账
-        self.realized_pnl = 0.0  # 已实现盈亏
+        self.positions = {}  # Format: { TICKER: {"shares": int, "avg_cost": float, "highest_price": float} }
+        self.ledger = []     # Transaction ledger
+        self.realized_pnl = 0.0  # Realized PnL
         self.peak_equity = initial_cash
         self.risk_multiplier = 1.0
         self.consecutive_losses = 0
@@ -34,7 +34,7 @@ class Portfolio:
 
     def update_highest_price(self, ticker, current_price):
         """
-        更新持仓期间达到的最高价，用于移动追踪止损。
+        Update highest price reached during position hold for trailing stop-loss.
         """
         if ticker in self.positions:
             self.positions[ticker]["highest_price"] = max(
@@ -44,7 +44,7 @@ class Portfolio:
 
     def get_equity(self, current_prices):
         """
-        计算账户总资产 (可用资金 + 所有持仓市值)
+        Calculate total account equity (available cash + market value of all positions).
         """
         equity = self.cash
         for ticker, pos in self.positions.items():
@@ -56,7 +56,7 @@ class Portfolio:
 
     def get_unrealized_pnl(self, current_prices):
         """
-        计算未实现浮动盈亏
+        Calculate unrealized floating PnL.
         """
         unrealized = 0.0
         for ticker, pos in self.positions.items():
@@ -67,20 +67,14 @@ class Portfolio:
 
     def calculate_position_size(self, ticker, current_price, atr, risk_pct=0.01, atr_multiplier=2.0, max_size_pct=0.5):
         """
-        动态仓位管理：使用 ATR 波动率计算符合账户风险预期的买入股数。
-        - 风险金额 = 账户总净资产 * (risk_pct * self.risk_multiplier)
-        - 止损距离 = ATR * atr_multiplier
-        - 股数 = 风险金额 / 止损距离
-        - 最终股数不超过账户总净资产的 max_size_pct
+        Dynamic position sizing: calculate share quantity using ATR volatility and risk per trade.
         """
         total_equity = self.get_equity({ticker: current_price})
         
-        # 应用账户级风控乘数
         effective_risk_pct = risk_pct * self.risk_multiplier
         if effective_risk_pct <= 0:
             return 0
             
-        # 兜底：如果 ATR 异常或为 0，退化为固定比例分配
         if atr <= 0:
             target_allocation = total_equity * max_size_pct
             return int(target_allocation / current_price)
@@ -93,7 +87,6 @@ class Portfolio:
             
         shares = int(dollar_risk / stop_distance)
         
-        # 上限控制 (MAX_POSITION_SIZE_PCT)
         max_allocation = total_equity * max_size_pct
         max_shares = int(max_allocation / current_price)
         
@@ -101,32 +94,25 @@ class Portfolio:
 
     def buy(self, timestamp, ticker, price, shares):
         """
-        执行买入模拟：
-        1. 计入滑点：实际成交价高于盘面价格（因买入推高价格）
-        2. 计算每股佣金与最低交易佣金
+        Execute simulated BUY order with slippage and commission calculations.
         """
         if shares <= 0:
-            return False, "买入股数必须大于 0"
+            return False, "Shares to buy must be greater than 0"
 
-        # 计入滑点损耗 (买入时滑点拉高买入价格)
         execution_price = price * (1 + self.slippage_rate)
 
-        # 计算佣金 (每股0.005刀，最低1刀，如果费率为0则为0)
         if self.commission_per_share <= 0:
             commission = 0.0
         else:
             commission = max(shares * self.commission_per_share, self.min_commission_per_order)
         
-        # 总支出 = 股本 + 佣金
         total_cost = (execution_price * shares) + commission
 
         if total_cost > self.cash:
-            return False, f"资金不足：需要 {total_cost:.2f} 刀，但账户只有 {self.cash:.2f} 刀。"
+            return False, f"Insufficient funds: Needs ${total_cost:.2f}, but cash available is ${self.cash:.2f}."
 
-        # 扣除资金
         self.cash -= total_cost
 
-        # 更新持仓和均价
         if ticker in self.positions:
             pos = self.positions[ticker]
             old_shares = pos["shares"]
@@ -145,7 +131,6 @@ class Portfolio:
                 "highest_price": execution_price
             }
 
-        # 记录账单
         self.ledger.append({
             "timestamp": str(timestamp),
             "action": "BUY",
@@ -159,50 +144,40 @@ class Portfolio:
             "cash_remaining": round(self.cash, 2)
         })
 
-        return True, f"成功在 {execution_price:.2f} 刀买入 {shares} 股 {ticker} (佣金: {commission:.2f} 刀)"
+        return True, f"Successfully bought {shares} shares of {ticker} @ ${execution_price:.2f} (Commission: ${commission:.2f})"
 
     def sell(self, timestamp, ticker, price, shares):
         """
-        执行卖出/平仓模拟：
-        1. 计入滑点：实际成交价低于盘面价格（因抛售拉低价格）
-        2. 扣除佣金
+        Execute simulated SELL / EXIT order.
         """
         if ticker not in self.positions:
-            return False, f"账户中未持有 {ticker}"
+            return False, f"Ticker {ticker} not found in positions"
 
         pos = self.positions[ticker]
         owned_shares = pos["shares"]
 
-        # 如果卖出股数大于持有股数，自动修正为全清
         if shares > owned_shares:
             shares = owned_shares
 
-        # 计入滑点损耗 (卖出时滑点降低卖出得到的价格)
         execution_price = price * (1 - self.slippage_rate)
 
-        # 计算佣金
         if self.commission_per_share <= 0:
             commission = 0.0
         else:
             commission = max(shares * self.commission_per_share, self.min_commission_per_order)
 
-        # 回笼资金 = 销售额 - 佣金
         revenue = (execution_price * shares) - commission
 
-        # 增加资金
         self.cash += revenue
 
-        # 计算并累加已实现利润
         pnl = (execution_price - pos["avg_cost"]) * shares
         self.realized_pnl += pnl
 
-        # 更新/删除持仓
         if shares == owned_shares:
             del self.positions[ticker]
         else:
             self.positions[ticker]["shares"] -= shares
 
-        # 记录账单
         self.ledger.append({
             "timestamp": str(timestamp),
             "action": "SELL",
@@ -217,11 +192,11 @@ class Portfolio:
             "cash_remaining": round(self.cash, 2)
         })
 
-        return True, f"成功在 {execution_price:.2f} 刀卖出 {shares} 股 {ticker} (实现利润: {pnl:.2f} 刀，佣金: {commission:.2f} 刀)"
+        return True, f"Successfully sold {shares} shares of {ticker} @ ${execution_price:.2f} (Realized PnL: ${pnl:.2f}, Commission: ${commission:.2f})"
 
     def force_liquidate_all(self, timestamp, current_prices):
         """
-        市价强制平仓所有持仓（用于每日美东 15:55 清仓或触及大额止损时）
+        Market force liquidate all positions (EOD 15:55 or drawdown limit).
         """
         liquidated_actions = []
         tickers_to_sell = list(self.positions.keys())
@@ -238,13 +213,13 @@ class Portfolio:
                 shares = self.positions[ticker]["shares"]
                 success, msg = self.sell(timestamp, ticker, price, shares)
                 if success:
-                    liquidated_actions.append(msg + " (由于缺失最新价，以成本价结算)")
+                    liquidated_actions.append(msg + " (Settled at cost price due to missing quote)")
         
         return liquidated_actions
 
     def reset(self):
         """
-        重置账户状态
+        Reset account portfolio state.
         """
         self.cash = self.initial_cash
         self.positions = {}

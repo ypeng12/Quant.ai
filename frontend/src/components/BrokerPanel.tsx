@@ -311,45 +311,72 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
       </div>
 
       {/* Today PnL Summary */}
-      {todaySummary && (
-        <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(5, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
-          <div className="stat-card" style={{ background: '#09090b', border: `1px solid ${todayPnlPositive ? 'rgba(0,200,5,0.3)' : 'rgba(255,59,48,0.3)'}`, padding: '1.25rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-              <span className="stat-label">Realized PnL</span>
-              <span style={{ fontSize: '0.68rem', padding: '1px 5px', borderRadius: '3px', background: 'rgba(0,200,5,0.15)', color: '#00c805', fontWeight: 700 }}>Alpaca Live</span>
+      {(() => {
+        if (!todaySummary && tradeHistory.length === 0) return null;
+
+        const curDate = selectedDate || todaySummary?.date || (tradeHistory.length > 0 ? (tradeHistory[0].date || tradeHistory[0].time?.slice(0, 10))?.trim() : new Date().toLocaleDateString('sv-SE'));
+        const closedToday = tradeHistory.filter(t => {
+          const d = (t.date || t.time?.slice(0, 10))?.trim();
+          return d === curDate && (t.action === 'SELL' || t.action === 'COVER');
+        });
+        const calcWins = closedToday.filter(t => (t.pnl || 0) > 0).length;
+        const calcLosses = closedToday.filter(t => (t.pnl || 0) < 0).length;
+        const calcClosed = closedToday.length;
+        const calcWinRate = calcClosed > 0 ? (calcWins / calcClosed) * 100 : 0.0;
+
+        const bestTradeVal = (todaySummary?.best_trade !== undefined && todaySummary.best_trade !== 0)
+          ? todaySummary.best_trade
+          : (closedToday.length > 0 ? Math.max(0, ...closedToday.map(t => t.pnl || 0)) : 0);
+
+        const worstTradeVal = (todaySummary?.worst_trade !== undefined && todaySummary.worst_trade !== 0)
+          ? todaySummary.worst_trade
+          : (closedToday.length > 0 ? Math.min(0, ...closedToday.map(t => t.pnl || 0)) : 0);
+
+        const winsVal = (todaySummary?.wins !== undefined && todaySummary.wins > 0) ? todaySummary.wins : calcWins;
+        const lossesVal = (todaySummary?.losses !== undefined && todaySummary.losses > 0) ? todaySummary.losses : calcLosses;
+        const winRateVal = (todaySummary?.win_rate !== undefined && todaySummary.win_rate > 0) ? todaySummary.win_rate : calcWinRate;
+        const netPnlVal = todaySummary?.total_pnl ?? closedToday.reduce((sum, t) => sum + (t.pnl || 0), 0);
+
+        return (
+          <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(5, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
+            <div className="stat-card" style={{ background: '#09090b', border: `1px solid ${netPnlVal >= 0 ? 'rgba(0,200,5,0.3)' : 'rgba(255,59,48,0.3)'}`, padding: '1.25rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                <span className="stat-label">Realized PnL</span>
+                <span style={{ fontSize: '0.68rem', padding: '1px 5px', borderRadius: '3px', background: 'rgba(0,200,5,0.15)', color: '#00c805', fontWeight: 700 }}>Alpaca Live</span>
+              </div>
+              <span className="stat-value" style={{ fontSize: '1.4rem', fontWeight: 900, color: netPnlVal >= 0 ? 'var(--color-green)' : 'var(--color-red)' }}>
+                {netPnlVal >= 0 ? '+' : ''}${netPnlVal.toFixed(2)}
+              </span>
             </div>
-            <span className="stat-value" style={{ fontSize: '1.4rem', fontWeight: 900, color: todayPnlPositive ? 'var(--color-green)' : 'var(--color-red)' }}>
-              {todayPnlPositive ? '+' : ''}${todaySummary.total_pnl.toFixed(2)}
-            </span>
+            <div className="stat-card" style={{ background: '#09090b', border: '1px solid var(--color-border)', padding: '1.25rem' }}>
+              <span className="stat-label">Win Rate</span>
+              <span className="stat-value" style={{ fontSize: '1.4rem', fontWeight: 900, color: winRateVal >= 50 ? 'var(--color-green)' : 'var(--color-red)' }}>
+                {winRateVal.toFixed(1)}%
+              </span>
+            </div>
+            <div className="stat-card" style={{ background: '#09090b', border: '1px solid var(--color-border)', padding: '1.25rem' }}>
+              <span className="stat-label">Wins / Losses</span>
+              <span className="stat-value" style={{ fontSize: '1.4rem', fontWeight: 900 }}>
+                <span style={{ color: 'var(--color-green)' }}>{winsVal}</span>
+                <span style={{ color: '#555', margin: '0 4px' }}>/</span>
+                <span style={{ color: 'var(--color-red)' }}>{lossesVal}</span>
+              </span>
+            </div>
+            <div className="stat-card" style={{ background: '#09090b', border: '1px solid rgba(0,200,5,0.2)', padding: '1.25rem' }}>
+              <span className="stat-label">Best Trade</span>
+              <span className="stat-value" style={{ fontSize: '1.3rem', fontWeight: 900, color: 'var(--color-green)' }}>
+                +${bestTradeVal.toFixed(2)}
+              </span>
+            </div>
+            <div className="stat-card" style={{ background: '#09090b', border: '1px solid rgba(255,59,48,0.2)', padding: '1.25rem' }}>
+              <span className="stat-label">Worst Trade</span>
+              <span className="stat-value" style={{ fontSize: '1.3rem', fontWeight: 900, color: 'var(--color-red)' }}>
+                ${worstTradeVal.toFixed(2)}
+              </span>
+            </div>
           </div>
-          <div className="stat-card" style={{ background: '#09090b', border: '1px solid var(--color-border)', padding: '1.25rem' }}>
-            <span className="stat-label">Win Rate</span>
-            <span className="stat-value" style={{ fontSize: '1.4rem', fontWeight: 900, color: todaySummary.win_rate >= 50 ? 'var(--color-green)' : 'var(--color-red)' }}>
-              {todaySummary.win_rate.toFixed(1)}%
-            </span>
-          </div>
-          <div className="stat-card" style={{ background: '#09090b', border: '1px solid var(--color-border)', padding: '1.25rem' }}>
-            <span className="stat-label">Wins / Losses</span>
-            <span className="stat-value" style={{ fontSize: '1.4rem', fontWeight: 900 }}>
-              <span style={{ color: 'var(--color-green)' }}>{todaySummary.wins}</span>
-              <span style={{ color: '#555', margin: '0 4px' }}>/</span>
-              <span style={{ color: 'var(--color-red)' }}>{todaySummary.losses}</span>
-            </span>
-          </div>
-          <div className="stat-card" style={{ background: '#09090b', border: '1px solid rgba(0,200,5,0.2)', padding: '1.25rem' }}>
-            <span className="stat-label">Best Trade</span>
-            <span className="stat-value" style={{ fontSize: '1.3rem', fontWeight: 900, color: 'var(--color-green)' }}>
-              +${todaySummary.best_trade.toFixed(2)}
-            </span>
-          </div>
-          <div className="stat-card" style={{ background: '#09090b', border: '1px solid rgba(255,59,48,0.2)', padding: '1.25rem' }}>
-            <span className="stat-label">Worst Trade</span>
-            <span className="stat-value" style={{ fontSize: '1.3rem', fontWeight: 900, color: 'var(--color-red)' }}>
-              ${todaySummary.worst_trade.toFixed(2)}
-            </span>
-          </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Account Overview */}
       {account && (
@@ -527,7 +554,7 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
                       const hasPnl = trade.pnl !== 0;
                       return (
                         <tr key={idx}>
-                          <td style={{ color: 'var(--color-text-secondary)', fontSize: '0.72rem', whiteSpace: 'nowrap' }}>{trade.time.slice(5)}</td>
+                          <td style={{ color: 'var(--color-text-secondary)', fontSize: '0.72rem', whiteSpace: 'nowrap' }}>{trade.time ? (trade.time.length > 5 ? trade.time.slice(5) : trade.time) : (trade.date || '—')}</td>
                           <td style={{ fontWeight: 900, color: '#fff' }}>{trade.ticker}</td>
                           <td><span style={{ padding: '2px 7px', borderRadius: '4px', border: st.border, color: st.color, fontSize: '0.72rem', fontWeight: 700 }}>{trade.action}</span></td>
                           <td>{trade.shares}</td>
@@ -559,19 +586,24 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
       {/* ====== Execution Log with Date Selector ====== */}
       {(() => {
         const todayStr = todaySummary?.date || new Date().toLocaleDateString('sv-SE');
-        const availableDates = Array.from(new Set(tradeHistory.map(t => t.date))).sort().reverse();
+        const rawDates = tradeHistory.map(t => (t.date || t.time?.slice(0, 10))?.trim()).filter(Boolean) as string[];
+        const availableDates = Array.from(new Set(rawDates)).sort().reverse();
         if (todayStr && !availableDates.includes(todayStr)) {
           availableDates.unshift(todayStr);
         }
 
-        const effectiveDate = selectedDate || todayStr;
-        const displayTrades = [...tradeHistory].filter(t => t.date === effectiveDate).reverse();
+        const effectiveDate = selectedDate || (availableDates.length > 0 ? availableDates[0] : todayStr);
+        const displayTrades = [...tradeHistory].filter(t => {
+          const d = (t.date || t.time?.slice(0, 10))?.trim();
+          return d === effectiveDate;
+        }).reverse();
 
         // Calculate metrics for selected date
         const totalTradesCount = displayTrades.length;
-        const winsCount = displayTrades.filter(t => t.pnl > 0).length;
-        const lossesCount = displayTrades.filter(t => t.pnl < 0).length;
-        const netPnl = displayTrades.reduce((sum, t) => sum + (t.pnl || 0), 0);
+        const closedTrades = displayTrades.filter(t => t.action === 'SELL' || t.action === 'COVER');
+        const winsCount = closedTrades.filter(t => (t.pnl || 0) > 0).length;
+        const lossesCount = closedTrades.filter(t => (t.pnl || 0) < 0).length;
+        const netPnl = closedTrades.reduce((sum, t) => sum + (t.pnl || 0), 0);
 
         const tickerMap: Record<string, { trades: TradeRecord[]; totalPnl: number; openAction: string | null }> = {};
         displayTrades.forEach(t => {
@@ -589,30 +621,49 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 900, color: '#fff' }}>📒 Execution & Review Log</h3>
                   {/* Date Picker Selector */}
-                  <select
-                    value={effectiveDate}
-                    onChange={(e) => setSelectedDate(e.target.value)}
-                    style={{
-                      background: 'rgba(255,255,255,0.08)',
-                      border: '1px solid var(--color-border)',
-                      color: '#00e5ff',
-                      borderRadius: '6px',
-                      padding: '4px 10px',
-                      fontSize: '0.82rem',
-                      fontWeight: 800,
-                      cursor: 'pointer',
-                      outline: 'none'
-                    }}
-                  >
-                    {availableDates.map(d => (
-                      <option key={d} value={d} style={{ background: '#1c1c1e', color: '#fff' }}>
-                        {d === todayStr ? `📅 Today (${d})` : `📅 ${d}`}
-                      </option>
-                    ))}
-                  </select>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <select
+                      value={effectiveDate}
+                      onChange={(e) => setSelectedDate(e.target.value)}
+                      style={{
+                        background: 'rgba(255,255,255,0.08)',
+                        border: '1px solid var(--color-border)',
+                        color: '#00e5ff',
+                        borderRadius: '6px',
+                        padding: '4px 10px',
+                        fontSize: '0.82rem',
+                        fontWeight: 800,
+                        cursor: 'pointer',
+                        outline: 'none'
+                      }}
+                    >
+                      {availableDates.map(d => (
+                        <option key={d} value={d} style={{ background: '#1c1c1e', color: '#fff' }}>
+                          {d === todayStr ? `🔴 Live Today (${d})` : `🗓️ ${d}`}
+                        </option>
+                      ))}
+                    </select>
+                    {selectedDate && selectedDate !== todayStr && (
+                      <button
+                        onClick={() => setSelectedDate('')}
+                        style={{
+                          background: 'rgba(0,200,5,0.15)',
+                          border: '1px solid var(--color-green)',
+                          color: 'var(--color-green)',
+                          borderRadius: '6px',
+                          padding: '4px 10px',
+                          fontSize: '0.78rem',
+                          fontWeight: 800,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        ⚡ Switch to Today Real-Time
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <p style={{ margin: '4px 0 0', fontSize: '0.78rem', color: 'var(--color-text-secondary)' }}>
-                  {effectiveDate === todayStr ? 'Refreshes every 5s · Real-time record of all orders' : `Historical review for date: ${effectiveDate}`}
+                  {effectiveDate === todayStr ? '🔴 Real-time stream of all orders today' : `🗓️ Historical review for date: ${effectiveDate}`}
                 </p>
               </div>
 

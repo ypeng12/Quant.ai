@@ -10,7 +10,7 @@ import os
 import pytz
 from typing import Dict, List, Optional
 from app.broker.alpaca_adapter import AlpacaAdapter
-from app.config import ALPACA_API_KEY, ALPACA_SECRET_KEY, ALPACA_BASE_URL, WATCHLIST
+from app.config import ALPACA_API_KEY, ALPACA_SECRET_KEY, ALPACA_BASE_URL, WATCHLIST, save_watchlist, load_watchlist
 from app.data_manager import fetch_and_prepare_data
 from app.data_cache import invalidate_cache
 from app.strategy import evaluate_market_state
@@ -123,8 +123,62 @@ class LiveTradingRunner:
                     data = json.load(f)
                     self.trade_history = data.get("trade_history", [])
                     self.action_logs = data.get("action_logs", [])
+                    self.recalculate_trade_pnls()
         except Exception as e:
             print(f"Error loading trade_history.json: {e}")
+
+    def recalculate_trade_pnls(self):
+        """Recalculate PnL for closed trades (SELL / COVER) by matching FIFO positions across trade history."""
+        if not self.trade_history:
+            return
+            
+        position_tracker = {}
+        self.trade_history.sort(key=lambda x: x.get("time", ""))
+        
+        for trade in self.trade_history:
+            ticker = trade.get("ticker", "")
+            action = trade.get("action", "").upper()
+            qty = trade.get("shares", 0)
+            price = trade.get("price", 0.0)
+            
+            if not ticker or qty <= 0 or price <= 0:
+                continue
+                
+            if ticker not in position_tracker:
+                position_tracker[ticker] = []
+                
+            if action in ("BUY",):
+                position_tracker[ticker].append({"price": price, "qty": qty})
+            elif action in ("SELL",):
+                realized = 0.0
+                remaining = qty
+                queue = position_tracker[ticker]
+                while remaining > 0 and queue:
+                    entry = queue[0]
+                    matched_qty = min(remaining, entry["qty"])
+                    realized += (price - entry["price"]) * matched_qty
+                    entry["qty"] -= matched_qty
+                    remaining -= matched_qty
+                    if entry["qty"] <= 0:
+                        queue.pop(0)
+                if trade.get("pnl", 0.0) == 0.0 or realized != 0.0:
+                    trade["pnl"] = round(realized, 2)
+            elif action in ("SHORT",):
+                position_tracker[ticker].append({"price": price, "qty": -qty})
+            elif action in ("COVER",):
+                realized = 0.0
+                remaining = qty
+                queue = position_tracker[ticker]
+                while remaining > 0 and queue:
+                    entry = queue[0]
+                    matched_qty = min(remaining, abs(entry["qty"]))
+                    realized += (entry["price"] - price) * matched_qty
+                    entry["qty"] += matched_qty
+                    remaining -= matched_qty
+                    if abs(entry["qty"]) <= 0:
+                        queue.pop(0)
+                if trade.get("pnl", 0.0) == 0.0 or realized != 0.0:
+                    trade["pnl"] = round(realized, 2)
 
     def save_trade_history(self):
         """保存交易历史与动作日志到本地磁盘。"""
@@ -153,7 +207,8 @@ class LiveTradingRunner:
 
     def add_trade_action(self, action: str, ticker: str, shares: int, price: float, reason: str, pnl: float = 0.0):
         """Record trade action to action_logs and trade_history for UI display and analysis."""
-        now = datetime.datetime.now()
+        est = pytz.timezone('America/New_York')
+        now = datetime.datetime.now(est)
         timestamp_str = now.strftime("%Y-%m-%d %H:%M:%S")
         date_str = now.strftime("%Y-%m-%d")
 
@@ -187,10 +242,12 @@ class LiveTradingRunner:
 
     def get_today_summary(self) -> dict:
         """Calculate today's trade summary and realized/unrealized PnL."""
-        today = datetime.datetime.now().strftime("%Y-%m-%d")
-        today_trades = [t for t in self.trade_history if t.get("date") == today]
+        self.recalculate_trade_pnls()
+        est = pytz.timezone('America/New_York')
+        today = datetime.datetime.now(est).strftime("%Y-%m-%d")
+        today_trades = [t for t in self.trade_history if (t.get("date") or t.get("time", "")[:10]).strip() == today]
 
-        closed_trades = [t for t in today_trades if t.get("action") in ("SELL", "COVER") and t.get("pnl", 0.0) != 0.0]
+        closed_trades = [t for t in today_trades if t.get("action") in ("SELL", "COVER")]
         wins = [t for t in closed_trades if t.get("pnl", 0.0) > 0]
         losses = [t for t in closed_trades if t.get("pnl", 0.0) < 0]
         realized_pnl = sum(t.get("pnl", 0.0) for t in closed_trades)
@@ -212,7 +269,7 @@ class LiveTradingRunner:
         except Exception:
             pass
 
-        final_today_pnl = round(realized_pnl, 2) if alpaca_official_today_pnl is None else round(alpaca_official_today_pnl, 2)
+        final_today_pnl = round(realized_pnl, 2) if (alpaca_official_today_pnl is None or alpaca_official_today_pnl == 0.0) else round(alpaca_official_today_pnl, 2)
 
         return {
             "date": today,
@@ -221,12 +278,12 @@ class LiveTradingRunner:
             "wins": len(wins),
             "losses": len(losses),
             "win_rate": round(len(wins) / len(closed_trades) * 100, 1) if closed_trades else 0.0,
-            "realized_pnl": final_today_pnl,
+            "realized_pnl": round(realized_pnl, 2),
             "alpaca_official_pnl": round(alpaca_official_today_pnl, 2) if alpaca_official_today_pnl is not None else final_today_pnl,
             "unrealized_pnl": round(unrealized_pnl, 2),
-            "total_pnl": final_today_pnl,
-            "best_trade": round(max((t["pnl"] for t in closed_trades), default=0.0), 2),
-            "worst_trade": round(min((t["pnl"] for t in closed_trades), default=0.0), 2)
+            "total_pnl": round(realized_pnl + unrealized_pnl, 2),
+            "best_trade": round(max((t.get("pnl", 0.0) for t in closed_trades), default=0.0), 2),
+            "worst_trade": round(min((t.get("pnl", 0.0) for t in closed_trades), default=0.0), 2)
         }
 
     def update_tickers(self, new_tickers: List[str]):
@@ -242,7 +299,8 @@ class LiveTradingRunner:
         
         if cleaned and cleaned != self.active_tickers:
             self.active_tickers = cleaned
-            self.add_log(f"🔄 AI 实时研判股票池已与 Watchlist 自动对齐: {self.active_tickers}")
+            save_watchlist(cleaned)
+            self.add_log(f"🔄 AI 实时研判股票池已与 Watchlist 自动对齐并持久化保存: {self.active_tickers}")
 
     def start(self, strategy_params: Optional[Dict] = None, tickers: Optional[List[str]] = None, ignore_market_hours: bool = True):
         if self.is_running:
@@ -296,8 +354,10 @@ class LiveTradingRunner:
                     continue
                 
                 dt = order.filled_at
-                date_str = dt.strftime("%Y-%m-%d")
-                time_str = dt.strftime("%Y-%m-%d %H:%M:%S")
+                est = pytz.timezone('America/New_York')
+                dt_est = dt.astimezone(est) if hasattr(dt, "astimezone") else dt
+                date_str = dt_est.strftime("%Y-%m-%d")
+                time_str = dt_est.strftime("%Y-%m-%d %H:%M:%S")
                 action_str = order.side.value.upper() if hasattr(order.side, "value") else str(order.side).upper()
                 qty = int(order.filled_qty or 0)
                 price = float(order.filled_avg_price or 0.0)
@@ -318,6 +378,7 @@ class LiveTradingRunner:
                 existing_ids.add(order_id_str)
                 added_count += 1
                 
+            self.recalculate_trade_pnls()
             if added_count > 0:
                 self.trade_history.sort(key=lambda x: x.get("time", ""))
                 self.save_trade_history()
