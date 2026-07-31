@@ -538,14 +538,41 @@ function App() {
     }
   };
 
-  // 删除自选股
-  const handleRemoveTicker = (tickerToRemove: string, e: React.MouseEvent) => {
+  // 删除自选股并提醒同步平仓清盘
+  const handleRemoveTicker = async (tickerToRemove: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    
+    const confirmMsg = `确定要将 [${tickerToRemove}] 从 Watchlist 自选股列表中移除吗？\n\n系统提示：如果当前账户中持有 ${tickerToRemove} 的仓位，移除时将自动发起强行卖出/平仓，且 AI 后续绝不再买入或交易该股。`;
+    if (!window.confirm(confirmMsg)) {
+      return;
+    }
+
+    // 1. 尝试自动平仓（若有残留持仓）
+    try {
+      await fetch(`${API_BASE}/api/live/close_position`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ticker: tickerToRemove })
+      });
+    } catch (err) {
+      // 若没有持仓，静默处理
+    }
+
+    // 2. 更新前端 Watchlist
     const newWatchlist = watchlist.filter(t => t !== tickerToRemove);
     setWatchlist(newWatchlist);
     if (activeTicker === tickerToRemove && newWatchlist.length > 0) {
       setActiveTicker(newWatchlist[0]);
     }
+
+    // 3. 强同步至后端与 Alpaca 云端 Watchlist
+    try {
+      await fetch(`${API_BASE}/api/live/watchlist/sync`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tickers: newWatchlist })
+      });
+    } catch (err) {}
   };
 
   const DEFAULT_WATCHLIST_STOCKS = ["NVDA", "SNDK", "TSLA", "AMD", "MSFT", "MU"];
