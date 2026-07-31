@@ -195,7 +195,6 @@ class AlpacaAdapter:
         Close all active positions (force liquidation).
         """
         try:
-            # close_all_positions returns a list of orders submitted to close positions
             close_orders = self.client.close_all_positions(cancel_orders=True)
             return {
                 "success": True,
@@ -205,4 +204,24 @@ class AlpacaAdapter:
             return {
                 "success": False,
                 "error": str(e)
+            }
+
+    def close_position(self, symbol: str) -> Dict:
+        """
+        Close a specific open position for a single ticker (force liquidate/sell).
+        """
+        try:
+            order = self.client.close_position(symbol_or_asset_id=symbol.upper())
+            return {
+                "success": True,
+                "order_id": str(getattr(order, 'id', '')),
+                "symbol": symbol.upper(),
+                "message": f"Successfully submitted market order to close position for {symbol.upper()}."
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "symbol": symbol.upper(),
+                "error": str(e),
+                "message": f"Failed to close position for {symbol.upper()}: {str(e)}"
             }

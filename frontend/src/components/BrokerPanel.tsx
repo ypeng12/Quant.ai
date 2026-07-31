@@ -65,6 +65,31 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [closingTicker, setClosingTicker] = useState<string | null>(null);
+
+  const handleClosePosition = async (ticker: string) => {
+    if (!window.confirm(`确定要手动强行卖出 / 平仓 ${ticker} 吗？\nConfirm manual force sell/close position for ${ticker}?`)) {
+      return;
+    }
+    setClosingTicker(ticker);
+    try {
+      const res = await fetch(`${API_BASE}/api/live/close_position`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ticker })
+      });
+      const data = await res.json();
+      if (data.success) {
+        await fetchBrokerData();
+      } else {
+        alert(`平仓失败: ${data.error || data.detail || 'Unknown error'}`);
+      }
+    } catch (err) {
+      alert(`请求失败: ${err}`);
+    } finally {
+      setClosingTicker(null);
+    }
+  };
 
   // Extended hours limit order state
   const [showExtModal, setShowExtModal] = useState(false);
@@ -401,7 +426,34 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
         <div className="card" style={{ padding: '1.25rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
             <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 800, color: '#fff' }}>📋 Live Positions</h3>
-            <span style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>Account: <strong>{account?.account_number}</strong></span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              {positions.length > 0 && (
+                <button
+                  onClick={async () => {
+                    if (window.confirm("⚠️ 确定要强行全平所有持仓吗？(Force liquidate all positions)")) {
+                      try {
+                        const res = await fetch(`${API_BASE}/api/broker/close_all`, { method: 'POST' });
+                        const d = await res.json();
+                        if (d.success) fetchBrokerData();
+                      } catch (e) {}
+                    }
+                  }}
+                  style={{
+                    background: 'rgba(255, 59, 48, 0.12)',
+                    border: '1px solid rgba(255, 59, 48, 0.3)',
+                    color: '#ff6b6b',
+                    padding: '2px 8px',
+                    borderRadius: '4px',
+                    fontSize: '0.72rem',
+                    fontWeight: 700,
+                    cursor: 'pointer'
+                  }}
+                >
+                  🔥 Close All Positions
+                </button>
+              )}
+              <span style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>Account: <strong>{account?.account_number}</strong></span>
+            </div>
           </div>
           {positions.length === 0 ? (
             <div style={{ textAlign: 'center', color: 'var(--color-text-secondary)', padding: '3.5rem 0', fontSize: '0.85rem' }}>
@@ -411,7 +463,7 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
             <table className="ledger-table" style={{ fontSize: '0.85rem' }}>
               <thead>
                 <tr>
-                  <th>Ticker</th><th>Side</th><th>Shares</th><th>Avg Price</th><th>Current Price</th><th style={{ textAlign: 'right' }}>Unrealized PnL</th>
+                  <th>Ticker</th><th>Side</th><th>Shares</th><th>Avg Price</th><th>Current Price</th><th style={{ textAlign: 'right' }}>Unrealized PnL</th><th style={{ textAlign: 'center' }}>Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -427,6 +479,27 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
                       <td>${pos.current_price.toFixed(2)}</td>
                       <td style={{ textAlign: 'right', fontWeight: 800, color: isUp ? 'var(--color-green)' : 'var(--color-red)' }}>
                         {isUp ? '+' : ''}${pos.unrealized_pnl.toFixed(2)} ({isUp ? '+' : ''}{pos.unrealized_pnl_pct.toFixed(2)}%)
+                      </td>
+                      <td style={{ textAlign: 'center' }}>
+                        <button
+                          onClick={() => handleClosePosition(pos.ticker)}
+                          disabled={closingTicker === pos.ticker}
+                          title={isShort ? "强制买入平空仓 (Close Short)" : "强制卖出/平多仓 (Close Long / Sell)"}
+                          style={{
+                            background: isShort ? 'rgba(0,200,5,0.15)' : 'rgba(255,59,48,0.15)',
+                            border: isShort ? '1px solid rgba(0,200,5,0.35)' : '1px solid rgba(255,59,48,0.35)',
+                            color: isShort ? '#00c805' : '#ff4d4d',
+                            padding: '3px 9px',
+                            borderRadius: '4px',
+                            fontWeight: 800,
+                            fontSize: '0.73rem',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease',
+                            boxShadow: '0 2px 6px rgba(0,0,0,0.2)'
+                          }}
+                        >
+                          {closingTicker === pos.ticker ? '⏳ 平仓中' : isShort ? '买平 Cover' : '卖出 Sell'}
+                        </button>
                       </td>
                     </tr>
                   );

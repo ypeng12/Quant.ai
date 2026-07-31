@@ -1858,6 +1858,19 @@ def reset_watchlist_endpoint():
     return {"success": True, "watchlist": saved}
 
 
+@app.post("/api/live/close_position")
+def close_individual_live_position(payload: dict):
+    ticker = payload.get("ticker")
+    if not ticker or not isinstance(ticker, str):
+        raise HTTPException(status_code=400, detail="Missing or invalid ticker parameter")
+    
+    res = live_runner.close_individual_position(ticker.strip().upper())
+    if res.get("success"):
+        return res
+    else:
+        raise HTTPException(status_code=500, detail=res.get("error", "Failed to close position"))
+
+
 # 静态文件托管（前端 React 构建产物）
 _backend_dir = os.path.dirname(os.path.abspath(__file__))
 _dist_dir = os.path.join(os.path.dirname(_backend_dir), "frontend", "dist")
