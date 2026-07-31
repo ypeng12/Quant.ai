@@ -2993,6 +2993,28 @@
       "price": 301.21,
       "pnl": 0.0,
       "reason": "[Bearish-Cross] EMA 9/21 Death Cross formed."
+    },
+    {
+      "date": "2026-07-31",
+      "time": "2026-07-31 10:48:53",
+      "action": "SELL",
+      "action_cn": "SELL",
+      "ticker": "SNDK",
+      "shares": 31,
+      "price": 1260.38,
+      "pnl": 340.88,
+      "reason": "[Long-TrailingStop] Price pulled back from peak $1270.95 to trigger stop $1260.68."
+    },
+    {
+      "date": "2026-07-31",
+      "time": "2026-07-31 10:49:25",
+      "action": "BUY",
+      "action_cn": "BUY",
+      "ticker": "NVDA",
+      "shares": 214,
+      "price": 199.12,
+      "pnl": 0.0,
+      "reason": "[Bullish-VWAP] Price holding above VWAP ($197.60)."
     }
   ],
   "action_logs": [
@@ -3049,6 +3071,8 @@
     "[2026-07-31 10:39:23] 🔻 [MSFT] SHORT × 92 shs @ $462.49 | [Bearish-Cross] EMA 9/21 Death Cross formed.",
     "[2026-07-31 10:39:55] 🔴 [TSLA] SELL × 1 shs @ $310.08 | PnL: -0.50 USD | [Long-Reversal] EMA Death Cross and below VWAP.",
     "[2026-07-31 10:41:05] 🔴 [PLTR] SELL × 348 shs @ $122.57 | PnL: -3.48 USD | [Long-Reversal] EMA Death Cross and below VWAP.",
-    "[2026-07-31 10:46:04] 🔻 [AAPL] SHORT × 142 shs @ $301.21 | [Bearish-Cross] EMA 9/21 Death Cross formed."
+    "[2026-07-31 10:46:04] 🔻 [AAPL] SHORT × 142 shs @ $301.21 | [Bearish-Cross] EMA 9/21 Death Cross formed.",
+    "[2026-07-31 10:48:53] 🔴 [SNDK] SELL × 31 shs @ $1260.38 | PnL: +340.88 USD | [Long-TrailingStop] Price pulled back from peak $1270.95 to trigger stop $1260.68.",
+    "[2026-07-31 10:49:25] 🟢 [NVDA] BUY × 214 shs @ $199.12 | [Bullish-VWAP] Price holding above VWAP ($197.60)."
   ]
 }
