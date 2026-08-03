@@ -463,29 +463,30 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
         fontSize: '0.82rem'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-          <span style={{ color: 'var(--color-green)', fontWeight: 700 }}>🎯 AI 实时研判股票池 (动态置信度降序):</span>
-          {activeTickers.map(t => {
+          <span style={{ color: 'var(--color-green)', fontWeight: 700 }}>🎯 AI 实时研判股票池 (横截面相对择优排序):</span>
+          {activeTickers.map((t, idx) => {
             const score = tickerScores[t] !== undefined ? tickerScores[t] : 0;
             let badgeBg = 'rgba(255,255,255,0.06)';
             let badgeBorder = '1px solid rgba(255,255,255,0.12)';
             let badgeColor = '#888';
-            let labelText = `⏳ ${t} ${score}分 (观望)`;
+            let rankTag = idx === 0 ? "🥇 相对第1名" : idx === 1 ? "🥈 相对第2名" : idx === 2 ? "🥉 相对第3名" : `#${idx + 1}`;
+            let labelText = `⏳ ${t} (${score}分·${rankTag})`;
 
-            if (score >= 80) {
+            if (idx === 0) {
               badgeBg = 'linear-gradient(135deg, rgba(0,200,5,0.25) 0%, rgba(16,185,129,0.3) 100%)';
               badgeBorder = '1px solid rgba(0,200,5,0.8)';
               badgeColor = '#fff';
-              labelText = `🔥 ${t} ${score}分 (AI高置信·25%上限)`;
-            } else if (score >= 60) {
+              labelText = `🔥 ${t} (${score}分·${rankTag}·优先强抓买点)`;
+            } else if (idx === 1) {
               badgeBg = 'rgba(100, 180, 255, 0.2)';
               badgeBorder = '1px solid #64b4ff';
               badgeColor = '#64b4ff';
-              labelText = `⚡ ${t} ${score}分 (标准·20%仓位)`;
-            } else if (score >= 45) {
+              labelText = `⚡ ${t} (${score}分·${rankTag})`;
+            } else if (score >= 35) {
               badgeBg = 'rgba(255, 193, 7, 0.15)';
               badgeBorder = '1px solid #ffc107';
               badgeColor = '#ffc107';
-              labelText = `🔍 ${t} ${score}分 (试仓·10%仓位)`;
+              labelText = `🔍 ${t} (${score}分·${rankTag})`;
             }
 
             return (
@@ -512,7 +513,7 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
           })}
         </div>
         <span style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>
-          🤖 研判池已由 AI 量化模型根据 5 维因子实时打分并自动重仓排序（无需人工干预）
+          🤖 研判池已采用【横截面相对择优机制】，系统每一轮自动抓取 Watchlist 中相对表现最强、形态最优的标的优先下发交易！
         </span>
       </div>
 

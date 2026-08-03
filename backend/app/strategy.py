@@ -68,16 +68,10 @@ def calculate_confidence_score(row, prev_row, is_bullish=True):
     return min(100, score)
 
 
-def evaluate_market_state(row, prev_row, current_shares, avg_cost, ticker, highest_price=0.0, params=None):
+def evaluate_market_state(row, prev_row, current_shares, avg_cost, ticker, highest_price=0.0, params=None, rank_percentile=None):
     """
-    Evaluate current bar data and determine trading action.
-    - BUY: Trigger long position (35% probe, 70% standard, 100% full conviction)
-    - PYRAMID_BUY: Add-on position (+35%) when momentum builds
-    - SHORT: Trigger short position
-    - PARTIAL_SELL: Scale-out 50% take profit & lock breakeven
-    - SELL: Close long position
-    - COVER: Close short position
-    - HOLD: Standing aside
+    Evaluate current bar data and determine trading action with Cross-Sectional Relative Selection.
+    - rank_percentile: Relative strength rank in Watchlist (0.0 to 100.0, 100 = Top 1 best).
     """
     p = DEFAULT_PARAMS.copy()
     if params:
@@ -135,8 +129,13 @@ def evaluate_market_state(row, prev_row, current_shares, avg_cost, ticker, highe
         # A. Long BUY Signals
         if is_bullish_trend:
             score = calculate_confidence_score(row, prev_row, is_bullish=True)
-            if score < 45:
-                return "HOLD", f"[{ticker}] Confidence Score ({score}/100) below 45 safety threshold. Standing aside."
+            
+            # Cross-Sectional Relative Safety Gate: If Top-1/Top-2 relative performer in Watchlist, lower entry threshold
+            is_relative_top = (rank_percentile is not None and rank_percentile >= 70.0)
+            min_cutoff = 25 if is_relative_top else 45
+
+            if score < min_cutoff:
+                return "HOLD", f"[{ticker}] Confidence Score ({score}/100) below {min_cutoff} cutoff. Standing aside."
 
             if is_gold_cross:
                 reason = f"EMA 9/21 Golden Cross."
@@ -149,18 +148,23 @@ def evaluate_market_state(row, prev_row, current_shares, avg_cost, ticker, highe
             else:
                 return "HOLD", "Maintaining flat stance."
 
-            if 45 <= score < 60:
-                return "BUY", f"[Probe-Light Score:{score}/100] {reason} Conservative probe position (~10% size)."
-            elif 60 <= score < 80:
-                return "BUY", f"[Standard-Entry Score:{score}/100] {reason} Standard entry (~20% size)."
+            rank_str = f" [Watchlist Rank Top-{100-int(rank_percentile)}%]" if rank_percentile is not None else ""
+
+            if score >= 75 or (is_relative_top and score >= 50):
+                return "BUY", f"[Conviction-Top Score:{score}/100{rank_str}] {reason} High conviction entry (25-30% max cap)."
+            elif score >= 55 or (is_relative_top and score >= 35):
+                return "BUY", f"[Standard-Entry Score:{score}/100{rank_str}] {reason} Standard entry (~20% size)."
             else:
-                return "BUY", f"[Conviction-Top Score:{score}/100] {reason} High conviction entry (25-30% max cap)."
+                return "BUY", f"[Probe-Light Score:{score}/100{rank_str}] {reason} Best-in-class relative probe (~10% size)."
 
         # B. Short SELL Signals
         if is_bearish_trend:
             score = calculate_confidence_score(row, prev_row, is_bullish=False)
-            if score < 45:
-                return "HOLD", f"[{ticker}] Short Confidence Score ({score}/100) below 45 safety threshold. Standing aside."
+            is_relative_top = (rank_percentile is not None and rank_percentile >= 70.0)
+            min_cutoff = 25 if is_relative_top else 45
+
+            if score < min_cutoff:
+                return "HOLD", f"[{ticker}] Short Confidence Score ({score}/100) below {min_cutoff} cutoff. Standing aside."
 
             if is_death_cross:
                 reason = "EMA 9/21 Death Cross."
@@ -173,12 +177,14 @@ def evaluate_market_state(row, prev_row, current_shares, avg_cost, ticker, highe
             else:
                 return "HOLD", "Maintaining flat stance."
 
-            if 45 <= score < 60:
-                return "SHORT", f"[Probe-Light Score:{score}/100] {reason} Conservative probe short (~10% size)."
-            elif 60 <= score < 80:
-                return "SHORT", f"[Standard-Entry Score:{score}/100] {reason} Standard short (~20% size)."
+            rank_str = f" [Watchlist Rank Top-{100-int(rank_percentile)}%]" if rank_percentile is not None else ""
+
+            if score >= 75 or (is_relative_top and score >= 50):
+                return "SHORT", f"[Conviction-Top Score:{score}/100{rank_str}] {reason} High conviction short (25-30% max cap)."
+            elif score >= 55 or (is_relative_top and score >= 35):
+                return "SHORT", f"[Standard-Entry Score:{score}/100{rank_str}] {reason} Standard short (~20% size)."
             else:
-                return "SHORT", f"[Conviction-Top Score:{score}/100] {reason} High conviction short (25-30% max cap)."
+                return "SHORT", f"[Probe-Light Score:{score}/100{rank_str}] {reason} Best-in-class relative short (~10% size)."
 
     # State 2: Holding Long Position (Search for SELL / PARTIAL_SELL opportunities)
     elif current_shares > 0:
