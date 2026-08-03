@@ -13,7 +13,7 @@ from app.broker.alpaca_adapter import AlpacaAdapter
 from app.config import ALPACA_API_KEY, ALPACA_SECRET_KEY, ALPACA_BASE_URL, WATCHLIST, save_watchlist, load_watchlist
 from app.data_manager import fetch_and_prepare_data
 from app.data_cache import invalidate_cache
-from app.strategy import evaluate_market_state
+from app.strategy import evaluate_market_state, calculate_confidence_score
 
 class MockAlpacaAdapter:
     def __init__(self):
@@ -583,27 +583,44 @@ class LiveTradingRunner:
         if self.ignore_market_hours:
             return True
 
+        # High-precision NYSE local schedule check (Monday - Friday 9:30 AM - 4:00 PM EST)
+        est = pytz.timezone('America/New_York')
+        now_ny = datetime.datetime.now(est)
+        is_weekday = now_ny.weekday() <= 4
+        ny_time = now_ny.hour + now_ny.minute / 60.0 + now_ny.second / 3600.0
+        is_regular_hours = is_weekday and (9.5 <= ny_time < 16.0)
+
         if hasattr(self.adapter, "get_clock"):
             clock_res = self.adapter.get_clock()
             if clock_res.get("success"):
-                return clock_res.get("is_open", False)
+                api_open = clock_res.get("is_open", False)
+                # If API reports open or local EST time is within 9:30 AM - 4:00 PM EST on a weekday, market is open
+                return api_open or is_regular_hours
 
-        # High-precision fallback
-        est = pytz.timezone('America/New_York')
-        now_ny = datetime.datetime.now(est)
-        if now_ny.weekday() > 4:
-            return False
-        ny_time = now_ny.hour + now_ny.minute / 60.0 + now_ny.second / 3600.0
-        return 9.5 <= ny_time < 16.0
+        return is_regular_hours
 
     def check_and_trigger_eod_close(self, positions_list: list) -> bool:
         """
         日内收盘前自动强行全平持仓风控 (EOD Auto Close-All Strategy).
         Queries official exchange API `get_clock()`.
-        If remaining time to official market close <= 300 seconds (5 mins):
+        Only triggers in the final 5 minutes of regular market hours (15:55 PM - 16:00 PM EST).
         Triggers `close_all_positions()` for 0 overnight position risk!
         """
         if not positions_list:
+            return False
+
+        est = pytz.timezone('America/New_York')
+        now_ny = datetime.datetime.now(est)
+        today_str = now_ny.strftime("%Y-%m-%d")
+
+        # Weekend guard
+        if now_ny.weekday() > 4:
+            return False
+
+        ny_time = now_ny.hour + now_ny.minute / 60.0 + now_ny.second / 3600.0
+
+        # EOD liquidation must ONLY happen strictly between 15:55 PM (15.9166) and 16:00 PM (16.0) EST
+        if not (15.9166 <= ny_time < 16.0):
             return False
 
         seconds_left = None
@@ -616,15 +633,9 @@ class LiveTradingRunner:
 
         # Fallback to local exchange clock math if API clock is unavailable
         if seconds_left is None:
-            est = pytz.timezone('America/New_York')
-            now_ny = datetime.datetime.now(est)
-            if now_ny.weekday() > 4:
-                return False
-            ny_time = now_ny.hour + now_ny.minute / 60.0 + now_ny.second / 3600.0
-            if 15.9166 <= ny_time <= 16.0833:
-                seconds_left = max(0.0, (16.0 - ny_time) * 3600.0)
+            seconds_left = (16.0 - ny_time) * 3600.0
 
-        if seconds_left is not None and 0.0 <= seconds_left <= 300.0:
+        if seconds_left is not None and 0.0 < seconds_left <= 300.0:
             mins_left = seconds_left / 60.0
             self.add_log(f"🌇 [交易所官方尾盘双重清场风控] 距关盘仅剩 {mins_left:.1f} 分钟！执行【双重清场】：全量撤销所有挂单 + 强行全平 {len(positions_list)} 笔持仓，确保零挂单零持仓过夜...")
             try:
@@ -660,7 +671,7 @@ class LiveTradingRunner:
                 # 1. Check if market is open
                 if not self.is_market_open():
                     self.add_log("💤 [休市中/未开盘] 交易所处于非常规交易时段，系统处于休市暂停模式，正在等待开盘...")
-                    await asyncio.sleep(60)
+                    await asyncio.sleep(10)
                     continue
 
                 self.add_log(f"📡 [系统开盘中·全频段扫描] 正在研判监控池股票 [{len(self.active_tickers)} 支标的]...")
