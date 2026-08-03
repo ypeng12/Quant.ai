@@ -260,11 +260,11 @@ def fetch_and_prepare_data(ticker, period=None, interval="1m"):
     df['MACD_Signal'] = df['MACD'].ewm(span=9, adjust=False).mean()
     df['MACD_Hist'] = df['MACD'] - df['MACD_Signal']
     
-    # 唐奇安通道
-    df['Donchian_High'] = df['High'].rolling(window=20).max()
-    df['Donchian_Low'] = df['Low'].rolling(window=20).min()
-    df['Donchian_High_55'] = df['High'].rolling(window=55).max()
-    df['Donchian_Low_55'] = df['Low'].rolling(window=55).min()
+    # 唐奇安通道 (应用 .shift(1) 排除当前K线自身，彻底杜绝未来函数前瞻偏差)
+    df['Donchian_High'] = df['High'].rolling(window=20).max().shift(1)
+    df['Donchian_Low'] = df['Low'].rolling(window=20).min().shift(1)
+    df['Donchian_High_55'] = df['High'].rolling(window=55).max().shift(1)
+    df['Donchian_Low_55'] = df['Low'].rolling(window=55).min().shift(1)
     
     # 能量潮指标 (OBV)
     df['OBV'] = (np.sign(df['Close'].diff()).fillna(0.0) * df['Volume']).cumsum()
@@ -324,6 +324,17 @@ def fetch_and_prepare_data(ticker, period=None, interval="1m"):
         else:
             df['PMH'] = 0.0
             df['PML'] = 0.0
+
+        # 每日计算 ORB (开盘前5分钟 9:30-9:35 区间高低点)
+        orb_data = df[(df['Time'] >= datetime.time(9, 30)) & (df['Time'] <= datetime.time(9, 35))]
+        if not orb_data.empty:
+            orb_h_dict = orb_data.groupby('Date')['High'].max().to_dict()
+            orb_l_dict = orb_data.groupby('Date')['Low'].min().to_dict()
+            df['ORB_High'] = df['Date'].map(orb_h_dict).fillna(0.0)
+            df['ORB_Low'] = df['Date'].map(orb_l_dict).fillna(0.0)
+        else:
+            df['ORB_High'] = 0.0
+            df['ORB_Low'] = 0.0
             
         regular_hours_df = df[df['Is_Regular_Hours']].copy()
     else:
@@ -333,6 +344,8 @@ def fetch_and_prepare_data(ticker, period=None, interval="1m"):
         regular_hours_df['Is_Pre_Market'] = False
         regular_hours_df['PMH'] = 0.0
         regular_hours_df['PML'] = 0.0
+        regular_hours_df['ORB_High'] = 0.0
+        regular_hours_df['ORB_Low'] = 0.0
         
     # 获取昨日关键位
     yesterday_levels = get_yesterday_levels(ticker)
