@@ -245,7 +245,8 @@ class LiveTradingRunner:
             print(f"Error saving trade_history.json: {e}")
 
     def add_log(self, msg: str):
-        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        est = pytz.timezone('America/New_York')
+        timestamp = datetime.datetime.now(est).strftime("%Y-%m-%d %H:%M:%S EDT")
         full_msg = f"[{timestamp}] {msg}"
         try:
             print(full_msg)  # Print to server console
