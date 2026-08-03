@@ -655,11 +655,11 @@ class LiveTradingRunner:
             try:
                 # 1. Check if market is open
                 if not self.is_market_open():
-                    self.add_log("💤 Outside market hours, bot sleeping...")
+                    self.add_log("💤 [休市中/未开盘] 交易所处于非常规交易时段，系统处于休市暂停模式，正在等待开盘...")
                     await asyncio.sleep(60)
                     continue
 
-                self.add_log(f"📡 Analyzing universe [{len(self.active_tickers)} tickers]...")
+                self.add_log(f"📡 [系统开盘中·全频段扫描] 正在研判监控池股票 [{len(self.active_tickers)} 支标的]...")
                 
                 # 2. Get active positions from Alpaca to sync state
                 try:
@@ -766,7 +766,7 @@ class LiveTradingRunner:
                             pnl_pct = (avg_cost - close_price) / avg_cost * 100
                             pos_label = f"SHORT {abs(current_shares)} shs @ ${avg_cost:.2f} | PnL: {'+' if pnl_pct>=0 else ''}{pnl_pct:.2f}%"
                         else:
-                            pos_label = "Flat / Watch"
+                            pos_label = "📡 [系统开盘中·空仓研判] 正在全频段扫描，暂未发现符合条件的合适买点"
 
                         alerts = []
                         vwap_dist_pct = abs(close_price - vwap) / vwap * 100
@@ -787,8 +787,10 @@ class LiveTradingRunner:
                             decision_icon = "⏳ WATCH"
                         elif action in ("BUY", "SHORT"):
                             decision_icon = f"🚀 TRIGGER {action}"
+                        elif action in ("PARTIAL_SELL", "PARTIAL_COVER"):
+                            decision_icon = f"🟢 PARTIAL EXIT {action}"
                         else:
-                            decision_icon = f"🔒 EXIT {action}"
+                            decision_icon = f"🔒 FULL EXIT {action}"
 
                         snapshot = (
                             f"{trend_icon} [{ticker}] ${close_price:.2f} | "
@@ -826,6 +828,28 @@ class LiveTradingRunner:
                                 self.add_trade_action("BUY", ticker, shares, close_price, reason)
                             else:
                                 self.add_log(f"❌ [{ticker}] BUY order failed. Reason: {order_res.get('error')}")
+
+                        elif action == "PARTIAL_SELL" and current_shares > 0:
+                            sell_qty = max(1, current_shares // 2)
+                            pnl = (close_price - avg_cost) * sell_qty
+                            self.add_log(f"🟢 [{ticker}] PARTIAL_SELL (第一阶分批止盈 50%) signal triggered! Market selling {sell_qty} shares (Est. PnL ${pnl:.2f})...")
+                            order_res = self.adapter.submit_market_order(ticker, sell_qty, "sell")
+                            if order_res.get("success"):
+                                self.add_log(f"✅ [{ticker}] PARTIAL_SELL order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
+                                self.add_trade_action("PARTIAL_SELL", ticker, sell_qty, close_price, reason, pnl=pnl)
+                            else:
+                                self.add_log(f"❌ [{ticker}] PARTIAL_SELL order failed. Reason: {order_res.get('error')}")
+
+                        elif action == "PARTIAL_COVER" and current_shares < 0:
+                            cover_qty = max(1, abs(current_shares) // 2)
+                            pnl = (avg_cost - close_price) * cover_qty
+                            self.add_log(f"🟢 [{ticker}] PARTIAL_COVER (第一阶分批止回补 50%) signal triggered! Market buying {cover_qty} shares (Est. PnL ${pnl:.2f})...")
+                            order_res = self.adapter.submit_market_order(ticker, cover_qty, "buy")
+                            if order_res.get("success"):
+                                self.add_log(f"✅ [{ticker}] PARTIAL_COVER order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
+                                self.add_trade_action("PARTIAL_COVER", ticker, cover_qty, close_price, reason, pnl=pnl)
+                            else:
+                                self.add_log(f"❌ [{ticker}] PARTIAL_COVER order failed. Reason: {order_res.get('error')}")
 
                         elif action == "SHORT" and current_shares == 0:
                             account = self.adapter.get_account_summary()
