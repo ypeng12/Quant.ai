@@ -95,9 +95,11 @@ class LiveTradingRunner:
         self.action_logs = []   # 仅含实际买卖动作的日志
         self.trade_history = [] # 持久化交易记录（用于复盘）
         self.history_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "trade_history.json")
-        self.config_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "runner_config.json")
         self.load_trade_history()
-
+        self.config_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "runner_config.json")
+        self.load_runner_config()
+        self.add_log("📡 [系统初始化完成] AI 量化研判引擎已准备就绪...")
+        self.adapter = MockAlpacaAdapter()
         self.active_tickers = WATCHLIST.copy()
         self.highest_prices = {}
         self.loop_task = None
