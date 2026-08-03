@@ -746,7 +746,15 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
             <div style={{ flex: 1, overflowY: 'auto', maxHeight: '380px' }}>
               {analysisFeed.length === 0 ? (
                 <div style={{ color: 'var(--color-text-secondary)', fontSize: '0.85rem', padding: '2.5rem 0', textAlign: 'center' }}>
-                  When AI Bot is active, real-time indicator snapshots and pattern alerts will appear here.
+                  {isBotRunning ? (
+                    <div style={{ color: '#00c805', fontWeight: 700 }}>
+                      📡 AI Quant Engine is active and scanning market bars in real time...
+                    </div>
+                  ) : (
+                    <div>
+                      ▶️ Click "Start AI Bot" to launch live indicator scanning and pattern alerts.
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
