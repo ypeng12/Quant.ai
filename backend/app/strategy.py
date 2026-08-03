@@ -199,8 +199,9 @@ def evaluate_market_state(row, prev_row, current_shares, avg_cost, ticker, highe
         if pnl_pct >= breakeven_trigger and not is_scaled_out:
             return "PARTIAL_SELL", f"[Long-PartialTakeProfit] Reached +{pnl_pct*100:.2f}% gain. Executing 50% scale-out & locking breakeven."
 
-        # 2. Dynamic Ratchet Profit Lock (Lock in >= 50% of peak gains once peak profit >= breakeven_trigger)
-        if peak_pnl_pct >= breakeven_trigger and avg_cost > 0:
+        ratchet_trigger = p.get("ratchet_trigger_pct", 0.015)
+        # 2. Dynamic Ratchet Profit Lock (Lock in >= 50% of peak gains once peak profit >= +1.5%)
+        if peak_pnl_pct >= ratchet_trigger and avg_cost > 0:
             ratchet_locked_pnl = max(0.001, peak_pnl_pct * 0.50)  # Lock at least 50% of peak unrealized gain
             ratchet_stop_price = avg_cost * (1.0 + ratchet_locked_pnl)
             if close < ratchet_stop_price:
