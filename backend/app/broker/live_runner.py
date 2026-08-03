@@ -115,18 +115,17 @@ class LiveTradingRunner:
         }
         self.market_mode = "MANUAL_OPEN"     # 默认人为强制开盘，打破休市限制
         self.ignore_market_hours = True
-        self.focus_tickers = []              # 用户指定的重点重仓关注标的 (Overweight Focus Tickers)
+        self.ticker_scores = {}              # AI 实时多因子置信度打分 (由 AI 客观计算与动态排序)
         self.load_runner_config()
         self.adapter = MockAlpacaAdapter()
 
     def load_runner_config(self):
-        """从本地磁盘 runner_config.json 加载持久化系统开盘控制模式、重点关注股票与状态配置。"""
+        """从本地磁盘 runner_config.json 加载持久化系统开盘控制模式与状态配置。"""
         try:
             if os.path.exists(self.config_file):
                 with open(self.config_file, 'r', encoding='utf-8') as f:
                     data = json.load(f)
                     self.market_mode = data.get("market_mode", "MANUAL_OPEN")
-                    self.focus_tickers = data.get("focus_tickers", [])
                     if "strategy_params" in data and isinstance(data["strategy_params"], dict):
                         self.strategy_params.update(data["strategy_params"])
                     self.ignore_market_hours = (self.market_mode == "MANUAL_OPEN")
@@ -134,32 +133,17 @@ class LiveTradingRunner:
             print(f"Error loading runner_config.json: {e}")
 
     def save_runner_config(self):
-        """保存系统开盘控制模式、重点关注股票与策略参数到本地磁盘 runner_config.json。"""
+        """保存系统开盘控制模式与策略参数到本地磁盘 runner_config.json。"""
         try:
             with open(self.config_file, 'w', encoding='utf-8') as f:
                 json.dump({
                     "market_mode": self.market_mode,
                     "is_running": self.is_running,
-                    "focus_tickers": self.focus_tickers,
                     "strategy_params": self.strategy_params,
                     "updated_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 }, f, ensure_ascii=False, indent=2)
         except Exception as e:
             print(f"Error saving runner_config.json: {e}")
-
-    def set_focus_tickers(self, tickers: List[str]) -> Dict:
-        """设置重点重仓关注股票 (Overweight Focus Tickers)"""
-        cleaned = []
-        for t in tickers:
-            if t and isinstance(t, str):
-                sym = t.upper().strip()
-                if sym and sym not in cleaned:
-                    cleaned.append(sym)
-        self.focus_tickers = cleaned
-        self.save_runner_config()
-        msg = f"🔥 [重点重仓配置已更新] AI 已将 {self.focus_tickers} 标记为【高优先重仓关注标的】(优先研判 +15分置信加成 + 1.75x 重仓配额)！"
-        self.add_log(msg)
-        return {"success": True, "focus_tickers": self.focus_tickers, "message": msg}
 
     def set_market_mode(self, mode: str) -> Dict:
         """人为设定开盘关盘控制模式: MANUAL_OPEN (人为强制开盘), MANUAL_CLOSE (人为强制关盘), AUTO_EXCHANGE (交易所自动)"""
@@ -576,7 +560,7 @@ class LiveTradingRunner:
             "market_mode": self.market_mode,
             "is_market_open": self.is_market_open(),
             "ignore_market_hours": self.ignore_market_hours,
-            "focus_tickers": self.focus_tickers,
+            "ticker_scores": self.ticker_scores,
             "monitored_tickers": self.active_tickers,
             "strategy_params": self.strategy_params,
             "logs_count": len(self.logs)
@@ -705,8 +689,9 @@ class LiveTradingRunner:
                     has_pos = positions_by_ticker.get(t) and positions_by_ticker[t].get('shares', 0) != 0
                     if t in user_watchlist or has_pos:
                         pruned_universe.append(t)
-                # Prioritize focus tickers to top of monitoring queue
-                pruned_universe.sort(key=lambda t: 0 if t in self.focus_tickers else 1)
+                
+                # Sort active tickers by live AI confidence score in descending order
+                pruned_universe.sort(key=lambda t: self.ticker_scores.get(t, 0), reverse=True)
                 self.active_tickers = pruned_universe
 
                 # 4. Poll and evaluate each stock in our watchlist
@@ -752,7 +737,6 @@ class LiveTradingRunner:
                                 del self.highest_prices[ticker]
 
                         # 5. Evaluate strategy
-                        is_focus_stock = ticker in self.focus_tickers
                         action, reason = evaluate_market_state(
                             row=row,
                             prev_row=prev_row,
@@ -760,9 +744,15 @@ class LiveTradingRunner:
                             avg_cost=avg_cost,
                             ticker=ticker,
                             highest_price=highest_price,
-                            params=self.strategy_params,
-                            is_focus=is_focus_stock
+                            params=self.strategy_params
                         )
+
+                        # Update AI Confidence Score map for UI & ranking
+                        ema_9 = float(row.get('EMA_9', close_price))
+                        ema_21 = float(row.get('EMA_21', close_price))
+                        is_bullish = (ema_9 > ema_21)
+                        live_score = calculate_confidence_score(row, prev_row, is_bullish=is_bullish)
+                        self.ticker_scores[ticker] = live_score
 
                         # Enforce Exit-Only Mode for tickers removed from user Watchlist
                         if ticker not in user_watchlist and action in ("BUY", "SHORT"):
@@ -770,8 +760,6 @@ class LiveTradingRunner:
                             reason = f"[{ticker}] removed from Watchlist (Exit-Only Mode). Blocked new entry order."
 
                         # Generate Indicator Snapshot (English)
-                        ema_9  = float(row.get('EMA_9',  close_price))
-                        ema_21 = float(row.get('EMA_21', close_price))
                         vwap   = float(row.get('VWAP',   close_price))
                         rsi    = float(row.get('RSI',    50.0))
                         rvol   = float(row.get('RVOL',   1.0))
@@ -791,8 +779,7 @@ class LiveTradingRunner:
                             pos_label = "📡 [系统开盘中·空仓研判] 正在全频段扫描，暂未发现符合条件的合适买点"
 
                         alerts = []
-                        if is_focus_stock:
-                            alerts.append("🔥 Overweight Focus")
+                        alerts.append(f"🏆 AI Score:{live_score}分")
                         vwap_dist_pct = abs(close_price - vwap) / vwap * 100
                         ema_cross_dist = abs(ema_9 - ema_21) / ema_21 * 100
                         if vwap_dist_pct < 0.15:
@@ -849,17 +836,11 @@ class LiveTradingRunner:
                             else:
                                 size_scale = 1.00
 
-                            # Apply 1.75x Overweight Multiplier for Focus Tickers
-                            if is_focus_stock:
-                                size_scale *= 1.75
-                                max_pct = min(0.95, max_pct * 1.75)
-
                             shares = int(base_shares * size_scale)
                             cash_shares = int((cash * 0.95) / close_price)
                             shares = max(1, min(shares, cash_shares))
 
-                            focus_msg = "🔥 [重点重仓 1.75x]" if is_focus_stock else ""
-                            self.add_log(f"🛒 [{ticker}] {focus_msg} BUY signal triggered ({size_scale*100:.0f}% position)! Market buying {shares} shares...")
+                            self.add_log(f"🛒 [{ticker}] BUY signal triggered ({size_scale*100:.0f}% position, AI Score: {live_score}分)! Market buying {shares} shares...")
                             order_res = self.adapter.submit_market_order(ticker, shares, "buy")
                             if order_res.get("success"):
                                 self.add_log(f"✅ [{ticker}] BUY order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
