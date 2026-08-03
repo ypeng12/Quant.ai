@@ -140,10 +140,14 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
       }
 
       const feedJson = await feedRes.json();
-      if (feedJson.success) setActionFeed(feedJson.logs || []);
+      if (feedJson.success && feedJson.logs && feedJson.logs.length > 0) {
+        setActionFeed(feedJson.logs);
+      }
 
       const analysisJson = await analysisRes.json();
-      if (analysisJson.success) setAnalysisFeed(analysisJson.logs || []);
+      if (analysisJson.success && analysisJson.logs && analysisJson.logs.length > 0) {
+        setAnalysisFeed(analysisJson.logs);
+      }
 
       const histJson = await histRes.json();
       if (histJson.success) setTradeHistory(histJson.trades || []);
