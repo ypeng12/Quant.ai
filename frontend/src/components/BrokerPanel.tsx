@@ -281,6 +281,8 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
     if (action === 'SHORT') return { border: '1px solid rgba(255,59,48,0.5)', color: '#ff6b6b', bg: 'rgba(255,59,48,0.05)' };
     if (action === 'SELL') return { border: '1px solid rgba(255,149,0,0.4)', color: '#ff9500', bg: 'rgba(255,149,0,0.04)' };
     if (action === 'COVER') return { border: '1px solid rgba(100,180,255,0.4)', color: '#64b4ff', bg: 'rgba(100,180,255,0.04)' };
+    if (action === 'PARTIAL_SELL') return { border: '1px solid rgba(0,200,5,0.6)', color: '#00c805', bg: 'rgba(0,200,5,0.12)' };
+    if (action === 'PARTIAL_COVER') return { border: '1px solid rgba(100,180,255,0.6)', color: '#64b4ff', bg: 'rgba(100,180,255,0.12)' };
     return { border: '1px solid #333', color: '#888', bg: 'transparent' };
   };
 
@@ -589,8 +591,26 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
             </div>
           </div>
           {positions.length === 0 ? (
-            <div style={{ textAlign: 'center', color: 'var(--color-text-secondary)', padding: '3.5rem 0', fontSize: '0.85rem' }}>
-              No active positions. AI signals will trigger new orders automatically.
+            <div style={{ textAlign: 'center', padding: '3rem 1.5rem', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', border: '1px dashed rgba(255,255,255,0.1)' }}>
+              {(!isMarketOpen || marketMode === 'MANUAL_CLOSE') ? (
+                <div>
+                  <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#ff6b6b', marginBottom: '6px' }}>
+                    💤 休市中 / 人为关盘中
+                  </div>
+                  <div style={{ fontSize: '0.82rem', color: 'var(--color-text-secondary)' }}>
+                    美股交易所处于非常规交易时段或系统已设定为人为关盘。正在等待开盘或手动切换开盘模式...
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#00c805', marginBottom: '6px' }}>
+                    📡 系统全频段研判中 (监控池目前空仓)
+                  </div>
+                  <div style={{ fontSize: '0.82rem', color: 'var(--color-text-secondary)' }}>
+                    AI 量化引擎正在实时扫描 Watchlist 股票池微观数据，暂未发现符合条件的合适买点，持续全频监控中...
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <table className="ledger-table" style={{ fontSize: '0.85rem' }}>

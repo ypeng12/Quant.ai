@@ -93,45 +93,69 @@ def evaluate_market_state(row, prev_row, current_shares, avg_cost, ticker, highe
             if is_pml_breakdown or is_pdl_breakdown:
                 return "SHORT", "[Bearish-Support] Price broke below pre-market/yesterday support."
 
-    # State 2: Holding Long Position (Search for SELL opportunities)
+    # State 2: Holding Long Position (Search for SELL / PARTIAL_SELL opportunities)
     elif current_shares > 0:
         pnl_pct = (close - avg_cost) / avg_cost
+        peak_pnl_pct = (highest_price - avg_cost) / avg_cost if (highest_price > avg_cost and avg_cost > 0) else pnl_pct
         stop_loss = p.get("stop_loss_pct", 0.006)
         profit_target = p.get("profit_target_pct", 0.008)
-        
-        # 1. Take Profit
-        if pnl_pct >= profit_target:
-            return "SELL", f"[Long-TakeProfit] Profit reached +{pnl_pct*100:.2f}%."
-        
-        # 2. Stop Loss
+        breakeven_trigger = p.get("breakeven_trigger_pct", 0.008)
+        is_scaled_out = params.get("is_scaled_out", False) if params else False
+
+        # 1. First-Stage Scale-Out (50% Take Profit & Lock Breakeven)
+        if pnl_pct >= breakeven_trigger and not is_scaled_out:
+            return "PARTIAL_SELL", f"[Long-PartialTakeProfit] Reached +{pnl_pct*100:.2f}% gain. Executing 50% scale-out & locking breakeven."
+
+        # 2. Dynamic Ratchet Profit Lock (Lock in >= 50% of peak gains once peak profit >= breakeven_trigger)
+        if peak_pnl_pct >= breakeven_trigger and avg_cost > 0:
+            ratchet_locked_pnl = max(0.001, peak_pnl_pct * 0.50)  # Lock at least 50% of peak unrealized gain
+            ratchet_stop_price = avg_cost * (1.0 + ratchet_locked_pnl)
+            if close < ratchet_stop_price:
+                return "SELL", f"[Long-RatchetLock] Price pulled back to ${close:.2f}, triggering profit-lock stop ${ratchet_stop_price:.2f} (Locked +{ratchet_locked_pnl*100:.2f}% gain)."
+
+        # 3. Ultimate Full Take Profit
+        if pnl_pct >= profit_target * 2.0:
+            return "SELL", f"[Long-FullTakeProfit] Reached max profit target +{pnl_pct*100:.2f}%."
+
+        # 4. Breakeven Stop Loss (If peak exceeded breakeven trigger, never allow negative PnL)
+        if peak_pnl_pct >= breakeven_trigger and pnl_pct <= 0.001:
+            return "SELL", f"[Long-BreakevenStop] Price pulled back near entry (${avg_cost:.2f}). Exiting to preserve principal."
+
+        # 5. Fixed Stop Loss
         if pnl_pct <= -stop_loss:
             return "SELL", f"[Long-StopLoss] Loss reached -{abs(pnl_pct)*100:.2f}%."
-        
-        # 3. Trailing Stop
+
+        # 6. Trailing Stop
         stop_distance = atr * p.get("trailing_stop_atr_mult", 1.0)
         atr_stop_price = highest_price - stop_distance
         if close < atr_stop_price and highest_price > 0:
             return "SELL", f"[Long-TrailingStop] Price pulled back from peak ${highest_price:.2f} to trigger stop ${atr_stop_price:.2f}."
-        
-        # 4. Trend Reversal
+
+        # 7. Trend Reversal
         if is_death_cross or (is_bearish_trend and close < vwap):
             return "SELL", "[Long-Reversal] EMA Death Cross and below VWAP."
 
-    # State 3: Holding Short Position (Search for COVER opportunities)
+    # State 3: Holding Short Position (Search for COVER / PARTIAL_COVER opportunities)
     elif current_shares < 0:
         short_pnl_pct = (avg_cost - close) / avg_cost
         stop_loss = p.get("stop_loss_pct", 0.006)
         profit_target = p.get("profit_target_pct", 0.008)
-        
-        # 1. Take Profit
-        if short_pnl_pct >= profit_target:
-            return "COVER", f"[Short-TakeProfit] Downside profit reached +{short_pnl_pct*100:.2f}%."
-        
-        # 2. Stop Loss
+        breakeven_trigger = p.get("breakeven_trigger_pct", 0.008)
+        is_scaled_out = params.get("is_scaled_out", False) if params else False
+
+        # 1. First-Stage Scale-Out (50% Take Profit)
+        if short_pnl_pct >= breakeven_trigger and not is_scaled_out:
+            return "PARTIAL_COVER", f"[Short-PartialTakeProfit] Reached +{short_pnl_pct*100:.2f}% gain. Scaling out 50% & locking breakeven."
+
+        # 2. Dynamic Full Take Profit
+        if short_pnl_pct >= profit_target * 2.0:
+            return "COVER", f"[Short-FullTakeProfit] Reached max downside profit +{short_pnl_pct*100:.2f}%."
+
+        # 3. Stop Loss
         if short_pnl_pct <= -stop_loss:
             return "COVER", f"[Short-StopLoss] Price rebounded +{abs(short_pnl_pct)*100:.2f}%."
-        
-        # 3. Trend Reversal
+
+        # 4. Trend Reversal
         if is_gold_cross or (is_bullish_trend and close >= vwap):
             return "COVER", "[Short-Reversal] EMA Golden Cross and reclaimed VWAP."
 
