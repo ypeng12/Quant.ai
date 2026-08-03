@@ -813,14 +813,23 @@ class LiveTradingRunner:
                             dollar_risk = total_equity * risk_pct
                             stop_distance = atr * atr_mult
                             
-                            shares = int(dollar_risk / stop_distance) if stop_distance > 0 else int((total_equity * max_pct) / close_price)
+                            base_shares = int(dollar_risk / stop_distance) if stop_distance > 0 else int((total_equity * max_pct) / close_price)
                             max_shares = int((total_equity * max_pct) / close_price)
-                            shares = min(shares, max_shares)
-                            
+                            base_shares = min(base_shares, max_shares)
+
+                            # Tiered Position Sizing based on Confidence Score
+                            if "[Probe-Light" in reason:
+                                size_scale = 0.35
+                            elif "[Standard-Entry" in reason:
+                                size_scale = 0.70
+                            else:
+                                size_scale = 1.00
+
+                            shares = int(base_shares * size_scale)
                             cash_shares = int((cash * 0.95) / close_price)
                             shares = max(1, min(shares, cash_shares))
 
-                            self.add_log(f"🛒 [{ticker}] BUY signal triggered! Market buying {shares} shares...")
+                            self.add_log(f"🛒 [{ticker}] BUY signal triggered ({size_scale*100:.0f}% position)! Market buying {shares} shares...")
                             order_res = self.adapter.submit_market_order(ticker, shares, "buy")
                             if order_res.get("success"):
                                 self.add_log(f"✅ [{ticker}] BUY order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
@@ -828,6 +837,21 @@ class LiveTradingRunner:
                                 self.add_trade_action("BUY", ticker, shares, close_price, reason)
                             else:
                                 self.add_log(f"❌ [{ticker}] BUY order failed. Reason: {order_res.get('error')}")
+
+                        elif action == "PYRAMID_BUY" and current_shares > 0:
+                            account = self.adapter.get_account_summary()
+                            cash = account['cash']
+                            add_shares = max(1, int(current_shares * 0.35))
+                            cash_shares = int((cash * 0.90) / close_price)
+                            add_shares = max(1, min(add_shares, cash_shares))
+
+                            self.add_log(f"⚡ [{ticker}] PYRAMID_BUY (顺势加仓 +35%) signal triggered! Market buying {add_shares} shares...")
+                            order_res = self.adapter.submit_market_order(ticker, add_shares, "buy")
+                            if order_res.get("success"):
+                                self.add_log(f"✅ [{ticker}] PYRAMID_BUY order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
+                                self.add_trade_action("PYRAMID_BUY", ticker, add_shares, close_price, reason)
+                            else:
+                                self.add_log(f"❌ [{ticker}] PYRAMID_BUY order failed. Reason: {order_res.get('error')}")
 
                         elif action == "PARTIAL_SELL" and current_shares > 0:
                             sell_qty = max(1, current_shares // 2)

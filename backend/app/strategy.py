@@ -9,14 +9,75 @@ DEFAULT_PARAMS = {
     "strategy_mode": "dynamic"   # dynamic, consensus, ema_cross, breakout, patterns, opening_breakout
 }
 
+def calculate_confidence_score(row, prev_row, is_bullish=True):
+    """
+    Calculate 5-factor AI confidence score (0 to 100 points):
+    1. Trend Alignment (EMA 9 > 21 > 50): +25 pts
+    2. Relative Volume (RVOL >= 1.1): +20 pts
+    3. VWAP Support/Resistance (close vs VWAP): +20 pts
+    4. RSI Healthiness (45 <= RSI <= 68): +15 pts
+    5. Breakout / Cross Resonance: +20 pts
+    """
+    score = 0
+    close = row['Close']
+    vwap = row['VWAP']
+    ema_9 = row['EMA_9']
+    ema_21 = row['EMA_21']
+    ema_50 = row.get('EMA_50', ema_21)
+    rsi = row.get('RSI', 50.0)
+    rvol = row.get('RVOL', 1.0)
+    
+    # 1. Trend Alignment
+    if is_bullish:
+        if ema_9 > ema_21 > ema_50:
+            score += 25
+        elif ema_9 > ema_21:
+            score += 15
+    else:
+        if ema_9 < ema_21 < ema_50:
+            score += 25
+        elif ema_9 < ema_21:
+            score += 15
+
+    # 2. RVOL Volume Confirmation
+    if rvol >= 1.4:
+        score += 20
+    elif rvol >= 1.1:
+        score += 12
+
+    # 3. VWAP Position
+    if is_bullish and close >= vwap:
+        score += 20
+    elif not is_bullish and close < vwap:
+        score += 20
+
+    # 4. RSI Health Indicator
+    if is_bullish and 45 <= rsi <= 68:
+        score += 15
+    elif not is_bullish and 32 <= rsi <= 55:
+        score += 15
+
+    # 5. Breakout / Cross Resonance
+    prev_ema_9 = prev_row['EMA_9']
+    prev_ema_21 = prev_row['EMA_21']
+    if is_bullish and prev_ema_9 <= prev_ema_21 and ema_9 > ema_21:
+        score += 20
+    elif not is_bullish and prev_ema_9 >= prev_ema_21 and ema_9 < ema_21:
+        score += 20
+
+    return min(100, score)
+
+
 def evaluate_market_state(row, prev_row, current_shares, avg_cost, ticker, highest_price=0.0, params=None):
     """
     Evaluate current bar data and determine trading action.
-    - BUY: Trigger long position
+    - BUY: Trigger long position (35% probe, 70% standard, 100% full conviction)
+    - PYRAMID_BUY: Add-on position (+35%) when momentum builds
     - SHORT: Trigger short position
+    - PARTIAL_SELL: Scale-out 50% take profit & lock breakeven
     - SELL: Close long position
     - COVER: Close short position
-    - HOLD: No action
+    - HOLD: Standing aside
     """
     p = DEFAULT_PARAMS.copy()
     if params:
@@ -73,25 +134,51 @@ def evaluate_market_state(row, prev_row, current_shares, avg_cost, ticker, highe
     if current_shares == 0:
         # A. Long BUY Signals
         if is_bullish_trend:
+            score = calculate_confidence_score(row, prev_row, is_bullish=True)
+            if score < 30:
+                return "HOLD", f"[{ticker}] Confidence Score ({score}/100) below 30 threshold. Standing aside."
+
             if is_gold_cross:
-                return "BUY", "[Bullish-Cross] EMA 9/21 Golden Cross formed."
-            if close >= vwap:
-                return "BUY", f"[Bullish-VWAP] Price holding above VWAP (${vwap:.2f})."
-            if donchian_high > 0 and close >= donchian_high:
-                return "BUY", f"[Bullish-Breakout] Donchian High breakout (${donchian_high:.2f})."
-            if is_pmh_breakout or is_pdh_breakout:
-                return "BUY", "[Bullish-Resistance] Price broke above pre-market/yesterday high."
+                reason = f"EMA 9/21 Golden Cross."
+            elif close >= vwap:
+                reason = f"Price holding above VWAP (${vwap:.2f})."
+            elif donchian_high > 0 and close >= donchian_high:
+                reason = f"Donchian High breakout (${donchian_high:.2f})."
+            elif is_pmh_breakout or is_pdh_breakout:
+                reason = f"PMH/PDH Breakout."
+            else:
+                return "HOLD", "Maintaining flat stance."
+
+            if 30 <= score < 55:
+                return "BUY", f"[Probe-Light Score:{score}/100] {reason} Initial light probe position (35% size)."
+            elif 55 <= score < 75:
+                return "BUY", f"[Standard-Entry Score:{score}/100] {reason} Standard entry (70% size)."
+            else:
+                return "BUY", f"[Conviction-Full Score:{score}/100] {reason} High conviction entry (100% size)."
 
         # B. Short SELL Signals
         if is_bearish_trend:
+            score = calculate_confidence_score(row, prev_row, is_bullish=False)
+            if score < 30:
+                return "HOLD", f"[{ticker}] Short Confidence Score ({score}/100) below 30 threshold. Standing aside."
+
             if is_death_cross:
-                return "SHORT", "[Bearish-Cross] EMA 9/21 Death Cross formed."
-            if close < vwap:
-                return "SHORT", f"[Bearish-VWAP] Price dropped below VWAP (${vwap:.2f})."
-            if donchian_low > 0 and close <= donchian_low:
-                return "SHORT", f"[Bearish-Breakdown] Donchian Low breakdown (${donchian_low:.2f})."
-            if is_pml_breakdown or is_pdl_breakdown:
-                return "SHORT", "[Bearish-Support] Price broke below pre-market/yesterday support."
+                reason = "EMA 9/21 Death Cross."
+            elif close < vwap:
+                reason = f"Price dropped below VWAP (${vwap:.2f})."
+            elif donchian_low > 0 and close <= donchian_low:
+                reason = f"Donchian Low breakdown (${donchian_low:.2f})."
+            elif is_pml_breakdown or is_pdl_breakdown:
+                reason = "PMH/PDH Breakdown."
+            else:
+                return "HOLD", "Maintaining flat stance."
+
+            if 30 <= score < 55:
+                return "SHORT", f"[Probe-Light Score:{score}/100] {reason} Initial light probe short (35% size)."
+            elif 55 <= score < 75:
+                return "SHORT", f"[Standard-Entry Score:{score}/100] {reason} Standard short (70% size)."
+            else:
+                return "SHORT", f"[Conviction-Full Score:{score}/100] {reason} High conviction short (100% size)."
 
     # State 2: Holding Long Position (Search for SELL / PARTIAL_SELL opportunities)
     elif current_shares > 0:
@@ -101,6 +188,12 @@ def evaluate_market_state(row, prev_row, current_shares, avg_cost, ticker, highe
         profit_target = p.get("profit_target_pct", 0.008)
         breakeven_trigger = p.get("breakeven_trigger_pct", 0.008)
         is_scaled_out = params.get("is_scaled_out", False) if params else False
+
+        # Pyramiding Add-On: If confidence score builds up (Score >= 55) and trade is in profit (+0.3%+), trigger add-on
+        score = calculate_confidence_score(row, prev_row, is_bullish=True)
+        is_pyramided = params.get("is_pyramided", False) if params else False
+        if score >= 55 and pnl_pct >= 0.003 and not is_pyramided and not is_scaled_out:
+            return "PYRAMID_BUY", f"[Pyramid-Addon Score:{score}/100] Momentum growing & trade in profit (+{pnl_pct*100:.2f}%). Adding +35% position."
 
         # 1. First-Stage Scale-Out (50% Take Profit & Lock Breakeven)
         if pnl_pct >= breakeven_trigger and not is_scaled_out:
