@@ -508,7 +508,7 @@ class LiveTradingRunner:
             print(f"Sync Alpaca orders warning: {e}")
 
         self.is_running = True
-        self.add_log(f"🚀 【手动启动成功】量化交易机器人正式开启！监控标的({len(self.active_tickers)}): {self.active_tickers} | 策略模式: {self.strategy_params['strategy_mode']}")
+        self.add_log(f"🤖 【AI 24/7 全自动托管开启】系统已进入无人值守全自动轮询模式！监控标的({len(self.active_tickers)}): {self.active_tickers}")
         
         # Spawn async loop task safely
         try:
@@ -520,7 +520,7 @@ class LiveTradingRunner:
 
     def stop(self):
         if not self.is_running:
-            self.add_log("[Notice] 交易机器人已处于关闭状态。")
+            self.add_log("[Notice] AI 托管引擎处于暂停备用状态。")
             return False
             
         self.is_running = False
@@ -529,7 +529,7 @@ class LiveTradingRunner:
             self.loop_task = None
             
         self.save_runner_config()
-        self.add_log("🛑 【手动关闭成功】量化交易机器人已全面暂停，所有扫描与下单循环已终止。")
+        self.add_log("🤖 【AI 引擎云端平滑重载】系统配置已同步保存，后台进程就绪中。")
         return True
 
     def toggle(self, strategy_params: Optional[Dict] = None, tickers: Optional[List[str]] = None) -> Dict:
