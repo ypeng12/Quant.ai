@@ -52,6 +52,10 @@ class LiveStartRequest(BaseModel):
     params: Optional[dict] = None
     tickers: Optional[List[str]] = None
     ignore_market_hours: Optional[bool] = True
+    market_mode: Optional[str] = None
+
+class MarketModeRequest(BaseModel):
+    market_mode: str  # "MANUAL_OPEN", "MANUAL_CLOSE", "AUTO_EXCHANGE"
 
 class WatchlistSyncRequest(BaseModel):
     tickers: List[str]
@@ -70,9 +74,10 @@ live_runner = LiveTradingRunner()
 @app.on_event("startup")
 def auto_start_live_runner():
     """
-    后端服务启动时，自动初始化开启 AI 量化托管交易机器人，保障 24/7 全天候实时监控与自动交易。
+    后端服务启动时，自动初始化开启 AI 量化托管交易机器人，继承持久化开盘模式与状态配置。
     """
     try:
+        saved_mode = getattr(live_runner, "market_mode", "MANUAL_OPEN")
         live_runner.start(
             strategy_params={
                 "strategy_mode": "dynamic",
@@ -83,9 +88,9 @@ def auto_start_live_runner():
                 "rsi_threshold_buy": 70.0,
                 "market_open_focus": False
             },
-            ignore_market_hours=False
+            market_mode=saved_mode
         )
-        print("[System Startup] 🚀 AI 量化托管交易机器人已在后台自动启动上线 (严格遵循美股常规交易时段与尾盘 15:55 清仓风控)！")
+        print(f"[System Startup] 🚀 AI 量化托管交易机器人已在后台自动启动上线 (当前开盘控制模式: {saved_mode})！")
     except Exception as e:
         print(f"[System Startup Warning] 自动启动交易机器人异常: {e}")
 
@@ -1440,9 +1445,40 @@ def start_live_trading(req: LiveStartRequest):
     success = live_runner.start(
         strategy_params=req.params, 
         tickers=req.tickers,
-        ignore_market_hours=req.ignore_market_hours
+        ignore_market_hours=req.ignore_market_hours if req.ignore_market_hours is not None else True,
+        market_mode=req.market_mode
     )
     return {"success": success, "status": live_runner.get_status()}
+
+
+@app.post("/api/live/market_mode")
+def set_live_market_mode(req: MarketModeRequest):
+    res = live_runner.set_market_mode(req.market_mode)
+    return {"success": res.get("success", False), "data": res, "status": live_runner.get_status()}
+
+
+@app.get("/api/live/market_mode")
+def get_live_market_mode():
+    return {
+        "success": True,
+        "market_mode": live_runner.market_mode,
+        "is_market_open": live_runner.is_market_open(),
+        "status": live_runner.get_status()
+    }
+
+
+@app.post("/api/live/stop")
+def stop_live_trading():
+    success = live_runner.stop()
+    return {"success": success, "status": live_runner.get_status()}
+
+
+@app.post("/api/live/toggle")
+def toggle_live_trading(req: Optional[LiveStartRequest] = None):
+    params = req.params if req else None
+    tickers = req.tickers if req else None
+    res = live_runner.toggle(strategy_params=params, tickers=tickers)
+    return {"success": True, "data": res, "status": live_runner.get_status()}
 
 
 @app.post("/api/live/watchlist/sync")
@@ -1450,12 +1486,6 @@ def sync_watchlist(req: WatchlistSyncRequest):
     updated = save_watchlist(req.tickers)
     live_runner.update_tickers(updated)
     return {"success": True, "active_tickers": live_runner.active_tickers}
-
-
-@app.post("/api/live/stop")
-def stop_live_trading():
-    success = live_runner.stop()
-    return {"success": success, "status": live_runner.get_status()}
 
 
 @app.get("/api/live/status")
