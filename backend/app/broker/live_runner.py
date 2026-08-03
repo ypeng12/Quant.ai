@@ -736,17 +736,24 @@ class LiveTradingRunner:
                             if ticker in self.highest_prices:
                                 del self.highest_prices[ticker]
 
-                        # Calculate AI Confidence Score & Relative Percentile Rank
+                        # Calculate Volatility & RVOL Weighted AI Score & Relative Rank
                         ema_9 = float(row.get('EMA_9', close_price))
                         ema_21 = float(row.get('EMA_21', close_price))
                         is_bullish = (ema_9 > ema_21)
                         live_score = calculate_confidence_score(row, prev_row, is_bullish=is_bullish)
-                        self.ticker_scores[ticker] = live_score
+                        
+                        rvol = float(row.get('RVOL', 1.0))
+                        atr = float(row.get('ATR', close_price * 0.01))
+                        atr_pct = (atr / close_price * 100.0) if close_price > 0 else 1.0
+                        vol_multiplier = max(1.0, (rvol * 0.6) + (atr_pct * 0.4))
+                        weighted_score = live_score * vol_multiplier
+
+                        self.ticker_scores[ticker] = round(weighted_score, 1)
 
                         # Calculate relative rank percentile in Watchlist
                         scores_list = list(self.ticker_scores.values())
                         if scores_list:
-                            rank_pct = (sum(1 for s in scores_list if s <= live_score) / len(scores_list)) * 100.0
+                            rank_pct = (sum(1 for s in scores_list if s <= weighted_score) / len(scores_list)) * 100.0
                         else:
                             rank_pct = 50.0
 

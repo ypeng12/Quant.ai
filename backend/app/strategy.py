@@ -11,12 +11,12 @@ DEFAULT_PARAMS = {
 
 def calculate_confidence_score(row, prev_row, is_bullish=True):
     """
-    Calculate 5-factor AI confidence score (0 to 100 points):
+    Calculate Volatility & RVOL Weighted AI Confidence Score (0 to 100 points):
     1. Trend Alignment (EMA 9 > 21 > 50): +25 pts
-    2. Relative Volume (RVOL >= 1.1): +20 pts
-    3. VWAP Support/Resistance (close vs VWAP): +20 pts
-    4. RSI Healthiness (45 <= RSI <= 68): +15 pts
-    5. Breakout / Cross Resonance: +20 pts
+    2. RVOL Volume Surge (RVOL >= 1.2): +25 pts
+    3. Intraday Volatility Expansion (ATR% >= 0.3%): +15 pts
+    4. VWAP Position: +20 pts
+    5. RSI Healthiness: +15 pts
     """
     score = 0
     close = row['Close']
@@ -26,6 +26,8 @@ def calculate_confidence_score(row, prev_row, is_bullish=True):
     ema_50 = row.get('EMA_50', ema_21)
     rsi = row.get('RSI', 50.0)
     rvol = row.get('RVOL', 1.0)
+    atr = row.get('ATR', 0.0)
+    atr_pct = (atr / close * 100.0) if close > 0 else 0.0
     
     # 1. Trend Alignment
     if is_bullish:
@@ -39,31 +41,31 @@ def calculate_confidence_score(row, prev_row, is_bullish=True):
         elif ema_9 < ema_21:
             score += 15
 
-    # 2. RVOL Volume Confirmation
-    if rvol >= 1.4:
-        score += 20
-    elif rvol >= 1.1:
-        score += 12
+    # 2. RVOL Volume Surge (Prioritize high activity stocks like TSLA over quiet AAPL)
+    if rvol >= 1.8:
+        score += 25
+    elif rvol >= 1.2:
+        score += 15
+    elif rvol >= 1.0:
+        score += 8
 
-    # 3. VWAP Position
+    # 3. Intraday Volatility Expansion (Boost active moving stocks)
+    if atr_pct >= 0.6:
+        score += 15
+    elif atr_pct >= 0.3:
+        score += 10
+
+    # 4. VWAP Position
     if is_bullish and close >= vwap:
         score += 20
     elif not is_bullish and close < vwap:
         score += 20
 
-    # 4. RSI Health Indicator
+    # 5. RSI Health Indicator
     if is_bullish and 45 <= rsi <= 68:
         score += 15
     elif not is_bullish and 32 <= rsi <= 55:
         score += 15
-
-    # 5. Breakout / Cross Resonance
-    prev_ema_9 = prev_row['EMA_9']
-    prev_ema_21 = prev_row['EMA_21']
-    if is_bullish and prev_ema_9 <= prev_ema_21 and ema_9 > ema_21:
-        score += 20
-    elif not is_bullish and prev_ema_9 >= prev_ema_21 and ema_9 < ema_21:
-        score += 20
 
     return min(100, score)
 
