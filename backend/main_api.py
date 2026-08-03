@@ -57,6 +57,9 @@ class LiveStartRequest(BaseModel):
 class MarketModeRequest(BaseModel):
     market_mode: str  # "MANUAL_OPEN", "MANUAL_CLOSE", "AUTO_EXCHANGE"
 
+class FocusTickersRequest(BaseModel):
+    tickers: List[str]
+
 class WatchlistSyncRequest(BaseModel):
     tickers: List[str]
 
@@ -1463,6 +1466,21 @@ def get_live_market_mode():
         "success": True,
         "market_mode": live_runner.market_mode,
         "is_market_open": live_runner.is_market_open(),
+        "status": live_runner.get_status()
+    }
+
+
+@app.post("/api/live/focus_tickers")
+def set_live_focus_tickers(req: FocusTickersRequest):
+    res = live_runner.set_focus_tickers(req.tickers)
+    return {"success": res.get("success", False), "data": res, "status": live_runner.get_status()}
+
+
+@app.get("/api/live/focus_tickers")
+def get_live_focus_tickers():
+    return {
+        "success": True,
+        "focus_tickers": live_runner.focus_tickers,
         "status": live_runner.get_status()
     }
 

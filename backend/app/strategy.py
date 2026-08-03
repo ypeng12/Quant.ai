@@ -9,7 +9,7 @@ DEFAULT_PARAMS = {
     "strategy_mode": "dynamic"   # dynamic, consensus, ema_cross, breakout, patterns, opening_breakout
 }
 
-def calculate_confidence_score(row, prev_row, is_bullish=True):
+def calculate_confidence_score(row, prev_row, is_bullish=True, is_focus=False):
     """
     Calculate 5-factor AI confidence score (0 to 100 points):
     1. Trend Alignment (EMA 9 > 21 > 50): +25 pts
@@ -17,6 +17,7 @@ def calculate_confidence_score(row, prev_row, is_bullish=True):
     3. VWAP Support/Resistance (close vs VWAP): +20 pts
     4. RSI Healthiness (45 <= RSI <= 68): +15 pts
     5. Breakout / Cross Resonance: +20 pts
+    6. Focus Ticker Overweight Bonus (is_focus=True): +15 pts
     """
     score = 0
     close = row['Close']
@@ -65,10 +66,14 @@ def calculate_confidence_score(row, prev_row, is_bullish=True):
     elif not is_bullish and prev_ema_9 >= prev_ema_21 and ema_9 < ema_21:
         score += 20
 
+    # 6. Priority Overweight Focus Bonus
+    if is_focus:
+        score += 15
+
     return min(100, score)
 
 
-def evaluate_market_state(row, prev_row, current_shares, avg_cost, ticker, highest_price=0.0, params=None):
+def evaluate_market_state(row, prev_row, current_shares, avg_cost, ticker, highest_price=0.0, params=None, is_focus=False):
     """
     Evaluate current bar data and determine trading action.
     - BUY: Trigger long position (35% probe, 70% standard, 100% full conviction)
@@ -134,9 +139,10 @@ def evaluate_market_state(row, prev_row, current_shares, avg_cost, ticker, highe
     if current_shares == 0:
         # A. Long BUY Signals
         if is_bullish_trend:
-            score = calculate_confidence_score(row, prev_row, is_bullish=True)
+            score = calculate_confidence_score(row, prev_row, is_bullish=True, is_focus=is_focus)
+            focus_str = "🔥 [Focus-Overweight] " if is_focus else ""
             if score < 30:
-                return "HOLD", f"[{ticker}] Confidence Score ({score}/100) below 30 threshold. Standing aside."
+                return "HOLD", f"[{ticker}] {focus_str}Confidence Score ({score}/100) below 30 threshold. Standing aside."
 
             if is_gold_cross:
                 reason = f"EMA 9/21 Golden Cross."
@@ -150,17 +156,18 @@ def evaluate_market_state(row, prev_row, current_shares, avg_cost, ticker, highe
                 return "HOLD", "Maintaining flat stance."
 
             if 30 <= score < 55:
-                return "BUY", f"[Probe-Light Score:{score}/100] {reason} Initial light probe position (35% size)."
+                return "BUY", f"[Probe-Light Score:{score}/100] {focus_str}{reason} Initial light probe position (35% size)."
             elif 55 <= score < 75:
-                return "BUY", f"[Standard-Entry Score:{score}/100] {reason} Standard entry (70% size)."
+                return "BUY", f"[Standard-Entry Score:{score}/100] {focus_str}{reason} Standard entry (70% size)."
             else:
-                return "BUY", f"[Conviction-Full Score:{score}/100] {reason} High conviction entry (100% size)."
+                return "BUY", f"[Conviction-Full Score:{score}/100] {focus_str}{reason} High conviction entry (100% size)."
 
         # B. Short SELL Signals
         if is_bearish_trend:
-            score = calculate_confidence_score(row, prev_row, is_bullish=False)
+            score = calculate_confidence_score(row, prev_row, is_bullish=False, is_focus=is_focus)
+            focus_str = "🔥 [Focus-Overweight] " if is_focus else ""
             if score < 30:
-                return "HOLD", f"[{ticker}] Short Confidence Score ({score}/100) below 30 threshold. Standing aside."
+                return "HOLD", f"[{ticker}] {focus_str}Short Confidence Score ({score}/100) below 30 threshold. Standing aside."
 
             if is_death_cross:
                 reason = "EMA 9/21 Death Cross."
@@ -174,11 +181,11 @@ def evaluate_market_state(row, prev_row, current_shares, avg_cost, ticker, highe
                 return "HOLD", "Maintaining flat stance."
 
             if 30 <= score < 55:
-                return "SHORT", f"[Probe-Light Score:{score}/100] {reason} Initial light probe short (35% size)."
+                return "SHORT", f"[Probe-Light Score:{score}/100] {focus_str}{reason} Initial light probe short (35% size)."
             elif 55 <= score < 75:
-                return "SHORT", f"[Standard-Entry Score:{score}/100] {reason} Standard short (70% size)."
+                return "SHORT", f"[Standard-Entry Score:{score}/100] {focus_str}{reason} Standard short (70% size)."
             else:
-                return "SHORT", f"[Conviction-Full Score:{score}/100] {reason} High conviction short (100% size)."
+                return "SHORT", f"[Conviction-Full Score:{score}/100] {focus_str}{reason} High conviction short (100% size)."
 
     # State 2: Holding Long Position (Search for SELL / PARTIAL_SELL opportunities)
     elif current_shares > 0:
@@ -190,7 +197,7 @@ def evaluate_market_state(row, prev_row, current_shares, avg_cost, ticker, highe
         is_scaled_out = params.get("is_scaled_out", False) if params else False
 
         # Pyramiding Add-On: If confidence score builds up (Score >= 55) and trade is in profit (+0.3%+), trigger add-on
-        score = calculate_confidence_score(row, prev_row, is_bullish=True)
+        score = calculate_confidence_score(row, prev_row, is_bullish=True, is_focus=is_focus)
         is_pyramided = params.get("is_pyramided", False) if params else False
         if score >= 55 and pnl_pct >= 0.003 and not is_pyramided and not is_scaled_out:
             return "PYRAMID_BUY", f"[Pyramid-Addon Score:{score}/100] Momentum growing & trade in profit (+{pnl_pct*100:.2f}%). Adding +35% position."
