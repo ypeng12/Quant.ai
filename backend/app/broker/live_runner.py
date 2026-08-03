@@ -95,6 +95,7 @@ class LiveTradingRunner:
         self.action_logs = []   # 仅含实际买卖动作的日志
         self.trade_history = [] # 持久化交易记录（用于复盘）
         self.history_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "trade_history.json")
+        self.config_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "runner_config.json")
         self.load_trade_history()
 
         self.active_tickers = WATCHLIST.copy()
@@ -112,8 +113,57 @@ class LiveTradingRunner:
             "position_sizing_mode": "atr",
             "market_open_focus": False       # 全天候扫描信号
         }
-        self.ignore_market_hours = True  # Set to True by default to allow testing anytime
+        self.market_mode = "MANUAL_OPEN"     # 默认人为强制开盘，打破休市限制
+        self.ignore_market_hours = True
+        self.load_runner_config()
         self.adapter = MockAlpacaAdapter()
+
+    def load_runner_config(self):
+        """从本地磁盘 runner_config.json 加载持久化系统开盘控制模式与状态配置。"""
+        try:
+            if os.path.exists(self.config_file):
+                with open(self.config_file, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    self.market_mode = data.get("market_mode", "MANUAL_OPEN")
+                    if "strategy_params" in data and isinstance(data["strategy_params"], dict):
+                        self.strategy_params.update(data["strategy_params"])
+                    self.ignore_market_hours = (self.market_mode == "MANUAL_OPEN")
+        except Exception as e:
+            print(f"Error loading runner_config.json: {e}")
+
+    def save_runner_config(self):
+        """保存系统开盘控制模式与策略参数到本地磁盘 runner_config.json，保障重启后状态继承。"""
+        try:
+            with open(self.config_file, 'w', encoding='utf-8') as f:
+                json.dump({
+                    "market_mode": self.market_mode,
+                    "is_running": self.is_running,
+                    "strategy_params": self.strategy_params,
+                    "updated_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                }, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            print(f"Error saving runner_config.json: {e}")
+
+    def set_market_mode(self, mode: str) -> Dict:
+        """人为设定开盘关盘控制模式: MANUAL_OPEN (人为强制开盘), MANUAL_CLOSE (人为强制关盘), AUTO_EXCHANGE (交易所自动)"""
+        mode = mode.upper().strip()
+        if mode not in ("MANUAL_OPEN", "MANUAL_CLOSE", "AUTO_EXCHANGE"):
+            return {"success": False, "error": f"无效的 market_mode: {mode}。必须为 MANUAL_OPEN, MANUAL_CLOSE, 或 AUTO_EXCHANGE。"}
+        
+        self.market_mode = mode
+        if mode == "MANUAL_OPEN":
+            self.ignore_market_hours = True
+            msg = "🟢 [人为控制切换] 已强制设定为【人为开盘模式 (MANUAL_OPEN)】：打破休市限制，立即允许实时研判与买卖交易！"
+        elif mode == "MANUAL_CLOSE":
+            self.ignore_market_hours = False
+            msg = "🔴 [人为控制切换] 已强制设定为【人为关盘模式 (MANUAL_CLOSE)】：系统暂停一切研判扫描与下单交易。"
+        else:
+            self.ignore_market_hours = False
+            msg = "⏱️ [人为控制切换] 已切换为【交易所自动模式 (AUTO_EXCHANGE)】：系统将严格遵循美股官方交易所开盘时段 (9:30-16:00 EST)。"
+
+        self.save_runner_config()
+        self.add_log(msg)
+        return {"success": True, "market_mode": self.market_mode, "message": msg}
 
     def load_trade_history(self):
         """从本地磁盘 trade_history.json 加载持久化交易历史，防止服务重启清空数据。"""
@@ -354,10 +404,18 @@ class LiveTradingRunner:
         except Exception as e:
             return {"success": False, "error": str(e)}
 
-    def start(self, strategy_params: Optional[Dict] = None, tickers: Optional[List[str]] = None, ignore_market_hours: bool = True):
+    def start(self, strategy_params: Optional[Dict] = None, tickers: Optional[List[str]] = None, ignore_market_hours: bool = True, market_mode: Optional[str] = None):
         if self.is_running:
-            self.add_log("[Warning] Quant trading bot is already running.")
+            self.add_log("[Warning] 交易机器人已在运行中，无需重复启动。")
             return False
+
+        # 人为手动启动时，自动清空上一日的旧缓存与价格高点状态
+        try:
+            invalidate_cache()
+            self.highest_prices.clear()
+            self.add_log("🧹 [手动启动重置] 已强制清空上一日盘后缓存与最高价记录，初始化全新交易周期。")
+        except Exception as e:
+            print(f"Cache clear warning on start: {e}")
             
         if strategy_params:
             self.strategy_params.update(strategy_params)
@@ -365,7 +423,14 @@ class LiveTradingRunner:
         if tickers:
             self.update_tickers(tickers)
             
-        self.ignore_market_hours = ignore_market_hours
+        if market_mode:
+            self.set_market_mode(market_mode)
+        else:
+            self.ignore_market_hours = ignore_market_hours
+            if ignore_market_hours and self.market_mode != "MANUAL_CLOSE":
+                self.market_mode = "MANUAL_OPEN"
+
+        self.save_runner_config()
         
         # Initialize Adapter
         try:
@@ -376,15 +441,15 @@ class LiveTradingRunner:
                     base_url=ALPACA_BASE_URL
                 )
                 self.adapter.get_account_summary()
-                self.add_log("🟢 Connected to Alpaca API successfully.")
+                self.add_log("🟢 已成功连接至 Alpaca 实盘/Paper 交易接口。")
                 # Sync historical closed orders from Alpaca to guarantee complete persistent log history
                 self.sync_alpaca_orders_to_history()
             else:
                 self.adapter = MockAlpacaAdapter()
-                self.add_log("💡 Alpaca API Key missing, switched to [Local Paper Simulation Mode].")
+                self.add_log("💡 未检测到 Alpaca API Key，自动切换至【本地虚拟盘模拟模式】。")
         except Exception as e:
             self.adapter = MockAlpacaAdapter()
-            self.add_log(f"💡 Alpaca connection failed ({str(e)}), switched to [Local Paper Simulation Mode].")
+            self.add_log(f"💡 Alpaca 连接异常 ({str(e)})，已自动降级至【本地虚拟盘模拟模式】。")
 
     def sync_alpaca_orders_to_history(self):
         """自动从 Alpaca 官方接口抓取已成交的历史订单并同步存入 trade_history.json，确保历史交易永久保存。"""
@@ -439,7 +504,7 @@ class LiveTradingRunner:
             print(f"Sync Alpaca orders warning: {e}")
 
         self.is_running = True
-        self.add_log(f"🚀 Quant trading bot started! Monitored tickers ({len(self.active_tickers)}): {self.active_tickers} | Strategy mode: {self.strategy_params['strategy_mode']}")
+        self.add_log(f"🚀 【手动启动成功】量化交易机器人正式开启！监控标的({len(self.active_tickers)}): {self.active_tickers} | 策略模式: {self.strategy_params['strategy_mode']}")
         
         # Spawn async loop task safely
         try:
@@ -451,7 +516,7 @@ class LiveTradingRunner:
 
     def stop(self):
         if not self.is_running:
-            self.add_log("[Notice] Quant trading bot is not running.")
+            self.add_log("[Notice] 交易机器人已处于关闭状态。")
             return False
             
         self.is_running = False
@@ -459,8 +524,18 @@ class LiveTradingRunner:
             self.loop_task.cancel()
             self.loop_task = None
             
-        self.add_log("🛑 Quant trading bot paused.")
+        self.save_runner_config()
+        self.add_log("🛑 【手动关闭成功】量化交易机器人已全面暂停，所有扫描与下单循环已终止。")
         return True
+
+    def toggle(self, strategy_params: Optional[Dict] = None, tickers: Optional[List[str]] = None) -> Dict:
+        """一键人工开启 / 关闭切换 (Manual Start/Stop Toggle)"""
+        if self.is_running:
+            self.stop()
+            return {"status": "stopped", "is_running": False, "message": "已手动关闭量化交易系统"}
+        else:
+            self.start(strategy_params=strategy_params, tickers=tickers)
+            return {"status": "started", "is_running": True, "message": "已手动启动量化交易系统"}
 
     def submit_extended_hours_order(self, symbol: str, qty: int, side: str, limit_price: float) -> Dict:
         """下发盘前/盘后扩展时段限价挂单 (Extended-Hours Limit Order)"""
@@ -481,6 +556,8 @@ class LiveTradingRunner:
     def get_status(self) -> Dict:
         return {
             "is_running": self.is_running,
+            "market_mode": self.market_mode,
+            "is_market_open": self.is_market_open(),
             "ignore_market_hours": self.ignore_market_hours,
             "monitored_tickers": self.active_tickers,
             "strategy_params": self.strategy_params,
@@ -489,10 +566,16 @@ class LiveTradingRunner:
 
     def is_market_open(self) -> bool:
         """
-        Check if US stock market is currently open.
-        First attempts to query Alpaca's official exchange API (`client.get_clock()`).
-        Fallback to NYSE exchange calendar math (9:30 AM - 4:00 PM EST).
+        Check if US stock market session is open under current market mode.
+        1. MANUAL_OPEN: Always return True (Forces trading system active).
+        2. MANUAL_CLOSE: Always return False (Forces system paused).
+        3. AUTO_EXCHANGE: Checks official Alpaca clock or NYSE schedule (9:30 AM - 4:00 PM EST).
         """
+        if self.market_mode == "MANUAL_OPEN":
+            return True
+        if self.market_mode == "MANUAL_CLOSE":
+            return False
+
         if self.ignore_market_hours:
             return True
 

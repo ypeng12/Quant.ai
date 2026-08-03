@@ -99,6 +99,8 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
   const [extPrice, setExtPrice] = useState(300.0);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<ActiveTab>('analysis');
+  const [marketMode, setMarketMode] = useState<'MANUAL_OPEN' | 'MANUAL_CLOSE' | 'AUTO_EXCHANGE'>('MANUAL_OPEN');
+  const [isMarketOpen, setIsMarketOpen] = useState<boolean>(true);
 
   const fetchBrokerData = async () => {
     try {
@@ -122,6 +124,12 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
       const statusJson = await statusRes.json();
       if (statusJson.success) {
         setIsBotRunning(statusJson.status.is_running);
+        if (statusJson.status.market_mode) {
+          setMarketMode(statusJson.status.market_mode);
+        }
+        if (statusJson.status.is_market_open !== undefined) {
+          setIsMarketOpen(statusJson.status.is_market_open);
+        }
         if (statusJson.status.active_tickers) {
           setActiveTickers(statusJson.status.active_tickers);
         }
@@ -167,13 +175,39 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
     return () => clearInterval(interval);
   }, []);
 
+  const handleSetMarketMode = async (mode: 'MANUAL_OPEN' | 'MANUAL_CLOSE' | 'AUTO_EXCHANGE') => {
+    setActionLoading('market_mode');
+    try {
+      const res = await fetch(`${API_BASE}/api/live/market_mode`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ market_mode: mode })
+      });
+      const json = await res.json();
+      if (json.success) {
+        setMarketMode(mode);
+        if (json.status) {
+          setIsMarketOpen(json.status.is_market_open);
+          setIsBotRunning(json.status.is_running);
+        }
+      } else {
+        alert('设置开盘模式失败: ' + (json.data?.error || json.error || '未知错误'));
+      }
+    } catch {
+      alert('请求失败');
+    } finally {
+      setActionLoading(null);
+      fetchBrokerData();
+    }
+  };
+
   const handleStartBot = async () => {
     setActionLoading('start');
     try {
       const res = await fetch(`${API_BASE}/api/live/start`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tickers: watchlist, ignore_market_hours: true })
+        body: JSON.stringify({ tickers: watchlist, ignore_market_hours: true, market_mode: marketMode })
       });
       const json = await res.json();
       if (json.success) setIsBotRunning(json.status.is_running);
@@ -304,6 +338,105 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
           )}
           <button onClick={() => setShowExtModal(true)} disabled={actionLoading !== null} style={{ background: 'linear-gradient(135deg, #2e1065 0%, #3b0764 100%)', color: '#c084fc', fontWeight: 800, fontSize: '0.95rem', padding: '12px 20px', borderRadius: '8px', border: '1px solid rgba(192,132,252,0.4)', cursor: 'pointer', boxShadow: '0 4px 15px rgba(147,51,234,0.25)' }}>
             🌙 Extended-Hours Limit Order
+          </button>
+        </div>
+      </div>
+
+      {/* Manual Market Open / Close Control Card */}
+      <div style={{
+        marginBottom: '1.2rem',
+        padding: '12px 18px',
+        background: 'linear-gradient(135deg, rgba(20,20,25,0.95) 0%, rgba(10,10,12,0.95) 100%)',
+        borderRadius: '10px',
+        border: '1px solid rgba(255,255,255,0.12)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '12px'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#fff' }}>🎛️ 人为开关盘控制:</span>
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '4px 10px',
+            borderRadius: '6px',
+            background: marketMode === 'MANUAL_OPEN'
+              ? 'rgba(0, 200, 5, 0.15)'
+              : marketMode === 'MANUAL_CLOSE'
+                ? 'rgba(255, 59, 48, 0.15)'
+                : 'rgba(100, 180, 255, 0.15)',
+            border: `1px solid ${
+              marketMode === 'MANUAL_OPEN'
+                ? 'rgba(0, 200, 5, 0.4)'
+                : marketMode === 'MANUAL_CLOSE'
+                  ? 'rgba(255, 59, 48, 0.4)'
+                  : 'rgba(100, 180, 255, 0.4)'
+            }`,
+            fontSize: '0.82rem',
+            fontWeight: 800,
+            color: marketMode === 'MANUAL_OPEN'
+              ? '#00c805'
+              : marketMode === 'MANUAL_CLOSE'
+                ? '#ff6b6b'
+                : '#64b4ff'
+          }}>
+            {marketMode === 'MANUAL_OPEN' && '🟢 人为强制开盘中 (打破休市限制，允许全天候买卖)'}
+            {marketMode === 'MANUAL_CLOSE' && '🔴 人为强制关盘中 (暂停研判扫描与下单)'}
+            {marketMode === 'AUTO_EXCHANGE' && `⏱️ 交易所自动模式 (${isMarketOpen ? '美股已开盘 ✅' : '美股休市中 💤'})`}
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button
+            onClick={() => handleSetMarketMode('MANUAL_OPEN')}
+            disabled={actionLoading !== null}
+            style={{
+              background: marketMode === 'MANUAL_OPEN' ? 'rgba(0, 200, 5, 0.25)' : 'rgba(255,255,255,0.05)',
+              border: marketMode === 'MANUAL_OPEN' ? '1px solid #00c805' : '1px solid rgba(255,255,255,0.15)',
+              color: marketMode === 'MANUAL_OPEN' ? '#00c805' : '#ccc',
+              fontWeight: 800,
+              fontSize: '0.82rem',
+              padding: '6px 14px',
+              borderRadius: '6px',
+              cursor: 'pointer'
+            }}
+          >
+            🟢 人为强制开盘
+          </button>
+          <button
+            onClick={() => handleSetMarketMode('MANUAL_CLOSE')}
+            disabled={actionLoading !== null}
+            style={{
+              background: marketMode === 'MANUAL_CLOSE' ? 'rgba(255, 59, 48, 0.25)' : 'rgba(255,255,255,0.05)',
+              border: marketMode === 'MANUAL_CLOSE' ? '1px solid #ff5d5d' : '1px solid rgba(255,255,255,0.15)',
+              color: marketMode === 'MANUAL_CLOSE' ? '#ff6b6b' : '#ccc',
+              fontWeight: 800,
+              fontSize: '0.82rem',
+              padding: '6px 14px',
+              borderRadius: '6px',
+              cursor: 'pointer'
+            }}
+          >
+            🔴 人为强制关盘
+          </button>
+          <button
+            onClick={() => handleSetMarketMode('AUTO_EXCHANGE')}
+            disabled={actionLoading !== null}
+            style={{
+              background: marketMode === 'AUTO_EXCHANGE' ? 'rgba(100, 180, 255, 0.25)' : 'rgba(255,255,255,0.05)',
+              border: marketMode === 'AUTO_EXCHANGE' ? '1px solid #64b4ff' : '1px solid rgba(255,255,255,0.15)',
+              color: marketMode === 'AUTO_EXCHANGE' ? '#64b4ff' : '#ccc',
+              fontWeight: 800,
+              fontSize: '0.82rem',
+              padding: '6px 14px',
+              borderRadius: '6px',
+              cursor: 'pointer'
+            }}
+          >
+            ⏱️ 交易所自动
           </button>
         </div>
       </div>
