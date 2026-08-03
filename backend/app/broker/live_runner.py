@@ -108,8 +108,8 @@ class LiveTradingRunner:
             "trailing_stop_mode": "atr",
             "trailing_stop_atr_mult": 1.0,   # 更紧追踪止损
             "rsi_threshold_buy": 72.0,
-            "risk_per_trade_pct": 0.03,      # 每次交易风险占资金 3%，确保仓位有意义
-            "max_position_size_pct": 0.50,
+            "risk_per_trade_pct": 0.02,      # 每次交易风险设为 2%
+            "max_position_size_pct": 0.25,   # 硬性限制单票最高持仓占用不超过总资金 25%
             "position_sizing_mode": "atr",
             "market_open_focus": False       # 全天候扫描信号
         }

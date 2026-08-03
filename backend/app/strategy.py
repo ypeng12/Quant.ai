@@ -135,8 +135,8 @@ def evaluate_market_state(row, prev_row, current_shares, avg_cost, ticker, highe
         # A. Long BUY Signals
         if is_bullish_trend:
             score = calculate_confidence_score(row, prev_row, is_bullish=True)
-            if score < 30:
-                return "HOLD", f"[{ticker}] Confidence Score ({score}/100) below 30 threshold. Standing aside."
+            if score < 45:
+                return "HOLD", f"[{ticker}] Confidence Score ({score}/100) below 45 safety threshold. Standing aside."
 
             if is_gold_cross:
                 reason = f"EMA 9/21 Golden Cross."
@@ -149,18 +149,18 @@ def evaluate_market_state(row, prev_row, current_shares, avg_cost, ticker, highe
             else:
                 return "HOLD", "Maintaining flat stance."
 
-            if 30 <= score < 55:
-                return "BUY", f"[Probe-Light Score:{score}/100] {reason} Initial light probe position (35% size)."
-            elif 55 <= score < 75:
-                return "BUY", f"[Standard-Entry Score:{score}/100] {reason} Standard entry (70% size)."
+            if 45 <= score < 60:
+                return "BUY", f"[Probe-Light Score:{score}/100] {reason} Conservative probe position (~10% size)."
+            elif 60 <= score < 80:
+                return "BUY", f"[Standard-Entry Score:{score}/100] {reason} Standard entry (~20% size)."
             else:
-                return "BUY", f"[Conviction-Full Score:{score}/100] {reason} High conviction entry (100% size)."
+                return "BUY", f"[Conviction-Top Score:{score}/100] {reason} High conviction entry (25-30% max cap)."
 
         # B. Short SELL Signals
         if is_bearish_trend:
             score = calculate_confidence_score(row, prev_row, is_bullish=False)
-            if score < 30:
-                return "HOLD", f"[{ticker}] Short Confidence Score ({score}/100) below 30 threshold. Standing aside."
+            if score < 45:
+                return "HOLD", f"[{ticker}] Short Confidence Score ({score}/100) below 45 safety threshold. Standing aside."
 
             if is_death_cross:
                 reason = "EMA 9/21 Death Cross."
@@ -173,12 +173,12 @@ def evaluate_market_state(row, prev_row, current_shares, avg_cost, ticker, highe
             else:
                 return "HOLD", "Maintaining flat stance."
 
-            if 30 <= score < 55:
-                return "SHORT", f"[Probe-Light Score:{score}/100] {reason} Initial light probe short (35% size)."
-            elif 55 <= score < 75:
-                return "SHORT", f"[Standard-Entry Score:{score}/100] {reason} Standard short (70% size)."
+            if 45 <= score < 60:
+                return "SHORT", f"[Probe-Light Score:{score}/100] {reason} Conservative probe short (~10% size)."
+            elif 60 <= score < 80:
+                return "SHORT", f"[Standard-Entry Score:{score}/100] {reason} Standard short (~20% size)."
             else:
-                return "SHORT", f"[Conviction-Full Score:{score}/100] {reason} High conviction short (100% size)."
+                return "SHORT", f"[Conviction-Top Score:{score}/100] {reason} High conviction short (25-30% max cap)."
 
     # State 2: Holding Long Position (Search for SELL / PARTIAL_SELL opportunities)
     elif current_shares > 0:
