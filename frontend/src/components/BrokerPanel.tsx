@@ -283,6 +283,7 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
     if (action === 'COVER') return { border: '1px solid rgba(100,180,255,0.4)', color: '#64b4ff', bg: 'rgba(100,180,255,0.04)' };
     if (action === 'PARTIAL_SELL') return { border: '1px solid rgba(0,200,5,0.6)', color: '#00c805', bg: 'rgba(0,200,5,0.12)' };
     if (action === 'PARTIAL_COVER') return { border: '1px solid rgba(100,180,255,0.6)', color: '#64b4ff', bg: 'rgba(100,180,255,0.12)' };
+    if (action === 'PYRAMID_BUY') return { border: '1px solid rgba(192,132,252,0.6)', color: '#c084fc', bg: 'rgba(192,132,252,0.12)' };
     return { border: '1px solid #333', color: '#888', bg: 'transparent' };
   };
 
