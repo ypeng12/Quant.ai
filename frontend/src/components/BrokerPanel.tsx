@@ -101,7 +101,7 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
   const [activeTab, setActiveTab] = useState<ActiveTab>('analysis');
   const [marketMode, setMarketMode] = useState<'MANUAL_OPEN' | 'MANUAL_CLOSE' | 'AUTO_EXCHANGE'>('MANUAL_OPEN');
   const [isMarketOpen, setIsMarketOpen] = useState<boolean>(true);
-  const [focusTickers, setFocusTickers] = useState<string[]>([]);
+  const [tickerScores, setTickerScores] = useState<Record<string, number>>({});
 
   const fetchBrokerData = async () => {
     try {
@@ -134,8 +134,8 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
         if (statusJson.status.active_tickers) {
           setActiveTickers(statusJson.status.active_tickers);
         }
-        if (statusJson.status.focus_tickers) {
-          setFocusTickers(statusJson.status.focus_tickers);
+        if (statusJson.status.ticker_scores) {
+          setTickerScores(statusJson.status.ticker_scores);
         }
       }
 
@@ -201,29 +201,6 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
       alert('请求失败');
     } finally {
       setActionLoading(null);
-      fetchBrokerData();
-    }
-  };
-
-  const handleToggleFocusTicker = async (ticker: string) => {
-    const sym = ticker.toUpperCase().trim();
-    const nextFocus = focusTickers.includes(sym)
-      ? focusTickers.filter(t => t !== sym)
-      : [...focusTickers, sym];
-
-    try {
-      const res = await fetch(`${API_BASE}/api/live/focus_tickers`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tickers: nextFocus })
-      });
-      const json = await res.json();
-      if (json.success) {
-        setFocusTickers(json.data?.focus_tickers || nextFocus);
-      }
-    } catch (e) {
-      console.error('Focus tickers error:', e);
-    } finally {
       fetchBrokerData();
     }
   };
@@ -486,37 +463,56 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
         fontSize: '0.82rem'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-          <span style={{ color: 'var(--color-green)', fontWeight: 700 }}>🎯 AI 实时研判股票池 ({activeTickers.length} 支已自动对齐):</span>
+          <span style={{ color: 'var(--color-green)', fontWeight: 700 }}>🎯 AI 实时研判股票池 (动态置信度降序):</span>
           {activeTickers.map(t => {
-            const isFocus = focusTickers.includes(t.toUpperCase());
+            const score = tickerScores[t] !== undefined ? tickerScores[t] : 0;
+            let badgeBg = 'rgba(255,255,255,0.06)';
+            let badgeBorder = '1px solid rgba(255,255,255,0.12)';
+            let badgeColor = '#888';
+            let labelText = `⏳ ${t} ${score}分 (观望)`;
+
+            if (score >= 75) {
+              badgeBg = 'linear-gradient(135deg, rgba(0,200,5,0.25) 0%, rgba(16,185,129,0.3) 100%)';
+              badgeBorder = '1px solid rgba(0,200,5,0.8)';
+              badgeColor = '#fff';
+              labelText = `🔥 ${t} ${score}分 (AI满仓)`;
+            } else if (score >= 55) {
+              badgeBg = 'rgba(100, 180, 255, 0.2)';
+              badgeBorder = '1px solid #64b4ff';
+              badgeColor = '#64b4ff';
+              labelText = `⚡ ${t} ${score}分 (标准)`;
+            } else if (score >= 30) {
+              badgeBg = 'rgba(255, 193, 7, 0.15)';
+              badgeBorder = '1px solid #ffc107';
+              badgeColor = '#ffc107';
+              labelText = `🔍 ${t} ${score}分 (试仓)`;
+            }
+
             return (
-              <button
+              <span
                 key={t}
-                onClick={() => handleToggleFocusTicker(t)}
-                title={isFocus ? "已设为重点重仓标的 (点击取消)" : "点击设为 AI 重点重仓关注标的 (优先研判+15分置信加成+1.75x仓位)"}
+                title={`AI 多因子综合评分: ${score}/100 分`}
                 style={{
-                  background: isFocus ? 'linear-gradient(135deg, rgba(192,132,252,0.25) 0%, rgba(147,51,234,0.3) 100%)' : 'rgba(255,255,255,0.08)',
-                  border: isFocus ? '1px solid rgba(192,132,252,0.7)' : '1px solid rgba(255,255,255,0.12)',
-                  boxShadow: isFocus ? '0 0 10px rgba(192,132,252,0.35)' : 'none',
+                  background: badgeBg,
+                  border: badgeBorder,
                   padding: '3px 10px',
                   borderRadius: '6px',
-                  color: isFocus ? '#fff' : '#ccc',
+                  color: badgeColor,
                   fontWeight: 800,
                   fontSize: '0.78rem',
-                  cursor: 'pointer',
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '4px',
                   transition: 'all 0.2s ease'
                 }}
               >
-                {isFocus ? `🔥 ${t} (重点重仓)` : t}
-              </button>
+                {labelText}
+              </span>
             );
           })}
         </div>
         <span style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>
-          💡 点击股票按钮可随时切换【🔥 重点重仓关注】状态（享 1.75x 仓位与最高研判优先级）
+          🤖 研判池已由 AI 量化模型根据 5 维因子实时打分并自动重仓排序（无需人工干预）
         </span>
       </div>
 
