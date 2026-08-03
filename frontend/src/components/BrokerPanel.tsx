@@ -471,21 +471,21 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
             let badgeColor = '#888';
             let labelText = `⏳ ${t} ${score}分 (观望)`;
 
-            if (score >= 75) {
+            if (score >= 80) {
               badgeBg = 'linear-gradient(135deg, rgba(0,200,5,0.25) 0%, rgba(16,185,129,0.3) 100%)';
               badgeBorder = '1px solid rgba(0,200,5,0.8)';
               badgeColor = '#fff';
-              labelText = `🔥 ${t} ${score}分 (AI满仓)`;
-            } else if (score >= 55) {
+              labelText = `🔥 ${t} ${score}分 (AI高置信·25%上限)`;
+            } else if (score >= 60) {
               badgeBg = 'rgba(100, 180, 255, 0.2)';
               badgeBorder = '1px solid #64b4ff';
               badgeColor = '#64b4ff';
-              labelText = `⚡ ${t} ${score}分 (标准)`;
-            } else if (score >= 30) {
+              labelText = `⚡ ${t} ${score}分 (标准·20%仓位)`;
+            } else if (score >= 45) {
               badgeBg = 'rgba(255, 193, 7, 0.15)';
               badgeBorder = '1px solid #ffc107';
               badgeColor = '#ffc107';
-              labelText = `🔍 ${t} ${score}分 (试仓)`;
+              labelText = `🔍 ${t} ${score}分 (试仓·10%仓位)`;
             }
 
             return (
