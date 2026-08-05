@@ -353,105 +353,6 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
         </div>
       </div>
 
-      {/* Manual Market Open / Close Control Card */}
-      <div style={{
-        marginBottom: '1.2rem',
-        padding: '12px 18px',
-        background: 'linear-gradient(135deg, rgba(20,20,25,0.95) 0%, rgba(10,10,12,0.95) 100%)',
-        borderRadius: '10px',
-        border: '1px solid rgba(255,255,255,0.12)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexWrap: 'wrap',
-        gap: '12px'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#fff' }}>🎛️ 人为开关盘控制:</span>
-          <div style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px',
-            padding: '4px 10px',
-            borderRadius: '6px',
-            background: marketMode === 'MANUAL_OPEN'
-              ? 'rgba(0, 200, 5, 0.15)'
-              : marketMode === 'MANUAL_CLOSE'
-                ? 'rgba(255, 59, 48, 0.15)'
-                : 'rgba(100, 180, 255, 0.15)',
-            border: `1px solid ${
-              marketMode === 'MANUAL_OPEN'
-                ? 'rgba(0, 200, 5, 0.4)'
-                : marketMode === 'MANUAL_CLOSE'
-                  ? 'rgba(255, 59, 48, 0.4)'
-                  : 'rgba(100, 180, 255, 0.4)'
-            }`,
-            fontSize: '0.82rem',
-            fontWeight: 800,
-            color: marketMode === 'MANUAL_OPEN'
-              ? '#00c805'
-              : marketMode === 'MANUAL_CLOSE'
-                ? '#ff6b6b'
-                : '#64b4ff'
-          }}>
-            {marketMode === 'MANUAL_OPEN' && '🟢 人为强制开盘中 (打破休市限制，允许全天候买卖)'}
-            {marketMode === 'MANUAL_CLOSE' && '🔴 人为强制关盘中 (暂停研判扫描与下单)'}
-            {marketMode === 'AUTO_EXCHANGE' && `⏱️ 交易所自动模式 (${isMarketOpen ? '美股已开盘 ✅' : '美股休市中 💤'})`}
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <button
-            onClick={() => handleSetMarketMode('MANUAL_OPEN')}
-            disabled={actionLoading !== null}
-            style={{
-              background: marketMode === 'MANUAL_OPEN' ? 'rgba(0, 200, 5, 0.25)' : 'rgba(255,255,255,0.05)',
-              border: marketMode === 'MANUAL_OPEN' ? '1px solid #00c805' : '1px solid rgba(255,255,255,0.15)',
-              color: marketMode === 'MANUAL_OPEN' ? '#00c805' : '#ccc',
-              fontWeight: 800,
-              fontSize: '0.82rem',
-              padding: '6px 14px',
-              borderRadius: '6px',
-              cursor: 'pointer'
-            }}
-          >
-            🟢 人为强制开盘
-          </button>
-          <button
-            onClick={() => handleSetMarketMode('MANUAL_CLOSE')}
-            disabled={actionLoading !== null}
-            style={{
-              background: marketMode === 'MANUAL_CLOSE' ? 'rgba(255, 59, 48, 0.25)' : 'rgba(255,255,255,0.05)',
-              border: marketMode === 'MANUAL_CLOSE' ? '1px solid #ff5d5d' : '1px solid rgba(255,255,255,0.15)',
-              color: marketMode === 'MANUAL_CLOSE' ? '#ff6b6b' : '#ccc',
-              fontWeight: 800,
-              fontSize: '0.82rem',
-              padding: '6px 14px',
-              borderRadius: '6px',
-              cursor: 'pointer'
-            }}
-          >
-            🔴 人为强制关盘
-          </button>
-          <button
-            onClick={() => handleSetMarketMode('AUTO_EXCHANGE')}
-            disabled={actionLoading !== null}
-            style={{
-              background: marketMode === 'AUTO_EXCHANGE' ? 'rgba(100, 180, 255, 0.25)' : 'rgba(255,255,255,0.05)',
-              border: marketMode === 'AUTO_EXCHANGE' ? '1px solid #64b4ff' : '1px solid rgba(255,255,255,0.15)',
-              color: marketMode === 'AUTO_EXCHANGE' ? '#64b4ff' : '#ccc',
-              fontWeight: 800,
-              fontSize: '0.82rem',
-              padding: '6px 14px',
-              borderRadius: '6px',
-              cursor: 'pointer'
-            }}
-          >
-            ⏱️ 交易所自动
-          </button>
-        </div>
-      </div>
-
       {/* AI Scanner Watchlist Synchronization Bar */}
       <div style={{
         marginBottom: '1.2rem',
@@ -467,30 +368,29 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
         fontSize: '0.82rem'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-          <span style={{ color: 'var(--color-green)', fontWeight: 700 }}>🎯 AI 实时研判股票池 (横截面相对择优排序):</span>
+          <span style={{ color: 'var(--color-green)', fontWeight: 700 }}>🎯 AI 实时研判股票池:</span>
           {activeTickers.map((t, idx) => {
             const score = tickerScores[t] !== undefined ? tickerScores[t] : 0;
             let badgeBg = 'rgba(255,255,255,0.06)';
             let badgeBorder = '1px solid rgba(255,255,255,0.12)';
             let badgeColor = '#888';
-            let rankTag = idx === 0 ? "🥇 相对第1名" : idx === 1 ? "🥈 相对第2名" : idx === 2 ? "🥉 相对第3名" : `#${idx + 1}`;
-            let labelText = `⏳ ${t} (${score}分·${rankTag})`;
+            let labelText = `🔍 ${t} (${score}分)`;
 
             if (idx === 0) {
               badgeBg = 'linear-gradient(135deg, rgba(0,200,5,0.25) 0%, rgba(16,185,129,0.3) 100%)';
               badgeBorder = '1px solid rgba(0,200,5,0.8)';
               badgeColor = '#fff';
-              labelText = `🔥 ${t} (${score}分·${rankTag}·优先强抓买点)`;
+              labelText = `🔥 ${t} (${score}分)`;
             } else if (idx === 1) {
               badgeBg = 'rgba(100, 180, 255, 0.2)';
               badgeBorder = '1px solid #64b4ff';
               badgeColor = '#64b4ff';
-              labelText = `⚡ ${t} (${score}分·${rankTag})`;
+              labelText = `⚡ ${t} (${score}分)`;
             } else if (score >= 35) {
               badgeBg = 'rgba(255, 193, 7, 0.15)';
               badgeBorder = '1px solid #ffc107';
               badgeColor = '#ffc107';
-              labelText = `🔍 ${t} (${score}分·${rankTag})`;
+              labelText = `🔍 ${t} (${score}分)`;
             }
 
             return (
@@ -516,9 +416,6 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
             );
           })}
         </div>
-        <span style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>
-          🤖 研判池已采用【横截面相对择优机制】，系统每一轮自动抓取 Watchlist 中相对表现最强、形态最优的标的优先下发交易！
-        </span>
       </div>
 
       {/* Today PnL Summary */}
