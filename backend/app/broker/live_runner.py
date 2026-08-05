@@ -22,14 +22,16 @@ class MockAlpacaAdapter:
         self.positions = {}
 
     def get_account_summary(self) -> Dict:
+        pos_val = sum(pos["shares"] * pos.get("current_price", pos["avg_entry_price"]) for pos in self.positions.values())
+        self.equity = round(self.cash + pos_val, 2)
         return {
             "success": True,
             "account_number": "MOCK_PAPER_9988",
             "status": "ACTIVE (本地虚拟盘)",
             "currency": "USD",
-            "cash": self.cash,
+            "cash": round(self.cash, 2),
             "portfolio_value": self.equity,
-            "buying_power": self.cash * 2,
+            "buying_power": round(max(0.0, self.cash * 2), 2),
             "multiplier": 2.0,
             "shorting_enabled": True,
             "equity": self.equity,
@@ -40,41 +42,79 @@ class MockAlpacaAdapter:
     def get_open_positions(self) -> List[Dict]:
         res = []
         for ticker, pos in self.positions.items():
+            if pos["shares"] == 0:
+                continue
+            cur_p = round(pos.get("current_price", pos["avg_entry_price"]), 2)
+            avg_p = pos["avg_entry_price"]
+            sh = pos["shares"]
+            val = round(sh * cur_p, 2)
+            pnl = round((cur_p - avg_p) * sh, 2) if sh > 0 else round((avg_p - cur_p) * abs(sh), 2)
+            pnl_pct = round((pnl / (abs(sh) * avg_p)) * 100.0, 2) if avg_p > 0 and sh != 0 else 0.0
             res.append({
                 "ticker": ticker,
-                "shares": pos["shares"],
-                "avg_entry_price": pos["avg_entry_price"],
-                "market_value": round(pos["shares"] * pos.get("current_price", pos["avg_entry_price"]), 2),
-                "current_price": round(pos.get("current_price", pos["avg_entry_price"]), 2),
-                "unrealized_pnl": round((pos.get("current_price", pos["avg_entry_price"]) - pos["avg_entry_price"]) * pos["shares"], 2),
-                "unrealized_pnl_pct": round(((pos.get("current_price", pos["avg_entry_price"]) - pos["avg_entry_price"]) / pos["avg_entry_price"]) * 100, 2) if pos["avg_entry_price"] > 0 else 0.0
+                "shares": sh,
+                "avg_entry_price": avg_p,
+                "market_value": val,
+                "current_price": cur_p,
+                "unrealized_pnl": pnl,
+                "unrealized_pnl_pct": pnl_pct
             })
         return res
 
     def get_position(self, symbol: str) -> Optional[Dict]:
-        symbol = symbol.upper()
-        if symbol in self.positions:
-            pos = self.positions[symbol]
-            return {
-                "ticker": symbol,
-                "shares": pos["shares"],
-                "avg_entry_price": pos["avg_entry_price"],
-                "market_value": round(pos["shares"] * pos.get("current_price", pos["avg_entry_price"]), 2),
-                "current_price": round(pos.get("current_price", pos["avg_entry_price"]), 2),
-                "unrealized_pnl": round((pos.get("current_price", pos["avg_entry_price"]) - pos["avg_entry_price"]) * pos["shares"], 2),
-                "unrealized_pnl_pct": round(((pos.get("current_price", pos["avg_entry_price"]) - pos["avg_entry_price"]) / pos["avg_entry_price"]) * 100, 2) if pos["avg_entry_price"] > 0 else 0.0
-            }
+        positions = self.get_open_positions()
+        for p in positions:
+            if p["ticker"] == symbol.upper():
+                return p
         return None
 
-    def submit_market_order(self, symbol: str, qty: int, side: str, price: Optional[float] = None) -> Dict:
+    def submit_market_order(self, symbol: str, qty: int, side: str, price: Optional[float] = None, client_order_id: Optional[str] = None) -> Dict:
         symbol = symbol.upper()
-        exec_price = price if price is not None else 100.0
-        if side.lower() == "buy":
-            self.positions[symbol] = {"shares": qty, "avg_entry_price": exec_price, "current_price": exec_price}
+        raw_price = price if price is not None else 100.0
+        slippage_pct = 0.0002
+        if side.lower() in ("buy", "cover"):
+            exec_price = round(raw_price * (1.0 + slippage_pct), 2)
         else:
-            if symbol in self.positions:
-                del self.positions[symbol]
-        return {"success": True, "status": "filled", "id": "mock_order_123"}
+            exec_price = round(raw_price * (1.0 - slippage_pct), 2)
+
+        cur = self.positions.get(symbol, {"shares": 0, "avg_entry_price": exec_price, "current_price": exec_price})
+        old_sh = cur["shares"]
+        old_avg = cur["avg_entry_price"]
+
+        if side.lower() == "buy":
+            if old_sh >= 0:
+                new_sh = old_sh + qty
+                new_avg = round(((old_sh * old_avg) + (qty * exec_price)) / new_sh, 2) if new_sh > 0 else exec_price
+                self.positions[symbol] = {"shares": new_sh, "avg_entry_price": new_avg, "current_price": exec_price}
+                self.cash -= round(qty * exec_price, 2)
+            else:
+                cover_qty = min(qty, abs(old_sh))
+                new_sh = old_sh + cover_qty
+                pnl = (old_avg - exec_price) * cover_qty
+                self.cash += round((cover_qty * old_avg) + pnl, 2)
+                if new_sh == 0:
+                    del self.positions[symbol]
+                else:
+                    self.positions[symbol] = {"shares": new_sh, "avg_entry_price": old_avg, "current_price": exec_price}
+
+        elif side.lower() == "sell":
+            if old_sh > 0:
+                sell_qty = min(qty, old_sh)
+                new_sh = old_sh - sell_qty
+                pnl = (exec_price - old_avg) * sell_qty
+                self.cash += round((sell_qty * old_avg) + pnl, 2)
+                if new_sh == 0:
+                    del self.positions[symbol]
+                else:
+                    self.positions[symbol] = {"shares": new_sh, "avg_entry_price": old_avg, "current_price": exec_price}
+            else:
+                new_sh = old_sh - qty
+                new_avg = round(((abs(old_sh) * old_avg) + (qty * exec_price)) / abs(new_sh), 2) if new_sh != 0 else exec_price
+                self.positions[symbol] = {"shares": new_sh, "avg_entry_price": new_avg, "current_price": exec_price}
+                self.cash -= round(qty * exec_price, 2)
+
+        self.get_account_summary()
+        return {"success": True, "status": "filled", "id": client_order_id or f"mock_{symbol}_{int(datetime.datetime.now().timestamp())}", "exec_price": exec_price}
 
     def submit_limit_order(self, symbol: str, qty: int, side: str, limit_price: float, extended_hours: bool = True) -> Dict:
         return self.submit_market_order(symbol, qty, side, price=limit_price)
@@ -100,24 +140,32 @@ class LiveTradingRunner:
         self.adapter = MockAlpacaAdapter()
         self.active_tickers = WATCHLIST.copy()
         self.highest_prices = {}
+        self.pending_entry_tickers = set()  # 防止重复提交建仓单 (daytrade.pdf)
+        self.pending_exit_tickers = set()   # 防止重复提交平仓单 (daytrade.pdf)
+        self.entry_times = {}               # 记录持仓建立时间点 (支持时间止损 daytrade.pdf)
         self.loop_task = None
         self.strategy_params = {
             "strategy_mode": "dynamic",
-            "stop_loss_pct": 0.006,          # 0.6% 止损 — 高频日内短线
-            "profit_target_pct": 0.008,      # 0.8% 止盈 — 快速锁利
-            "trailing_stop_mode": "atr",
-            "trailing_stop_atr_mult": 1.0,   # 更紧追踪止损
-            "rsi_threshold_buy": 72.0,
-            "risk_per_trade_pct": 0.02,      # 每次交易风险设为 2%
-            "max_position_size_pct": 0.25,   # 硬性限制单票最高持仓占用不超过总资金 25%
-            "position_sizing_mode": "atr",
-            "market_open_focus": False       # 全天候扫描信号
+            "risk_per_trade_pct": 0.0030,            # 0.30% 账户风险/笔 (daytrade.pdf)
+            "max_position_size_pct": 0.12,           # 单票最高 12% 账户净值占用 (daytrade.pdf)
+            "daily_loss_limit_pct": 0.012,           # 当日亏损 1.20% 停止新开仓 (daytrade.pdf)
+            "initial_stop_atr_mult": 1.05,           # 初始 ATR 止损倍率 (daytrade.pdf)
+            "stop_min_pct": 0.0025,                  # 最小止损 0.25%
+            "stop_max_pct": 0.0060,                  # 最大止损 0.60%
+            "tp1_r": 0.90,                           # 第一阶止盈 0.90R (40% 减仓)
+            "tp2_r": 1.60,                           # 第二阶止盈 1.60R (35% 减仓)
+            "runner_size_pct": 0.25,                 # 25% Runner ATR 追踪
+            "breakeven_trigger_r": 0.85,             # 0.85R 触发保本止损
+            "trail_start_r": 1.10,                   # 1.10R 启动追踪止损
+            "trailing_stop_atr_mult": 1.10,
+            "max_hold_minutes": 35,                  # 35 分钟时间止损
+            "min_reward_to_cost_ratio": 3.0          # 最小盈亏比门槛 (daytrade.pdf)
         }
         self.market_mode = "MANUAL_OPEN"     # 默认人为强制开盘，打破休市限制
         self.ignore_market_hours = True
-        self.ticker_scores = {}              # AI 实时多因子置信度打分 (由 AI 客观计算与动态排序)
+        self.ticker_scores = {}              # AI 实时多因子置信度打分
         self.load_runner_config()
-        self.add_log("📡 [系统初始化完成] AI 量化研判引擎已准备就绪...")
+        self.add_log("📡 [系统初始化完成] Quant AI 日内风控与研判引擎已就绪...")
 
     def load_runner_config(self):
         """从本地磁盘 runner_config.json 加载持久化系统开盘控制模式与状态配置。"""
@@ -146,28 +194,28 @@ class LiveTradingRunner:
             print(f"Error saving runner_config.json: {e}")
 
     def set_market_mode(self, mode: str) -> Dict:
-        """人为设定开盘关盘控制模式: MANUAL_OPEN (人为强制开盘), MANUAL_CLOSE (人为强制关盘), AUTO_EXCHANGE (交易所自动)"""
+        """人为设定开盘关盘控制模式: MANUAL_OPEN, MANUAL_CLOSE, AUTO_EXCHANGE"""
         mode = mode.upper().strip()
         if mode not in ("MANUAL_OPEN", "MANUAL_CLOSE", "AUTO_EXCHANGE"):
-            return {"success": False, "error": f"无效的 market_mode: {mode}。必须为 MANUAL_OPEN, MANUAL_CLOSE, 或 AUTO_EXCHANGE。"}
+            return {"success": False, "error": f"无效的 market_mode: {mode}"}
         
         self.market_mode = mode
         if mode == "MANUAL_OPEN":
             self.ignore_market_hours = True
-            msg = "🟢 [人为控制切换] 已强制设定为【人为开盘模式 (MANUAL_OPEN)】：打破休市限制，立即允许实时研判与买卖交易！"
+            msg = "🟢 [人为控制切换] 已设定为【人为开盘模式 (MANUAL_OPEN)】：允许实时研判与买卖交易！"
         elif mode == "MANUAL_CLOSE":
             self.ignore_market_hours = False
-            msg = "🔴 [人为控制切换] 已强制设定为【人为关盘模式 (MANUAL_CLOSE)】：系统暂停一切研判扫描与下单交易。"
+            msg = "🔴 [人为控制切换] 已设定为【人为关盘模式 (MANUAL_CLOSE)】：暂停研判扫描与交易。"
         else:
             self.ignore_market_hours = False
-            msg = "⏱️ [人为控制切换] 已切换为【交易所自动模式 (AUTO_EXCHANGE)】：系统将严格遵循美股官方交易所开盘时段 (9:30-16:00 EST)。"
+            msg = "⏱️ [人为控制切换] 已切换为【交易所自动模式 (AUTO_EXCHANGE)】：遵循美股官方交易时段 (9:30-16:00 EST)。"
 
         self.save_runner_config()
         self.add_log(msg)
         return {"success": True, "market_mode": self.market_mode, "message": msg}
 
     def load_trade_history(self):
-        """从本地磁盘 trade_history.json 加载持久化交易历史，防止服务重启清空数据。"""
+        """从本地磁盘 trade_history.json 加载持久化交易历史。"""
         try:
             if os.path.exists(self.history_file):
                 with open(self.history_file, 'r', encoding='utf-8') as f:
@@ -179,7 +227,7 @@ class LiveTradingRunner:
             print(f"Error loading trade_history.json: {e}")
 
     def recalculate_trade_pnls(self):
-        """Recalculate PnL for closed trades (SELL / COVER) by matching FIFO positions across trade history."""
+        """Recalculate PnL for closed trades by matching FIFO positions across trade history (daytrade.pdf)."""
         if not self.trade_history:
             return
             
@@ -198,9 +246,9 @@ class LiveTradingRunner:
             if ticker not in position_tracker:
                 position_tracker[ticker] = []
                 
-            if action in ("BUY",):
+            if action in ("BUY", "PYRAMID_BUY"):
                 position_tracker[ticker].append({"price": price, "qty": qty})
-            elif action in ("SELL",):
+            elif action in ("SELL", "PARTIAL_SELL"):
                 realized = 0.0
                 remaining = qty
                 queue = position_tracker[ticker]
@@ -216,7 +264,7 @@ class LiveTradingRunner:
                     trade["pnl"] = round(realized, 2)
             elif action in ("SHORT",):
                 position_tracker[ticker].append({"price": price, "qty": -qty})
-            elif action in ("COVER",):
+            elif action in ("COVER", "PARTIAL_COVER"):
                 realized = 0.0
                 remaining = qty
                 queue = position_tracker[ticker]
@@ -452,6 +500,16 @@ class LiveTradingRunner:
         except Exception as e:
             self.adapter = MockAlpacaAdapter()
             self.add_log(f"💡 Alpaca 连接异常 ({str(e)})，已自动降级至【本地虚拟盘模拟模式】。")
+        self.is_running = True
+        self.add_log(f"🤖 【AI 24/7 全自动托管开启】系统已进入无人值守全自动轮询模式！监控标的({len(self.active_tickers)}): {self.active_tickers}")
+        
+        # Spawn async loop task safely
+        try:
+            loop = asyncio.get_running_loop()
+            self.loop_task = loop.create_task(self._run_loop())
+        except RuntimeError:
+            pass
+        return True
 
     def sync_alpaca_orders_to_history(self):
         """自动从 Alpaca 官方接口抓取已成交的历史订单并同步存入 trade_history.json，确保历史交易永久保存。"""
@@ -504,17 +562,6 @@ class LiveTradingRunner:
                 self.add_log(f"📥 成功从 Alpaca 云端自动同步 {added_count} 笔历史成交记录到本地磁盘归档！")
         except Exception as e:
             print(f"Sync Alpaca orders warning: {e}")
-
-        self.is_running = True
-        self.add_log(f"🤖 【AI 24/7 全自动托管开启】系统已进入无人值守全自动轮询模式！监控标的({len(self.active_tickers)}): {self.active_tickers}")
-        
-        # Spawn async loop task safely
-        try:
-            loop = asyncio.get_running_loop()
-            self.loop_task = loop.create_task(self._run_loop())
-        except RuntimeError:
-            pass
-        return True
 
     def stop(self):
         if not self.is_running:
@@ -689,6 +736,14 @@ class LiveTradingRunner:
                     positions_list = self.adapter.get_open_positions()
                     positions_by_ticker = {pos['ticker']: pos for pos in positions_list}
                     
+                    # Clear pending order locks for updated positions
+                    for pos in positions_list:
+                        sym = pos['ticker']
+                        if pos.get('shares', 0) != 0 and sym in self.pending_entry_tickers:
+                            self.pending_entry_tickers.remove(sym)
+                        elif pos.get('shares', 0) == 0 and sym in self.pending_exit_tickers:
+                            self.pending_exit_tickers.remove(sym)
+
                     # 关盘前 15:55 EST 强行清仓不过夜
                     if self.check_and_trigger_eod_close(positions_list):
                         await asyncio.sleep(30)
@@ -802,10 +857,17 @@ class LiveTradingRunner:
                                 action = "HOLD"
                                 reason = f"[{ticker}] removed from Watchlist (Exit-Only Mode). Blocked new entry order."
 
-                            # Generate Indicator Snapshot (English)
+                            # Deduplication Lock Check (daytrade.pdf)
+                            if action in ("BUY", "SHORT") and ticker in self.pending_entry_tickers:
+                                action = "HOLD"
+                                reason = f"[{ticker}] Pending entry order active. Blocked duplicate entry."
+                            elif action in ("SELL", "COVER", "PARTIAL_SELL", "PARTIAL_COVER") and ticker in self.pending_exit_tickers:
+                                action = "HOLD"
+                                reason = f"[{ticker}] Pending exit order active. Blocked duplicate exit."
+
+                            # Generate Indicator Snapshot
                             vwap   = float(row.get('VWAP',   close_price))
                             rsi    = float(row.get('RSI',    50.0))
-                            rvol   = float(row.get('RVOL',   1.0))
                             regime = str(row.get('Regime', 'range_bound'))
 
                             trend_icon = "📈" if ema_9 > ema_21 else "📉"
@@ -859,19 +921,22 @@ class LiveTradingRunner:
                                 total_equity = account['equity']
                                 cash = account['cash']
                                 
-                                risk_pct = self.strategy_params.get("risk_per_trade_pct", 0.02)
-                                atr_mult = self.strategy_params.get("trailing_stop_atr_mult", 1.5)
-                                max_pct = self.strategy_params.get("max_position_size_pct", 0.50)
-                                atr = float(row['ATR']) if 'ATR' in row and row['ATR'] > 0 else close_price * 0.02
-                                
+                                risk_pct = self.strategy_params.get("risk_per_trade_pct", 0.0030)
+                                max_pct = self.strategy_params.get("max_position_size_pct", 0.12)
+                                stop_min_pct = self.strategy_params.get("stop_min_pct", 0.0025)
+                                stop_max_pct = self.strategy_params.get("stop_max_pct", 0.0060)
+                                initial_stop_atr_mult = self.strategy_params.get("initial_stop_atr_mult", 1.05)
+
+                                atr_val = float(row['ATR']) if 'ATR' in row and row['ATR'] > 0 else close_price * 0.004
+                                atr_pct = (atr_val / close_price) if close_price > 0 else 0.004
+                                stop_dist_pct = min(stop_max_pct, max(stop_min_pct, initial_stop_atr_mult * atr_pct))
+                                stop_distance = close_price * stop_dist_pct
+
                                 dollar_risk = total_equity * risk_pct
-                                stop_distance = atr * atr_mult
-                                
                                 base_shares = int(dollar_risk / stop_distance) if stop_distance > 0 else int((total_equity * max_pct) / close_price)
                                 max_shares = int((total_equity * max_pct) / close_price)
-                                base_shares = min(base_shares, max_shares)
+                                shares = max(1, min(base_shares, max_shares))
 
-                                # Tiered Position Sizing based on Confidence Score
                                 if "[Probe-Light" in reason:
                                     size_scale = 0.35
                                 elif "[Standard-Entry" in reason:
@@ -879,17 +944,22 @@ class LiveTradingRunner:
                                 else:
                                     size_scale = 1.00
 
-                                shares = int(base_shares * size_scale)
+                                shares = int(shares * size_scale)
                                 cash_shares = int((cash * 0.95) / close_price)
                                 shares = max(1, min(shares, cash_shares))
 
-                                self.add_log(f"🛒 [{ticker}] BUY signal triggered ({size_scale*100:.0f}% position, AI Score: {live_score}分)! Market buying {shares} shares...")
-                                order_res = self.adapter.submit_market_order(ticker, shares, "buy")
+                                client_order_id = f"{ticker}-{int(datetime.datetime.now().timestamp())}-ENTRY"
+                                self.pending_entry_tickers.add(ticker)
+                                self.entry_times[ticker] = datetime.datetime.now()
+
+                                self.add_log(f"🛒 [{ticker}] BUY signal triggered ({size_scale*100:.0f}% position, Initial Risk: ${dollar_risk:.2f})! Market buying {shares} shares...")
+                                order_res = self.adapter.submit_market_order(ticker, shares, "buy", client_order_id=client_order_id)
                                 if order_res.get("success"):
                                     self.add_log(f"✅ [{ticker}] BUY order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
                                     self.highest_prices[ticker] = close_price
                                     self.add_trade_action("BUY", ticker, shares, close_price, reason)
                                 else:
+                                    self.pending_entry_tickers.discard(ticker)
                                     self.add_log(f"❌ [{ticker}] BUY order failed. Reason: {order_res.get('error')}")
 
                             elif action == "PYRAMID_BUY" and current_shares > 0:
@@ -899,8 +969,9 @@ class LiveTradingRunner:
                                 cash_shares = int((cash * 0.90) / close_price)
                                 add_shares = max(1, min(add_shares, cash_shares))
 
+                                client_order_id = f"{ticker}-{int(datetime.datetime.now().timestamp())}-PYRAMID"
                                 self.add_log(f"⚡ [{ticker}] PYRAMID_BUY (顺势加仓 +35%) signal triggered! Market buying {add_shares} shares...")
-                                order_res = self.adapter.submit_market_order(ticker, add_shares, "buy")
+                                order_res = self.adapter.submit_market_order(ticker, add_shares, "buy", client_order_id=client_order_id)
                                 if order_res.get("success"):
                                     self.add_log(f"✅ [{ticker}] PYRAMID_BUY order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
                                     self.add_trade_action("PYRAMID_BUY", ticker, add_shares, close_price, reason)
@@ -908,70 +979,93 @@ class LiveTradingRunner:
                                     self.add_log(f"❌ [{ticker}] PYRAMID_BUY order failed. Reason: {order_res.get('error')}")
 
                             elif action == "PARTIAL_SELL" and current_shares > 0:
-                                sell_qty = max(1, current_shares // 2)
+                                sell_qty = max(1, int(current_shares * 0.40))
                                 pnl = (close_price - avg_cost) * sell_qty
-                                self.add_log(f"🟢 [{ticker}] PARTIAL_SELL (第一阶分批止盈 50%) signal triggered! Market selling {sell_qty} shares (Est. PnL ${pnl:.2f})...")
-                                order_res = self.adapter.submit_market_order(ticker, sell_qty, "sell")
+                                client_order_id = f"{ticker}-{int(datetime.datetime.now().timestamp())}-TP"
+                                self.pending_exit_tickers.add(ticker)
+                                self.add_log(f"🟢 [{ticker}] PARTIAL_SELL (TP1 分批止盈 40%) signal triggered! Market selling {sell_qty} shares (Est. PnL ${pnl:.2f})...")
+                                order_res = self.adapter.submit_market_order(ticker, sell_qty, "sell", client_order_id=client_order_id)
                                 if order_res.get("success"):
                                     self.add_log(f"✅ [{ticker}] PARTIAL_SELL order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
                                     self.add_trade_action("PARTIAL_SELL", ticker, sell_qty, close_price, reason, pnl=pnl)
                                 else:
+                                    self.pending_exit_tickers.discard(ticker)
                                     self.add_log(f"❌ [{ticker}] PARTIAL_SELL order failed. Reason: {order_res.get('error')}")
 
                             elif action == "PARTIAL_COVER" and current_shares < 0:
-                                cover_qty = max(1, abs(current_shares) // 2)
+                                cover_qty = max(1, int(abs(current_shares) * 0.40))
                                 pnl = (avg_cost - close_price) * cover_qty
-                                self.add_log(f"🟢 [{ticker}] PARTIAL_COVER (第一阶分批止回补 50%) signal triggered! Market buying {cover_qty} shares (Est. PnL ${pnl:.2f})...")
-                                order_res = self.adapter.submit_market_order(ticker, cover_qty, "buy")
+                                client_order_id = f"{ticker}-{int(datetime.datetime.now().timestamp())}-TP"
+                                self.pending_exit_tickers.add(ticker)
+                                self.add_log(f"🟢 [{ticker}] PARTIAL_COVER (TP1 分批止回补 40%) signal triggered! Market buying {cover_qty} shares (Est. PnL ${pnl:.2f})...")
+                                order_res = self.adapter.submit_market_order(ticker, cover_qty, "buy", client_order_id=client_order_id)
                                 if order_res.get("success"):
                                     self.add_log(f"✅ [{ticker}] PARTIAL_COVER order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
                                     self.add_trade_action("PARTIAL_COVER", ticker, cover_qty, close_price, reason, pnl=pnl)
                                 else:
+                                    self.pending_exit_tickers.discard(ticker)
                                     self.add_log(f"❌ [{ticker}] PARTIAL_COVER order failed. Reason: {order_res.get('error')}")
 
                             elif action == "SHORT" and current_shares == 0:
                                 account = self.adapter.get_account_summary()
                                 total_equity = account['equity']
                                 
-                                risk_pct = self.strategy_params.get("risk_per_trade_pct", 0.02)
-                                max_pct = self.strategy_params.get("max_position_size_pct", 0.50)
-                                atr = float(row['ATR']) if 'ATR' in row and row['ATR'] > 0 else close_price * 0.02
-                                
+                                risk_pct = self.strategy_params.get("risk_per_trade_pct", 0.0030)
+                                max_pct = self.strategy_params.get("max_position_size_pct", 0.12)
+                                stop_min_pct = self.strategy_params.get("stop_min_pct", 0.0025)
+                                stop_max_pct = self.strategy_params.get("stop_max_pct", 0.0060)
+                                initial_stop_atr_mult = self.strategy_params.get("initial_stop_atr_mult", 1.05)
+
+                                atr_val = float(row['ATR']) if 'ATR' in row and row['ATR'] > 0 else close_price * 0.004
+                                atr_pct = (atr_val / close_price) if close_price > 0 else 0.004
+                                stop_dist_pct = min(stop_max_pct, max(stop_min_pct, initial_stop_atr_mult * atr_pct))
+                                stop_distance = close_price * stop_dist_pct
+
                                 dollar_risk = total_equity * risk_pct
-                                stop_distance = atr * 1.5
-                                shares = int(dollar_risk / stop_distance) if stop_distance > 0 else int((total_equity * max_pct) / close_price)
+                                base_shares = int(dollar_risk / stop_distance) if stop_distance > 0 else int((total_equity * max_pct) / close_price)
                                 max_shares = int((total_equity * max_pct) / close_price)
-                                shares = max(1, min(shares, max_shares))
+                                shares = max(1, min(base_shares, max_shares))
+
+                                client_order_id = f"{ticker}-{int(datetime.datetime.now().timestamp())}-ENTRY"
+                                self.pending_entry_tickers.add(ticker)
+                                self.entry_times[ticker] = datetime.datetime.now()
 
                                 self.add_log(f"📉 [{ticker}] SHORT signal triggered! Market shorting {shares} shares...")
-                                order_res = self.adapter.submit_market_order(ticker, shares, "sell")
+                                order_res = self.adapter.submit_market_order(ticker, shares, "sell", client_order_id=client_order_id)
                                 if order_res.get("success"):
                                     self.add_log(f"✅ [{ticker}] SHORT order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
                                     self.add_trade_action("SHORT", ticker, shares, close_price, reason)
                                 else:
+                                    self.pending_entry_tickers.discard(ticker)
                                     self.add_log(f"❌ [{ticker}] SHORT order failed. Reason: {order_res.get('error')}")
 
                             elif action == "SELL" and current_shares > 0:
                                 pnl = (close_price - avg_cost) * current_shares
+                                client_order_id = f"{ticker}-{int(datetime.datetime.now().timestamp())}-EXIT"
+                                self.pending_exit_tickers.add(ticker)
                                 self.add_log(f"🔔 [{ticker}] SELL signal triggered! Market selling {current_shares} shares (Est. PnL ${pnl:.2f})...")
-                                order_res = self.adapter.submit_market_order(ticker, current_shares, "sell")
+                                order_res = self.adapter.submit_market_order(ticker, current_shares, "sell", client_order_id=client_order_id)
                                 if order_res.get("success"):
                                     self.add_log(f"✅ [{ticker}] SELL order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
                                     self.add_trade_action("SELL", ticker, current_shares, close_price, reason, pnl=pnl)
                                     if ticker in self.highest_prices:
                                         del self.highest_prices[ticker]
                                 else:
+                                    self.pending_exit_tickers.discard(ticker)
                                     self.add_log(f"❌ [{ticker}] SELL order failed. Reason: {order_res.get('error')}")
 
                             elif action == "COVER" and current_shares < 0:
                                 cover_qty = abs(current_shares)
                                 pnl = (avg_cost - close_price) * cover_qty
+                                client_order_id = f"{ticker}-{int(datetime.datetime.now().timestamp())}-EXIT"
+                                self.pending_exit_tickers.add(ticker)
                                 self.add_log(f"🔔 [{ticker}] COVER signal triggered! Market buying {cover_qty} shares (Est. PnL ${pnl:.2f})...")
-                                order_res = self.adapter.submit_market_order(ticker, cover_qty, "buy")
+                                order_res = self.adapter.submit_market_order(ticker, cover_qty, "buy", client_order_id=client_order_id)
                                 if order_res.get("success"):
                                     self.add_log(f"✅ [{ticker}] COVER order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
                                     self.add_trade_action("COVER", ticker, cover_qty, close_price, reason, pnl=pnl)
                                 else:
+                                    self.pending_exit_tickers.discard(ticker)
                                     self.add_log(f"❌ [{ticker}] COVER order failed. Reason: {order_res.get('error')}")
                                     
                         except Exception as ex:
