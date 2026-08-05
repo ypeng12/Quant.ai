@@ -673,7 +673,16 @@ class LiveTradingRunner:
                     await asyncio.sleep(10)
                     continue
 
-                self.add_log(f"📡 [系统开盘中·全频段扫描] 正在研判监控池股票 [{len(self.active_tickers)} 支标的]...")
+                # Check if currently in Market Opening Window (9:30 AM - 9:36 AM EST = 6:30 AM - 6:36 AM PST)
+                est = pytz.timezone('America/New_York')
+                now_ny = datetime.datetime.now(est)
+                ny_time = now_ny.hour + now_ny.minute / 60.0 + now_ny.second / 3600.0
+                is_market_opening_window = (now_ny.weekday() <= 4) and (9.50 <= ny_time < 9.60)
+
+                if is_market_opening_window:
+                    self.add_log(f"⚡ [开盘黄金重诊 6:30-6:36 PST / 9:30-9:36 EST] 开启 3 连诊高频拉网校验，防开盘漏单！监控池 [{len(self.active_tickers)} 支标的]...")
+                else:
+                    self.add_log(f"📡 [系统开盘中·全频段扫描] 正在研判监控池股票 [{len(self.active_tickers)} 支标的]...")
                 
                 # 2. Get active positions from Alpaca to sync state
                 try:
@@ -706,262 +715,270 @@ class LiveTradingRunner:
                 pruned_universe.sort(key=lambda t: self.ticker_scores.get(t, 0), reverse=True)
                 self.active_tickers = pruned_universe
 
-                # 4. Poll and evaluate each stock in our watchlist
-                for ticker in self.active_tickers:
+                # 4. Multi-pass Poll and evaluate each stock in our watchlist (3 passes during 6:30-6:36 PST opening window)
+                scan_passes = 3 if is_market_opening_window else 1
+                for pass_idx in range(scan_passes):
                     if not self.is_running:
                         break
-                        
-                    try:
-                        invalidate_cache(ticker)
-                        
-                        try:
-                            df = fetch_and_prepare_data(ticker, period="3d", interval="1m")
-                        except Exception:
-                            df = None
+                    if pass_idx > 0:
+                        await asyncio.sleep(3)
+
+                    for ticker in self.active_tickers:
+                        if not self.is_running:
+                            break
                             
-                        if df is None or df.empty or len(df) < 2:
+                        try:
+                            invalidate_cache(ticker)
+                            
                             try:
-                                df = fetch_and_prepare_data(ticker, period="5d", interval="5m")
+                                df = fetch_and_prepare_data(ticker, period="3d", interval="1m")
                             except Exception:
                                 df = None
-                        
-                        if df is None or df.empty or len(df) < 2:
-                            self.add_log(f"🔍 [{ticker}] Waiting for bar data...")
-                            continue
+                                
+                            if df is None or df.empty or len(df) < 2:
+                                try:
+                                    df = fetch_and_prepare_data(ticker, period="5d", interval="5m")
+                                except Exception:
+                                    df = None
                             
-                        row = df.iloc[-1]
-                        prev_row = df.iloc[-2]
-                        close_price = float(row['Close'])
-                        
-                        alpaca_pos = positions_by_ticker.get(ticker)
-                        current_shares = alpaca_pos['shares'] if alpaca_pos else 0
-                        avg_cost = alpaca_pos['avg_entry_price'] if alpaca_pos else 0.0
-                        
-                        if current_shares > 0:
-                            highest_price = max(
-                                self.highest_prices.get(ticker, avg_cost),
-                                close_price
-                            )
-                            self.highest_prices[ticker] = highest_price
-                        else:
-                            highest_price = 0.0
-                            if ticker in self.highest_prices:
-                                del self.highest_prices[ticker]
-
-                        # Calculate Volatility & RVOL Weighted AI Score & Relative Rank
-                        ema_9 = float(row.get('EMA_9', close_price))
-                        ema_21 = float(row.get('EMA_21', close_price))
-                        is_bullish = (ema_9 > ema_21)
-                        live_score = calculate_confidence_score(row, prev_row, is_bullish=is_bullish)
-                        
-                        rvol = float(row.get('RVOL', 1.0))
-                        atr = float(row.get('ATR', close_price * 0.01))
-                        atr_pct = (atr / close_price * 100.0) if close_price > 0 else 1.0
-                        vol_multiplier = max(1.0, (rvol * 0.6) + (atr_pct * 0.4))
-                        weighted_score = live_score * vol_multiplier
-
-                        self.ticker_scores[ticker] = round(weighted_score, 1)
-
-                        # Calculate relative rank percentile in Watchlist
-                        scores_list = list(self.ticker_scores.values())
-                        if scores_list:
-                            rank_pct = (sum(1 for s in scores_list if s <= weighted_score) / len(scores_list)) * 100.0
-                        else:
-                            rank_pct = 50.0
-
-                        # 5. Evaluate strategy with Cross-Sectional Relative Rank
-                        action, reason = evaluate_market_state(
-                            row=row,
-                            prev_row=prev_row,
-                            current_shares=current_shares,
-                            avg_cost=avg_cost,
-                            ticker=ticker,
-                            highest_price=highest_price,
-                            params=self.strategy_params,
-                            rank_percentile=rank_pct
-                        )
-
-                        # Enforce Exit-Only Mode for tickers removed from user Watchlist
-                        if ticker not in user_watchlist and action in ("BUY", "SHORT"):
-                            action = "HOLD"
-                            reason = f"[{ticker}] removed from Watchlist (Exit-Only Mode). Blocked new entry order."
-
-                        # Generate Indicator Snapshot (English)
-                        vwap   = float(row.get('VWAP',   close_price))
-                        rsi    = float(row.get('RSI',    50.0))
-                        rvol   = float(row.get('RVOL',   1.0))
-                        regime = str(row.get('Regime', 'range_bound'))
-
-                        trend_icon = "📈" if ema_9 > ema_21 else "📉"
-                        vwap_pos   = "Above VWAP✅" if close_price >= vwap else "Below VWAP⚠️"
-                        ema_gap_pct = abs(ema_9 - ema_21) / ema_21 * 100
-
-                        if current_shares > 0:
-                            pnl_pct = (close_price - avg_cost) / avg_cost * 100
-                            pos_label = f"LONG {current_shares} shs @ ${avg_cost:.2f} | PnL: {'+' if pnl_pct>=0 else ''}{pnl_pct:.2f}%"
-                        elif current_shares < 0:
-                            pnl_pct = (avg_cost - close_price) / avg_cost * 100
-                            pos_label = f"SHORT {abs(current_shares)} shs @ ${avg_cost:.2f} | PnL: {'+' if pnl_pct>=0 else ''}{pnl_pct:.2f}%"
-                        else:
-                            pos_label = "📡 [系统开盘中·空仓研判] 正在全频段扫描，暂未发现符合条件的合适买点"
-
-                        alerts = []
-                        alerts.append(f"🏆 AI Score:{live_score}分")
-                        vwap_dist_pct = abs(close_price - vwap) / vwap * 100
-                        ema_cross_dist = abs(ema_9 - ema_21) / ema_21 * 100
-                        if vwap_dist_pct < 0.15:
-                            alerts.append("🔔 Near VWAP Line")
-                        if ema_cross_dist < 0.08:
-                            alerts.append("⚡ EMA9/21 Near Cross")
-                        if rsi > 68:
-                            alerts.append(f"🌡️ RSI={rsi:.0f} Overbought")
-                        if rsi < 32:
-                            alerts.append(f"🌡️ RSI={rsi:.0f} Oversold")
-                        if rvol > 1.8:
-                            alerts.append(f"🔥 RVOL={rvol:.1f}x High Vol")
-                        alert_str = " | " + " · ".join(alerts) if alerts else ""
-
-                        if action == "HOLD":
-                            decision_icon = "⏳ WATCH"
-                        elif action in ("BUY", "SHORT"):
-                            decision_icon = f"🚀 TRIGGER {action}"
-                        elif action in ("PARTIAL_SELL", "PARTIAL_COVER"):
-                            decision_icon = f"🟢 PARTIAL EXIT {action}"
-                        else:
-                            decision_icon = f"🔒 FULL EXIT {action}"
-
-                        snapshot = (
-                            f"{trend_icon} [{ticker}] ${close_price:.2f} | "
-                            f"{vwap_pos} | EMA_Diff={ema_gap_pct:.2f}% | RSI={rsi:.0f} | "
-                            f"Regime={regime} | {pos_label}{alert_str} → {decision_icon}"
-                        )
-                        self.add_log(snapshot)
-
-                        # 5. Execute action on Alpaca
-                        if action == "BUY" and current_shares == 0:
-                            account = self.adapter.get_account_summary()
-                            total_equity = account['equity']
-                            cash = account['cash']
+                            if df is None or df.empty or len(df) < 2:
+                                self.add_log(f"🔍 [{ticker}] Waiting for bar data...")
+                                continue
+                                
+                            row = df.iloc[-1]
+                            prev_row = df.iloc[-2]
+                            close_price = float(row['Close'])
                             
-                            risk_pct = self.strategy_params.get("risk_per_trade_pct", 0.02)
-                            atr_mult = self.strategy_params.get("trailing_stop_atr_mult", 1.5)
-                            max_pct = self.strategy_params.get("max_position_size_pct", 0.50)
-                            atr = float(row['ATR']) if 'ATR' in row and row['ATR'] > 0 else close_price * 0.02
+                            alpaca_pos = positions_by_ticker.get(ticker)
+                            current_shares = alpaca_pos['shares'] if alpaca_pos else 0
+                            avg_cost = alpaca_pos['avg_entry_price'] if alpaca_pos else 0.0
                             
-                            dollar_risk = total_equity * risk_pct
-                            stop_distance = atr * atr_mult
-                            
-                            base_shares = int(dollar_risk / stop_distance) if stop_distance > 0 else int((total_equity * max_pct) / close_price)
-                            max_shares = int((total_equity * max_pct) / close_price)
-                            base_shares = min(base_shares, max_shares)
-
-                            # Tiered Position Sizing based on Confidence Score
-                            if "[Probe-Light" in reason:
-                                size_scale = 0.35
-                            elif "[Standard-Entry" in reason:
-                                size_scale = 0.70
+                            if current_shares > 0:
+                                highest_price = max(
+                                    self.highest_prices.get(ticker, avg_cost),
+                                    close_price
+                                )
+                                self.highest_prices[ticker] = highest_price
                             else:
-                                size_scale = 1.00
-
-                            shares = int(base_shares * size_scale)
-                            cash_shares = int((cash * 0.95) / close_price)
-                            shares = max(1, min(shares, cash_shares))
-
-                            self.add_log(f"🛒 [{ticker}] BUY signal triggered ({size_scale*100:.0f}% position, AI Score: {live_score}分)! Market buying {shares} shares...")
-                            order_res = self.adapter.submit_market_order(ticker, shares, "buy")
-                            if order_res.get("success"):
-                                self.add_log(f"✅ [{ticker}] BUY order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
-                                self.highest_prices[ticker] = close_price
-                                self.add_trade_action("BUY", ticker, shares, close_price, reason)
-                            else:
-                                self.add_log(f"❌ [{ticker}] BUY order failed. Reason: {order_res.get('error')}")
-
-                        elif action == "PYRAMID_BUY" and current_shares > 0:
-                            account = self.adapter.get_account_summary()
-                            cash = account['cash']
-                            add_shares = max(1, int(current_shares * 0.35))
-                            cash_shares = int((cash * 0.90) / close_price)
-                            add_shares = max(1, min(add_shares, cash_shares))
-
-                            self.add_log(f"⚡ [{ticker}] PYRAMID_BUY (顺势加仓 +35%) signal triggered! Market buying {add_shares} shares...")
-                            order_res = self.adapter.submit_market_order(ticker, add_shares, "buy")
-                            if order_res.get("success"):
-                                self.add_log(f"✅ [{ticker}] PYRAMID_BUY order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
-                                self.add_trade_action("PYRAMID_BUY", ticker, add_shares, close_price, reason)
-                            else:
-                                self.add_log(f"❌ [{ticker}] PYRAMID_BUY order failed. Reason: {order_res.get('error')}")
-
-                        elif action == "PARTIAL_SELL" and current_shares > 0:
-                            sell_qty = max(1, current_shares // 2)
-                            pnl = (close_price - avg_cost) * sell_qty
-                            self.add_log(f"🟢 [{ticker}] PARTIAL_SELL (第一阶分批止盈 50%) signal triggered! Market selling {sell_qty} shares (Est. PnL ${pnl:.2f})...")
-                            order_res = self.adapter.submit_market_order(ticker, sell_qty, "sell")
-                            if order_res.get("success"):
-                                self.add_log(f"✅ [{ticker}] PARTIAL_SELL order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
-                                self.add_trade_action("PARTIAL_SELL", ticker, sell_qty, close_price, reason, pnl=pnl)
-                            else:
-                                self.add_log(f"❌ [{ticker}] PARTIAL_SELL order failed. Reason: {order_res.get('error')}")
-
-                        elif action == "PARTIAL_COVER" and current_shares < 0:
-                            cover_qty = max(1, abs(current_shares) // 2)
-                            pnl = (avg_cost - close_price) * cover_qty
-                            self.add_log(f"🟢 [{ticker}] PARTIAL_COVER (第一阶分批止回补 50%) signal triggered! Market buying {cover_qty} shares (Est. PnL ${pnl:.2f})...")
-                            order_res = self.adapter.submit_market_order(ticker, cover_qty, "buy")
-                            if order_res.get("success"):
-                                self.add_log(f"✅ [{ticker}] PARTIAL_COVER order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
-                                self.add_trade_action("PARTIAL_COVER", ticker, cover_qty, close_price, reason, pnl=pnl)
-                            else:
-                                self.add_log(f"❌ [{ticker}] PARTIAL_COVER order failed. Reason: {order_res.get('error')}")
-
-                        elif action == "SHORT" and current_shares == 0:
-                            account = self.adapter.get_account_summary()
-                            total_equity = account['equity']
-                            
-                            risk_pct = self.strategy_params.get("risk_per_trade_pct", 0.02)
-                            max_pct = self.strategy_params.get("max_position_size_pct", 0.50)
-                            atr = float(row['ATR']) if 'ATR' in row and row['ATR'] > 0 else close_price * 0.02
-                            
-                            dollar_risk = total_equity * risk_pct
-                            stop_distance = atr * 1.5
-                            shares = int(dollar_risk / stop_distance) if stop_distance > 0 else int((total_equity * max_pct) / close_price)
-                            max_shares = int((total_equity * max_pct) / close_price)
-                            shares = max(1, min(shares, max_shares))
-
-                            self.add_log(f"📉 [{ticker}] SHORT signal triggered! Market shorting {shares} shares...")
-                            order_res = self.adapter.submit_market_order(ticker, shares, "sell")
-                            if order_res.get("success"):
-                                self.add_log(f"✅ [{ticker}] SHORT order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
-                                self.add_trade_action("SHORT", ticker, shares, close_price, reason)
-                            else:
-                                self.add_log(f"❌ [{ticker}] SHORT order failed. Reason: {order_res.get('error')}")
-
-                        elif action == "SELL" and current_shares > 0:
-                            pnl = (close_price - avg_cost) * current_shares
-                            self.add_log(f"🔔 [{ticker}] SELL signal triggered! Market selling {current_shares} shares (Est. PnL ${pnl:.2f})...")
-                            order_res = self.adapter.submit_market_order(ticker, current_shares, "sell")
-                            if order_res.get("success"):
-                                self.add_log(f"✅ [{ticker}] SELL order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
-                                self.add_trade_action("SELL", ticker, current_shares, close_price, reason, pnl=pnl)
+                                highest_price = 0.0
                                 if ticker in self.highest_prices:
                                     del self.highest_prices[ticker]
-                            else:
-                                self.add_log(f"❌ [{ticker}] SELL order failed. Reason: {order_res.get('error')}")
 
-                        elif action == "COVER" and current_shares < 0:
-                            cover_qty = abs(current_shares)
-                            pnl = (avg_cost - close_price) * cover_qty
-                            self.add_log(f"🔔 [{ticker}] COVER signal triggered! Market buying {cover_qty} shares (Est. PnL ${pnl:.2f})...")
-                            order_res = self.adapter.submit_market_order(ticker, cover_qty, "buy")
-                            if order_res.get("success"):
-                                self.add_log(f"✅ [{ticker}] COVER order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
-                                self.add_trade_action("COVER", ticker, cover_qty, close_price, reason, pnl=pnl)
+                            # Calculate Volatility & RVOL Weighted AI Score & Relative Rank
+                            ema_9 = float(row.get('EMA_9', close_price))
+                            ema_21 = float(row.get('EMA_21', close_price))
+                            is_bullish = (ema_9 > ema_21)
+                            live_score = calculate_confidence_score(row, prev_row, is_bullish=is_bullish)
+                            
+                            rvol = float(row.get('RVOL', 1.0))
+                            atr = float(row.get('ATR', close_price * 0.01))
+                            atr_pct = (atr / close_price * 100.0) if close_price > 0 else 1.0
+                            vol_multiplier = max(1.0, (rvol * 0.6) + (atr_pct * 0.4))
+                            weighted_score = live_score * vol_multiplier
+
+                            self.ticker_scores[ticker] = round(weighted_score, 1)
+
+                            # Calculate relative rank percentile in Watchlist
+                            scores_list = list(self.ticker_scores.values())
+                            if scores_list:
+                                rank_pct = (sum(1 for s in scores_list if s <= weighted_score) / len(scores_list)) * 100.0
                             else:
-                                self.add_log(f"❌ [{ticker}] COVER order failed. Reason: {order_res.get('error')}")
+                                rank_pct = 50.0
+
+                            # 5. Evaluate strategy with Cross-Sectional Relative Rank
+                            action, reason = evaluate_market_state(
+                                row=row,
+                                prev_row=prev_row,
+                                current_shares=current_shares,
+                                avg_cost=avg_cost,
+                                ticker=ticker,
+                                highest_price=highest_price,
+                                params=self.strategy_params,
+                                rank_percentile=rank_pct
+                            )
+
+                            # Enforce Exit-Only Mode for tickers removed from user Watchlist
+                            if ticker not in user_watchlist and action in ("BUY", "SHORT"):
+                                action = "HOLD"
+                                reason = f"[{ticker}] removed from Watchlist (Exit-Only Mode). Blocked new entry order."
+
+                            # Generate Indicator Snapshot (English)
+                            vwap   = float(row.get('VWAP',   close_price))
+                            rsi    = float(row.get('RSI',    50.0))
+                            rvol   = float(row.get('RVOL',   1.0))
+                            regime = str(row.get('Regime', 'range_bound'))
+
+                            trend_icon = "📈" if ema_9 > ema_21 else "📉"
+                            vwap_pos   = "Above VWAP✅" if close_price >= vwap else "Below VWAP⚠️"
+                            ema_gap_pct = abs(ema_9 - ema_21) / ema_21 * 100
+
+                            if current_shares > 0:
+                                pnl_pct = (close_price - avg_cost) / avg_cost * 100
+                                pos_label = f"LONG {current_shares} shs @ ${avg_cost:.2f} | PnL: {'+' if pnl_pct>=0 else ''}{pnl_pct:.2f}%"
+                            elif current_shares < 0:
+                                pnl_pct = (avg_cost - close_price) / avg_cost * 100
+                                pos_label = f"SHORT {abs(current_shares)} shs @ ${avg_cost:.2f} | PnL: {'+' if pnl_pct>=0 else ''}{pnl_pct:.2f}%"
+                            else:
+                                pos_label = "📡 [系统开盘中·空仓研判] 正在全频段扫描，暂未发现符合条件的合适买点"
+
+                            alerts = []
+                            alerts.append(f"🏆 AI Score:{live_score}分")
+                            vwap_dist_pct = abs(close_price - vwap) / vwap * 100
+                            ema_cross_dist = abs(ema_9 - ema_21) / ema_21 * 100
+                            if vwap_dist_pct < 0.15:
+                                alerts.append("🔔 Near VWAP Line")
+                            if ema_cross_dist < 0.08:
+                                alerts.append("⚡ EMA9/21 Near Cross")
+                            if rsi > 68:
+                                alerts.append(f"🌡️ RSI={rsi:.0f} Overbought")
+                            if rsi < 32:
+                                alerts.append(f"🌡️ RSI={rsi:.0f} Oversold")
+                            if rvol > 1.8:
+                                alerts.append(f"🔥 RVOL={rvol:.1f}x High Vol")
+                            alert_str = " | " + " · ".join(alerts) if alerts else ""
+
+                            if action == "HOLD":
+                                decision_icon = "⏳ WATCH"
+                            elif action in ("BUY", "SHORT"):
+                                decision_icon = f"🚀 TRIGGER {action}"
+                            elif action in ("PARTIAL_SELL", "PARTIAL_COVER"):
+                                decision_icon = f"🟢 PARTIAL EXIT {action}"
+                            else:
+                                decision_icon = f"🔒 FULL EXIT {action}"
+
+                            snapshot = (
+                                f"{trend_icon} [{ticker}] ${close_price:.2f} | "
+                                f"{vwap_pos} | EMA_Diff={ema_gap_pct:.2f}% | RSI={rsi:.0f} | "
+                                f"Regime={regime} | {pos_label}{alert_str} → {decision_icon}"
+                            )
+                            self.add_log(snapshot)
+
+                            # 5. Execute action on Alpaca
+                            if action == "BUY" and current_shares == 0:
+                                account = self.adapter.get_account_summary()
+                                total_equity = account['equity']
+                                cash = account['cash']
                                 
-                    except Exception as ex:
-                        self.add_log(f"⚠️ Error scanning {ticker}: {str(ex)}")
+                                risk_pct = self.strategy_params.get("risk_per_trade_pct", 0.02)
+                                atr_mult = self.strategy_params.get("trailing_stop_atr_mult", 1.5)
+                                max_pct = self.strategy_params.get("max_position_size_pct", 0.50)
+                                atr = float(row['ATR']) if 'ATR' in row and row['ATR'] > 0 else close_price * 0.02
+                                
+                                dollar_risk = total_equity * risk_pct
+                                stop_distance = atr * atr_mult
+                                
+                                base_shares = int(dollar_risk / stop_distance) if stop_distance > 0 else int((total_equity * max_pct) / close_price)
+                                max_shares = int((total_equity * max_pct) / close_price)
+                                base_shares = min(base_shares, max_shares)
 
-                await asyncio.sleep(30)
+                                # Tiered Position Sizing based on Confidence Score
+                                if "[Probe-Light" in reason:
+                                    size_scale = 0.35
+                                elif "[Standard-Entry" in reason:
+                                    size_scale = 0.70
+                                else:
+                                    size_scale = 1.00
+
+                                shares = int(base_shares * size_scale)
+                                cash_shares = int((cash * 0.95) / close_price)
+                                shares = max(1, min(shares, cash_shares))
+
+                                self.add_log(f"🛒 [{ticker}] BUY signal triggered ({size_scale*100:.0f}% position, AI Score: {live_score}分)! Market buying {shares} shares...")
+                                order_res = self.adapter.submit_market_order(ticker, shares, "buy")
+                                if order_res.get("success"):
+                                    self.add_log(f"✅ [{ticker}] BUY order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
+                                    self.highest_prices[ticker] = close_price
+                                    self.add_trade_action("BUY", ticker, shares, close_price, reason)
+                                else:
+                                    self.add_log(f"❌ [{ticker}] BUY order failed. Reason: {order_res.get('error')}")
+
+                            elif action == "PYRAMID_BUY" and current_shares > 0:
+                                account = self.adapter.get_account_summary()
+                                cash = account['cash']
+                                add_shares = max(1, int(current_shares * 0.35))
+                                cash_shares = int((cash * 0.90) / close_price)
+                                add_shares = max(1, min(add_shares, cash_shares))
+
+                                self.add_log(f"⚡ [{ticker}] PYRAMID_BUY (顺势加仓 +35%) signal triggered! Market buying {add_shares} shares...")
+                                order_res = self.adapter.submit_market_order(ticker, add_shares, "buy")
+                                if order_res.get("success"):
+                                    self.add_log(f"✅ [{ticker}] PYRAMID_BUY order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
+                                    self.add_trade_action("PYRAMID_BUY", ticker, add_shares, close_price, reason)
+                                else:
+                                    self.add_log(f"❌ [{ticker}] PYRAMID_BUY order failed. Reason: {order_res.get('error')}")
+
+                            elif action == "PARTIAL_SELL" and current_shares > 0:
+                                sell_qty = max(1, current_shares // 2)
+                                pnl = (close_price - avg_cost) * sell_qty
+                                self.add_log(f"🟢 [{ticker}] PARTIAL_SELL (第一阶分批止盈 50%) signal triggered! Market selling {sell_qty} shares (Est. PnL ${pnl:.2f})...")
+                                order_res = self.adapter.submit_market_order(ticker, sell_qty, "sell")
+                                if order_res.get("success"):
+                                    self.add_log(f"✅ [{ticker}] PARTIAL_SELL order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
+                                    self.add_trade_action("PARTIAL_SELL", ticker, sell_qty, close_price, reason, pnl=pnl)
+                                else:
+                                    self.add_log(f"❌ [{ticker}] PARTIAL_SELL order failed. Reason: {order_res.get('error')}")
+
+                            elif action == "PARTIAL_COVER" and current_shares < 0:
+                                cover_qty = max(1, abs(current_shares) // 2)
+                                pnl = (avg_cost - close_price) * cover_qty
+                                self.add_log(f"🟢 [{ticker}] PARTIAL_COVER (第一阶分批止回补 50%) signal triggered! Market buying {cover_qty} shares (Est. PnL ${pnl:.2f})...")
+                                order_res = self.adapter.submit_market_order(ticker, cover_qty, "buy")
+                                if order_res.get("success"):
+                                    self.add_log(f"✅ [{ticker}] PARTIAL_COVER order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
+                                    self.add_trade_action("PARTIAL_COVER", ticker, cover_qty, close_price, reason, pnl=pnl)
+                                else:
+                                    self.add_log(f"❌ [{ticker}] PARTIAL_COVER order failed. Reason: {order_res.get('error')}")
+
+                            elif action == "SHORT" and current_shares == 0:
+                                account = self.adapter.get_account_summary()
+                                total_equity = account['equity']
+                                
+                                risk_pct = self.strategy_params.get("risk_per_trade_pct", 0.02)
+                                max_pct = self.strategy_params.get("max_position_size_pct", 0.50)
+                                atr = float(row['ATR']) if 'ATR' in row and row['ATR'] > 0 else close_price * 0.02
+                                
+                                dollar_risk = total_equity * risk_pct
+                                stop_distance = atr * 1.5
+                                shares = int(dollar_risk / stop_distance) if stop_distance > 0 else int((total_equity * max_pct) / close_price)
+                                max_shares = int((total_equity * max_pct) / close_price)
+                                shares = max(1, min(shares, max_shares))
+
+                                self.add_log(f"📉 [{ticker}] SHORT signal triggered! Market shorting {shares} shares...")
+                                order_res = self.adapter.submit_market_order(ticker, shares, "sell")
+                                if order_res.get("success"):
+                                    self.add_log(f"✅ [{ticker}] SHORT order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
+                                    self.add_trade_action("SHORT", ticker, shares, close_price, reason)
+                                else:
+                                    self.add_log(f"❌ [{ticker}] SHORT order failed. Reason: {order_res.get('error')}")
+
+                            elif action == "SELL" and current_shares > 0:
+                                pnl = (close_price - avg_cost) * current_shares
+                                self.add_log(f"🔔 [{ticker}] SELL signal triggered! Market selling {current_shares} shares (Est. PnL ${pnl:.2f})...")
+                                order_res = self.adapter.submit_market_order(ticker, current_shares, "sell")
+                                if order_res.get("success"):
+                                    self.add_log(f"✅ [{ticker}] SELL order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
+                                    self.add_trade_action("SELL", ticker, current_shares, close_price, reason, pnl=pnl)
+                                    if ticker in self.highest_prices:
+                                        del self.highest_prices[ticker]
+                                else:
+                                    self.add_log(f"❌ [{ticker}] SELL order failed. Reason: {order_res.get('error')}")
+
+                            elif action == "COVER" and current_shares < 0:
+                                cover_qty = abs(current_shares)
+                                pnl = (avg_cost - close_price) * cover_qty
+                                self.add_log(f"🔔 [{ticker}] COVER signal triggered! Market buying {cover_qty} shares (Est. PnL ${pnl:.2f})...")
+                                order_res = self.adapter.submit_market_order(ticker, cover_qty, "buy")
+                                if order_res.get("success"):
+                                    self.add_log(f"✅ [{ticker}] COVER order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
+                                    self.add_trade_action("COVER", ticker, cover_qty, close_price, reason, pnl=pnl)
+                                else:
+                                    self.add_log(f"❌ [{ticker}] COVER order failed. Reason: {order_res.get('error')}")
+                                    
+                        except Exception as ex:
+                            self.add_log(f"⚠️ Error scanning {ticker}: {str(ex)}")
+
+                loop_delay = 5 if is_market_opening_window else 30
+                await asyncio.sleep(loop_delay)
 
             except asyncio.CancelledError:
                 self.add_log("Background trading loop task cancelled.")
