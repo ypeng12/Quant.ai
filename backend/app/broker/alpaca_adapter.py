@@ -6,11 +6,21 @@ Wraps official alpaca-py SDK for paper/live trading commands.
 
 import os
 from typing import Dict, List, Optional
-from alpaca.trading.client import TradingClient
-from alpaca.trading.requests import MarketOrderRequest, LimitOrderRequest
-from alpaca.trading.enums import OrderSide, TimeInForce, OrderStatus
-
 from dotenv import load_dotenv
+
+try:
+    from alpaca.trading.client import TradingClient
+    from alpaca.trading.requests import MarketOrderRequest, LimitOrderRequest
+    from alpaca.trading.enums import OrderSide, TimeInForce, OrderStatus
+    HAS_ALPACA_SDK = True
+except ImportError:
+    TradingClient = None
+    MarketOrderRequest = None
+    LimitOrderRequest = None
+    OrderSide = None
+    TimeInForce = None
+    OrderStatus = None
+    HAS_ALPACA_SDK = False
 
 class AlpacaAdapter:
     def __init__(self, api_key: Optional[str] = None, api_secret: Optional[str] = None, base_url: Optional[str] = None):

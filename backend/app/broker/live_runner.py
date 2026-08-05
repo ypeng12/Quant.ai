@@ -66,14 +66,14 @@ class MockAlpacaAdapter:
             }
         return None
 
-    def submit_market_order(self, symbol: str, qty: int, side: str) -> Dict:
+    def submit_market_order(self, symbol: str, qty: int, side: str, price: Optional[float] = None) -> Dict:
         symbol = symbol.upper()
+        exec_price = price if price is not None else 100.0
         if side.lower() == "buy":
-            self.positions[symbol] = {"shares": qty, "avg_entry_price": 100.0, "current_price": 100.0}
+            self.positions[symbol] = {"shares": qty, "avg_entry_price": exec_price, "current_price": exec_price}
         else:
             if symbol in self.positions:
                 del self.positions[symbol]
-        return {"status": "filled", "id": "mock_order_123"}
         return {"success": True, "status": "filled", "id": "mock_order_123"}
 
     def submit_limit_order(self, symbol: str, qty: int, side: str, limit_price: float, extended_hours: bool = True) -> Dict:
@@ -97,8 +97,6 @@ class LiveTradingRunner:
         self.history_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "trade_history.json")
         self.load_trade_history()
         self.config_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "runner_config.json")
-        self.load_runner_config()
-        self.add_log("📡 [系统初始化完成] AI 量化研判引擎已准备就绪...")
         self.adapter = MockAlpacaAdapter()
         self.active_tickers = WATCHLIST.copy()
         self.highest_prices = {}
@@ -119,7 +117,7 @@ class LiveTradingRunner:
         self.ignore_market_hours = True
         self.ticker_scores = {}              # AI 实时多因子置信度打分 (由 AI 客观计算与动态排序)
         self.load_runner_config()
-        self.adapter = MockAlpacaAdapter()
+        self.add_log("📡 [系统初始化完成] AI 量化研判引擎已准备就绪...")
 
     def load_runner_config(self):
         """从本地磁盘 runner_config.json 加载持久化系统开盘控制模式与状态配置。"""

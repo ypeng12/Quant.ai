@@ -337,6 +337,9 @@ def fetch_and_prepare_data(ticker, period=None, interval="1m"):
             df['ORB_Low'] = 0.0
             
         regular_hours_df = df[df['Is_Regular_Hours']].copy()
+        if len(regular_hours_df) < 2:
+            # 当处在非常规交易时段或盘前导致常规时段K线不足时，自动回退取全部可用K线(包含盘前/盘后)
+            regular_hours_df = df.copy()
     else:
         # 日线级别数据全部视为常规时段
         regular_hours_df = df.copy()
