@@ -852,6 +852,41 @@ class LiveTradingRunner:
                                 rank_percentile=rank_pct
                             )
 
+                            # Time Stop Check (daytrade.pdf P.14, 15): Exit stagnant trades after max_hold_minutes (35 mins)
+                            if current_shares != 0 and ticker in self.entry_times:
+                                minutes_in_trade = (datetime.datetime.now() - self.entry_times[ticker]).total_seconds() / 60.0
+                                max_hold = self.strategy_params.get("max_hold_minutes", 35)
+                                min_progress_r = self.strategy_params.get("time_stop_min_progress_r", 0.35)
+                                stop_min_pct = self.strategy_params.get("stop_min_pct", 0.0025)
+                                stop_max_pct = self.strategy_params.get("stop_max_pct", 0.0060)
+                                initial_stop_atr_mult = self.strategy_params.get("initial_stop_atr_mult", 1.05)
+
+                                atr_val = float(row['ATR']) if 'ATR' in row and row['ATR'] > 0 else close_price * 0.004
+                                atr_pct = (atr_val / close_price) if close_price > 0 else 0.004
+                                stop_dist_pct = min(stop_max_pct, max(stop_min_pct, initial_stop_atr_mult * atr_pct))
+
+                                pnl_pct = (close_price - avg_cost) / avg_cost if (current_shares > 0 and avg_cost > 0) else ((avg_cost - close_price) / avg_cost if avg_cost > 0 else 0.0)
+                                pnl_r = pnl_pct / stop_dist_pct if stop_dist_pct > 0 else 0.0
+
+                                if minutes_in_trade >= max_hold and pnl_r < min_progress_r:
+                                    action = "SELL" if current_shares > 0 else "COVER"
+                                    reason = f"[TimeStop] Position held for {int(minutes_in_trade)} mins without reaching {min_progress_r}R progress. Closing stagnant trade."
+
+                            # Daily Loss Limit Check (daytrade.pdf P.15, 16): Stop opening new positions if daily loss >= 1.20%
+                            account_summary = self.adapter.get_account_summary()
+                            total_eq = account_summary.get('equity', 100000.0)
+                            daily_loss_limit_pct = self.strategy_params.get("daily_loss_limit_pct", 0.012)
+                            
+                            # Estimate daily unrealized + realized PnL
+                            today_str = datetime.datetime.now().strftime("%Y-%m-%d")
+                            today_trades_pnl = sum(t.get("pnl", 0.0) for t in self.trade_history if t.get("date") == today_str)
+                            open_pnl = sum((p.get("unrealized_pnl", 0.0)) for p in positions_list)
+                            est_daily_pnl_pct = (today_trades_pnl + open_pnl) / total_eq if total_eq > 0 else 0.0
+
+                            if est_daily_pnl_pct <= -daily_loss_limit_pct and action in ("BUY", "SHORT"):
+                                action = "HOLD"
+                                reason = f"[DailyLossLimit] Daily drawdown ({est_daily_pnl_pct*100:.2f}%) reached max limit (-{daily_loss_limit_pct*100:.2f}%). Blocked new entry order."
+
                             # Enforce Exit-Only Mode for tickers removed from user Watchlist
                             if ticker not in user_watchlist and action in ("BUY", "SHORT"):
                                 action = "HOLD"
