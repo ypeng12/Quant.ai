@@ -42,6 +42,9 @@ interface TodaySummary {
   wins: number;
   losses: number;
   win_rate: number;
+  realized_pnl: number;
+  alpaca_official_pnl: number;
+  unrealized_pnl: number;
   total_pnl: number;
   best_trade: number;
   worst_trade: number;
@@ -443,7 +446,7 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
         const winsVal = (todaySummary?.wins !== undefined && todaySummary.wins > 0) ? todaySummary.wins : calcWins;
         const lossesVal = (todaySummary?.losses !== undefined && todaySummary.losses > 0) ? todaySummary.losses : calcLosses;
         const winRateVal = (todaySummary?.win_rate !== undefined && todaySummary.win_rate > 0) ? todaySummary.win_rate : calcWinRate;
-        const netPnlVal = todaySummary?.total_pnl ?? closedToday.reduce((sum, t) => sum + (t.pnl || 0), 0);
+        const netPnlVal = todaySummary?.alpaca_official_pnl ?? todaySummary?.total_pnl ?? closedToday.reduce((sum, t) => sum + (t.pnl || 0), 0);
 
         return (
           <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(5, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>

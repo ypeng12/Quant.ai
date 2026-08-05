@@ -347,7 +347,7 @@ class LiveTradingRunner:
         today = datetime.datetime.now(est).strftime("%Y-%m-%d")
         today_trades = [t for t in self.trade_history if (t.get("date") or t.get("time", "")[:10]).strip() == today]
 
-        closed_trades = [t for t in today_trades if t.get("action") in ("SELL", "COVER")]
+        closed_trades = [t for t in today_trades if t.get("action") in ("SELL", "COVER", "PARTIAL_SELL", "PARTIAL_COVER")]
         wins = [t for t in closed_trades if t.get("pnl", 0.0) > 0]
         losses = [t for t in closed_trades if t.get("pnl", 0.0) < 0]
         realized_pnl = sum(t.get("pnl", 0.0) for t in closed_trades)
@@ -369,7 +369,9 @@ class LiveTradingRunner:
         except Exception:
             pass
 
-        final_today_pnl = round(realized_pnl, 2) if (alpaca_official_today_pnl is None or alpaca_official_today_pnl == 0.0) else round(alpaca_official_today_pnl, 2)
+        # Priority: use Alpaca's official today_pnl (equity - last_equity) as the ground truth
+        # Fall back to our calculated realized_pnl only if Alpaca doesn't provide one
+        final_today_pnl = round(alpaca_official_today_pnl, 2) if (alpaca_official_today_pnl is not None and alpaca_official_today_pnl != 0.0) else round(realized_pnl, 2)
 
         return {
             "date": today,
@@ -379,9 +381,9 @@ class LiveTradingRunner:
             "losses": len(losses),
             "win_rate": round(len(wins) / len(closed_trades) * 100, 1) if closed_trades else 0.0,
             "realized_pnl": round(realized_pnl, 2),
-            "alpaca_official_pnl": round(alpaca_official_today_pnl, 2) if alpaca_official_today_pnl is not None else final_today_pnl,
+            "alpaca_official_pnl": final_today_pnl,
             "unrealized_pnl": round(unrealized_pnl, 2),
-            "total_pnl": round(realized_pnl + unrealized_pnl, 2),
+            "total_pnl": final_today_pnl,
             "best_trade": round(max((t.get("pnl", 0.0) for t in closed_trades), default=0.0), 2),
             "worst_trade": round(min((t.get("pnl", 0.0) for t in closed_trades), default=0.0), 2)
         }
