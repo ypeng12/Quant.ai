@@ -78,6 +78,7 @@ def auto_start_live_runner():
     """
     try:
         saved_mode = getattr(live_runner, "market_mode", "MANUAL_OPEN")
+        mode_to_start = saved_mode if saved_mode in ("MANUAL_OPEN", "MANUAL_CLOSE", "AUTO_EXCHANGE") else "MANUAL_OPEN"
         live_runner.start(
             strategy_params={
                 "strategy_mode": "dynamic",
@@ -88,9 +89,10 @@ def auto_start_live_runner():
                 "rsi_threshold_buy": 70.0,
                 "market_open_focus": False
             },
-            market_mode=saved_mode
+            market_mode=mode_to_start,
+            ignore_market_hours=(mode_to_start == "MANUAL_OPEN")
         )
-        print(f"[System Startup] 🚀 AI 量化托管交易机器人已在后台自动启动上线 (当前开盘控制模式: {saved_mode})！")
+        print(f"[System Startup] 🚀 AI 量化托管交易机器人已在后台自动启动上线 (当前开盘控制模式: {mode_to_start})！")
     except Exception as e:
         print(f"[System Startup Warning] 自动启动交易机器人异常: {e}")
 
