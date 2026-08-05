@@ -374,23 +374,23 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
             let badgeBg = 'rgba(255,255,255,0.06)';
             let badgeBorder = '1px solid rgba(255,255,255,0.12)';
             let badgeColor = '#888';
-            let labelText = `🔍 ${t} (${score}分)`;
+            let labelText = `🔍 ${t}`;
 
             if (idx === 0) {
               badgeBg = 'linear-gradient(135deg, rgba(0,200,5,0.25) 0%, rgba(16,185,129,0.3) 100%)';
               badgeBorder = '1px solid rgba(0,200,5,0.8)';
               badgeColor = '#fff';
-              labelText = `🔥 ${t} (${score}分)`;
+              labelText = `🔥 ${t}`;
             } else if (idx === 1) {
               badgeBg = 'rgba(100, 180, 255, 0.2)';
               badgeBorder = '1px solid #64b4ff';
               badgeColor = '#64b4ff';
-              labelText = `⚡ ${t} (${score}分)`;
+              labelText = `⚡ ${t}`;
             } else if (score >= 35) {
               badgeBg = 'rgba(255, 193, 7, 0.15)';
               badgeBorder = '1px solid #ffc107';
               badgeColor = '#ffc107';
-              labelText = `🔍 ${t} (${score}分)`;
+              labelText = `🔍 ${t}`;
             }
 
             return (
