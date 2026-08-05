@@ -341,19 +341,35 @@ class LiveTradingRunner:
         self.save_trade_history()
 
     def get_today_summary(self) -> dict:
-        """Calculate today's trade summary and realized PnL strictly from today's closed trades."""
+        """Calculate today's trade summary and realized/unrealized PnL."""
         self.recalculate_trade_pnls()
         est = pytz.timezone('America/New_York')
         today = datetime.datetime.now(est).strftime("%Y-%m-%d")
         today_trades = [t for t in self.trade_history if (t.get("date") or t.get("time", "")[:10]).strip() == today]
 
-        closed_trades = [t for t in today_trades if t.get("action") in ("SELL", "COVER", "PARTIAL_SELL", "PARTIAL_COVER")]
+        closed_trades = [t for t in today_trades if t.get("action") in ("SELL", "COVER")]
         wins = [t for t in closed_trades if t.get("pnl", 0.0) > 0]
         losses = [t for t in closed_trades if t.get("pnl", 0.0) < 0]
         realized_pnl = sum(t.get("pnl", 0.0) for t in closed_trades)
 
-        best_trade = max([t.get("pnl", 0.0) for t in closed_trades], default=0.0)
-        worst_trade = min([t.get("pnl", 0.0) for t in closed_trades], default=0.0)
+        unrealized_pnl = 0.0
+        try:
+            open_positions = self.adapter.get_open_positions()
+            for pos in open_positions:
+                unrealized_pnl += pos.get("unrealized_pnl", 0.0)
+        except Exception:
+            pass
+
+        alpaca_official_today_pnl = None
+        try:
+            if hasattr(self.adapter, "get_account_summary"):
+                acc_info = self.adapter.get_account_summary()
+                if acc_info and acc_info.get("success"):
+                    alpaca_official_today_pnl = acc_info.get("today_pnl")
+        except Exception:
+            pass
+
+        final_today_pnl = round(realized_pnl, 2) if (alpaca_official_today_pnl is None or alpaca_official_today_pnl == 0.0) else round(alpaca_official_today_pnl, 2)
 
         return {
             "date": today,
@@ -362,9 +378,12 @@ class LiveTradingRunner:
             "wins": len(wins),
             "losses": len(losses),
             "win_rate": round(len(wins) / len(closed_trades) * 100, 1) if closed_trades else 0.0,
-            "total_pnl": round(realized_pnl, 2),
-            "best_trade": round(best_trade, 2),
-            "worst_trade": round(worst_trade, 2)
+            "realized_pnl": round(realized_pnl, 2),
+            "alpaca_official_pnl": round(alpaca_official_today_pnl, 2) if alpaca_official_today_pnl is not None else final_today_pnl,
+            "unrealized_pnl": round(unrealized_pnl, 2),
+            "total_pnl": round(realized_pnl + unrealized_pnl, 2),
+            "best_trade": round(max((t.get("pnl", 0.0) for t in closed_trades), default=0.0), 2),
+            "worst_trade": round(min((t.get("pnl", 0.0) for t in closed_trades), default=0.0), 2)
         }
 
     def update_tickers(self, new_tickers: List[str]):

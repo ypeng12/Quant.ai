@@ -425,7 +425,7 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
         const curDate = selectedDate || todaySummary?.date || (tradeHistory.length > 0 ? (tradeHistory[0].date || tradeHistory[0].time?.slice(0, 10))?.trim() : new Date().toLocaleDateString('sv-SE'));
         const closedToday = tradeHistory.filter(t => {
           const d = (t.date || t.time?.slice(0, 10))?.trim();
-          return d === curDate && (t.action === 'SELL' || t.action === 'COVER' || t.action === 'PARTIAL_SELL' || t.action === 'PARTIAL_COVER');
+          return d === curDate && (t.action === 'SELL' || t.action === 'COVER');
         });
         const calcWins = closedToday.filter(t => (t.pnl || 0) > 0).length;
         const calcLosses = closedToday.filter(t => (t.pnl || 0) < 0).length;
