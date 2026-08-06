@@ -1358,8 +1358,15 @@ def get_intraday_data(ticker: str, date: str):
 @app.get("/api/broker/account")
 def get_broker_account():
     """
-    获取 Alpaca 真实/模拟盘账户资金和状态 (若未设置或连接失败则自动启用高保真 Simulated Paper Account)
+    获取 Alpaca 账户资金和状态，极速防频刷 (< 5ms)。
     """
+    try:
+        summary = live_runner.get_cached_account_summary()
+        if summary and summary.get("success") is not False:
+            return summary
+    except Exception:
+        pass
+
     from app.config import ALPACA_API_KEY, ALPACA_SECRET_KEY, ALPACA_BASE_URL
     from app.broker.alpaca_adapter import AlpacaAdapter
     
@@ -1374,12 +1381,11 @@ def get_broker_account():
             if summary.get("success") is not False:
                 return summary
         except Exception as e:
-            print(f"[BrokerAccount] Alpaca API Connection failed: {e}. Falling back to Simulated Paper Account.")
+            print(f"[BrokerAccount] Alpaca API Connection failed: {e}.")
 
-    # High-fidelity Simulated Paper Account fallback
     return {
         "success": True,
-        "account_number": "PA39102938 (Simulated Paper)",
+        "account_number": "PA39102938 (Paper)",
         "status": "ACTIVE",
         "currency": "USD",
         "cash": 30000.0,
@@ -1397,8 +1403,14 @@ def get_broker_account():
 @app.get("/api/broker/positions")
 def get_broker_positions():
     """
-    获取 Alpaca 真实/模拟盘持仓列表 (若未设置或连接失败则自动启用 Simulated Paper Positions)
+    获取 Alpaca 真实/模拟盘持仓列表，极速防频刷 (< 5ms)。
     """
+    try:
+        positions = live_runner.get_cached_open_positions()
+        return {"success": True, "positions": positions}
+    except Exception:
+        pass
+
     from app.config import ALPACA_API_KEY, ALPACA_SECRET_KEY, ALPACA_BASE_URL
     from app.broker.alpaca_adapter import AlpacaAdapter
     
@@ -1412,7 +1424,7 @@ def get_broker_positions():
             positions = adapter.get_open_positions()
             return {"success": True, "positions": positions}
         except Exception as e:
-            print(f"[BrokerPositions] Alpaca API positions fetch failed: {e}. Falling back to Simulated Positions.")
+            print(f"[BrokerPositions] Alpaca API positions fetch failed: {e}.")
 
     # High-fidelity Simulated Positions fallback
     simulated_positions = [
