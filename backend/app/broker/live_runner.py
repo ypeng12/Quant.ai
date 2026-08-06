@@ -172,7 +172,8 @@ class LiveTradingRunner:
             "trail_start_r": 1.10,                   # 1.10R 启动追踪止损
             "trailing_stop_atr_mult": 1.10,
             "max_hold_minutes": 35,                  # 35 分钟时间止损
-            "min_reward_to_cost_ratio": 3.0          # 最小盈亏比门槛 (daytrade.pdf)
+            "min_reward_to_cost_ratio": 1.5,         # 最小盈亏比门槛 (适合美股流动性标的)
+            "max_expected_slippage_pct": 0.0002      # 预估滑点 0.02%
         }
         self.ticker_scores = {}              # AI 实时多因子置信度打分
         self.load_runner_config()

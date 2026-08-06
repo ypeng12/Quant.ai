@@ -33,9 +33,9 @@ DEFAULT_PARAMS = {
     "time_stop_min_progress_r": 0.35,        # Require >= 0.35R progress by 12 mins
 
     # Execution Quality & Cost Gate
-    "min_reward_to_cost_ratio": 3.0,         # Minimum 3.0 reward-to-cost ratio
-    "max_spread_pct": 0.0010,                # Max 0.10% spread allowed
-    "max_expected_slippage_pct": 0.0006,     # Max 0.06% slippage allowed
+    "min_reward_to_cost_ratio": 1.5,         # Minimum 1.5 reward-to-cost ratio for liquid US equities
+    "max_spread_pct": 0.0006,                # Max 0.06% spread allowed
+    "max_expected_slippage_pct": 0.0002,     # Max 0.02% slippage allowed for liquid tickers
 
     "strategy_mode": "dynamic"
 }
@@ -148,10 +148,10 @@ def evaluate_market_state(row, prev_row, current_shares, avg_cost, ticker, highe
     is_pdl_breakdown = (prev_close >= pdl) and (close < pdl) and (pdl > 0)
 
     # Cost Gate Validation: Reward-to-Cost Ratio (daytrade.pdf)
-    spread_pct = float(row.get('Spread_Pct', 0.0004))
-    expected_cost_pct = spread_pct + p.get("max_expected_slippage_pct", 0.0006)
+    spread_pct = float(row.get('Spread_Pct', 0.0002))
+    expected_cost_pct = spread_pct + p.get("max_expected_slippage_pct", 0.0002)
     tp1_reward_pct = stop_dist_pct * p.get("tp1_r", 0.90)
-    if expected_cost_pct > 0 and (tp1_reward_pct / expected_cost_pct) < p.get("min_reward_to_cost_ratio", 3.0):
+    if expected_cost_pct > 0 and (tp1_reward_pct / expected_cost_pct) < p.get("min_reward_to_cost_ratio", 1.5):
         cost_gate_pass = False
     else:
         cost_gate_pass = True

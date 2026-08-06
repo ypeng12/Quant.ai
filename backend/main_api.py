@@ -99,9 +99,9 @@ request_latencies = []
 async def track_latency(request, call_next):
     start = time.time()
     response = await call_next(request)
-    duration_ms = (time.time() - start) * 1000
+    duration_ms = (time.time() - start) * 10000
     request_latencies.append(duration_ms)
-    if len(request_latencies) > 1000:  # 只保留最近1000条
+    if len(request_latencies) > 10000:  # 只保留最近10000条
         request_latencies.pop(0)
     return response
 
