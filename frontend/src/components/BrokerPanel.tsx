@@ -778,9 +778,14 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
         }
 
         const effectiveDate = selectedDate || (availableDates.length > 0 ? availableDates[0] : todayStr);
-        const displayTrades = [...tradeHistory].filter(t => {
+        const displayTrades = [...tradeHistory].filter((t, _idx, arr) => {
           const d = (t.date || t.time?.slice(0, 10))?.trim();
-          return d === effectiveDate;
+          if (d !== effectiveDate) return false;
+          if (t.reason === 'Alpaca Broker Executed Sync') {
+            const hasBotTrade = arr.some(t2 => t2.ticker === t.ticker && t2.shares === t.shares && t2.reason !== 'Alpaca Broker Executed Sync' && (t2.date || t2.time?.slice(0, 10))?.trim() === d);
+            if (hasBotTrade) return false;
+          }
+          return true;
         }).reverse();
 
         // Calculate metrics for selected date
