@@ -615,7 +615,7 @@ class LiveTradingRunner:
         """
         try:
             from huggingface_hub import HfApi, hf_hub_download
-            token = os.getenv("HF_TOKEN") or os.getenv("HUGGINGFACsE_TOKEN") or os.getenv("HF_HUB_TOKEN")
+            token = os.getenv("HF_TOKEN") or os.getenv("HUGGINGFACE_TOKEN") or os.getenv("HF_HUB_TOKEN")
             repo_id = "Ypeng12/quant-ai-trade-history"
             
             api = HfApi(token=token) if token else HfApi()
