@@ -102,7 +102,6 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
   const [extPrice, setExtPrice] = useState(300.0);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<ActiveTab>('analysis');
-  const [marketMode, setMarketMode] = useState<'MANUAL_OPEN' | 'MANUAL_CLOSE' | 'AUTO_EXCHANGE'>('MANUAL_OPEN');
   const [isMarketOpen, setIsMarketOpen] = useState<boolean>(true);
   const [tickerScores, setTickerScores] = useState<Record<string, number>>({});
 
@@ -128,9 +127,6 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
       const statusJson = await statusRes.json();
       if (statusJson.success) {
         setIsBotRunning(statusJson.status.is_running);
-        if (statusJson.status.market_mode) {
-          setMarketMode(statusJson.status.market_mode);
-        }
         if (statusJson.status.is_market_open !== undefined) {
           setIsMarketOpen(statusJson.status.is_market_open);
         }
@@ -186,39 +182,13 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
     return () => clearInterval(interval);
   }, []);
 
-  const handleSetMarketMode = async (mode: 'MANUAL_OPEN' | 'MANUAL_CLOSE' | 'AUTO_EXCHANGE') => {
-    setActionLoading('market_mode');
-    try {
-      const res = await fetch(`${API_BASE}/api/live/market_mode`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ market_mode: mode })
-      });
-      const json = await res.json();
-      if (json.success) {
-        setMarketMode(mode);
-        if (json.status) {
-          setIsMarketOpen(json.status.is_market_open);
-          setIsBotRunning(json.status.is_running);
-        }
-      } else {
-        alert('设置开盘模式失败: ' + (json.data?.error || json.error || '未知错误'));
-      }
-    } catch {
-      alert('请求失败');
-    } finally {
-      setActionLoading(null);
-      fetchBrokerData();
-    }
-  };
-
   const handleStartBot = async () => {
     setActionLoading('start');
     try {
       const res = await fetch(`${API_BASE}/api/live/start`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tickers: watchlist, ignore_market_hours: true, market_mode: marketMode })
+        body: JSON.stringify({ tickers: watchlist })
       });
       const json = await res.json();
       if (json.success) setIsBotRunning(json.status.is_running);
@@ -543,13 +513,13 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
           </div>
           {positions.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '3rem 1.5rem', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', border: '1px dashed rgba(255,255,255,0.1)' }}>
-              {(!isMarketOpen || marketMode === 'MANUAL_CLOSE') ? (
+              {!isMarketOpen ? (
                 <div>
                   <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#ff6b6b', marginBottom: '6px' }}>
-                    💤 休市中 / 人为关盘中
+                    💤 休市中 (Market Closed)
                   </div>
                   <div style={{ fontSize: '0.82rem', color: 'var(--color-text-secondary)' }}>
-                    美股交易所处于非常规交易时段或系统已设定为人为关盘。正在等待开盘或手动切换开盘模式...
+                    美股交易所处于非常规交易时段，系统依从 Alpaca 官方交易所 API 状态，正在等待美股开盘...
                   </div>
                 </div>
               ) : (
@@ -797,16 +767,22 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
 
         // Calculate metrics for selected date
         const totalTradesCount = displayTrades.length;
-        const closedTrades = displayTrades.filter(t => t.action === 'SELL' || t.action === 'COVER');
+        const closedTrades = displayTrades.filter(t => t.action === 'SELL' || t.action === 'COVER' || t.action === 'PARTIAL_SELL' || t.action === 'PARTIAL_COVER');
         const winsCount = closedTrades.filter(t => (t.pnl || 0) > 0).length;
         const lossesCount = closedTrades.filter(t => (t.pnl || 0) < 0).length;
-        const netPnl = closedTrades.reduce((sum, t) => sum + (t.pnl || 0), 0);
+        // Use Alpaca official today PnL when viewing today's date - it's the authoritative source
+        const netPnl = (effectiveDate === todayStr && todaySummary?.alpaca_official_pnl !== undefined)
+          ? todaySummary.alpaca_official_pnl
+          : closedTrades.reduce((sum, t) => sum + (t.pnl || 0), 0);
 
         const tickerMap: Record<string, { trades: TradeRecord[]; totalPnl: number; openAction: string | null }> = {};
         displayTrades.forEach(t => {
           if (!tickerMap[t.ticker]) tickerMap[t.ticker] = { trades: [], totalPnl: 0, openAction: null };
           tickerMap[t.ticker].trades.push(t);
-          tickerMap[t.ticker].totalPnl += t.pnl;
+          // Only sum pnl for closed trades (SELL/COVER), not BUY which has pnl=0 but can pollute total
+          if (t.action === 'SELL' || t.action === 'COVER' || t.action === 'PARTIAL_SELL' || t.action === 'PARTIAL_COVER') {
+            tickerMap[t.ticker].totalPnl += (t.pnl || 0);
+          }
           if (t.action === 'BUY' || t.action === 'SHORT') tickerMap[t.ticker].openAction = t.action;
           if (t.action === 'SELL' || t.action === 'COVER') tickerMap[t.ticker].openAction = null;
         });

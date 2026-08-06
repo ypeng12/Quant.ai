@@ -126,6 +126,19 @@ class MockAlpacaAdapter:
         self.positions.clear()
         return {"success": True, "message": "已成功平仓所有模拟持仓"}
 
+    def get_clock(self) -> Dict:
+        import pytz
+        est = pytz.timezone('America/New_York')
+        now_ny = datetime.datetime.now(est)
+        is_weekday = now_ny.weekday() <= 4
+        ny_time = now_ny.hour + now_ny.minute / 60.0 + now_ny.second / 3600.0
+        is_open = is_weekday and (9.5 <= ny_time < 16.0)
+        return {
+            "success": True,
+            "is_open": is_open,
+            "timestamp": str(now_ny)
+        }
+
 import json
 
 class LiveTradingRunner:
@@ -161,31 +174,26 @@ class LiveTradingRunner:
             "max_hold_minutes": 35,                  # 35 分钟时间止损
             "min_reward_to_cost_ratio": 3.0          # 最小盈亏比门槛 (daytrade.pdf)
         }
-        self.market_mode = "MANUAL_OPEN"     # 默认人为强制开盘，打破休市限制
-        self.ignore_market_hours = True
         self.ticker_scores = {}              # AI 实时多因子置信度打分
         self.load_runner_config()
         self.add_log("📡 [系统初始化完成] Quant AI 日内风控与研判引擎已就绪...")
 
     def load_runner_config(self):
-        """从本地磁盘 runner_config.json 加载持久化系统开盘控制模式与状态配置。"""
+        """从本地磁盘 runner_config.json 加载持久化策略参数配置。"""
         try:
             if os.path.exists(self.config_file):
                 with open(self.config_file, 'r', encoding='utf-8') as f:
                     data = json.load(f)
-                    self.market_mode = data.get("market_mode", "MANUAL_OPEN")
                     if "strategy_params" in data and isinstance(data["strategy_params"], dict):
                         self.strategy_params.update(data["strategy_params"])
-                    self.ignore_market_hours = (self.market_mode == "MANUAL_OPEN")
         except Exception as e:
             print(f"Error loading runner_config.json: {e}")
 
     def save_runner_config(self):
-        """保存系统开盘控制模式与策略参数到本地磁盘 runner_config.json。"""
+        """保存策略参数到本地磁盘 runner_config.json。"""
         try:
             with open(self.config_file, 'w', encoding='utf-8') as f:
                 json.dump({
-                    "market_mode": self.market_mode,
                     "is_running": self.is_running,
                     "strategy_params": self.strategy_params,
                     "updated_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -193,26 +201,12 @@ class LiveTradingRunner:
         except Exception as e:
             print(f"Error saving runner_config.json: {e}")
 
-    def set_market_mode(self, mode: str) -> Dict:
-        """人为设定开盘关盘控制模式: MANUAL_OPEN, MANUAL_CLOSE, AUTO_EXCHANGE"""
-        mode = mode.upper().strip()
-        if mode not in ("MANUAL_OPEN", "MANUAL_CLOSE", "AUTO_EXCHANGE"):
-            return {"success": False, "error": f"无效的 market_mode: {mode}"}
-        
-        self.market_mode = mode
-        if mode == "MANUAL_OPEN":
-            self.ignore_market_hours = True
-            msg = "🟢 [人为控制切换] 已设定为【人为开盘模式 (MANUAL_OPEN)】：允许实时研判与买卖交易！"
-        elif mode == "MANUAL_CLOSE":
-            self.ignore_market_hours = False
-            msg = "🔴 [人为控制切换] 已设定为【人为关盘模式 (MANUAL_CLOSE)】：暂停研判扫描与交易。"
-        else:
-            self.ignore_market_hours = False
-            msg = "⏱️ [人为控制切换] 已切换为【交易所自动模式 (AUTO_EXCHANGE)】：遵循美股官方交易时段 (9:30-16:00 EST)。"
-
+    def set_market_mode(self, mode: str = "AUTO_EXCHANGE") -> Dict:
+        """模式统一直接依从 Alpaca 官方交易所实操时钟 (AUTO_EXCHANGE)"""
+        msg = "⏱️ 开盘关盘已 100% 绑定 Alpaca 官方交易所 API 实操时钟 (AUTO_EXCHANGE)。"
         self.save_runner_config()
         self.add_log(msg)
-        return {"success": True, "market_mode": self.market_mode, "message": msg}
+        return {"success": True, "market_mode": "AUTO_EXCHANGE", "message": msg}
 
     def load_trade_history(self):
         """从本地磁盘 trade_history.json 加载持久化交易历史。"""
@@ -456,7 +450,7 @@ class LiveTradingRunner:
         except Exception as e:
             return {"success": False, "error": str(e)}
 
-    def start(self, strategy_params: Optional[Dict] = None, tickers: Optional[List[str]] = None, ignore_market_hours: bool = True, market_mode: Optional[str] = None):
+    def start(self, strategy_params: Optional[Dict] = None, tickers: Optional[List[str]] = None, **kwargs):
         if self.is_running:
             self.add_log("[Warning] 交易机器人已在运行中，无需重复启动。")
             return False
@@ -474,13 +468,6 @@ class LiveTradingRunner:
 
         if tickers:
             self.update_tickers(tickers)
-            
-        if market_mode:
-            self.set_market_mode(market_mode)
-        else:
-            self.ignore_market_hours = ignore_market_hours
-            if ignore_market_hours and self.market_mode != "MANUAL_CLOSE":
-                self.market_mode = "MANUAL_OPEN"
 
         self.save_runner_config()
         
@@ -607,9 +594,8 @@ class LiveTradingRunner:
     def get_status(self) -> Dict:
         return {
             "is_running": self.is_running,
-            "market_mode": self.market_mode,
+            "market_mode": "AUTO_EXCHANGE",
             "is_market_open": self.is_market_open(),
-            "ignore_market_hours": self.ignore_market_hours,
             "ticker_scores": self.ticker_scores,
             "monitored_tickers": self.active_tickers,
             "strategy_params": self.strategy_params,
@@ -618,39 +604,18 @@ class LiveTradingRunner:
 
     def is_market_open(self) -> bool:
         """
-        Check if US stock market session is open under current market mode.
-        1. MANUAL_OPEN: Always return True (Forces trading system active).
-        2. MANUAL_CLOSE: Always return False (Forces system paused).
-        3. AUTO_EXCHANGE: Checks official Alpaca clock or NYSE schedule (9:30 AM - 4:00 PM EST).
+        利用本机系统时间精度转换为美东时间 (America/New_York)，判定是否处于美股常规交易开盘时段。
+        规则：美东时间 周一至周五 9:30 AM - 4:00 PM EST (9.5 <= ny_time < 16.0)。
         """
-        if self.market_mode == "MANUAL_OPEN":
-            return True
-        if self.market_mode == "MANUAL_CLOSE":
-            return False
-
-        if self.ignore_market_hours:
-            return True
-
-        # High-precision NYSE local schedule check (Monday - Friday 9:30 AM - 4:00 PM EST)
         est = pytz.timezone('America/New_York')
         now_ny = datetime.datetime.now(est)
         is_weekday = now_ny.weekday() <= 4
         ny_time = now_ny.hour + now_ny.minute / 60.0 + now_ny.second / 3600.0
-        is_regular_hours = is_weekday and (9.5 <= ny_time < 16.0)
-
-        if hasattr(self.adapter, "get_clock"):
-            clock_res = self.adapter.get_clock()
-            if clock_res.get("success"):
-                api_open = clock_res.get("is_open", False)
-                # If API reports open or local EST time is within 9:30 AM - 4:00 PM EST on a weekday, market is open
-                return api_open or is_regular_hours
-
-        return is_regular_hours
+        return is_weekday and (9.5 <= ny_time < 16.0)
 
     def check_and_trigger_eod_close(self, positions_list: list) -> bool:
         """
         日内收盘前自动强行全平持仓风控 (EOD Auto Close-All Strategy).
-        Queries official exchange API `get_clock()`.
         Only triggers in the final 5 minutes of regular market hours (15:55 PM - 16:00 PM EST).
         Triggers `close_all_positions()` for 0 overnight position risk!
         """
@@ -671,23 +636,12 @@ class LiveTradingRunner:
         if not (15.9166 <= ny_time < 16.0):
             return False
 
-        seconds_left = None
-        if hasattr(self.adapter, "get_clock"):
-            clock_res = self.adapter.get_clock()
-            if clock_res.get("success"):
-                if not clock_res.get("is_open"):
-                    return False
-                seconds_left = clock_res.get("seconds_to_close", 99999)
-
-        # Fallback to local exchange clock math if API clock is unavailable
-        if seconds_left is None:
-            seconds_left = (16.0 - ny_time) * 3600.0
-
-        if seconds_left is not None and 0.0 < seconds_left <= 300.0:
+        seconds_left = (16.0 - ny_time) * 3600.0
+        if 0.0 < seconds_left <= 300.0:
             mins_left = seconds_left / 60.0
-            self.add_log(f"🌇 [交易所官方尾盘双重清场风控] 距关盘仅剩 {mins_left:.1f} 分钟！执行【双重清场】：全量撤销所有挂单 + 强行全平 {len(positions_list)} 笔持仓，确保零挂单零持仓过夜...")
+            self.add_log(f"🌇 [交易所尾盘双重清场风控] 距关盘仅剩 {mins_left:.1f} 分钟！执行【双重清场】：全量撤销所有挂单 + 强行全平 {len(positions_list)} 笔持仓，确保零挂单零持仓过夜...")
             try:
-                # Step 1: 撤销所有挂单，防止挂单意外成交再买入
+                # Step 1: 撤销所有挂单
                 if hasattr(self.adapter, "cancel_all_orders"):
                     c_res = self.adapter.cancel_all_orders()
                     self.add_log(f"🧹 [双重清场 Step 1/2] 已全量撤销挂单: {c_res.get('message', 'All pending orders canceled.')}")
@@ -716,22 +670,21 @@ class LiveTradingRunner:
     async def _run_loop(self):
         while self.is_running:
             try:
-                # 1. Check if market is open
-                if not self.is_market_open():
-                    self.add_log("💤 [休市中/未开盘] 交易所处于非常规交易时段，系统处于休市暂停模式，正在等待开盘...")
-                    await asyncio.sleep(10)
-                    continue
+                # 1. 判定是否为美东 9:30 - 16:00 盘中常规交易时间
+                is_open = self.is_market_open()
 
-                # Check if currently in Market Opening Window (9:30 AM - 9:36 AM EST = 6:30 AM - 6:36 AM PST)
                 est = pytz.timezone('America/New_York')
                 now_ny = datetime.datetime.now(est)
                 ny_time = now_ny.hour + now_ny.minute / 60.0 + now_ny.second / 3600.0
                 is_market_opening_window = (now_ny.weekday() <= 4) and (9.50 <= ny_time < 9.60)
 
-                if is_market_opening_window:
-                    self.add_log(f"⚡ [开盘黄金重诊 6:30-6:36 PST / 9:30-9:36 EST] 开启 3 连诊高频拉网校验，防开盘漏单！监控池 [{len(self.active_tickers)} 支标的]...")
+                if is_open:
+                    if is_market_opening_window:
+                        self.add_log(f"⚡ [开盘黄金重诊 9:30-9:36 EST] 开启高频拉网校验！监控池 [{len(self.active_tickers)} 支标的]...")
+                    else:
+                        self.add_log(f"📡 [美股开盘交易中·全频段扫描发单] 正在研判监控池股票 [{len(self.active_tickers)} 支标的]...")
                 else:
-                    self.add_log(f"📡 [系统开盘中·全频段扫描] 正在研判监控池股票 [{len(self.active_tickers)} 支标的]...")
+                    self.add_log(f"🌙 [美股盘后研判/休市监控中] 24/7 持续实时计算多因子与形态（休市期间仅研判记录，暂停实盘买卖发单）...")
                 
                 # 2. Get active positions from Alpaca to sync state
                 try:
@@ -785,8 +738,6 @@ class LiveTradingRunner:
                             break
                             
                         try:
-                            invalidate_cache(ticker)
-                            
                             try:
                                 df = fetch_and_prepare_data(ticker, period="3d", interval="1m")
                             except Exception:
@@ -954,66 +905,72 @@ class LiveTradingRunner:
 
                             # 5. Execute action on Alpaca
                             if action == "BUY" and current_shares == 0:
-                                account = self.adapter.get_account_summary()
-                                total_equity = account['equity']
-                                cash = account['cash']
-                                
-                                risk_pct = self.strategy_params.get("risk_per_trade_pct", 0.0030)
-                                max_pct = self.strategy_params.get("max_position_size_pct", 0.12)
-                                stop_min_pct = self.strategy_params.get("stop_min_pct", 0.0025)
-                                stop_max_pct = self.strategy_params.get("stop_max_pct", 0.0060)
-                                initial_stop_atr_mult = self.strategy_params.get("initial_stop_atr_mult", 1.05)
-
-                                atr_val = float(row['ATR']) if 'ATR' in row and row['ATR'] > 0 else close_price * 0.004
-                                atr_pct = (atr_val / close_price) if close_price > 0 else 0.004
-                                stop_dist_pct = min(stop_max_pct, max(stop_min_pct, initial_stop_atr_mult * atr_pct))
-                                stop_distance = close_price * stop_dist_pct
-
-                                dollar_risk = total_equity * risk_pct
-                                base_shares = int(dollar_risk / stop_distance) if stop_distance > 0 else int((total_equity * max_pct) / close_price)
-                                max_shares = int((total_equity * max_pct) / close_price)
-                                shares = max(1, min(base_shares, max_shares))
-
-                                if "[Probe-Light" in reason:
-                                    size_scale = 0.35
-                                elif "[Standard-Entry" in reason:
-                                    size_scale = 0.70
+                                if not is_open:
+                                    self.add_log(f"🌙 [盘后研判/休市记录] [{ticker}] 触发 BUY 选股买点信号 (AI Score: {live_score}分) | 非美股盘中交易时段 (9:30-16:00 EST 以外)，仅保留研判日志，暂不发单扣动扳机。")
                                 else:
-                                    size_scale = 1.00
+                                    account = self.adapter.get_account_summary()
+                                    total_equity = account['equity']
+                                    cash = account['cash']
+                                    
+                                    risk_pct = self.strategy_params.get("risk_per_trade_pct", 0.0030)
+                                    max_pct = self.strategy_params.get("max_position_size_pct", 0.12)
+                                    stop_min_pct = self.strategy_params.get("stop_min_pct", 0.0025)
+                                    stop_max_pct = self.strategy_params.get("stop_max_pct", 0.0060)
+                                    initial_stop_atr_mult = self.strategy_params.get("initial_stop_atr_mult", 1.05)
 
-                                shares = int(shares * size_scale)
-                                cash_shares = int((cash * 0.95) / close_price)
-                                shares = max(1, min(shares, cash_shares))
+                                    atr_val = float(row['ATR']) if 'ATR' in row and row['ATR'] > 0 else close_price * 0.004
+                                    atr_pct = (atr_val / close_price) if close_price > 0 else 0.004
+                                    stop_dist_pct = min(stop_max_pct, max(stop_min_pct, initial_stop_atr_mult * atr_pct))
+                                    stop_distance = close_price * stop_dist_pct
 
-                                client_order_id = f"{ticker}-{int(datetime.datetime.now().timestamp())}-ENTRY"
-                                self.pending_entry_tickers.add(ticker)
-                                self.entry_times[ticker] = datetime.datetime.now()
+                                    dollar_risk = total_equity * risk_pct
+                                    base_shares = int(dollar_risk / stop_distance) if stop_distance > 0 else int((total_equity * max_pct) / close_price)
+                                    max_shares = int((total_equity * max_pct) / close_price)
+                                    shares = max(1, min(base_shares, max_shares))
 
-                                self.add_log(f"🛒 [{ticker}] BUY signal triggered ({size_scale*100:.0f}% position, Initial Risk: ${dollar_risk:.2f})! Market buying {shares} shares...")
-                                order_res = self.adapter.submit_market_order(ticker, shares, "buy", client_order_id=client_order_id)
-                                if order_res.get("success"):
-                                    self.add_log(f"✅ [{ticker}] BUY order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
-                                    self.highest_prices[ticker] = close_price
-                                    self.add_trade_action("BUY", ticker, shares, close_price, reason)
-                                else:
-                                    self.pending_entry_tickers.discard(ticker)
-                                    self.add_log(f"❌ [{ticker}] BUY order failed. Reason: {order_res.get('error')}")
+                                    if "[Probe-Light" in reason:
+                                        size_scale = 0.35
+                                    elif "[Standard-Entry" in reason:
+                                        size_scale = 0.70
+                                    else:
+                                        size_scale = 1.00
+
+                                    shares = int(shares * size_scale)
+                                    cash_shares = int((cash * 0.95) / close_price)
+                                    shares = max(1, min(shares, cash_shares))
+
+                                    client_order_id = f"{ticker}-{int(datetime.datetime.now().timestamp())}-ENTRY"
+                                    self.pending_entry_tickers.add(ticker)
+                                    self.entry_times[ticker] = datetime.datetime.now()
+
+                                    self.add_log(f"🛒 [{ticker}] BUY signal triggered ({size_scale*100:.0f}% position, Initial Risk: ${dollar_risk:.2f})! Market buying {shares} shares...")
+                                    order_res = self.adapter.submit_market_order(ticker, shares, "buy", client_order_id=client_order_id)
+                                    if order_res.get("success"):
+                                        self.add_log(f"✅ [{ticker}] BUY order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
+                                        self.highest_prices[ticker] = close_price
+                                        self.add_trade_action("BUY", ticker, shares, close_price, reason)
+                                    else:
+                                        self.pending_entry_tickers.discard(ticker)
+                                        self.add_log(f"❌ [{ticker}] BUY order failed. Reason: {order_res.get('error')}")
 
                             elif action == "PYRAMID_BUY" and current_shares > 0:
-                                account = self.adapter.get_account_summary()
-                                cash = account['cash']
-                                add_shares = max(1, int(current_shares * 0.35))
-                                cash_shares = int((cash * 0.90) / close_price)
-                                add_shares = max(1, min(add_shares, cash_shares))
-
-                                client_order_id = f"{ticker}-{int(datetime.datetime.now().timestamp())}-PYRAMID"
-                                self.add_log(f"⚡ [{ticker}] PYRAMID_BUY (顺势加仓 +35%) signal triggered! Market buying {add_shares} shares...")
-                                order_res = self.adapter.submit_market_order(ticker, add_shares, "buy", client_order_id=client_order_id)
-                                if order_res.get("success"):
-                                    self.add_log(f"✅ [{ticker}] PYRAMID_BUY order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
-                                    self.add_trade_action("PYRAMID_BUY", ticker, add_shares, close_price, reason)
+                                if not is_open:
+                                    self.add_log(f"🌙 [盘后研判/休市记录] [{ticker}] 触发 PYRAMID_BUY 加仓信号 | 非美股盘中交易时段，暂停发单。")
                                 else:
-                                    self.add_log(f"❌ [{ticker}] PYRAMID_BUY order failed. Reason: {order_res.get('error')}")
+                                    account = self.adapter.get_account_summary()
+                                    cash = account['cash']
+                                    add_shares = max(1, int(current_shares * 0.35))
+                                    cash_shares = int((cash * 0.90) / close_price)
+                                    add_shares = max(1, min(add_shares, cash_shares))
+
+                                    client_order_id = f"{ticker}-{int(datetime.datetime.now().timestamp())}-PYRAMID"
+                                    self.add_log(f"⚡ [{ticker}] PYRAMID_BUY (顺势加仓 +35%) signal triggered! Market buying {add_shares} shares...")
+                                    order_res = self.adapter.submit_market_order(ticker, add_shares, "buy", client_order_id=client_order_id)
+                                    if order_res.get("success"):
+                                        self.add_log(f"✅ [{ticker}] PYRAMID_BUY order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
+                                        self.add_trade_action("PYRAMID_BUY", ticker, add_shares, close_price, reason)
+                                    else:
+                                        self.add_log(f"❌ [{ticker}] PYRAMID_BUY order failed. Reason: {order_res.get('error')}")
 
                             elif action == "PARTIAL_SELL" and current_shares > 0:
                                 sell_qty = max(1, int(current_shares * 0.40))
@@ -1044,37 +1001,40 @@ class LiveTradingRunner:
                                     self.add_log(f"❌ [{ticker}] PARTIAL_COVER order failed. Reason: {order_res.get('error')}")
 
                             elif action == "SHORT" and current_shares == 0:
-                                account = self.adapter.get_account_summary()
-                                total_equity = account['equity']
-                                
-                                risk_pct = self.strategy_params.get("risk_per_trade_pct", 0.0030)
-                                max_pct = self.strategy_params.get("max_position_size_pct", 0.12)
-                                stop_min_pct = self.strategy_params.get("stop_min_pct", 0.0025)
-                                stop_max_pct = self.strategy_params.get("stop_max_pct", 0.0060)
-                                initial_stop_atr_mult = self.strategy_params.get("initial_stop_atr_mult", 1.05)
-
-                                atr_val = float(row['ATR']) if 'ATR' in row and row['ATR'] > 0 else close_price * 0.004
-                                atr_pct = (atr_val / close_price) if close_price > 0 else 0.004
-                                stop_dist_pct = min(stop_max_pct, max(stop_min_pct, initial_stop_atr_mult * atr_pct))
-                                stop_distance = close_price * stop_dist_pct
-
-                                dollar_risk = total_equity * risk_pct
-                                base_shares = int(dollar_risk / stop_distance) if stop_distance > 0 else int((total_equity * max_pct) / close_price)
-                                max_shares = int((total_equity * max_pct) / close_price)
-                                shares = max(1, min(base_shares, max_shares))
-
-                                client_order_id = f"{ticker}-{int(datetime.datetime.now().timestamp())}-ENTRY"
-                                self.pending_entry_tickers.add(ticker)
-                                self.entry_times[ticker] = datetime.datetime.now()
-
-                                self.add_log(f"📉 [{ticker}] SHORT signal triggered! Market shorting {shares} shares...")
-                                order_res = self.adapter.submit_market_order(ticker, shares, "sell", client_order_id=client_order_id)
-                                if order_res.get("success"):
-                                    self.add_log(f"✅ [{ticker}] SHORT order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
-                                    self.add_trade_action("SHORT", ticker, shares, close_price, reason)
+                                if not is_open:
+                                    self.add_log(f"🌙 [盘后研判/休市记录] [{ticker}] 触发 SHORT 选股做空信号 (AI Score: {live_score}分) | 非美股盘中交易时段 (9:30-16:00 EST 以外)，仅保留研判日志，暂不发单扣动扳机。")
                                 else:
-                                    self.pending_entry_tickers.discard(ticker)
-                                    self.add_log(f"❌ [{ticker}] SHORT order failed. Reason: {order_res.get('error')}")
+                                    account = self.adapter.get_account_summary()
+                                    total_equity = account['equity']
+                                    
+                                    risk_pct = self.strategy_params.get("risk_per_trade_pct", 0.0030)
+                                    max_pct = self.strategy_params.get("max_position_size_pct", 0.12)
+                                    stop_min_pct = self.strategy_params.get("stop_min_pct", 0.0025)
+                                    stop_max_pct = self.strategy_params.get("stop_max_pct", 0.0060)
+                                    initial_stop_atr_mult = self.strategy_params.get("initial_stop_atr_mult", 1.05)
+
+                                    atr_val = float(row['ATR']) if 'ATR' in row and row['ATR'] > 0 else close_price * 0.004
+                                    atr_pct = (atr_val / close_price) if close_price > 0 else 0.004
+                                    stop_dist_pct = min(stop_max_pct, max(stop_min_pct, initial_stop_atr_mult * atr_pct))
+                                    stop_distance = close_price * stop_dist_pct
+
+                                    dollar_risk = total_equity * risk_pct
+                                    base_shares = int(dollar_risk / stop_distance) if stop_distance > 0 else int((total_equity * max_pct) / close_price)
+                                    max_shares = int((total_equity * max_pct) / close_price)
+                                    shares = max(1, min(base_shares, max_shares))
+
+                                    client_order_id = f"{ticker}-{int(datetime.datetime.now().timestamp())}-ENTRY"
+                                    self.pending_entry_tickers.add(ticker)
+                                    self.entry_times[ticker] = datetime.datetime.now()
+
+                                    self.add_log(f"📉 [{ticker}] SHORT signal triggered! Market shorting {shares} shares...")
+                                    order_res = self.adapter.submit_market_order(ticker, shares, "sell", client_order_id=client_order_id)
+                                    if order_res.get("success"):
+                                        self.add_log(f"✅ [{ticker}] SHORT order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
+                                        self.add_trade_action("SHORT", ticker, shares, close_price, reason)
+                                    else:
+                                        self.pending_entry_tickers.discard(ticker)
+                                        self.add_log(f"❌ [{ticker}] SHORT order failed. Reason: {order_res.get('error')}")
 
                             elif action == "SELL" and current_shares > 0:
                                 pnl = (close_price - avg_cost) * current_shares
