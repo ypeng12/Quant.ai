@@ -1571,6 +1571,13 @@ def get_today_summary():
     return {"success": True, "summary": summary}
 
 
+@app.post("/api/live/archive_history")
+def archive_history_endpoint(keep_days: int = 2):
+    """Uploads older historical trade records to Hugging Face Dataset (Ypeng12/quant-ai-trade-history) and cleans local history."""
+    res = live_runner.archive_to_hf_dataset(keep_days=keep_days)
+    return res
+
+
 @app.get("/api/live/analysis_feed")
 def get_analysis_feed(limit: int = 80):
     """

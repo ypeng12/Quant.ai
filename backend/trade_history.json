@@ -8660,7 +8660,7 @@
       "ticker": "TSLA",
       "shares": 33,
       "price": 317.3,
-      "pnl": 0.0,
+      "pnl": 268.15,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -8672,7 +8672,7 @@
       "ticker": "NVDA",
       "shares": 48,
       "price": 218.64,
-      "pnl": 0.0,
+      "pnl": 943.2,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -8740,6 +8740,61 @@
       "price": 495.9,
       "pnl": -3.15,
       "reason": "[Long-Reversal] EMA Death Cross and below VWAP."
+    },
+    {
+      "date": "2026-08-06",
+      "time": "2026-08-06 13:59:43",
+      "action": "SHORT",
+      "action_cn": "SHORT",
+      "ticker": "MSFT",
+      "shares": 21,
+      "price": 495.955,
+      "pnl": 0.0,
+      "reason": "[Probe-Light Score:30/100 [Watchlist Top-29%]] EMA 9/21 Death Cross. Initial Stop: 0.25% (1.0R)."
+    },
+    {
+      "date": "2026-08-06",
+      "time": "2026-08-06 14:00:17",
+      "action": "COVER",
+      "action_cn": "COVER",
+      "ticker": "MSFT",
+      "shares": 21,
+      "price": 496.25,
+      "pnl": -6.82,
+      "reason": "[Short-Reversal] EMA Golden Cross and reclaimed VWAP."
+    },
+    {
+      "date": "2026-08-06",
+      "time": "2026-08-06 14:00:50",
+      "action": "BUY",
+      "action_cn": "BUY",
+      "ticker": "MSFT",
+      "shares": 21,
+      "price": 496.41,
+      "pnl": 0.0,
+      "reason": "[Conviction-Top Score:60/100 [Watchlist Top-0%]] EMA 9/21 Golden Cross. Initial Stop: 0.25% (1.0R)."
+    },
+    {
+      "date": "2026-08-06",
+      "time": "2026-08-06 14:01:27",
+      "action": "SELL",
+      "action_cn": "SELL",
+      "ticker": "SNDK",
+      "shares": 8,
+      "price": 1283.8199,
+      "pnl": -27.6,
+      "reason": "[InitialStopLoss] Loss reached -1.0R (-0.27%)."
+    },
+    {
+      "date": "2026-08-06",
+      "time": "2026-08-06 14:02:01",
+      "action": "SHORT",
+      "action_cn": "SHORT",
+      "ticker": "SNDK",
+      "shares": 8,
+      "price": 1282.12,
+      "pnl": 0.0,
+      "reason": "[Standard-Entry Score:40/100 [Watchlist Top-15%]] EMA 9/21 Death Cross. Initial Stop: 0.26% (1.0R)."
     }
   ],
   "action_logs": [
@@ -8857,6 +8912,11 @@
     "[2026-08-06 13:54:59] 🟢 [MSFT] BUY × 14 shs @ $496.19 | [Standard-Entry Score:45/100 [Watchlist Top-0%]] EMA 9/21 Golden Cross. Initial Stop: 0.25% (1.0R).",
     "[2026-08-06 13:56:09] 🔴 [MSFT] SELL × 14 shs @ $495.89 | PnL: -4.20 USD | [Long-Reversal] EMA Death Cross and below VWAP.",
     "[2026-08-06 13:56:12] 🟢 [SNDK] BUY × 8 shs @ $1286.25 | [Conviction-Top Score:50/100 [Watchlist Top-0%]] EMA 9/21 Golden Cross. Initial Stop: 0.28% (1.0R).",
-    "[2026-08-06 13:59:05] 🔴 [MSFT] SELL × 21 shs @ $495.90 | PnL: -3.15 USD | [Long-Reversal] EMA Death Cross and below VWAP."
+    "[2026-08-06 13:59:05] 🔴 [MSFT] SELL × 21 shs @ $495.90 | PnL: -3.15 USD | [Long-Reversal] EMA Death Cross and below VWAP.",
+    "[2026-08-06 13:59:43] 🔻 [MSFT] SHORT × 21 shs @ $495.95 | [Probe-Light Score:30/100 [Watchlist Top-29%]] EMA 9/21 Death Cross. Initial Stop: 0.25% (1.0R).",
+    "[2026-08-06 14:00:17] 🔼 [MSFT] COVER × 21 shs @ $496.25 | PnL: -6.82 USD | [Short-Reversal] EMA Golden Cross and reclaimed VWAP.",
+    "[2026-08-06 14:00:50] 🟢 [MSFT] BUY × 21 shs @ $496.41 | [Conviction-Top Score:60/100 [Watchlist Top-0%]] EMA 9/21 Golden Cross. Initial Stop: 0.25% (1.0R).",
+    "[2026-08-06 14:01:27] 🔴 [SNDK] SELL × 8 shs @ $1283.82 | PnL: -27.60 USD | [InitialStopLoss] Loss reached -1.0R (-0.27%).",
+    "[2026-08-06 14:02:01] 🔻 [SNDK] SHORT × 8 shs @ $1282.12 | [Standard-Entry Score:40/100 [Watchlist Top-15%]] EMA 9/21 Death Cross. Initial Stop: 0.26% (1.0R)."
   ]
 }

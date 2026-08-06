@@ -249,8 +249,25 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
       } else {
         alert('Order failed: ' + (json.message || json.error || 'Unknown error'));
       }
+    } finally {
+      setActionLoading(null);
+      fetchBrokerData();
+    }
+  };
+
+  const handleArchiveHistory = async () => {
+    if (!window.confirm('📦 确定将过去旧的历史成交记录打包上传至 Hugging Face Dataset (Ypeng12/quant-ai-trade-history)，并自动清理本地文件吗？')) return;
+    setActionLoading('archive_history');
+    try {
+      const res = await fetch(`${API_BASE}/api/live/archive_history`, { method: 'POST' });
+      const json = await res.json();
+      if (json.success) {
+        alert(json.message || '归档上传成功！');
+      } else {
+        alert('归档失败: ' + (json.error || json.message || 'Unknown error'));
+      }
     } catch {
-      alert('Request failed');
+      alert('请求失败');
     } finally {
       setActionLoading(null);
       fetchBrokerData();
@@ -833,6 +850,23 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
                         ⚡ Switch to Today Real-Time
                       </button>
                     )}
+                    <button
+                      onClick={handleArchiveHistory}
+                      disabled={actionLoading !== null}
+                      style={{
+                        background: 'rgba(192,132,252,0.12)',
+                        border: '1px solid #c084fc',
+                        color: '#c084fc',
+                        borderRadius: '6px',
+                        padding: '4px 10px',
+                        fontSize: '0.78rem',
+                        fontWeight: 800,
+                        cursor: 'pointer'
+                      }}
+                      title="Upload older trade history to Hugging Face Dataset (Ypeng12/quant-ai-trade-history) and prune local file"
+                    >
+                      📦 Archive History to HF
+                    </button>
                   </div>
                 </div>
                 <p style={{ margin: '4px 0 0', fontSize: '0.78rem', color: 'var(--color-text-secondary)' }}>
