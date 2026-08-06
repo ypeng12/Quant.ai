@@ -283,18 +283,12 @@ class LiveTradingRunner:
                     position_tracker[ticker] = []
                 queue = position_tracker[ticker]
                 
-                if trade.get("reason") == "Alpaca Broker Executed Sync":
-                    trade["pnl"] = 0.0
-                    continue
-
                 if action in ("BUY", "PYRAMID_BUY"):
                     queue.append({"price": price, "qty": qty})
-                    if "pnl" not in trade or trade["pnl"] is None:
-                        trade["pnl"] = 0.0
+                    trade["pnl"] = 0.0
                 elif action in ("SHORT",):
                     queue.append({"price": price, "qty": -qty})
-                    if "pnl" not in trade or trade["pnl"] is None:
-                        trade["pnl"] = 0.0
+                    trade["pnl"] = 0.0
                 elif action in ("SELL", "PARTIAL_SELL"):
                     realized = 0.0
                     remaining = qty
@@ -306,8 +300,7 @@ class LiveTradingRunner:
                         remaining -= matched_qty
                         if entry["qty"] <= 0:
                             queue.pop(0)
-                    if (trade.get("pnl") is None or trade.get("pnl") == 0.0) and realized != 0.0:
-                        trade["pnl"] = round(realized, 2)
+                    trade["pnl"] = round(realized, 2)
                 elif action in ("COVER", "PARTIAL_COVER"):
                     realized = 0.0
                     remaining = qty
@@ -319,8 +312,7 @@ class LiveTradingRunner:
                         remaining -= matched_qty
                         if abs(entry["qty"]) <= 0:
                             queue.pop(0)
-                    if (trade.get("pnl") is None or trade.get("pnl") == 0.0) and realized != 0.0:
-                        trade["pnl"] = round(realized, 2)
+                    trade["pnl"] = round(realized, 2)
 
     def save_trade_history(self):
         """保存交易历史与动作日志到本地磁盘。"""
@@ -1141,8 +1133,6 @@ class LiveTradingRunner:
                                 else:
                                     account = self.adapter.get_account_summary()
                                     total_equity = account['equity']
-                                    cash = account['cash']
-                                    buying_power = account.get('buying_power', cash * 2)
                                     
                                     risk_pct = self.strategy_params.get("risk_per_trade_pct", 0.0030)
                                     max_pct = self.strategy_params.get("max_position_size_pct", 0.12)
@@ -1160,22 +1150,11 @@ class LiveTradingRunner:
                                     max_shares = int((total_equity * max_pct) / close_price)
                                     shares = max(1, min(base_shares, max_shares))
 
-                                    if "[Probe-Light" in reason:
-                                        size_scale = 0.35
-                                    elif "[Standard-Entry" in reason:
-                                        size_scale = 0.70
-                                    else:
-                                        size_scale = 1.00
-
-                                    shares = int(shares * size_scale)
-                                    bp_shares = int((buying_power * 0.90) / close_price) if close_price > 0 else shares
-                                    shares = max(1, min(shares, bp_shares))
-
                                     client_order_id = f"{ticker}-{int(datetime.datetime.now().timestamp())}-ENTRY"
                                     self.lock_entry(ticker)
                                     self.entry_times[ticker] = datetime.datetime.now()
 
-                                    self.add_log(f"📉 [{ticker}] SHORT signal triggered ({size_scale*100:.0f}% position, Initial Risk: ${dollar_risk:.2f})! Market shorting {shares} shares...")
+                                    self.add_log(f"📉 [{ticker}] SHORT signal triggered! Market shorting {shares} shares...")
                                     order_res = self.adapter.submit_market_order(ticker, shares, "sell", client_order_id=client_order_id)
                                     if order_res.get("success"):
                                         self.add_log(f"✅ [{ticker}] SHORT order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
