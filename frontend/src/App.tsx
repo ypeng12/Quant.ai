@@ -636,25 +636,6 @@ function App() {
           </button>
 
           <button
-            className={`nav-tab ${activeTab === 'portfolio' ? 'active' : ''}`}
-            onClick={() => setActiveTab('portfolio')}
-            style={{
-              padding: '8px 18px',
-              fontSize: '0.9rem',
-              fontWeight: 800,
-              background: activeTab === 'portfolio' ? 'linear-gradient(135deg, #f59e0b, #d97706)' : 'transparent',
-              color: activeTab === 'portfolio' ? '#ffffff' : '#f59e0b',
-              borderRadius: '6px',
-              border: activeTab === 'portfolio' ? 'none' : '1px solid rgba(245, 158, 11, 0.4)',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-              boxShadow: activeTab === 'portfolio' ? '0 0 12px rgba(245, 158, 11, 0.4)' : 'none'
-            }}
-          >
-            📈 Portfolio History 权益曲线
-          </button>
-
-          <button
             className={`nav-tab ${activeTab === 'replay' ? 'active' : ''}`}
             onClick={() => setActiveTab('replay')}
             style={{
@@ -669,7 +650,7 @@ function App() {
               transition: 'all 0.2s ease'
             }}
           >
-            🎬 策略对比与历史复盘
+            🎬 策略对比、评估与历史复盘
           </button>
 
           <button

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { SameDayReplayPanel } from './SameDayReplayPanel';
 import { ExperimentCompare } from './ExperimentCompare';
+import { PortfolioHistoryChart } from './PortfolioHistoryChart';
 
 interface ReplayAndExperimentsPanelProps {
   watchlist: string[];
@@ -13,7 +14,7 @@ export const ReplayAndExperimentsPanel: React.FC<ReplayAndExperimentsPanelProps>
   activeTicker,
   onSelectTicker
 }) => {
-  const [subTab, setSubTab] = useState<'replay' | 'experiments'>('replay');
+  const [subTab, setSubTab] = useState<'replay' | 'experiments' | 'portfolio'>('replay');
 
   return (
     <div>
@@ -26,9 +27,11 @@ export const ReplayAndExperimentsPanel: React.FC<ReplayAndExperimentsPanelProps>
         padding: '10px 16px',
         borderRadius: '12px',
         border: '1px solid var(--color-border)',
-        marginBottom: '1.5rem'
+        marginBottom: '1.5rem',
+        flexWrap: 'wrap',
+        gap: '12px'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
           <button
             onClick={() => setSubTab('replay')}
             style={{
@@ -63,22 +66,48 @@ export const ReplayAndExperimentsPanel: React.FC<ReplayAndExperimentsPanelProps>
           >
             🧪 策略回填与回撤评估仪器 (Experiment Compare)
           </button>
+
+          <button
+            onClick={() => setSubTab('portfolio')}
+            style={{
+              padding: '8px 18px',
+              fontSize: '0.88rem',
+              fontWeight: 800,
+              background: subTab === 'portfolio' ? 'linear-gradient(135deg, #f59e0b, #d97706)' : 'transparent',
+              color: subTab === 'portfolio' ? '#ffffff' : '#f59e0b',
+              borderRadius: '8px',
+              border: subTab === 'portfolio' ? 'none' : '1px solid rgba(245, 158, 11, 0.4)',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              boxShadow: subTab === 'portfolio' ? '0 0 12px rgba(245, 158, 11, 0.4)' : 'none'
+            }}
+          >
+            📈 Portfolio History 权益曲线 (Alpaca Direct)
+          </button>
         </div>
 
         <div style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>
-          {subTab === 'replay' ? '🔴 逐秒驱动多因子与 Signal 历史复盘' : '📊 策略不同风控参数与回撤矩阵对比'}
+          {subTab === 'replay' && '🔴 逐秒驱动多因子与 Signal 历史复盘'}
+          {subTab === 'experiments' && '📊 策略不同风控参数与回撤矩阵对比'}
+          {subTab === 'portfolio' && '⚡ Alpaca 官方实时账户 Asset History 曲线'}
         </div>
       </div>
 
       {/* Render selected view */}
-      {subTab === 'replay' ? (
+      {subTab === 'replay' && (
         <SameDayReplayPanel 
           watchlist={watchlist} 
           activeTicker={activeTicker} 
           onSelectTicker={onSelectTicker} 
         />
-      ) : (
+      )}
+
+      {subTab === 'experiments' && (
         <ExperimentCompare />
+      )}
+
+      {subTab === 'portfolio' && (
+        <PortfolioHistoryChart />
       )}
     </div>
   );
