@@ -858,23 +858,6 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
                         ⚡ Switch to Today Real-Time
                       </button>
                     )}
-                    <button
-                      onClick={handleArchiveHistory}
-                      disabled={actionLoading !== null}
-                      style={{
-                        background: 'rgba(192,132,252,0.12)',
-                        border: '1px solid #c084fc',
-                        color: '#c084fc',
-                        borderRadius: '6px',
-                        padding: '4px 10px',
-                        fontSize: '0.78rem',
-                        fontWeight: 800,
-                        cursor: 'pointer'
-                      }}
-                      title="Upload older trade history to Hugging Face Dataset (Ypeng12/quant-ai-trade-history) and prune local file"
-                    >
-                      📦 Archive History to HF
-                    </button>
                   </div>
                 </div>
                 <p style={{ margin: '4px 0 0', fontSize: '0.78rem', color: 'var(--color-text-secondary)' }}>
