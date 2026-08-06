@@ -267,3 +267,49 @@ class AlpacaAdapter:
             }
         except Exception as e:
             return {"success": False, "error": str(e), "is_open": False, "seconds_to_close": 0.0}
+
+    def get_portfolio_history(self, period: str = "1M", timeframe: Optional[str] = None) -> Dict:
+        """
+        Fetch official Alpaca portfolio equity history line for rendering high-fidelity portfolio chart.
+        """
+        import requests
+        headers = {
+            "APCA-API-KEY-ID": self.api_key,
+            "APCA-API-SECRET-KEY": self.api_secret
+        }
+        p = (period or "1M").upper()
+        if not timeframe:
+            tf = "5Min" if p == "1D" else "1D"
+        else:
+            tf = timeframe
+
+        url = f"https://paper-api.alpaca.markets/v2/account/portfolio/history?period={p}&timeframe={tf}"
+        try:
+            resp = requests.get(url, headers=headers, timeout=8).json()
+            if isinstance(resp, dict) and "equity" in resp:
+                eq = [float(x) for x in resp.get("equity", []) if x is not None]
+                ts = resp.get("timestamp", [])
+                base = float(resp.get("base_value", eq[0] if eq else 100000.0) or 100000.0)
+                latest = eq[-1] if eq else base
+                chg_dollar = round(latest - base, 2)
+                chg_pct = round((chg_dollar / base * 100.0), 2) if base > 0 else 0.0
+                
+                import datetime, pytz
+                est = pytz.timezone('America/New_York')
+                now_est = datetime.datetime.now(est).strftime("%B %d, %I:%M %p EST")
+
+                return {
+                    "success": True,
+                    "period": p,
+                    "latest_equity": latest,
+                    "base_value": base,
+                    "change_dollar": chg_dollar,
+                    "change_pct": chg_pct,
+                    "asof": now_est,
+                    "timestamps": ts,
+                    "equity": eq,
+                    "profit_loss_pct": resp.get("profit_loss_pct", [])
+                }
+            return {"success": False, "error": str(resp)}
+        except Exception as ex:
+            return {"success": False, "error": str(ex)}
