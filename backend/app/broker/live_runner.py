@@ -243,14 +243,13 @@ class LiveTradingRunner:
         return {"success": True, "market_mode": "AUTO_EXCHANGE", "message": msg}
 
     def load_trade_history(self):
-        """从本地磁盘 trade_history.json 加载持久化交易历史。"""
+        """从本地磁盘 trade_history.json 加载持久化交易历史（原样读取，不做任何重算）。"""
         try:
             if os.path.exists(self.history_file):
                 with open(self.history_file, 'r', encoding='utf-8') as f:
                     data = json.load(f)
                     self.trade_history = data.get("trade_history", [])
                     self.action_logs = data.get("action_logs", [])
-                    self.recalculate_trade_pnls()
         except Exception as e:
             print(f"Error loading trade_history.json: {e}")
 

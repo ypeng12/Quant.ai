@@ -1551,10 +1551,9 @@ def get_action_feed(limit: int = 100):
 
 @app.get("/api/live/trade_history")
 def get_trade_history(days: int = 30):
-    """Returns persistent trade records for post-market review and replay."""
+    """Returns trade records directly from trade_history.json as-is (no recalculation)."""
     import datetime
     cutoff = (datetime.datetime.now() - datetime.timedelta(days=days)).strftime("%Y-%m-%d")
-    live_runner.recalculate_trade_pnls()
     history = []
     for t in live_runner.trade_history:
         d = t.get("date") or (t.get("time", "")[:10] if t.get("time") else "")
