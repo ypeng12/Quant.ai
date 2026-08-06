@@ -8,6 +8,7 @@ import asyncio
 import datetime
 import os
 import pytz
+import threading
 import time
 from typing import Dict, List, Optional
 from app.broker.alpaca_adapter import AlpacaAdapter
@@ -158,6 +159,13 @@ class LiveTradingRunner:
         self.pending_exit_locks = {}   # {ticker: timestamp} 60s TTL 防止卡死重复提交平仓单 (daytrade.pdf)
         self.entry_times = {}               # 记录持仓建立时间点 (支持时间止损 daytrade.pdf)
         self.loop_task = None
+        self.order_sync_thread = None
+        self._orders_lock = threading.RLock()
+        self._orders_refresh_lock = threading.Lock()
+        self._orders_cache = []
+        self._orders_cache_updated_at = 0.0
+        self._orders_cache_error = None
+        self._orders_cache_latency_ms = None
         self.strategy_params = {
             "strategy_mode": "dynamic",
             "risk_per_trade_pct": 0.0030,            # 0.30% 账户风险/笔 (daytrade.pdf)
@@ -174,7 +182,8 @@ class LiveTradingRunner:
             "trailing_stop_atr_mult": 1.10,
             "max_hold_minutes": 35,                  # 35 分钟时间止损
             "min_reward_to_cost_ratio": 1.5,         # 最小盈亏比门槛 (适合美股流动性标的)
-            "max_expected_slippage_pct": 0.0002      # 预估滑点 0.02%
+            "max_expected_slippage_pct": 0.0002,     # 预估滑点 0.02%
+            "orders_sync_interval_seconds": 2.0      # Alpaca 订单轻量同步频率
         }
         self.ticker_scores = {}              # AI 实时多因子置信度打分
         self.load_runner_config()
@@ -339,7 +348,18 @@ class LiveTradingRunner:
         if len(self.logs) > 500:
             self.logs.pop(0)
 
-    def add_trade_action(self, action: str, ticker: str, shares: int, price: float, reason: str, pnl: float = 0.0):
+    def add_trade_action(
+        self,
+        action: str,
+        ticker: str,
+        shares: int,
+        price: float,
+        reason: str,
+        pnl: float = 0.0,
+        order_id: Optional[str] = None,
+        client_order_id: Optional[str] = None,
+        order_status: Optional[str] = None,
+    ):
         """Record trade action to action_logs and trade_history for UI display and analysis."""
         est = pytz.timezone('America/New_York')
         now = datetime.datetime.now(est)
@@ -356,8 +376,9 @@ class LiveTradingRunner:
         if len(self.action_logs) > 200:
             self.action_logs.pop(0)
 
-        # Persistent trade history
-        self.trade_history.append({
+        # Persistent trade history. If the fast broker sync won the race, update
+        # that broker row instead of appending the same order twice.
+        trade_record = {
             "date": date_str,
             "time": timestamp_str,
             "action": action,
@@ -367,9 +388,32 @@ class LiveTradingRunner:
             "price": round(price, 4),
             "pnl": round(pnl, 2),
             "reason": reason
-        })
-        if len(self.trade_history) > 1000:
-            self.trade_history.pop(0)
+        }
+        if order_id:
+            trade_record["order_id"] = str(order_id)
+        if client_order_id:
+            trade_record["client_order_id"] = str(client_order_id)
+        if order_status:
+            trade_record["order_status"] = str(order_status)
+
+        existing = None
+        if order_id:
+            existing = next(
+                (trade for trade in self.trade_history if str(trade.get("order_id") or "") == str(order_id)),
+                None,
+            )
+        if existing is not None:
+            broker_fields = {
+                key: existing[key]
+                for key in ("date", "time", "shares", "price", "source")
+                if key in existing and existing[key] not in (None, "")
+            }
+            existing.update(trade_record)
+            existing.update(broker_fields)
+        else:
+            self.trade_history.append(trade_record)
+            if len(self.trade_history) > 1000:
+                self.trade_history.pop(0)
 
         # Save to disk
         self.save_trade_history()
@@ -449,14 +493,17 @@ class LiveTradingRunner:
                         pos = open_tickers[r_sym]
                         shares = pos.get('shares', 0)
                         self.add_log(f"🗑️ [自选股移除清仓] 检测到 [{r_sym}] 已从 Watchlist 移除，立刻自动提交 Alpaca 强行全卖清仓指令！")
+                        close_res = {}
                         if hasattr(self.adapter, "close_position"):
-                            self.adapter.close_position(r_sym)
+                            close_res = self.adapter.close_position(r_sym) or {}
                         self.add_trade_action(
                             action="SELL" if shares > 0 else "COVER",
                             ticker=r_sym,
                             shares=abs(shares),
                             price=pos.get("current_price", 0.0),
-                            reason="Watchlist Removal Auto Liquidation (自选股移除自动强行清仓)"
+                            reason="Watchlist Removal Auto Liquidation (自选股移除自动强行清仓)",
+                            order_id=close_res.get("order_id") or close_res.get("id"),
+                            order_status=close_res.get("status") or "submitted",
                         )
             except Exception as e:
                 self.add_log(f"⚠️ 自选股移除自动清仓警告: {e}")
@@ -479,7 +526,9 @@ class LiveTradingRunner:
                         ticker=sym,
                         shares=0,
                         price=0.0,
-                        reason="User Manual Force Sell/Close"
+                        reason="User Manual Force Sell/Close",
+                        order_id=res.get("order_id") or res.get("id"),
+                        order_status=res.get("status") or "submitted",
                     )
                     return {"success": True, "message": f"Successfully submitted close order for {sym}."}
                 else:
@@ -488,6 +537,32 @@ class LiveTradingRunner:
                 return {"success": False, "error": "Broker adapter does not support closing individual positions."}
         except Exception as e:
             return {"success": False, "error": str(e)}
+
+    @staticmethod
+    def _get_alpaca_credentials():
+        """Read credentials from process environment first; never persist secrets in runner files."""
+        api_key = (
+            os.getenv("APCA_API_KEY_ID")
+            or os.getenv("ALPACA_API_KEY")
+            or ALPACA_API_KEY
+        )
+        api_secret = (
+            os.getenv("APCA_API_SECRET_KEY")
+            or os.getenv("ALPACA_SECRET_KEY")
+            or ALPACA_SECRET_KEY
+        )
+        base_url = (
+            os.getenv("APCA_API_BASE_URL")
+            or os.getenv("ALPACA_BASE_URL")
+            or ALPACA_BASE_URL
+            or "https://paper-api.alpaca.markets/v2"
+        )
+        return api_key, api_secret, base_url
+
+    @staticmethod
+    def _credential_is_configured(value: Optional[str]) -> bool:
+        text = str(value or "").strip().lower()
+        return bool(text) and "your_" not in text and "placeholder" not in text
 
     def start(self, strategy_params: Optional[Dict] = None, tickers: Optional[List[str]] = None, **kwargs):
         if self.is_running:
@@ -512,21 +587,23 @@ class LiveTradingRunner:
         
         # Initialize Adapter
         try:
-            if ALPACA_API_KEY and "your_paper_api_key_here" not in ALPACA_API_KEY:
+            api_key, api_secret, base_url = self._get_alpaca_credentials()
+            if self._credential_is_configured(api_key) and self._credential_is_configured(api_secret):
                 self.adapter = AlpacaAdapter(
-                    api_key=ALPACA_API_KEY,
-                    api_secret=ALPACA_SECRET_KEY,
-                    base_url=ALPACA_BASE_URL
+                    api_key=api_key,
+                    api_secret=api_secret,
+                    base_url=base_url
                 )
                 self.adapter.get_account_summary()
                 self.add_log("🟢 已成功连接至 Alpaca 实盘/Paper 交易接口。")
             else:
                 self.adapter = MockAlpacaAdapter()
-                self.add_log("💡 未检测到 Alpaca API Key，自动切换至【本地虚拟盘模拟模式】。")
+                self.add_log("💡 未同时检测到 Alpaca API Key 与 Secret，自动切换至【本地虚拟盘模拟模式】。")
         except Exception as e:
             self.adapter = MockAlpacaAdapter()
             self.add_log(f"⚠️ [Alpaca 连接失败警报] API 密钥配置存在异常或建连失败 ({str(e)})，暂降级至【本地虚拟盘模拟模式】！")
         self.is_running = True
+        self._start_order_sync_worker()
         self.add_log(f"🤖 【AI 24/7 全自动托管开启】系统已进入无人值守全自动轮询模式！监控标的({len(self.active_tickers)}): {self.active_tickers}")
         
         # Spawn async loop task safely across both sync and async runtime contexts
@@ -534,7 +611,6 @@ class LiveTradingRunner:
             loop = asyncio.get_running_loop()
             self.loop_task = loop.create_task(self._run_loop())
         except RuntimeError:
-            import threading
             def start_background_loop():
                 loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(loop)
@@ -543,70 +619,279 @@ class LiveTradingRunner:
             t.start()
         return True
 
-    def sync_alpaca_orders_to_history(self):
-        """自动从 Alpaca 官方接口抓取已成交的历史订单并同步存入 trade_history.json，确保历史交易永久保存。"""
+    @staticmethod
+    def _order_field(order, field: str, default=None):
+        if isinstance(order, dict):
+            return order.get(field, default)
+        return getattr(order, field, default)
+
+    @staticmethod
+    def _enum_text(value) -> str:
+        raw = getattr(value, "value", value)
+        return str(raw or "").split(".")[-1].lower()
+
+    @staticmethod
+    def _number_or_none(value):
+        if value in (None, ""):
+            return None
+        try:
+            number = float(value)
+            return int(number) if number.is_integer() else round(number, 6)
+        except (TypeError, ValueError):
+            return None
+
+    @staticmethod
+    def _timestamp_iso(value):
+        if value is None:
+            return None
+        return value.isoformat() if hasattr(value, "isoformat") else str(value)
+
+    @staticmethod
+    def _timestamp_et(value):
+        if value is None:
+            return None
+        est = pytz.timezone("America/New_York")
+        dt = value
+        if isinstance(value, str):
+            try:
+                dt = datetime.datetime.fromisoformat(value.replace("Z", "+00:00"))
+            except ValueError:
+                return None
+        if not isinstance(dt, datetime.datetime):
+            return None
+        if dt.tzinfo is None:
+            dt = est.localize(dt)
+        return dt.astimezone(est)
+
+    def _serialize_alpaca_order(self, order) -> Dict:
+        submitted_at = self._order_field(order, "submitted_at")
+        filled_at = self._order_field(order, "filled_at")
+        updated_at = self._order_field(order, "updated_at")
+        event_time = filled_at or updated_at or submitted_at
+        event_et = self._timestamp_et(event_time)
+        return {
+            "order_id": str(self._order_field(order, "id", "")),
+            "client_order_id": str(self._order_field(order, "client_order_id", "") or ""),
+            "ticker": str(self._order_field(order, "symbol", "") or "").upper(),
+            "side": self._enum_text(self._order_field(order, "side")),
+            "type": self._enum_text(self._order_field(order, "type")),
+            "status": self._enum_text(self._order_field(order, "status")),
+            "time_in_force": self._enum_text(self._order_field(order, "time_in_force")),
+            "position_intent": self._enum_text(self._order_field(order, "position_intent")),
+            "qty": self._number_or_none(self._order_field(order, "qty")),
+            "notional": self._number_or_none(self._order_field(order, "notional")),
+            "filled_qty": self._number_or_none(self._order_field(order, "filled_qty")) or 0,
+            "filled_avg_price": self._number_or_none(self._order_field(order, "filled_avg_price")),
+            "limit_price": self._number_or_none(self._order_field(order, "limit_price")),
+            "stop_price": self._number_or_none(self._order_field(order, "stop_price")),
+            "extended_hours": bool(self._order_field(order, "extended_hours", False)),
+            "submitted_at": self._timestamp_iso(submitted_at),
+            "filled_at": self._timestamp_iso(filled_at),
+            "updated_at": self._timestamp_iso(updated_at),
+            "date": event_et.strftime("%Y-%m-%d") if event_et else "",
+            "time": event_et.strftime("%Y-%m-%d %H:%M:%S") if event_et else "",
+        }
+
+    def _cached_orders_snapshot(self) -> Dict:
+        with self._orders_lock:
+            updated_at = self._orders_cache_updated_at
+            interval = max(1.0, float(self.strategy_params.get("orders_sync_interval_seconds", 2.0)))
+            age_seconds = max(0.0, time.time() - updated_at) if updated_at else None
+            return {
+                "success": updated_at > 0 and self._orders_cache_error is None,
+                "connected": not isinstance(self.adapter, MockAlpacaAdapter),
+                "source": "alpaca_trading_api" if not isinstance(self.adapter, MockAlpacaAdapter) else "mock",
+                "orders": [dict(order) for order in self._orders_cache],
+                "count": len(self._orders_cache),
+                "updated_at": datetime.datetime.fromtimestamp(updated_at, tz=pytz.UTC).isoformat() if updated_at else None,
+                "age_seconds": round(age_seconds, 3) if age_seconds is not None else None,
+                "stale": updated_at == 0 or age_seconds > max(6.0, interval * 3.0),
+                "latency_ms": self._orders_cache_latency_ms,
+                "error": self._orders_cache_error,
+            }
+
+    def refresh_alpaca_orders(self) -> Dict:
+        """Fetch today's open/closed orders once and publish a JSON-safe in-memory snapshot."""
         if not self.adapter or isinstance(self.adapter, MockAlpacaAdapter):
-            return
+            return self._cached_orders_snapshot()
+
+        if not self._orders_refresh_lock.acquire(blocking=False):
+            snapshot = self._cached_orders_snapshot()
+            snapshot["refreshing"] = True
+            return snapshot
+
+        started = time.perf_counter()
         try:
             from alpaca.trading.requests import GetOrdersRequest
             from alpaca.trading.enums import QueryOrderStatus
-            req = GetOrdersRequest(status=QueryOrderStatus.CLOSED, limit=200)
-            closed_orders = self.adapter.client.get_orders(filter=req)
-            
-            existing_ids = {t.get("order_id") for t in self.trade_history if "order_id" in t}
+
+            est = pytz.timezone("America/New_York")
+            today_start = datetime.datetime.now(est).replace(hour=0, minute=0, second=0, microsecond=0)
+            request_kwargs = {
+                "status": QueryOrderStatus.ALL,
+                "limit": 500,
+                "after": today_start,
+                "nested": True,
+            }
+            try:
+                from alpaca.trading.enums import Sort
+                request_kwargs["direction"] = Sort.DESC
+            except (ImportError, AttributeError):
+                pass
+
+            req = GetOrdersRequest(**request_kwargs)
+            raw_orders = self.adapter.client.get_orders(filter=req)
+            orders = [self._serialize_alpaca_order(order) for order in (raw_orders or [])]
+            orders.sort(key=lambda order: order.get("submitted_at") or "", reverse=True)
+            latency_ms = round((time.perf_counter() - started) * 1000.0, 1)
+            with self._orders_lock:
+                self._orders_cache = orders
+                self._orders_cache_updated_at = time.time()
+                self._orders_cache_error = None
+                self._orders_cache_latency_ms = latency_ms
+            return self._cached_orders_snapshot()
+        except Exception as exc:
+            with self._orders_lock:
+                self._orders_cache_error = f"{type(exc).__name__}: {exc}"
+            return self._cached_orders_snapshot()
+        finally:
+            self._orders_refresh_lock.release()
+
+    def _start_order_sync_worker(self):
+        """Keep the UI order feed warm without making every browser refresh call Alpaca."""
+        if isinstance(self.adapter, MockAlpacaAdapter):
+            return
+        if self.order_sync_thread and self.order_sync_thread.is_alive():
+            return
+
+        def sync_worker():
+            while self.is_running and not isinstance(self.adapter, MockAlpacaAdapter):
+                cycle_started = time.monotonic()
+                snapshot = self.refresh_alpaca_orders()
+                if snapshot.get("success"):
+                    self.sync_alpaca_orders_to_history(snapshot=snapshot)
+                interval = max(1.0, min(10.0, float(self.strategy_params.get("orders_sync_interval_seconds", 2.0))))
+                time.sleep(max(0.25, interval - (time.monotonic() - cycle_started)))
+
+        self.order_sync_thread = threading.Thread(
+            target=sync_worker,
+            name="alpaca-order-sync",
+            daemon=True,
+        )
+        self.order_sync_thread.start()
+
+    def _broker_action(self, order: Dict) -> str:
+        intent = str(order.get("position_intent") or "").lower()
+        client_id = str(order.get("client_order_id") or "").upper()
+        side = str(order.get("side") or "").lower()
+        if intent in ("sto", "sell_to_open"):
+            return "SHORT"
+        if intent in ("btc", "buy_to_close"):
+            return "COVER"
+        if intent in ("stc", "sell_to_close"):
+            return "SELL"
+        if intent in ("bto", "buy_to_open"):
+            return "BUY"
+        if "ENTRY" in client_id:
+            return "SHORT" if side == "sell" else "BUY"
+        if "EXIT" in client_id or "-TP" in client_id:
+            return "COVER" if side == "buy" else "SELL"
+        return "BUY" if side == "buy" else "SELL"
+
+    def _find_provisional_trade(self, order: Dict):
+        """Match the bot's submission log to its broker order without collapsing same-size re-entries."""
+        order_time = self._timestamp_et(order.get("submitted_at") or order.get("filled_at"))
+        action = self._broker_action(order)
+        side_actions = {"BUY", "PYRAMID_BUY", "COVER", "PARTIAL_COVER"} if order.get("side") == "buy" else {"SELL", "PARTIAL_SELL", "SHORT"}
+        best = None
+        best_delta = None
+        for trade in reversed(self.trade_history):
+            if trade.get("order_id"):
+                continue
+            if trade.get("ticker") != order.get("ticker") or trade.get("action") not in side_actions:
+                continue
+            try:
+                if abs(float(trade.get("shares", 0)) - float(order.get("filled_qty", 0))) > 1e-6:
+                    continue
+            except (TypeError, ValueError):
+                continue
+            trade_time = self._timestamp_et(trade.get("time"))
+            delta = abs((order_time - trade_time).total_seconds()) if order_time and trade_time else 999999
+            if delta <= 300 and (best_delta is None or delta < best_delta):
+                best = trade
+                best_delta = delta
+        if best is not None and action in ("SHORT", "COVER"):
+            best["action"] = action
+            best["action_cn"] = action
+        return best
+
+    def sync_alpaca_orders_to_history(self, snapshot: Optional[Dict] = None, force_refresh: bool = False):
+        """Upsert Alpaca-confirmed fills into the local review ledger by immutable broker order ID."""
+        if not self.adapter or isinstance(self.adapter, MockAlpacaAdapter):
+            return {"success": True, "added": 0, "updated": 0}
+        try:
+            if force_refresh or snapshot is None:
+                snapshot = self.refresh_alpaca_orders()
+            if not snapshot or not snapshot.get("success"):
+                return {"success": False, "error": (snapshot or {}).get("error", "Order snapshot unavailable")}
+
+            existing_by_id = {
+                str(trade.get("order_id")): trade
+                for trade in self.trade_history
+                if trade.get("order_id")
+            }
             added_count = 0
-            for order in closed_orders:
-                order_id_str = str(order.id)
-                if order_id_str in existing_ids:
-                    continue
-                if not getattr(order, "filled_at", None):
-                    continue
-                
-                dt = order.filled_at
-                est = pytz.timezone('America/New_York')
-                dt_est = dt.astimezone(est) if hasattr(dt, "astimezone") else dt
-                date_str = dt_est.strftime("%Y-%m-%d")
-                time_str = dt_est.strftime("%Y-%m-%d %H:%M:%S")
-                action_str = order.side.value.upper() if hasattr(order.side, "value") else str(order.side).upper()
-                qty = int(order.filled_qty or 0)
-                price = float(order.filled_avg_price or 0.0)
-                symbol_str = str(order.symbol)
-                
-                # Check if a bot trade for same ticker and shares exists nearby to avoid duplicate records
-                is_duplicate = any(
-                    t.get("ticker") == symbol_str and 
-                    abs(t.get("shares", 0) - qty) == 0 and
-                    t.get("reason") != "Alpaca Broker Executed Sync" and
-                    t.get("date") == date_str
-                    for t in self.trade_history
-                )
-                if is_duplicate:
-                    existing_ids.add(order_id_str)
+            updated_count = 0
+            for order in snapshot.get("orders", []):
+                qty = self._number_or_none(order.get("filled_qty")) or 0
+                price = self._number_or_none(order.get("filled_avg_price")) or 0
+                if qty <= 0 or price <= 0:
                     continue
 
-                trade_record = {
-                    "order_id": order_id_str,
-                    "date": date_str,
-                    "time": time_str,
-                    "action": action_str,
-                    "action_cn": "买入" if action_str == "BUY" else "卖出",
-                    "ticker": symbol_str,
+                order_id = str(order.get("order_id") or "")
+                if not order_id:
+                    continue
+                action = self._broker_action(order)
+                record = existing_by_id.get(order_id)
+                is_new_record = False
+                if record is None:
+                    record = self._find_provisional_trade(order)
+                if record is None:
+                    record = {}
+                    self.trade_history.append(record)
+                    added_count += 1
+                    is_new_record = True
+
+                before = dict(record)
+                record.update({
+                    "order_id": order_id,
+                    "client_order_id": order.get("client_order_id", ""),
+                    "order_status": order.get("status", ""),
+                    "source": "alpaca_trading_api",
+                    "date": order.get("date", ""),
+                    "time": order.get("time", ""),
+                    "action": record.get("action") or action,
+                    "action_cn": record.get("action_cn") or action,
+                    "ticker": order.get("ticker", ""),
                     "shares": qty,
                     "price": price,
-                    "pnl": 0.0,
-                    "reason": "Alpaca Broker Executed Sync"
-                }
-                self.trade_history.append(trade_record)
-                existing_ids.add(order_id_str)
-                added_count += 1
-                
-            self.recalculate_trade_pnls()
-            if added_count > 0:
-                self.trade_history.sort(key=lambda x: x.get("time", ""))
+                    "pnl": float(record.get("pnl", 0.0) or 0.0),
+                    "reason": record.get("reason") or "Alpaca Broker Confirmed Fill",
+                })
+                existing_by_id[order_id] = record
+                if not is_new_record and record != before:
+                    updated_count += 1
+
+            if added_count or updated_count:
+                self.recalculate_trade_pnls()
+                self.trade_history.sort(key=lambda trade: trade.get("time", ""))
                 self.save_trade_history()
-                self.add_log(f"📥 成功从 Alpaca 云端自动同步 {added_count} 笔历史成交记录到本地磁盘归档！")
-        except Exception as e:
-            print(f"Sync Alpaca orders warning: {e}")
+                if added_count:
+                    self.add_log(f"📥 已从 Alpaca 官方订单接口同步 {added_count} 笔新成交，订单页与本地复盘账本已对齐。")
+            return {"success": True, "added": added_count, "updated": updated_count}
+        except Exception as exc:
+            print(f"Sync Alpaca orders warning: {exc}")
+            return {"success": False, "error": str(exc)}
 
     def archive_to_hf_dataset(self, keep_days: int = 2) -> dict:
         """
@@ -715,12 +1000,21 @@ class LiveTradingRunner:
             if res.get("success"):
                 action_type = "BUY" if side.lower() == "buy" else "SELL"
                 self.add_log(f"🌙 [盘前/盘后限价单] 成功下发 [{symbol}] {action_type} {qty} 股 @ ${limit_price:.2f} (Extended-Hours Active)")
-                self.add_trade_action(action_type, symbol, qty, limit_price, f"【盘前盘后限价交易】Limit Order @ ${limit_price:.2f}")
+                self.add_trade_action(
+                    action_type,
+                    symbol,
+                    qty,
+                    limit_price,
+                    f"【盘前盘后限价交易】Limit Order @ ${limit_price:.2f}",
+                    order_id=res.get("order_id") or res.get("id"),
+                    order_status=res.get("status") or "submitted",
+                )
             return res
         except Exception as e:
             return {"success": False, "error": str(e)}
 
     def get_status(self) -> Dict:
+        orders_snapshot = self._cached_orders_snapshot()
         return {
             "is_running": self.is_running,
             "market_mode": "AUTO_EXCHANGE",
@@ -728,8 +1022,18 @@ class LiveTradingRunner:
             "ticker_scores": self.ticker_scores,
             "monitored_tickers": self.active_tickers,
             "strategy_params": self.strategy_params,
-            "logs_count": len(self.logs)
+            "logs_count": len(self.logs),
+            "orders": orders_snapshot["orders"],
+            "orders_meta": {
+                key: value
+                for key, value in orders_snapshot.items()
+                if key != "orders"
+            }
         }
+
+    def get_live_orders(self, force_refresh: bool = False) -> Dict:
+        """Public API helper for a dedicated /api/live/orders endpoint."""
+        return self.refresh_alpaca_orders() if force_refresh else self._cached_orders_snapshot()
 
     def is_market_open(self) -> bool:
         """
@@ -1082,7 +1386,12 @@ class LiveTradingRunner:
                                     if order_res.get("success"):
                                         self.add_log(f"✅ [{ticker}] BUY order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
                                         self.highest_prices[ticker] = close_price
-                                        self.add_trade_action("BUY", ticker, shares, close_price, reason)
+                                        self.add_trade_action(
+                                            "BUY", ticker, shares, close_price, reason,
+                                            order_id=order_res.get("order_id") or order_res.get("id"),
+                                            client_order_id=client_order_id,
+                                            order_status=order_res.get("status") or "submitted",
+                                        )
                                     else:
                                         self.unlock_entry(ticker)
                                         self.add_log(f"❌ [{ticker}] BUY order failed. Reason: {order_res.get('error')}")
@@ -1102,7 +1411,12 @@ class LiveTradingRunner:
                                     order_res = self.adapter.submit_market_order(ticker, add_shares, "buy", client_order_id=client_order_id)
                                     if order_res.get("success"):
                                         self.add_log(f"✅ [{ticker}] PYRAMID_BUY order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
-                                        self.add_trade_action("PYRAMID_BUY", ticker, add_shares, close_price, reason)
+                                        self.add_trade_action(
+                                            "PYRAMID_BUY", ticker, add_shares, close_price, reason,
+                                            order_id=order_res.get("order_id") or order_res.get("id"),
+                                            client_order_id=client_order_id,
+                                            order_status=order_res.get("status") or "submitted",
+                                        )
                                     else:
                                         self.add_log(f"❌ [{ticker}] PYRAMID_BUY order failed. Reason: {order_res.get('error')}")
 
@@ -1115,7 +1429,12 @@ class LiveTradingRunner:
                                 order_res = self.adapter.submit_market_order(ticker, sell_qty, "sell", client_order_id=client_order_id)
                                 if order_res.get("success"):
                                     self.add_log(f"✅ [{ticker}] PARTIAL_SELL order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
-                                    self.add_trade_action("PARTIAL_SELL", ticker, sell_qty, close_price, reason, pnl=pnl)
+                                    self.add_trade_action(
+                                        "PARTIAL_SELL", ticker, sell_qty, close_price, reason, pnl=pnl,
+                                        order_id=order_res.get("order_id") or order_res.get("id"),
+                                        client_order_id=client_order_id,
+                                        order_status=order_res.get("status") or "submitted",
+                                    )
                                 else:
                                     self.unlock_exit(ticker)
                                     self.add_log(f"❌ [{ticker}] PARTIAL_SELL order failed. Reason: {order_res.get('error')}")
@@ -1129,7 +1448,12 @@ class LiveTradingRunner:
                                 order_res = self.adapter.submit_market_order(ticker, cover_qty, "buy", client_order_id=client_order_id)
                                 if order_res.get("success"):
                                     self.add_log(f"✅ [{ticker}] PARTIAL_COVER order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
-                                    self.add_trade_action("PARTIAL_COVER", ticker, cover_qty, close_price, reason, pnl=pnl)
+                                    self.add_trade_action(
+                                        "PARTIAL_COVER", ticker, cover_qty, close_price, reason, pnl=pnl,
+                                        order_id=order_res.get("order_id") or order_res.get("id"),
+                                        client_order_id=client_order_id,
+                                        order_status=order_res.get("status") or "submitted",
+                                    )
                                 else:
                                     self.unlock_exit(ticker)
                                     self.add_log(f"❌ [{ticker}] PARTIAL_COVER order failed. Reason: {order_res.get('error')}")
@@ -1165,7 +1489,12 @@ class LiveTradingRunner:
                                     order_res = self.adapter.submit_market_order(ticker, shares, "sell", client_order_id=client_order_id)
                                     if order_res.get("success"):
                                         self.add_log(f"✅ [{ticker}] SHORT order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
-                                        self.add_trade_action("SHORT", ticker, shares, close_price, reason)
+                                        self.add_trade_action(
+                                            "SHORT", ticker, shares, close_price, reason,
+                                            order_id=order_res.get("order_id") or order_res.get("id"),
+                                            client_order_id=client_order_id,
+                                            order_status=order_res.get("status") or "submitted",
+                                        )
                                     else:
                                         self.unlock_entry(ticker)
                                         self.add_log(f"❌ [{ticker}] SHORT order failed. Reason: {order_res.get('error')}")
@@ -1178,7 +1507,12 @@ class LiveTradingRunner:
                                 order_res = self.adapter.submit_market_order(ticker, current_shares, "sell", client_order_id=client_order_id)
                                 if order_res.get("success"):
                                     self.add_log(f"✅ [{ticker}] SELL order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
-                                    self.add_trade_action("SELL", ticker, current_shares, close_price, reason, pnl=pnl)
+                                    self.add_trade_action(
+                                        "SELL", ticker, current_shares, close_price, reason, pnl=pnl,
+                                        order_id=order_res.get("order_id") or order_res.get("id"),
+                                        client_order_id=client_order_id,
+                                        order_status=order_res.get("status") or "submitted",
+                                    )
                                     if ticker in self.highest_prices:
                                         del self.highest_prices[ticker]
                                 else:
@@ -1194,7 +1528,12 @@ class LiveTradingRunner:
                                 order_res = self.adapter.submit_market_order(ticker, cover_qty, "buy", client_order_id=client_order_id)
                                 if order_res.get("success"):
                                     self.add_log(f"✅ [{ticker}] COVER order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
-                                    self.add_trade_action("COVER", ticker, cover_qty, close_price, reason, pnl=pnl)
+                                    self.add_trade_action(
+                                        "COVER", ticker, cover_qty, close_price, reason, pnl=pnl,
+                                        order_id=order_res.get("order_id") or order_res.get("id"),
+                                        client_order_id=client_order_id,
+                                        order_status=order_res.get("status") or "submitted",
+                                    )
                                 else:
                                     self.unlock_exit(ticker)
                                     self.add_log(f"❌ [{ticker}] COVER order failed. Reason: {order_res.get('error')}")
