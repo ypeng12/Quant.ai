@@ -57,7 +57,7 @@
       "ticker": "MU",
       "shares": 1,
       "price": 893.74,
-      "pnl": 0.0,
+      "pnl": -0.25,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -105,7 +105,7 @@
       "ticker": "SNDK",
       "shares": 102,
       "price": 1423.103627,
-      "pnl": 0.0,
+      "pnl": -8.75,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -165,7 +165,7 @@
       "ticker": "SNDK",
       "shares": 10,
       "price": 1417.0,
-      "pnl": 0.0,
+      "pnl": -86.7,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -201,7 +201,7 @@
       "ticker": "AMD",
       "shares": 2,
       "price": 522.225,
-      "pnl": 0.0,
+      "pnl": 0.45,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -237,7 +237,7 @@
       "ticker": "NVDA",
       "shares": 72,
       "price": 210.48,
-      "pnl": 0.0,
+      "pnl": -9.12,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -249,7 +249,7 @@
       "ticker": "SNDK",
       "shares": 15,
       "price": 1418.0,
-      "pnl": 0.0,
+      "pnl": -99.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -261,7 +261,7 @@
       "ticker": "AMD",
       "shares": 42,
       "price": 521.241905,
-      "pnl": 0.0,
+      "pnl": -57.87,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -309,7 +309,7 @@
       "ticker": "TSLA",
       "shares": 67,
       "price": 324.69,
-      "pnl": 0.0,
+      "pnl": 8.95,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -321,7 +321,7 @@
       "ticker": "AMD",
       "shares": 42,
       "price": 521.574286,
-      "pnl": 0.0,
+      "pnl": -11.16,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -357,7 +357,7 @@
       "ticker": "SNDK",
       "shares": 10,
       "price": 1413.05,
-      "pnl": 0.0,
+      "pnl": -94.8,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -489,7 +489,7 @@
       "ticker": "MSFT",
       "shares": 44,
       "price": 496.43,
-      "pnl": 0.0,
+      "pnl": -49.87,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -537,7 +537,7 @@
       "ticker": "MU",
       "shares": 1,
       "price": 892.68,
-      "pnl": 0.0,
+      "pnl": -2.69,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -549,7 +549,7 @@
       "ticker": "NVDA",
       "shares": 104,
       "price": 210.34,
-      "pnl": 0.0,
+      "pnl": -45.76,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -573,7 +573,7 @@
       "ticker": "MU",
       "shares": 21,
       "price": 892.27,
-      "pnl": 0.0,
+      "pnl": -29.08,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -609,7 +609,7 @@
       "ticker": "NVDA",
       "shares": 92,
       "price": 210.345979,
-      "pnl": 0.0,
+      "pnl": -50.97,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -621,7 +621,7 @@
       "ticker": "TSLA",
       "shares": 67,
       "price": 324.89,
-      "pnl": 0.0,
+      "pnl": 14.08,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -633,7 +633,7 @@
       "ticker": "MU",
       "shares": 1,
       "price": 893.09,
-      "pnl": 0.0,
+      "pnl": -1.08,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -645,7 +645,7 @@
       "ticker": "NVDA",
       "shares": 104,
       "price": 210.34,
-      "pnl": 0.0,
+      "pnl": -26.96,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -669,7 +669,7 @@
       "ticker": "TSLA",
       "shares": 46,
       "price": 324.44,
-      "pnl": 0.0,
+      "pnl": -10.59,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -741,7 +741,7 @@
       "ticker": "AMD",
       "shares": 62,
       "price": 523.6,
-      "pnl": 0.0,
+      "pnl": 21.3,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -777,7 +777,7 @@
       "ticker": "AMD",
       "shares": 14,
       "price": 523.83,
-      "pnl": 0.0,
+      "pnl": 1.82,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -801,7 +801,7 @@
       "ticker": "AMD",
       "shares": 41,
       "price": 523.87,
-      "pnl": 0.0,
+      "pnl": -13.12,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -897,7 +897,7 @@
       "ticker": "SNDK",
       "shares": 24,
       "price": 1440.69,
-      "pnl": 0.0,
+      "pnl": 383.47,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -909,7 +909,7 @@
       "ticker": "SNDK",
       "shares": 12,
       "price": 1439.31,
-      "pnl": 0.0,
+      "pnl": 113.58,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -945,7 +945,7 @@
       "ticker": "TSLA",
       "shares": 1,
       "price": 324.77,
-      "pnl": 0.0,
+      "pnl": 0.1,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -969,7 +969,7 @@
       "ticker": "AMD",
       "shares": 14,
       "price": 523.6,
-      "pnl": 0.0,
+      "pnl": -8.82,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -981,7 +981,7 @@
       "ticker": "MU",
       "shares": 32,
       "price": 895.79,
-      "pnl": 0.0,
+      "pnl": -11.36,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1077,7 +1077,7 @@
       "ticker": "MU",
       "shares": 24,
       "price": 894.330833,
-      "pnl": 0.0,
+      "pnl": -40.06,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1113,7 +1113,7 @@
       "ticker": "SNDK",
       "shares": 44,
       "price": 1435.067273,
-      "pnl": 0.0,
+      "pnl": -150.89,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1149,7 +1149,7 @@
       "ticker": "SNDK",
       "shares": 10,
       "price": 1433.26,
-      "pnl": 0.0,
+      "pnl": -27.3,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1185,7 +1185,7 @@
       "ticker": "AMD",
       "shares": 3,
       "price": 524.88,
-      "pnl": 0.0,
+      "pnl": 1.19,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1353,7 +1353,7 @@
       "ticker": "MU",
       "shares": 23,
       "price": 918.998696,
-      "pnl": 0.0,
+      "pnl": -47.95,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1365,7 +1365,7 @@
       "ticker": "MU",
       "shares": 23,
       "price": 919.65,
-      "pnl": 0.0,
+      "pnl": -29.67,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1497,7 +1497,7 @@
       "ticker": "TSLA",
       "shares": 67,
       "price": 322.12,
-      "pnl": 0.0,
+      "pnl": -41.94,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1521,7 +1521,7 @@
       "ticker": "SNDK",
       "shares": 15,
       "price": 1414.51,
-      "pnl": 0.0,
+      "pnl": -39.9,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1533,7 +1533,7 @@
       "ticker": "AMD",
       "shares": 44,
       "price": 487.19,
-      "pnl": 0.0,
+      "pnl": -28.79,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1545,7 +1545,7 @@
       "ticker": "MU",
       "shares": 23,
       "price": 918.56,
-      "pnl": 0.0,
+      "pnl": -54.74,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1557,7 +1557,7 @@
       "ticker": "MSFT",
       "shares": 30,
       "price": 489.443333,
-      "pnl": 0.0,
+      "pnl": -11.53,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1569,7 +1569,7 @@
       "ticker": "NVDA",
       "shares": 99,
       "price": 221.39,
-      "pnl": 0.0,
+      "pnl": 16.83,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1593,7 +1593,7 @@
       "ticker": "MU",
       "shares": 23,
       "price": 917.73,
-      "pnl": 0.0,
+      "pnl": -84.41,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1617,7 +1617,7 @@
       "ticker": "AMD",
       "shares": 44,
       "price": 486.583182,
-      "pnl": 0.0,
+      "pnl": -54.01,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1629,7 +1629,7 @@
       "ticker": "MSFT",
       "shares": 44,
       "price": 489.192273,
-      "pnl": 0.0,
+      "pnl": -17.41,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1689,7 +1689,7 @@
       "ticker": "NVDA",
       "shares": 98,
       "price": 221.617347,
-      "pnl": 0.0,
+      "pnl": 26.2,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1713,7 +1713,7 @@
       "ticker": "NVDA",
       "shares": 68,
       "price": 221.52,
-      "pnl": 0.0,
+      "pnl": -10.88,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1725,7 +1725,7 @@
       "ticker": "AMD",
       "shares": 44,
       "price": 487.138864,
-      "pnl": 0.0,
+      "pnl": -23.83,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1773,7 +1773,7 @@
       "ticker": "NVDA",
       "shares": 98,
       "price": 219.868368,
-      "pnl": 0.0,
+      "pnl": -184.4,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1784,7 +1784,7 @@
       "ticker": "NVDA",
       "shares": 48,
       "price": 219.26,
-      "pnl": -29.76,
+      "pnl": 0.0,
       "reason": "[Short-InitialStopLoss] Rebounded -1.0R (+0.28%)."
     },
     {
@@ -1795,7 +1795,7 @@
       "ticker": "TSLA",
       "shares": 33,
       "price": 318.17,
-      "pnl": -28.71,
+      "pnl": 0.0,
       "reason": "[Short-InitialStopLoss] Rebounded -1.0R (+0.27%)."
     },
     {
@@ -1839,7 +1839,7 @@
       "ticker": "MSFT",
       "shares": 21,
       "price": 495.9,
-      "pnl": -3.15,
+      "pnl": 0.0,
       "reason": "[Long-Reversal] EMA Death Cross and below VWAP."
     },
     {
@@ -1861,7 +1861,7 @@
       "ticker": "MSFT",
       "shares": 21,
       "price": 496.25,
-      "pnl": -6.82,
+      "pnl": -6.2,
       "reason": "[Short-Reversal] EMA Golden Cross and reclaimed VWAP."
     },
     {
@@ -1883,7 +1883,7 @@
       "ticker": "SNDK",
       "shares": 8,
       "price": 1283.8199,
-      "pnl": -27.6,
+      "pnl": -19.44,
       "reason": "[InitialStopLoss] Loss reached -1.0R (-0.27%)."
     },
     {
@@ -1905,7 +1905,7 @@
       "ticker": "SNDK",
       "shares": 2,
       "price": 1276.032,
-      "pnl": 9.94,
+      "pnl": 12.18,
       "reason": "[TP1-ShortCover 40%] Reached +1.42R (+0.39% gain). Cover 40%."
     },
     {
@@ -1916,7 +1916,7 @@
       "ticker": "SNDK",
       "shares": 1,
       "price": 1276.955,
-      "pnl": 4.05,
+      "pnl": 5.16,
       "reason": "[TP1-ShortCover 40%] Reached +0.91R (+0.32% gain). Cover 40%."
     },
     {
@@ -1995,7 +1995,7 @@
       "ticker": "SNDK",
       "shares": 3,
       "price": 1293.0,
-      "pnl": 18.0,
+      "pnl": 8.96,
       "reason": "[TP1-TakeProfit 40%] Reached +0.91R (+0.47% gain). Scaling out 40%."
     },
     {
@@ -2029,7 +2029,7 @@
       "ticker": "SNDK",
       "shares": 1,
       "price": 1293.14,
-      "pnl": 6.14,
+      "pnl": 0.0,
       "reason": "[TP1-TakeProfit 40%] Reached +0.94R (+0.48% gain). Scaling out 40%."
     },
     {
@@ -2040,7 +2040,7 @@
       "ticker": "SNDK",
       "shares": 8,
       "price": 1288.1499,
-      "pnl": -14.8,
+      "pnl": 0.0,
       "reason": "[BreakevenStop] Price pulled back to $1288.15 near breakeven ($1290.77). Exiting."
     },
     {
@@ -2051,7 +2051,7 @@
       "ticker": "MU",
       "shares": 3,
       "price": 895.62,
-      "pnl": -0.81,
+      "pnl": 16.01,
       "reason": "[BreakevenStop] Price pulled back to $895.62 near breakeven ($896.43). Exiting."
     },
     {
@@ -2062,7 +2062,7 @@
       "ticker": "MSFT",
       "shares": 8,
       "price": 497.56,
-      "pnl": 9.04,
+      "pnl": 9.2,
       "reason": "[TP1-TakeProfit 40%] Reached +0.91R (+0.23% gain). Scaling out 40%."
     },
     {
@@ -2085,7 +2085,7 @@
       "ticker": "NVDA",
       "shares": 47,
       "price": 219.81,
-      "pnl": 0.0,
+      "pnl": -20.68,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -2097,7 +2097,7 @@
       "ticker": "MSFT",
       "shares": 1,
       "price": 497.57,
-      "pnl": 0.0,
+      "pnl": 1.16,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -2108,7 +2108,7 @@
       "ticker": "MSFT",
       "shares": 2,
       "price": 496.51,
-      "pnl": 0.16,
+      "pnl": 0.2,
       "reason": "[BreakevenStop] Price pulled back to $496.51 near breakeven ($496.73). Exiting."
     },
     {
@@ -2144,7 +2144,7 @@
       "ticker": "SNDK",
       "shares": 5,
       "price": 1285.18,
-      "pnl": 0.0,
+      "pnl": -20.3,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -2155,7 +2155,7 @@
       "ticker": "AMD",
       "shares": 21,
       "price": 492.35,
-      "pnl": -10.5,
+      "pnl": 2.0,
       "reason": "[Long-Reversal] EMA Death Cross and below VWAP."
     },
     {
@@ -2177,7 +2177,7 @@
       "ticker": "AMD",
       "shares": 21,
       "price": 492.33,
-      "pnl": -10.08,
+      "pnl": 0.0,
       "reason": "[Long-Reversal] EMA Death Cross and below VWAP."
     },
     {
@@ -2222,7 +2222,7 @@
       "ticker": "AMD",
       "shares": 16,
       "price": 494.02,
-      "pnl": 0.0,
+      "pnl": 18.56,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -2233,7 +2233,7 @@
       "ticker": "AMD",
       "shares": 10,
       "price": 494.7,
-      "pnl": 17.8,
+      "pnl": 9.2,
       "reason": "[TP1-TakeProfit 40%] Reached +1.44R (+0.36% gain). Scaling out 40%."
     },
     {
@@ -2267,7 +2267,7 @@
       "ticker": "AMD",
       "shares": 4,
       "price": 494.65,
-      "pnl": 6.92,
+      "pnl": 0.0,
       "reason": "[TP1-TakeProfit 40%] Reached +1.40R (+0.35% gain). Scaling out 40%."
     },
     {
@@ -2302,7 +2302,7 @@
       "ticker": "AMD",
       "shares": 1,
       "price": 495.4,
-      "pnl": 2.48,
+      "pnl": 0.0,
       "reason": "[TP1-TakeProfit 40%] Reached +2.01R (+0.50% gain). Scaling out 40%."
     },
     {
@@ -2324,7 +2324,7 @@
       "ticker": "MU",
       "shares": 1,
       "price": 897.415,
-      "pnl": 2.03,
+      "pnl": 7.13,
       "reason": "[TP1-TakeProfit 40%] Reached +0.91R (+0.23% gain). Scaling out 40%."
     },
     {
@@ -2347,7 +2347,7 @@
       "ticker": "AMD",
       "shares": 1,
       "price": 495.66,
-      "pnl": 2.74,
+      "pnl": 0.0,
       "reason": "[TP1-TakeProfit 40%] Reached +2.22R (+0.56% gain). Scaling out 40%."
     },
     {
@@ -2391,7 +2391,7 @@
       "ticker": "MU",
       "shares": 7,
       "price": 894.87,
-      "pnl": -19.04,
+      "pnl": 4.38,
       "reason": "[InitialStopLoss] Loss reached -1.0R (-0.30%)."
     },
     {
@@ -2402,7 +2402,7 @@
       "ticker": "SNDK",
       "shares": 3,
       "price": 1290.63,
-      "pnl": 11.01,
+      "pnl": 7.09,
       "reason": "[TP1-TakeProfit 40%] Reached +0.90R (+0.29% gain). Scaling out 40%."
     },
     {
@@ -2413,7 +2413,7 @@
       "ticker": "MU",
       "shares": 1,
       "price": 897.79,
-      "pnl": 2.05,
+      "pnl": 3.07,
       "reason": "[TP1-TakeProfit 40%] Reached +0.92R (+0.23% gain). Scaling out 40%."
     },
     {
@@ -2435,7 +2435,7 @@
       "ticker": "MU",
       "shares": 1,
       "price": 895.745,
-      "pnl": -1.4,
+      "pnl": 1.03,
       "reason": "[BreakevenStop] Price pulled back to $895.74 near breakeven ($896.28). Exiting."
     },
     {
@@ -2468,7 +2468,7 @@
       "ticker": "MU",
       "shares": 5,
       "price": 892.93,
-      "pnl": -15.05,
+      "pnl": -21.1,
       "reason": "[InitialStopLoss] Loss reached -1.0R (-0.34%)."
     },
     {
@@ -2479,7 +2479,7 @@
       "ticker": "SNDK",
       "shares": 8,
       "price": 1281.34,
-      "pnl": -9.61,
+      "pnl": -40.75,
       "reason": "[Long-Reversal] EMA Death Cross and below VWAP."
     },
     {
@@ -2501,7 +2501,7 @@
       "ticker": "MU",
       "shares": 3,
       "price": 893.1,
-      "pnl": -0.99,
+      "pnl": -7.92,
       "reason": "[Long-Reversal] EMA Death Cross and below VWAP."
     },
     {
@@ -2513,7 +2513,7 @@
       "ticker": "NVDA",
       "shares": 47,
       "price": 219.488511,
-      "pnl": 0.0,
+      "pnl": -26.86,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -2535,8 +2535,20 @@
       "ticker": "NVDA",
       "shares": 1,
       "price": 220.07,
-      "pnl": -0.58,
+      "pnl": -0.14,
       "reason": "[Short-InitialStopLoss] Rebounded -1.0R (+0.26%)."
+    },
+    {
+      "order_id": "d2e5d92b-b1f2-4a07-9f4d-8d4ca306c0d6",
+      "date": "2026-08-06",
+      "time": "2026-08-06 15:22:34",
+      "action": "BUY",
+      "action_cn": "买入",
+      "ticker": "NVDA",
+      "shares": 47,
+      "price": 220.084894,
+      "pnl": 0.0,
+      "reason": "Alpaca Broker Executed Sync"
     },
     {
       "date": "2026-08-06",
@@ -2546,7 +2558,7 @@
       "ticker": "MU",
       "shares": 11,
       "price": 893.225,
-      "pnl": -28.46,
+      "pnl": -19.77,
       "reason": "[InitialStopLoss] Loss reached -1.0R (-0.29%)."
     },
     {
@@ -2557,8 +2569,20 @@
       "ticker": "MSFT",
       "shares": 8,
       "price": 498.145,
-      "pnl": 9.0,
+      "pnl": 13.88,
       "reason": "[TP1-TakeProfit 40%] Reached +0.91R (+0.23% gain). Scaling out 40%."
+    },
+    {
+      "order_id": "c0374912-5bb6-4cc3-930f-9189e787e0d1",
+      "date": "2026-08-06",
+      "time": "2026-08-06 15:24:39",
+      "action": "SELL",
+      "action_cn": "卖出",
+      "ticker": "MSFT",
+      "shares": 5,
+      "price": 498.3,
+      "pnl": 7.26,
+      "reason": "Alpaca Broker Executed Sync"
     },
     {
       "date": "2026-08-06",
@@ -2568,7 +2592,7 @@
       "ticker": "MSFT",
       "shares": 3,
       "price": 498.58,
-      "pnl": 4.68,
+      "pnl": 4.32,
       "reason": "[TP1-TakeProfit 40%] Reached +1.26R (+0.31% gain). Scaling out 40%."
     },
     {
@@ -2590,7 +2614,7 @@
       "ticker": "MSFT",
       "shares": 1,
       "price": 498.465,
-      "pnl": 1.44,
+      "pnl": 1.32,
       "reason": "[TP1-TakeProfit 40%] Reached +1.16R (+0.29% gain). Scaling out 40%."
     },
     {
@@ -2601,7 +2625,7 @@
       "ticker": "MSFT",
       "shares": 1,
       "price": 498.57,
-      "pnl": 1.55,
+      "pnl": 1.43,
       "reason": "[TP1-TakeProfit 40%] Reached +1.25R (+0.31% gain). Scaling out 40%."
     },
     {
@@ -2612,7 +2636,7 @@
       "ticker": "TSLA",
       "shares": 22,
       "price": 319.7,
-      "pnl": -21.78,
+      "pnl": -0.88,
       "reason": "[Short-InitialStopLoss] Rebounded -1.0R (+0.31%)."
     },
     {
@@ -2656,7 +2680,7 @@
       "ticker": "MSFT",
       "shares": 8,
       "price": 499.73,
-      "pnl": 9.44,
+      "pnl": 20.72,
       "reason": "[TP1-TakeProfit 40%] Reached +0.95R (+0.24% gain). Scaling out 40%."
     },
     {
@@ -2667,8 +2691,130 @@
       "ticker": "MSFT",
       "shares": 1,
       "price": 499.8,
-      "pnl": 1.25,
+      "pnl": 2.66,
       "reason": "[TP1-TakeProfit 40%] Reached +1.00R (+0.25% gain). Scaling out 40%."
+    },
+    {
+      "order_id": "92f3444a-2cb0-4b2e-8824-e2378fa37457",
+      "date": "2026-08-06",
+      "time": "2026-08-06 15:36:55",
+      "action": "SELL",
+      "action_cn": "卖出",
+      "ticker": "MU",
+      "shares": 22,
+      "price": 893.220454,
+      "pnl": -29.61,
+      "reason": "Alpaca Broker Executed Sync"
+    },
+    {
+      "date": "2026-08-06",
+      "time": "2026-08-06 15:37:05",
+      "action": "BUY",
+      "action_cn": "BUY",
+      "ticker": "MU",
+      "shares": 11,
+      "price": 893.9,
+      "pnl": 0.0,
+      "reason": "[Conviction-Top Score:60/100 [Watchlist Top-0%]] Price holding above VWAP ($882.33). Initial Stop: 0.25% (1.0R)."
+    },
+    {
+      "date": "2026-08-06",
+      "time": "2026-08-06 15:37:38",
+      "action": "BUY",
+      "action_cn": "BUY",
+      "ticker": "SNDK",
+      "shares": 8,
+      "price": 1285.23,
+      "pnl": 0.0,
+      "reason": "[Conviction-Top Score:85/100 [Watchlist Top-0%]] Price holding above VWAP ($1259.87). Initial Stop: 0.33% (1.0R)."
+    },
+    {
+      "date": "2026-08-06",
+      "time": "2026-08-06 15:37:38",
+      "action": "SELL",
+      "action_cn": "SELL",
+      "ticker": "MU",
+      "shares": 11,
+      "price": 893.05,
+      "pnl": -9.35,
+      "reason": "[Long-Reversal] EMA Death Cross and below VWAP."
+    },
+    {
+      "date": "2026-08-06",
+      "time": "2026-08-06 15:38:11",
+      "action": "BUY",
+      "action_cn": "BUY",
+      "ticker": "NVDA",
+      "shares": 32,
+      "price": 220.16,
+      "pnl": 0.0,
+      "reason": "[Standard-Entry Score:45/100 [Watchlist Top-17%]] Price holding above VWAP ($220.13). Initial Stop: 0.25% (1.0R)."
+    },
+    {
+      "date": "2026-08-06",
+      "time": "2026-08-06 15:38:12",
+      "action": "BUY",
+      "action_cn": "BUY",
+      "ticker": "MSFT",
+      "shares": 21,
+      "price": 499.265,
+      "pnl": 0.0,
+      "reason": "[Conviction-Top Score:60/100 [Watchlist Top-17%]] Price holding above VWAP ($495.85). Initial Stop: 0.25% (1.0R)."
+    },
+    {
+      "date": "2026-08-06",
+      "time": "2026-08-06 15:39:18",
+      "action": "SHORT",
+      "action_cn": "SHORT",
+      "ticker": "SNDK",
+      "shares": 8,
+      "price": 1280.12,
+      "pnl": 0.0,
+      "reason": "[Conviction-Top Score:58/100 [Watchlist Top-17%]] EMA 9/21 Death Cross. Initial Stop: 0.33% (1.0R)."
+    },
+    {
+      "date": "2026-08-06",
+      "time": "2026-08-06 15:39:19",
+      "action": "SHORT",
+      "action_cn": "SHORT",
+      "ticker": "TSLA",
+      "shares": 11,
+      "price": 318.88,
+      "pnl": 0.0,
+      "reason": "[Probe-Light Score:50/100 [Watchlist Top-34%]] EMA 9/21 Death Cross. Initial Stop: 0.25% (1.0R)."
+    },
+    {
+      "date": "2026-08-06",
+      "time": "2026-08-06 15:40:59",
+      "action": "PARTIAL_COVER",
+      "action_cn": "PARTIAL_COVER",
+      "ticker": "SNDK",
+      "shares": 3,
+      "price": 1277.6949,
+      "pnl": 28.61,
+      "reason": "[TP1-ShortCover 40%] Reached +0.94R (+0.29% gain). Cover 40%."
+    },
+    {
+      "date": "2026-08-06",
+      "time": "2026-08-06 15:42:07",
+      "action": "PARTIAL_COVER",
+      "action_cn": "PARTIAL_COVER",
+      "ticker": "SNDK",
+      "shares": 1,
+      "price": 1277.25,
+      "pnl": 9.98,
+      "reason": "[TP1-ShortCover 40%] Reached +1.07R (+0.33% gain). Cover 40%."
+    },
+    {
+      "date": "2026-08-06",
+      "time": "2026-08-06 15:43:47",
+      "action": "SHORT",
+      "action_cn": "SHORT",
+      "ticker": "NVDA",
+      "shares": 16,
+      "price": 219.8,
+      "pnl": 0.0,
+      "reason": "[Probe-Light Score:50/100 [Watchlist Top-34%]] Price dropped below VWAP ($220.12). Initial Stop: 0.25% (1.0R)."
     }
   ],
   "action_logs": [
@@ -2846,6 +2992,16 @@
     "[2026-08-06 15:32:02] 🟢 [MU] BUY × 11 shs @ $895.50 | [Conviction-Top Score:75/100 [Watchlist Top-0%]] EMA 9/21 Golden Cross. Initial Stop: 0.25% (1.0R).",
     "[2026-08-06 15:32:03] 🟢 [SNDK] BUY × 8 shs @ $1287.66 | [Conviction-Top Score:60/100 [Watchlist Top-17%]] Price holding above VWAP ($1259.70). Initial Stop: 0.33% (1.0R).",
     "[2026-08-06 15:32:04] ⚪ [MSFT] PARTIAL_SELL × 8 shs @ $499.73 | PnL: +9.44 USD | [TP1-TakeProfit 40%] Reached +0.95R (+0.24% gain). Scaling out 40%.",
-    "[2026-08-06 15:33:11] ⚪ [MSFT] PARTIAL_SELL × 1 shs @ $499.80 | PnL: +1.25 USD | [TP1-TakeProfit 40%] Reached +1.00R (+0.25% gain). Scaling out 40%."
+    "[2026-08-06 15:33:11] ⚪ [MSFT] PARTIAL_SELL × 1 shs @ $499.80 | PnL: +1.25 USD | [TP1-TakeProfit 40%] Reached +1.00R (+0.25% gain). Scaling out 40%.",
+    "[2026-08-06 15:37:05] 🟢 [MU] BUY × 11 shs @ $893.90 | [Conviction-Top Score:60/100 [Watchlist Top-0%]] Price holding above VWAP ($882.33). Initial Stop: 0.25% (1.0R).",
+    "[2026-08-06 15:37:38] 🟢 [SNDK] BUY × 8 shs @ $1285.23 | [Conviction-Top Score:85/100 [Watchlist Top-0%]] Price holding above VWAP ($1259.87). Initial Stop: 0.33% (1.0R).",
+    "[2026-08-06 15:37:38] 🔴 [MU] SELL × 11 shs @ $893.05 | PnL: -12.10 USD | [Long-Reversal] EMA Death Cross and below VWAP.",
+    "[2026-08-06 15:38:11] 🟢 [NVDA] BUY × 32 shs @ $220.16 | [Standard-Entry Score:45/100 [Watchlist Top-17%]] Price holding above VWAP ($220.13). Initial Stop: 0.25% (1.0R).",
+    "[2026-08-06 15:38:12] 🟢 [MSFT] BUY × 21 shs @ $499.27 | [Conviction-Top Score:60/100 [Watchlist Top-17%]] Price holding above VWAP ($495.85). Initial Stop: 0.25% (1.0R).",
+    "[2026-08-06 15:39:18] 🔻 [SNDK] SHORT × 8 shs @ $1280.12 | [Conviction-Top Score:58/100 [Watchlist Top-17%]] EMA 9/21 Death Cross. Initial Stop: 0.33% (1.0R).",
+    "[2026-08-06 15:39:19] 🔻 [TSLA] SHORT × 11 shs @ $318.88 | [Probe-Light Score:50/100 [Watchlist Top-34%]] EMA 9/21 Death Cross. Initial Stop: 0.25% (1.0R).",
+    "[2026-08-06 15:40:59] ⚪ [SNDK] PARTIAL_COVER × 3 shs @ $1277.69 | PnL: +11.30 USD | [TP1-ShortCover 40%] Reached +0.94R (+0.29% gain). Cover 40%.",
+    "[2026-08-06 15:42:07] ⚪ [SNDK] PARTIAL_COVER × 1 shs @ $1277.25 | PnL: +4.21 USD | [TP1-ShortCover 40%] Reached +1.07R (+0.33% gain). Cover 40%.",
+    "[2026-08-06 15:43:47] 🔻 [NVDA] SHORT × 16 shs @ $219.80 | [Probe-Light Score:50/100 [Watchlist Top-34%]] Price dropped below VWAP ($220.12). Initial Stop: 0.25% (1.0R)."
   ]
 }
