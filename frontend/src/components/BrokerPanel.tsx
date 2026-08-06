@@ -150,7 +150,9 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
       }
 
       const histJson = await histRes.json();
-      if (histJson.success) setTradeHistory(histJson.trades || []);
+      // trade_history.json format: {"trade_history": [...], "action_logs": [...]}
+      const rawTrades = histJson.trade_history || histJson.trades || [];
+      setTradeHistory(rawTrades);
 
       const todayJson = await todayRes.json();
       if (todayJson.success) setTodaySummary(todayJson.summary);

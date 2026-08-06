@@ -1550,22 +1550,10 @@ def get_action_feed(limit: int = 100):
 
 
 @app.get("/api/live/trade_history")
-def get_trade_history(days: int = 30):
-    """直接从 trade_history.json 磁盘文件读取交易记录，无任何内存缓存，文件改了立即生效。"""
-    import datetime, os, json
+def get_trade_history():
+    """直接返回 trade_history.json 原始文件，零中间层。"""
     history_file = os.path.join(os.path.dirname(__file__), "trade_history.json")
-    try:
-        with open(history_file, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        trades = data.get("trade_history", [])
-    except Exception:
-        trades = []
-    cutoff = (datetime.datetime.now() - datetime.timedelta(days=days)).strftime("%Y-%m-%d")
-    history = [
-        t for t in trades
-        if ((t.get("date") or t.get("time", "")[:10] or "").strip() >= cutoff)
-    ]
-    return {"success": True, "trades": history, "total": len(history)}
+    return FileResponse(history_file, media_type="application/json")
 
 
 @app.get("/api/live/today_summary")
