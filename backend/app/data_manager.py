@@ -394,43 +394,50 @@ def get_batch_quotes(tickers: list):
 
     results = {}
     
-    # 使用 yfinance Fast Info 优先秒拉最新报价（最轻量速度最快）
-    for ticker in clean_tickers:
-        try:
-            stk = yf.Ticker(ticker)
-            fi = stk.fast_info
+    # 优先使用 Alpaca Data API 抓取 100% 准确的实盘 Snapshot 报价（含前收盘价与当日真实涨跌幅）
+    try:
+        from app.config import ALPACA_API_KEY, ALPACA_SECRET_KEY
+        if ALPACA_API_KEY and ALPACA_SECRET_KEY:
+            from alpaca.data.historical import StockHistoricalDataClient
+            from alpaca.data.requests import StockSnapshotRequest
             
-            last_price = float(fi.last_price or 0.0)
-            prev_close = float(fi.previous_close or last_price)
+            data_client = StockHistoricalDataClient(ALPACA_API_KEY, ALPACA_SECRET_KEY)
+            snapshots = data_client.get_stock_snapshot(StockSnapshotRequest(symbol_or_symbols=clean_tickers))
             
-            if last_price > 0:
-                change = last_price - prev_close
-                change_pct = (change / prev_close * 100.0) if prev_close != 0 else 0.0
-                day_high = float(fi.day_high or last_price)
-                day_low = float(fi.day_low or last_price)
-                volume = int(fi.last_volume or 0)
+            for ticker, snap in snapshots.items():
+                if not snap:
+                    continue
+                cur_p = float(snap.latest_trade.price) if snap.latest_trade else float(snap.daily_bar.close if snap.daily_bar else 0.0)
+                prev_p = float(snap.previous_daily_bar.close) if snap.previous_daily_bar else cur_p
                 
-                quote_data = {
-                    "ticker": ticker,
-                    "price": round(last_price, 2),
-                    "prev_close": round(prev_close, 2),
-                    "change": round(change, 2),
-                    "change_percent": round(change_pct, 2),
-                    "high": round(day_high, 2),
-                    "low": round(day_low, 2),
-                    "volume": volume,
-                    "timestamp": now.isoformat()
-                }
-                results[ticker] = quote_data
-                BATCH_QUOTES_CACHE[ticker] = quote_data
-        except Exception:
-            pass
+                if cur_p > 0 and prev_p > 0:
+                    chg = cur_p - prev_p
+                    pct = (chg / prev_p * 100.0)
+                    day_high = float(snap.daily_bar.high) if snap.daily_bar else cur_p
+                    day_low = float(snap.daily_bar.low) if snap.daily_bar else cur_p
+                    volume = int(snap.daily_bar.volume) if snap.daily_bar else 0
+                    
+                    quote_data = {
+                        "ticker": ticker,
+                        "price": round(cur_p, 2),
+                        "prev_close": round(prev_p, 2),
+                        "change": round(chg, 2),
+                        "change_percent": round(pct, 2),
+                        "high": round(day_high, 2),
+                        "low": round(day_low, 2),
+                        "volume": volume,
+                        "timestamp": now.isoformat()
+                    }
+                    results[ticker] = quote_data
+                    BATCH_QUOTES_CACHE[ticker] = quote_data
+    except Exception as e:
+        print(f"Alpaca snapshot quotes warning: {e}")
 
-    # 若个别 ticker 在 fast_info 获取失败，尝试使用 history 补救
+    # 若有未覆盖到的 ticker，使用 yfinance history 准确计算 prev_close 补救
     missing = [t for t in clean_tickers if t not in results]
     if missing:
         for ticker in missing:
-            if ticker in BATCH_QUOTES_CACHE:
+            if ticker in BATCH_QUOTES_CACHE and (now - BATCH_QUOTES_TIMESTAMP).total_seconds() < 15 if BATCH_QUOTES_TIMESTAMP else False:
                 results[ticker] = BATCH_QUOTES_CACHE[ticker]
                 continue
             try:
