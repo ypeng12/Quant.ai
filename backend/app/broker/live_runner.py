@@ -602,6 +602,79 @@ class LiveTradingRunner:
         except Exception as e:
             print(f"Sync Alpaca orders warning: {e}")
 
+    def archive_to_hf_dataset(self, keep_days: int = 2) -> dict:
+        """
+        自动将过去较旧的历史交易记录归档上传至 Hugging Face Dataset (Ypeng12/quant-ai-trade-history)，
+        并在上传成功后自动清理本地 trade_history.json，确保本地磁盘文件保持轻量高效、秒级读取。
+        """
+        try:
+            from huggingface_hub import HfApi, hf_hub_download
+            token = os.getenv("HF_TOKEN") or os.getenv("HUGGINGFACE_TOKEN") or os.getenv("HF_HUB_TOKEN")
+            repo_id = "Ypeng12/quant-ai-trade-history"
+            
+            api = HfApi(token=token) if token else HfApi()
+            api.create_repo(repo_id=repo_id, repo_type="dataset", exist_ok=True)
+            
+            est = pytz.timezone('America/New_York')
+            now_est = datetime.datetime.now(est)
+            valid_dates = {(now_est - datetime.timedelta(days=i)).strftime("%Y-%m-%d") for i in range(keep_days)}
+            
+            recent_trades = []
+            older_trades = []
+            
+            for t in self.trade_history:
+                d = (t.get("date") or (t.get("time", "")[:10] if t.get("time") else "")).strip()
+                if d in valid_dates:
+                    recent_trades.append(t)
+                else:
+                    older_trades.append(t)
+            
+            if not older_trades:
+                return {"success": True, "message": "没有需要归档的旧历史记录，本地已保持极简精简。", "archived_count": 0}
+                
+            dataset_trades = []
+            try:
+                local_dl = hf_hub_download(repo_id=repo_id, filename="historical_trades_archive.json", repo_type="dataset", token=token)
+                with open(local_dl, 'r', encoding='utf-8') as f:
+                    dataset_trades = json.load(f).get("trade_history", [])
+            except Exception:
+                dataset_trades = []
+                
+            existing_ids = {t.get("order_id") or f"{t.get('ticker')}-{t.get('time')}" for t in dataset_trades}
+            added = 0
+            for ot in older_trades:
+                uid = ot.get("order_id") or f"{ot.get('ticker')}-{ot.get('time')}"
+                if uid not in existing_ids:
+                    dataset_trades.append(ot)
+                    existing_ids.add(uid)
+                    added += 1
+                    
+            dataset_trades.sort(key=lambda x: x.get("time", ""))
+            
+            temp_file = os.path.join(os.path.dirname(self.history_file), "temp_hf_archive.json")
+            with open(temp_file, 'w', encoding='utf-8') as f:
+                json.dump({"trade_history": dataset_trades}, f, ensure_ascii=False, indent=2)
+                
+            api.upload_file(
+                path_or_fileobj=temp_file,
+                path_in_repo="historical_trades_archive.json",
+                repo_id=repo_id,
+                repo_type="dataset"
+            )
+            if os.path.exists(temp_file):
+                os.remove(temp_file)
+                
+            self.trade_history = recent_trades
+            self.save_trade_history()
+            
+            msg = f"📦 成功将 {added} 笔历史交易上传至 Hugging Face Dataset ({repo_id}) 归档，并已自动精简清理本地账本！"
+            self.add_log(msg)
+            return {"success": True, "message": msg, "archived_count": added, "local_remaining": len(recent_trades)}
+        except Exception as e:
+            err_msg = f"HF Dataset 归档失败: {str(e)}"
+            self.add_log(f"⚠️ {err_msg}")
+            return {"success": False, "error": err_msg}
+
     def stop(self):
         if not self.is_running:
             self.add_log("[Notice] AI 托管引擎处于暂停备用状态。")
