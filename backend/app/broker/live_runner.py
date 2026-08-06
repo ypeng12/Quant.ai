@@ -153,8 +153,8 @@ class LiveTradingRunner:
         self.adapter = MockAlpacaAdapter()
         self.active_tickers = WATCHLIST.copy()
         self.highest_prices = {}
-        self.pending_entry_tickers = set()  # 防止重复提交建仓单 (daytrade.pdf)
-        self.pending_exit_tickers = set()   # 防止重复提交平仓单 (daytrade.pdf)
+        self.pending_entry_locks = {}  # {ticker: timestamp} 60s TTL 防止卡死重复提交建仓单 (daytrade.pdf)
+        self.pending_exit_locks = {}   # {ticker: timestamp} 60s TTL 防止卡死重复提交平仓单 (daytrade.pdf)
         self.entry_times = {}               # 记录持仓建立时间点 (支持时间止损 daytrade.pdf)
         self.loop_task = None
         self.strategy_params = {
@@ -178,6 +178,38 @@ class LiveTradingRunner:
         self.ticker_scores = {}              # AI 实时多因子置信度打分
         self.load_runner_config()
         self.add_log("📡 [系统初始化完成] Quant AI 日内风控与研判引擎已就绪...")
+
+    def is_entry_locked(self, ticker: str) -> bool:
+        """检查是否有生效中的建仓并发锁（含 60 秒 TTL 自动防锁死过期机制）"""
+        now = time.time()
+        t = self.pending_entry_locks.get(ticker)
+        if t and (now - t < 60):
+            return True
+        elif t:
+            self.pending_entry_locks.pop(ticker, None)
+        return False
+
+    def is_exit_locked(self, ticker: str) -> bool:
+        """检查是否有生效中的平仓并发锁（含 60 秒 TTL 自动防锁死过期机制）"""
+        now = time.time()
+        t = self.pending_exit_locks.get(ticker)
+        if t and (now - t < 60):
+            return True
+        elif t:
+            self.pending_exit_locks.pop(ticker, None)
+        return False
+
+    def lock_entry(self, ticker: str):
+        self.pending_entry_locks[ticker] = time.time()
+
+    def unlock_entry(self, ticker: str):
+        self.pending_entry_locks.pop(ticker, None)
+
+    def lock_exit(self, ticker: str):
+        self.pending_exit_locks[ticker] = time.time()
+
+    def unlock_exit(self, ticker: str):
+        self.pending_exit_locks.pop(ticker, None)
 
     def load_runner_config(self):
         """从本地磁盘 runner_config.json 加载持久化策略参数配置。"""
@@ -489,16 +521,22 @@ class LiveTradingRunner:
                 self.add_log("💡 未检测到 Alpaca API Key，自动切换至【本地虚拟盘模拟模式】。")
         except Exception as e:
             self.adapter = MockAlpacaAdapter()
-            self.add_log(f"💡 Alpaca 连接异常 ({str(e)})，已自动降级至【本地虚拟盘模拟模式】。")
+            self.add_log(f"⚠️ [Alpaca 连接失败警报] API 密钥配置存在异常或建连失败 ({str(e)})，暂降级至【本地虚拟盘模拟模式】！")
         self.is_running = True
         self.add_log(f"🤖 【AI 24/7 全自动托管开启】系统已进入无人值守全自动轮询模式！监控标的({len(self.active_tickers)}): {self.active_tickers}")
         
-        # Spawn async loop task safely
+        # Spawn async loop task safely across both sync and async runtime contexts
         try:
             loop = asyncio.get_running_loop()
             self.loop_task = loop.create_task(self._run_loop())
         except RuntimeError:
-            pass
+            import threading
+            def start_background_loop():
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                loop.run_until_complete(self._run_loop())
+            t = threading.Thread(target=start_background_loop, daemon=True)
+            t.start()
         return True
 
     def sync_alpaca_orders_to_history(self):
@@ -690,41 +728,36 @@ class LiveTradingRunner:
                 # 2. Get active positions from Alpaca to sync state
                 try:
                     positions_list = self.adapter.get_open_positions()
-                    positions_by_ticker = {pos['ticker']: pos for pos in positions_list}
+                    positions_by_ticker = {pos['ticker']: pos for pos in positions_list if pos.get('ticker')}
+                    active_pos_tickers = set(positions_by_ticker.keys())
                     
-                    # Clear pending order locks for updated positions
-                    for pos in positions_list:
-                        sym = pos['ticker']
-                        if pos.get('shares', 0) != 0 and sym in self.pending_entry_tickers:
-                            self.pending_entry_tickers.remove(sym)
-                        elif pos.get('shares', 0) == 0 and sym in self.pending_exit_tickers:
-                            self.pending_exit_tickers.remove(sym)
+                    # Automatic TTL & state-based lock unlocking:
+                    # Clear entry locks for tickers that now have an active position
+                    for pos_ticker in active_pos_tickers:
+                        self.unlock_entry(pos_ticker)
+
+                    # Clear exit locks for tickers that no longer have an active position (closed)
+                    for lock_ticker in list(self.pending_exit_locks.keys()):
+                        if lock_ticker not in active_pos_tickers:
+                            self.unlock_exit(lock_ticker)
 
                     # 关盘前 15:55 EST 强行清仓不过夜
                     if self.check_and_trigger_eod_close(positions_list):
                         await asyncio.sleep(30)
                         continue
-
-                    for pos_ticker in positions_by_ticker.keys():
-                        if pos_ticker not in self.active_tickers:
-                            self.active_tickers.append(pos_ticker)
-                            self.add_log(f"📥 Detected active position [{pos_ticker}], added to universe.")
                 except Exception as e:
                     self.add_log(f"⚠️ Failed to fetch Alpaca positions: {str(e)}, skipping round.")
                     await asyncio.sleep(20)
                     continue
 
-                # 3. Fetch latest user watchlist and prune active_tickers
+                # 3. Synchronize active_tickers with user Watchlist & active positions (No data loss)
                 user_watchlist = load_watchlist()
-                pruned_universe = []
-                for t in self.active_tickers:
-                    has_pos = positions_by_ticker.get(t) and positions_by_ticker[t].get('shares', 0) != 0
-                    if t in user_watchlist or has_pos:
-                        pruned_universe.append(t)
+                if not user_watchlist:
+                    user_watchlist = WATCHLIST.copy()
                 
-                # Sort active tickers by live AI confidence score in descending order
-                pruned_universe.sort(key=lambda t: self.ticker_scores.get(t, 0), reverse=True)
-                self.active_tickers = pruned_universe
+                full_universe = list(dict.fromkeys(user_watchlist + list(active_pos_tickers)))
+                full_universe.sort(key=lambda t: self.ticker_scores.get(t, 0), reverse=True)
+                self.active_tickers = full_universe
 
                 # 4. Multi-pass Poll and evaluate each stock in our watchlist (3 passes during 6:30-6:36 PST opening window)
                 scan_passes = 3 if is_market_opening_window else 1
@@ -846,13 +879,13 @@ class LiveTradingRunner:
                                 action = "HOLD"
                                 reason = f"[{ticker}] removed from Watchlist (Exit-Only Mode). Blocked new entry order."
 
-                            # Deduplication Lock Check (daytrade.pdf)
-                            if action in ("BUY", "SHORT") and ticker in self.pending_entry_tickers:
+                            # Deduplication Lock Check (60s TTL Auto-expiring daytrade.pdf)
+                            if action in ("BUY", "SHORT") and self.is_entry_locked(ticker):
                                 action = "HOLD"
-                                reason = f"[{ticker}] Pending entry order active. Blocked duplicate entry."
-                            elif action in ("SELL", "COVER", "PARTIAL_SELL", "PARTIAL_COVER") and ticker in self.pending_exit_tickers:
+                                reason = f"[{ticker}] Pending entry order lock active. Blocked duplicate entry."
+                            elif action in ("SELL", "COVER", "PARTIAL_SELL", "PARTIAL_COVER") and self.is_exit_locked(ticker):
                                 action = "HOLD"
-                                reason = f"[{ticker}] Pending exit order active. Blocked duplicate exit."
+                                reason = f"[{ticker}] Pending exit order lock active. Blocked duplicate exit."
 
                             # Generate Indicator Snapshot
                             vwap   = float(row.get('VWAP',   close_price))
@@ -941,7 +974,7 @@ class LiveTradingRunner:
                                     shares = max(1, min(shares, cash_shares))
 
                                     client_order_id = f"{ticker}-{int(datetime.datetime.now().timestamp())}-ENTRY"
-                                    self.pending_entry_tickers.add(ticker)
+                                    self.lock_entry(ticker)
                                     self.entry_times[ticker] = datetime.datetime.now()
 
                                     self.add_log(f"🛒 [{ticker}] BUY signal triggered ({size_scale*100:.0f}% position, Initial Risk: ${dollar_risk:.2f})! Market buying {shares} shares...")
@@ -951,7 +984,7 @@ class LiveTradingRunner:
                                         self.highest_prices[ticker] = close_price
                                         self.add_trade_action("BUY", ticker, shares, close_price, reason)
                                     else:
-                                        self.pending_entry_tickers.discard(ticker)
+                                        self.unlock_entry(ticker)
                                         self.add_log(f"❌ [{ticker}] BUY order failed. Reason: {order_res.get('error')}")
 
                             elif action == "PYRAMID_BUY" and current_shares > 0:
@@ -977,28 +1010,28 @@ class LiveTradingRunner:
                                 sell_qty = max(1, int(current_shares * 0.40))
                                 pnl = (close_price - avg_cost) * sell_qty
                                 client_order_id = f"{ticker}-{int(datetime.datetime.now().timestamp())}-TP"
-                                self.pending_exit_tickers.add(ticker)
+                                self.lock_exit(ticker)
                                 self.add_log(f"🟢 [{ticker}] PARTIAL_SELL (TP1 分批止盈 40%) signal triggered! Market selling {sell_qty} shares (Est. PnL ${pnl:.2f})...")
                                 order_res = self.adapter.submit_market_order(ticker, sell_qty, "sell", client_order_id=client_order_id)
                                 if order_res.get("success"):
                                     self.add_log(f"✅ [{ticker}] PARTIAL_SELL order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
                                     self.add_trade_action("PARTIAL_SELL", ticker, sell_qty, close_price, reason, pnl=pnl)
                                 else:
-                                    self.pending_exit_tickers.discard(ticker)
+                                    self.unlock_exit(ticker)
                                     self.add_log(f"❌ [{ticker}] PARTIAL_SELL order failed. Reason: {order_res.get('error')}")
 
                             elif action == "PARTIAL_COVER" and current_shares < 0:
                                 cover_qty = max(1, int(abs(current_shares) * 0.40))
                                 pnl = (avg_cost - close_price) * cover_qty
                                 client_order_id = f"{ticker}-{int(datetime.datetime.now().timestamp())}-TP"
-                                self.pending_exit_tickers.add(ticker)
+                                self.lock_exit(ticker)
                                 self.add_log(f"🟢 [{ticker}] PARTIAL_COVER (TP1 分批止回补 40%) signal triggered! Market buying {cover_qty} shares (Est. PnL ${pnl:.2f})...")
                                 order_res = self.adapter.submit_market_order(ticker, cover_qty, "buy", client_order_id=client_order_id)
                                 if order_res.get("success"):
                                     self.add_log(f"✅ [{ticker}] PARTIAL_COVER order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
                                     self.add_trade_action("PARTIAL_COVER", ticker, cover_qty, close_price, reason, pnl=pnl)
                                 else:
-                                    self.pending_exit_tickers.discard(ticker)
+                                    self.unlock_exit(ticker)
                                     self.add_log(f"❌ [{ticker}] PARTIAL_COVER order failed. Reason: {order_res.get('error')}")
 
                             elif action == "SHORT" and current_shares == 0:
@@ -1025,7 +1058,7 @@ class LiveTradingRunner:
                                     shares = max(1, min(base_shares, max_shares))
 
                                     client_order_id = f"{ticker}-{int(datetime.datetime.now().timestamp())}-ENTRY"
-                                    self.pending_entry_tickers.add(ticker)
+                                    self.lock_entry(ticker)
                                     self.entry_times[ticker] = datetime.datetime.now()
 
                                     self.add_log(f"📉 [{ticker}] SHORT signal triggered! Market shorting {shares} shares...")
@@ -1034,13 +1067,13 @@ class LiveTradingRunner:
                                         self.add_log(f"✅ [{ticker}] SHORT order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
                                         self.add_trade_action("SHORT", ticker, shares, close_price, reason)
                                     else:
-                                        self.pending_entry_tickers.discard(ticker)
+                                        self.unlock_entry(ticker)
                                         self.add_log(f"❌ [{ticker}] SHORT order failed. Reason: {order_res.get('error')}")
 
                             elif action == "SELL" and current_shares > 0:
                                 pnl = (close_price - avg_cost) * current_shares
                                 client_order_id = f"{ticker}-{int(datetime.datetime.now().timestamp())}-EXIT"
-                                self.pending_exit_tickers.add(ticker)
+                                self.lock_exit(ticker)
                                 self.add_log(f"🔔 [{ticker}] SELL signal triggered! Market selling {current_shares} shares (Est. PnL ${pnl:.2f})...")
                                 order_res = self.adapter.submit_market_order(ticker, current_shares, "sell", client_order_id=client_order_id)
                                 if order_res.get("success"):
@@ -1049,21 +1082,21 @@ class LiveTradingRunner:
                                     if ticker in self.highest_prices:
                                         del self.highest_prices[ticker]
                                 else:
-                                    self.pending_exit_tickers.discard(ticker)
+                                    self.unlock_exit(ticker)
                                     self.add_log(f"❌ [{ticker}] SELL order failed. Reason: {order_res.get('error')}")
 
                             elif action == "COVER" and current_shares < 0:
                                 cover_qty = abs(current_shares)
                                 pnl = (avg_cost - close_price) * cover_qty
                                 client_order_id = f"{ticker}-{int(datetime.datetime.now().timestamp())}-EXIT"
-                                self.pending_exit_tickers.add(ticker)
+                                self.lock_exit(ticker)
                                 self.add_log(f"🔔 [{ticker}] COVER signal triggered! Market buying {cover_qty} shares (Est. PnL ${pnl:.2f})...")
                                 order_res = self.adapter.submit_market_order(ticker, cover_qty, "buy", client_order_id=client_order_id)
                                 if order_res.get("success"):
                                     self.add_log(f"✅ [{ticker}] COVER order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
                                     self.add_trade_action("COVER", ticker, cover_qty, close_price, reason, pnl=pnl)
                                 else:
-                                    self.pending_exit_tickers.discard(ticker)
+                                    self.unlock_exit(ticker)
                                     self.add_log(f"❌ [{ticker}] COVER order failed. Reason: {order_res.get('error')}")
                                     
                         except Exception as ex:
