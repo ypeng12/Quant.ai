@@ -1,7 +1,6 @@
-// frontend/src/components/BrokerPanel.tsx
-
 import { useState, useEffect } from 'react';
 import { API_BASE } from '../config';
+import { PortfolioHistoryChart } from './PortfolioHistoryChart';
 
 interface AccountSummary {
   success: boolean;
@@ -317,6 +316,9 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
 
   return (
     <div className="fade-in">
+      {/* Official Alpaca Portfolio Equity Curve Chart */}
+      <PortfolioHistoryChart />
+
       {/* Top AI Automated Management Control Card */}
       <div className="card" style={{
         marginBottom: '1.5rem', padding: '1.5rem 2rem',

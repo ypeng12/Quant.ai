@@ -1435,19 +1435,24 @@ def get_broker_positions():
             "current_price": 132.80,
             "market_value": 3320.0,
             "unrealized_pnl": 307.50,
-            "unrealized_pnl_pct": 0.1021
-        },
-        {
-            "ticker": "TSLA",
-            "shares": 15,
-            "avg_entry_price": 210.00,
-            "current_price": 222.00,
-            "market_value": 3330.0,
-            "unrealized_pnl": 180.00,
-            "unrealized_pnl_pct": 0.0571
+            "unrealized_pnl_pct": 10.21
         }
     ]
     return {"success": True, "positions": simulated_positions}
+
+
+@app.get("/api/broker/portfolio_history")
+def get_portfolio_history(period: str = "1M", timeframe: Optional[str] = None):
+    """
+    暴露给前端渲染与 Alpaca 官方完全相同的 Portfolio 折线图（对应 1D / 1M / 1Y / All）。
+    """
+    from app.config import ALPACA_API_KEY, ALPACA_SECRET_KEY, ALPACA_BASE_URL
+    from app.broker.alpaca_adapter import AlpacaAdapter
+    try:
+        adapter = AlpacaAdapter(ALPACA_API_KEY, ALPACA_SECRET_KEY, ALPACA_BASE_URL)
+        return adapter.get_portfolio_history(period=period, timeframe=timeframe)
+    except Exception as e:
+        return {"success": False, "error": str(e)}
 
 
 @app.post("/api/live/start")
