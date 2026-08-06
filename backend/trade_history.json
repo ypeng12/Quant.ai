@@ -2815,6 +2815,17 @@
       "price": 219.8,
       "pnl": 0.0,
       "reason": "[Probe-Light Score:50/100 [Watchlist Top-34%]] Price dropped below VWAP ($220.12). Initial Stop: 0.25% (1.0R)."
+    },
+    {
+      "date": "2026-08-06",
+      "time": "2026-08-06 15:47:03",
+      "action": "SELL",
+      "action_cn": "SELL",
+      "ticker": "MSFT",
+      "shares": 21,
+      "price": 498.245,
+      "pnl": -21.95,
+      "reason": "[Long-Reversal] EMA Death Cross and below VWAP."
     }
   ],
   "action_logs": [
@@ -3002,6 +3013,7 @@
     "[2026-08-06 15:39:19] 🔻 [TSLA] SHORT × 11 shs @ $318.88 | [Probe-Light Score:50/100 [Watchlist Top-34%]] EMA 9/21 Death Cross. Initial Stop: 0.25% (1.0R).",
     "[2026-08-06 15:40:59] ⚪ [SNDK] PARTIAL_COVER × 3 shs @ $1277.69 | PnL: +11.30 USD | [TP1-ShortCover 40%] Reached +0.94R (+0.29% gain). Cover 40%.",
     "[2026-08-06 15:42:07] ⚪ [SNDK] PARTIAL_COVER × 1 shs @ $1277.25 | PnL: +4.21 USD | [TP1-ShortCover 40%] Reached +1.07R (+0.33% gain). Cover 40%.",
-    "[2026-08-06 15:43:47] 🔻 [NVDA] SHORT × 16 shs @ $219.80 | [Probe-Light Score:50/100 [Watchlist Top-34%]] Price dropped below VWAP ($220.12). Initial Stop: 0.25% (1.0R)."
+    "[2026-08-06 15:43:47] 🔻 [NVDA] SHORT × 16 shs @ $219.80 | [Probe-Light Score:50/100 [Watchlist Top-34%]] Price dropped below VWAP ($220.12). Initial Stop: 0.25% (1.0R).",
+    "[2026-08-06 15:47:03] 🔴 [MSFT] SELL × 21 shs @ $498.24 | PnL: -21.95 USD | [Long-Reversal] EMA Death Cross and below VWAP."
   ]
 }
