@@ -643,9 +643,10 @@ class LiveTradingRunner:
                 
             dataset_trades = []
             try:
-                local_dl = hf_hub_download(repo_id=repo_id, filename="historical_trades_archive.json", repo_type="dataset", token=token)
+                local_dl = hf_hub_download(repo_id=repo_id, filename="train.json", repo_type="dataset", token=token)
                 with open(local_dl, 'r', encoding='utf-8') as f:
-                    dataset_trades = json.load(f).get("trade_history", [])
+                    raw_data = json.load(f)
+                    dataset_trades = raw_data if isinstance(raw_data, list) else raw_data.get("trade_history", [])
             except Exception:
                 dataset_trades = []
                 
@@ -662,11 +663,11 @@ class LiveTradingRunner:
             
             temp_file = os.path.join(os.path.dirname(self.history_file), "temp_hf_archive.json")
             with open(temp_file, 'w', encoding='utf-8') as f:
-                json.dump({"trade_history": dataset_trades}, f, ensure_ascii=False, indent=2)
+                json.dump(dataset_trades, f, ensure_ascii=False, indent=2)
                 
             api.upload_file(
                 path_or_fileobj=temp_file,
-                path_in_repo="historical_trades_archive.json",
+                path_in_repo="train.json",
                 repo_id=repo_id,
                 repo_type="dataset"
             )
