@@ -873,27 +873,6 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
                     >
                       📦 Archive History to HF
                     </button>
-                    <a
-                      href="https://huggingface.co/datasets/Ypeng12/quant-ai-trade-history/viewer/default/train"
-                      target="_blank"
-                      rel="noreferrer"
-                      style={{
-                        background: 'rgba(59,130,246,0.12)',
-                        border: '1px solid #3b82f6',
-                        color: '#60a5fa',
-                        borderRadius: '6px',
-                        padding: '4px 10px',
-                        fontSize: '0.78rem',
-                        fontWeight: 800,
-                        textDecoration: 'none',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '4px'
-                      }}
-                      title="Open Hugging Face Dataset Interactive Table Viewer"
-                    >
-                      🔗 View HF Dataset
-                    </a>
                   </div>
                 </div>
                 <p style={{ margin: '4px 0 0', fontSize: '0.78rem', color: 'var(--color-text-secondary)' }}>
