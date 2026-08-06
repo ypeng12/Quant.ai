@@ -961,13 +961,10 @@ class LiveTradingRunner:
             )
             if os.path.exists(temp_file):
                 os.remove(temp_file)
-                
-            self.trade_history = recent_trades
-            self.save_trade_history()
-            
-            msg = f"📦 成功将 {added} 笔历史交易上传至 Hugging Face Dataset ({repo_id}) 归档，并已自动精简清理本地账本！"
+
+            msg = f"📦 成功将 {added} 笔历史交易全量备份上传至 Hugging Face Dataset ({repo_id})！"
             self.add_log(msg)
-            return {"success": True, "message": msg, "archived_count": added, "local_remaining": len(recent_trades)}
+            return {"success": True, "message": msg, "archived_count": added, "local_remaining": len(self.trade_history)}
         except Exception as e:
             err_msg = f"HF Dataset 归档失败: {str(e)}"
             self.add_log(f"⚠️ {err_msg}")
