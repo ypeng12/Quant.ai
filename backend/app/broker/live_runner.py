@@ -283,18 +283,12 @@ class LiveTradingRunner:
                     position_tracker[ticker] = []
                 queue = position_tracker[ticker]
                 
-                if trade.get("reason") == "Alpaca Broker Executed Sync":
-                    trade["pnl"] = 0.0
-                    continue
-
                 if action in ("BUY", "PYRAMID_BUY"):
                     queue.append({"price": price, "qty": qty})
-                    if "pnl" not in trade or trade["pnl"] is None:
-                        trade["pnl"] = 0.0
+                    trade["pnl"] = 0.0
                 elif action in ("SHORT",):
                     queue.append({"price": price, "qty": -qty})
-                    if "pnl" not in trade or trade["pnl"] is None:
-                        trade["pnl"] = 0.0
+                    trade["pnl"] = 0.0
                 elif action in ("SELL", "PARTIAL_SELL"):
                     realized = 0.0
                     remaining = qty
@@ -306,8 +300,7 @@ class LiveTradingRunner:
                         remaining -= matched_qty
                         if entry["qty"] <= 0:
                             queue.pop(0)
-                    if (trade.get("pnl") is None or trade.get("pnl") == 0.0) and realized != 0.0:
-                        trade["pnl"] = round(realized, 2)
+                    trade["pnl"] = round(realized, 2)
                 elif action in ("COVER", "PARTIAL_COVER"):
                     realized = 0.0
                     remaining = qty
@@ -319,8 +312,7 @@ class LiveTradingRunner:
                         remaining -= matched_qty
                         if abs(entry["qty"]) <= 0:
                             queue.pop(0)
-                    if (trade.get("pnl") is None or trade.get("pnl") == 0.0) and realized != 0.0:
-                        trade["pnl"] = round(realized, 2)
+                    trade["pnl"] = round(realized, 2)
 
     def save_trade_history(self):
         """保存交易历史与动作日志到本地磁盘。"""
@@ -529,8 +521,6 @@ class LiveTradingRunner:
                 )
                 self.adapter.get_account_summary()
                 self.add_log("🟢 已成功连接至 Alpaca 实盘/Paper 交易接口。")
-                # Sync historical closed orders from Alpaca to guarantee complete persistent log history
-                self.sync_alpaca_orders_to_history()
             else:
                 self.adapter = MockAlpacaAdapter()
                 self.add_log("💡 未检测到 Alpaca API Key，自动切换至【本地虚拟盘模拟模式】。")
