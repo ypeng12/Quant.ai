@@ -54,7 +54,7 @@ interface BrokerPanelProps {
   watchlist?: string[];
 }
 
-type ActiveTab = 'analysis' | 'actions' | 'history';
+type ActiveTab = 'portfolio' | 'analysis' | 'actions' | 'history';
 
 export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
   const [account, setAccount] = useState<AccountSummary | null>(null);
@@ -316,9 +316,6 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
 
   return (
     <div className="fade-in">
-      {/* Official Alpaca Portfolio Equity Curve Chart */}
-      <PortfolioHistoryChart />
-
       {/* Top AI Automated Management Control Card */}
       <div className="card" style={{
         marginBottom: '1.5rem', padding: '1.5rem 2rem',
@@ -632,6 +629,7 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
           <div style={{ display: 'flex', gap: '8px', marginBottom: '1rem', borderBottom: '1px solid var(--color-border)', paddingBottom: '10px' }}>
             {([
               { id: 'analysis', label: '🧠 AI Live Analysis & Alerts' },
+              { id: 'portfolio', label: '📈 Portfolio History 曲线' },
               { id: 'actions', label: '⚡ Execution Activity' },
               { id: 'history', label: '📅 Trade History' },
             ] as { id: ActiveTab; label: string }[]).map((tab) => (
@@ -645,6 +643,13 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
               </button>
             ))}
           </div>
+
+          {/* 0. Portfolio Equity History Tab */}
+          {activeTab === 'portfolio' && (
+            <div style={{ flex: 1, padding: '0.5rem 0' }}>
+              <PortfolioHistoryChart />
+            </div>
+          )}
 
           {/* 1. AI Analysis & Alerts Tab */}
           {activeTab === 'analysis' && (
