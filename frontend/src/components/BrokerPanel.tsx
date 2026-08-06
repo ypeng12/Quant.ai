@@ -11,6 +11,7 @@ interface AccountSummary {
   portfolio_value: number;
   buying_power: number;
   equity: number;
+  today_pnl?: number;
 }
 
 interface BrokerPosition {
