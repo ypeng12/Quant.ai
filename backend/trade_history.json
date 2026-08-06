@@ -2122,6 +2122,39 @@
       "price": 219.700851,
       "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
+    },
+    {
+      "date": "2026-08-06",
+      "time": "2026-08-06 14:50:10",
+      "action": "SELL",
+      "action_cn": "SELL",
+      "ticker": "AMD",
+      "shares": 21,
+      "price": 492.35,
+      "pnl": -10.5,
+      "reason": "[Long-Reversal] EMA Death Cross and below VWAP."
+    },
+    {
+      "date": "2026-08-06",
+      "time": "2026-08-06 14:51:21",
+      "action": "BUY",
+      "action_cn": "BUY",
+      "ticker": "MSFT",
+      "shares": 21,
+      "price": 497.14,
+      "pnl": 0.0,
+      "reason": "[Conviction-Top Score:60/100 [Watchlist Top-0%]] EMA 9/21 Golden Cross. Initial Stop: 0.25% (1.0R)."
+    },
+    {
+      "date": "2026-08-06",
+      "time": "2026-08-06 14:51:53",
+      "action": "SELL",
+      "action_cn": "SELL",
+      "ticker": "AMD",
+      "shares": 21,
+      "price": 492.33,
+      "pnl": -10.08,
+      "reason": "[Long-Reversal] EMA Death Cross and below VWAP."
     }
   ],
   "action_logs": [
@@ -2258,6 +2291,9 @@
     "[2026-08-06 14:26:11] 🔴 [MU] SELL × 3 shs @ $895.62 | PnL: -0.81 USD | [BreakevenStop] Price pulled back to $895.62 near breakeven ($896.43). Exiting.",
     "[2026-08-06 14:27:51] ⚪ [MSFT] PARTIAL_SELL × 8 shs @ $497.56 | PnL: +9.04 USD | [TP1-TakeProfit 40%] Reached +0.91R (+0.23% gain). Scaling out 40%.",
     "[2026-08-06 14:33:25] 🟢 [MU] BUY × 3 shs @ $892.44 | [Probe-Light Score:45/100 [Watchlist Top-34%]] Price holding above VWAP ($881.50). Initial Stop: 0.25% (1.0R).",
-    "[2026-08-06 14:38:57] 🔴 [MSFT] SELL × 2 shs @ $496.51 | PnL: +0.16 USD | [BreakevenStop] Price pulled back to $496.51 near breakeven ($496.73). Exiting."
+    "[2026-08-06 14:38:57] 🔴 [MSFT] SELL × 2 shs @ $496.51 | PnL: +0.16 USD | [BreakevenStop] Price pulled back to $496.51 near breakeven ($496.73). Exiting.",
+    "[2026-08-06 14:50:10] 🔴 [AMD] SELL × 21 shs @ $492.35 | PnL: -10.50 USD | [Long-Reversal] EMA Death Cross and below VWAP.",
+    "[2026-08-06 14:51:21] 🟢 [MSFT] BUY × 21 shs @ $497.14 | [Conviction-Top Score:60/100 [Watchlist Top-0%]] EMA 9/21 Golden Cross. Initial Stop: 0.25% (1.0R).",
+    "[2026-08-06 14:51:53] 🔴 [AMD] SELL × 21 shs @ $492.33 | PnL: -10.08 USD | [Long-Reversal] EMA Death Cross and below VWAP."
   ]
 }
