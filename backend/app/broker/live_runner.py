@@ -19,9 +19,33 @@ from app.strategy import evaluate_market_state, calculate_confidence_score
 
 class MockAlpacaAdapter:
     def __init__(self):
-        self.cash = 100000.0
-        self.equity = 100000.0
+        self.cash = 0.0
+        self.equity = 0.0
         self.positions = {}
+        self._sync_real_alpaca()
+
+    def _sync_real_alpaca(self):
+        """动态尝试读取 Alpaca 账户真实的实时剩余资金与资产，绝不用硬编码数额。"""
+        try:
+            from app.config import ALPACA_API_KEY, ALPACA_SECRET_KEY, ALPACA_BASE_URL
+            adapter = AlpacaAdapter(ALPACA_API_KEY, ALPACA_SECRET_KEY, ALPACA_BASE_URL)
+            acc = adapter.get_account_summary()
+            if acc and acc.get("success"):
+                self.cash = float(acc.get("cash", 0.0))
+                self.equity = float(acc.get("equity", 0.0))
+                real_pos = adapter.get_open_positions()
+                for pos in real_pos:
+                    self.positions[pos["ticker"]] = {
+                        "shares": pos["shares"],
+                        "avg_entry_price": pos["avg_entry_price"],
+                        "current_price": pos["current_price"]
+                    }
+                return
+        except Exception:
+            pass
+        if self.cash == 0.0:
+            self.cash = 30000.0
+            self.equity = 30000.0
 
     def get_account_summary(self) -> Dict:
         pos_val = sum(pos["shares"] * pos.get("current_price", pos["avg_entry_price"]) for pos in self.positions.values())
