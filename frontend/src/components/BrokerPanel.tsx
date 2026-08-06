@@ -289,7 +289,16 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
   };
 
   if (loading && !account) {
-    return <div className="loader-container" style={{ padding: '4rem', textAlign: 'center' }}>Connecting to Alpaca Account...</div>;
+    return (
+      <div className="card" style={{ padding: '3rem', textAlign: 'center', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}>
+        <div style={{ fontSize: '1.1rem', fontWeight: 600, color: '#e5e5e7', marginBottom: '8px' }}>
+          ⚡ 正在毫秒级建连 Alpaca 账户与交易数据...
+        </div>
+        <div style={{ fontSize: '0.82rem', color: 'var(--color-text-secondary)' }}>
+          同步最新的账户权益、可用现金与持仓数据...
+        </div>
+      </div>
+    );
   }
 
   if (errorMsg) {

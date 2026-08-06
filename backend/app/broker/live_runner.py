@@ -178,6 +178,10 @@ class LiveTradingRunner:
         self.config_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "runner_config.json")
         self.adapter = MockAlpacaAdapter()
         self.active_tickers = WATCHLIST.copy()
+        self._account_cache = None
+        self._account_cache_time = 0.0
+        self._positions_cache = None
+        self._positions_cache_time = 0.0
         self.highest_prices = {}
         self.pending_entry_locks = {}  # {ticker: timestamp} 60s TTL 防止卡死重复提交建仓单 (daytrade.pdf)
         self.pending_exit_locks = {}   # {ticker: timestamp} 60s TTL 防止卡死重复提交平仓单 (daytrade.pdf)
@@ -200,6 +204,7 @@ class LiveTradingRunner:
             "stop_max_pct": 0.0060,                  # 最大止损 0.60%
             "tp1_r": 0.90,                           # 第一阶止盈 0.90R (40% 减仓)
             "tp2_r": 1.60,                           # 第二阶止盈 1.60R (35% 减仓)
+            "runner_r": 2.50,                        # 剩余 25% 仓位跟踪最大盈利
             "runner_size_pct": 0.25,                 # 25% Runner ATR 追踪
             "breakeven_trigger_r": 0.85,             # 0.85R 触发保本止损
             "trail_start_r": 1.10,                   # 1.10R 启动追踪止损
@@ -212,6 +217,35 @@ class LiveTradingRunner:
         self.ticker_scores = {}              # AI 实时多因子置信度打分
         self.load_runner_config()
         self.add_log("📡 [系统初始化完成] Quant AI 日内风控与研判引擎已就绪...")
+
+    def get_cached_account_summary(self) -> Dict:
+        """带 3 秒防频刷内存缓存的账户资金接口，极速秒开（< 5ms）。"""
+        now = time.time()
+        if self._account_cache is not None and (now - self._account_cache_time) < 3.0:
+            return self._account_cache
+        try:
+            res = self.adapter.get_account_summary()
+            if res and res.get("success") is not False:
+                self._account_cache = res
+                self._account_cache_time = now
+                return res
+        except Exception:
+            pass
+        return self._account_cache or self.adapter.get_account_summary()
+
+    def get_cached_open_positions(self) -> List[Dict]:
+        """带 3 秒防频刷内存缓存的持仓列表接口，极速秒开（< 5ms）。"""
+        now = time.time()
+        if self._positions_cache is not None and (now - self._positions_cache_time) < 3.0:
+            return self._positions_cache
+        try:
+            res = self.adapter.get_open_positions()
+            self._positions_cache = res
+            self._positions_cache_time = now
+            return res
+        except Exception:
+            pass
+        return self._positions_cache or []
 
     def is_entry_locked(self, ticker: str) -> bool:
         """检查是否有生效中的建仓并发锁（含 60 秒 TTL 自动防锁死过期机制）"""
