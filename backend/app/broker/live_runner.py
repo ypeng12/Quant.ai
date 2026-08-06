@@ -283,12 +283,18 @@ class LiveTradingRunner:
                     position_tracker[ticker] = []
                 queue = position_tracker[ticker]
                 
+                if trade.get("reason") == "Alpaca Broker Executed Sync":
+                    trade["pnl"] = 0.0
+                    continue
+
                 if action in ("BUY", "PYRAMID_BUY"):
                     queue.append({"price": price, "qty": qty})
-                    trade["pnl"] = 0.0
+                    if "pnl" not in trade or trade["pnl"] is None:
+                        trade["pnl"] = 0.0
                 elif action in ("SHORT",):
                     queue.append({"price": price, "qty": -qty})
-                    trade["pnl"] = 0.0
+                    if "pnl" not in trade or trade["pnl"] is None:
+                        trade["pnl"] = 0.0
                 elif action in ("SELL", "PARTIAL_SELL"):
                     realized = 0.0
                     remaining = qty
@@ -300,7 +306,8 @@ class LiveTradingRunner:
                         remaining -= matched_qty
                         if entry["qty"] <= 0:
                             queue.pop(0)
-                    trade["pnl"] = round(realized, 2)
+                    if (trade.get("pnl") is None or trade.get("pnl") == 0.0) and realized != 0.0:
+                        trade["pnl"] = round(realized, 2)
                 elif action in ("COVER", "PARTIAL_COVER"):
                     realized = 0.0
                     remaining = qty
@@ -312,7 +319,8 @@ class LiveTradingRunner:
                         remaining -= matched_qty
                         if abs(entry["qty"]) <= 0:
                             queue.pop(0)
-                    trade["pnl"] = round(realized, 2)
+                    if (trade.get("pnl") is None or trade.get("pnl") == 0.0) and realized != 0.0:
+                        trade["pnl"] = round(realized, 2)
 
     def save_trade_history(self):
         """保存交易历史与动作日志到本地磁盘。"""
@@ -618,7 +626,7 @@ class LiveTradingRunner:
         """
         try:
             from huggingface_hub import HfApi, hf_hub_download
-            token = os.getenv("HF_TOKEN") or os.getenv("HUGGINGFACE_TOKEN") or os.getenv("HF_HUB_TOKEN")
+            token = os.getenv("HF_TOKEN") or os.getenv("HUGGINGFACsE_TOKEN") or os.getenv("HF_HUB_TOKEN")
             repo_id = "Ypeng12/quant-ai-trade-history"
             
             api = HfApi(token=token) if token else HfApi()
@@ -643,10 +651,9 @@ class LiveTradingRunner:
                 
             dataset_trades = []
             try:
-                local_dl = hf_hub_download(repo_id=repo_id, filename="train.json", repo_type="dataset", token=token)
+                local_dl = hf_hub_download(repo_id=repo_id, filename="historical_trades_archive.json", repo_type="dataset", token=token)
                 with open(local_dl, 'r', encoding='utf-8') as f:
-                    raw_data = json.load(f)
-                    dataset_trades = raw_data if isinstance(raw_data, list) else raw_data.get("trade_history", [])
+                    dataset_trades = json.load(f).get("trade_history", [])
             except Exception:
                 dataset_trades = []
                 
@@ -663,11 +670,11 @@ class LiveTradingRunner:
             
             temp_file = os.path.join(os.path.dirname(self.history_file), "temp_hf_archive.json")
             with open(temp_file, 'w', encoding='utf-8') as f:
-                json.dump(dataset_trades, f, ensure_ascii=False, indent=2)
+                json.dump({"trade_history": dataset_trades}, f, ensure_ascii=False, indent=2)
                 
             api.upload_file(
                 path_or_fileobj=temp_file,
-                path_in_repo="train.json",
+                path_in_repo="historical_trades_archive.json",
                 repo_id=repo_id,
                 repo_type="dataset"
             )
@@ -746,10 +753,22 @@ class LiveTradingRunner:
         ny_time = now_ny.hour + now_ny.minute / 60.0 + now_ny.second / 3600.0
         return is_weekday and (9.5 <= ny_time < 16.0)
 
+    def is_eod_no_entry_window(self) -> bool:
+        """
+        判断是否处于美股收盘前禁止新建仓窗口 (美东时间 15:45 PM - 16:00 PM EST)。
+        在此窗口期内，封锁所有新建仓订单 (BUY / SHORT / PYRAMID_BUY)，确保零持仓过夜。
+        """
+        est = pytz.timezone('America/New_York')
+        now_ny = datetime.datetime.now(est)
+        if now_ny.weekday() > 4:
+            return False
+        ny_time = now_ny.hour + now_ny.minute / 60.0 + now_ny.second / 3600.0
+        return 15.75 <= ny_time < 16.0
+
     def check_and_trigger_eod_close(self, positions_list: list) -> bool:
         """
         日内收盘前自动强行全平持仓风控 (EOD Auto Close-All Strategy).
-        Only triggers in the final 5 minutes of regular market hours (15:55 PM - 16:00 PM EST).
+        Triggers between 15:50 PM (15.8333) and 16:00 PM (16.0) EST.
         Triggers `close_all_positions()` for 0 overnight position risk!
         """
         if not positions_list:
@@ -757,16 +776,14 @@ class LiveTradingRunner:
 
         est = pytz.timezone('America/New_York')
         now_ny = datetime.datetime.now(est)
-        today_str = now_ny.strftime("%Y-%m-%d")
 
-        # Weekend guard
         if now_ny.weekday() > 4:
             return False
 
         ny_time = now_ny.hour + now_ny.minute / 60.0 + now_ny.second / 3600.0
 
-        # EOD liquidation must ONLY happen strictly between 15:55 PM (15.9166) and 16:00 PM (16.0) EST
-        if not (15.9166 <= ny_time < 16.0):
+        # EOD liquidation triggers between 15:50 PM (15.8333) and 16:00 PM (16.0) EST
+        if not (15.8333 <= ny_time < 16.0):
             return False
 
         seconds_left = (16.0 - ny_time) * 3600.0
