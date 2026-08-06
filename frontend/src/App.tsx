@@ -18,6 +18,8 @@ import { ExperimentCompare } from './components/ExperimentCompare';
 import { BrokerPanel } from './components/BrokerPanel';
 import { SameDayReplayPanel } from './components/SameDayReplayPanel';
 import { InstitutionalPanel } from './components/InstitutionalPanel';
+import { PortfolioHistoryChart } from './components/PortfolioHistoryChart';
+import { ReplayAndExperimentsPanel } from './components/ReplayAndExperimentsPanel';
 import { API_BASE } from './config';
 
 interface SummaryData {
@@ -144,7 +146,7 @@ const INTERVAL_LABELS: Record<string, string> = {
   "1d": "Daily"
 };
 
-type ActiveTab = 'dashboard' | 'research' | 'report' | 'walkforward' | 'experiments' | 'replay' | 'broker' | 'institutional';
+type ActiveTab = 'dashboard' | 'research' | 'report' | 'walkforward' | 'experiments' | 'replay' | 'broker' | 'institutional' | 'portfolio';
 
 function App() {
   const [watchlist, setWatchlist] = useState<string[]>(["NVDA", "SNDK", "TSLA", "AMD", "MSFT", "MU"]);
@@ -613,27 +615,8 @@ function App() {
           Quant<span>.ai</span>
         </div>
         
-        {/* Simplified Two Core Modes Navigation */}
+        {/* Core Modes Navigation */}
         <div className="nav-tabs" style={{ background: '#09090b', padding: '4px', borderRadius: '8px', border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-          <button
-            className={`nav-tab ${activeTab === 'institutional' ? 'active' : ''}`}
-            onClick={() => setActiveTab('institutional')}
-            style={{
-              padding: '8px 18px',
-              fontSize: '0.9rem',
-              fontWeight: 800,
-              background: activeTab === 'institutional' ? 'linear-gradient(135deg, #d97706, #b45309)' : 'transparent',
-              color: activeTab === 'institutional' ? '#ffffff' : '#fbbf24',
-              borderRadius: '6px',
-              border: activeTab === 'institutional' ? 'none' : '1px solid rgba(245, 158, 11, 0.4)',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-              boxShadow: activeTab === 'institutional' ? '0 0 12px rgba(245, 158, 11, 0.4)' : 'none'
-            }}
-          >
-            🔬 机构级 Alpha 研究
-          </button>
-
           <button
             className={`nav-tab ${activeTab === 'broker' ? 'active' : ''}`}
             onClick={() => setActiveTab('broker')}
@@ -653,26 +636,63 @@ function App() {
           </button>
 
           <button
+            className={`nav-tab ${activeTab === 'portfolio' ? 'active' : ''}`}
+            onClick={() => setActiveTab('portfolio')}
+            style={{
+              padding: '8px 18px',
+              fontSize: '0.9rem',
+              fontWeight: 800,
+              background: activeTab === 'portfolio' ? 'linear-gradient(135deg, #f59e0b, #d97706)' : 'transparent',
+              color: activeTab === 'portfolio' ? '#ffffff' : '#f59e0b',
+              borderRadius: '6px',
+              border: activeTab === 'portfolio' ? 'none' : '1px solid rgba(245, 158, 11, 0.4)',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              boxShadow: activeTab === 'portfolio' ? '0 0 12px rgba(245, 158, 11, 0.4)' : 'none'
+            }}
+          >
+            📈 Portfolio History 权益曲线
+          </button>
+
+          <button
             className={`nav-tab ${activeTab === 'replay' ? 'active' : ''}`}
             onClick={() => setActiveTab('replay')}
             style={{
               padding: '8px 18px',
               fontSize: '0.9rem',
               fontWeight: 800,
-              background: activeTab === 'replay' ? 'var(--color-green)' : 'transparent',
-              color: activeTab === 'replay' ? '#000000' : '#ffffff',
+              background: activeTab === 'replay' ? 'linear-gradient(135deg, #3b82f6, #1d4ed8)' : 'transparent',
+              color: '#ffffff',
               borderRadius: '6px',
-              border: 'none',
+              border: activeTab === 'replay' ? 'none' : '1px solid rgba(59, 130, 246, 0.4)',
               cursor: 'pointer',
               transition: 'all 0.2s ease'
             }}
           >
-            📈 同天历史复盘
+            🎬 策略对比与历史复盘
+          </button>
+
+          <button
+            className={`nav-tab ${activeTab === 'institutional' ? 'active' : ''}`}
+            onClick={() => setActiveTab('institutional')}
+            style={{
+              padding: '8px 18px',
+              fontSize: '0.9rem',
+              fontWeight: 800,
+              background: activeTab === 'institutional' ? 'linear-gradient(135deg, #8b5cf6, #6d28d9)' : 'transparent',
+              color: '#ffffff',
+              borderRadius: '6px',
+              border: activeTab === 'institutional' ? 'none' : '1px solid rgba(139, 92, 246, 0.4)',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            🔬 机构级 Alpha 研究
           </button>
 
           {/* Optional Advanced Tools */}
           <select
-            value={['broker', 'replay'].includes(activeTab) ? '' : activeTab}
+            value={['broker', 'portfolio', 'replay', 'institutional'].includes(activeTab) ? '' : activeTab}
             onChange={(e) => {
               if (e.target.value) setActiveTab(e.target.value as ActiveTab);
             }}
@@ -686,8 +706,7 @@ function App() {
               cursor: 'pointer'
             }}
           >
-            <option value="" disabled style={{ background: '#111', color: '#888' }}>⚙️ 高级策略分析...</option>
-            <option value="institutional" style={{ background: '#111', color: '#6366f1', fontWeight: 800 }}>🏛️ 机构级 Quant & 低延迟架构</option>
+            <option value="" disabled style={{ background: '#111', color: '#888' }}>⚙️ 更多研究工具...</option>
             <option value="dashboard" style={{ background: '#111', color: '#fff' }}>📊 策略回测仪表盘</option>
             <option value="report" style={{ background: '#111', color: '#fff' }}>📖 深度量化报告</option>
             <option value="research" style={{ background: '#111', color: '#fff' }}>🤖 AI 策略助手</option>
@@ -705,6 +724,11 @@ function App() {
       <div className="app-container">
         {/* 左侧内容区 */}
         <main className="main-content">
+          {/* Portfolio History Curve Page */}
+          {activeTab === 'portfolio' && (
+            <PortfolioHistoryChart />
+          )}
+
           {/* Deep Research Tab */}
           {activeTab === 'report' && (
             <ResearchReportPanel 
@@ -745,9 +769,9 @@ function App() {
             <InstitutionalPanel />
           )}
 
-          {/* Replay Simulator Tab (Mode 2) */}
+          {/* Combined Replay Simulator & Experiments Tab */}
           {activeTab === 'replay' && (
-            <SameDayReplayPanel 
+            <ReplayAndExperimentsPanel 
               watchlist={watchlist} 
               activeTicker={activeTicker} 
               onSelectTicker={setActiveTicker} 
