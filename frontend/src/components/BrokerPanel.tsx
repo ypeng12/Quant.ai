@@ -440,7 +440,7 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
           <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(5, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
             <div className="stat-card" style={{ background: '#09090b', border: `1px solid ${netPnlVal >= 0 ? 'rgba(0,200,5,0.3)' : 'rgba(255,59,48,0.3)'}`, padding: '1.25rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                <span className="stat-label">Realized PnL</span>
+                <span className="stat-label">Today Net PnL</span>
                 <span style={{ fontSize: '0.68rem', padding: '1px 5px', borderRadius: '3px', background: 'rgba(0,200,5,0.15)', color: '#00c805', fontWeight: 700 }}>Alpaca Live</span>
               </div>
               <span className="stat-value" style={{ fontSize: '1.4rem', fontWeight: 900, color: netPnlVal >= 0 ? 'var(--color-green)' : 'var(--color-red)' }}>
@@ -793,10 +793,10 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
         const closedTrades = displayTrades.filter(t => t.action === 'SELL' || t.action === 'COVER' || t.action === 'PARTIAL_SELL' || t.action === 'PARTIAL_COVER');
         const winsCount = closedTrades.filter(t => (t.pnl || 0) > 0).length;
         const lossesCount = closedTrades.filter(t => (t.pnl || 0) < 0).length;
-        // Use Alpaca official today PnL when viewing today's date - it's the authoritative ground truth
+        const realizedPnl = closedTrades.reduce((sum, t) => sum + (t.pnl || 0), 0);
         const netPnl = (effectiveDate === todayStr)
-          ? (todaySummary?.alpaca_official_pnl ?? account?.today_pnl ?? closedTrades.reduce((sum, t) => sum + (t.pnl || 0), 0))
-          : closedTrades.reduce((sum, t) => sum + (t.pnl || 0), 0);
+          ? (todaySummary?.alpaca_official_pnl ?? account?.today_pnl ?? realizedPnl)
+          : realizedPnl;
 
         const tickerMap: Record<string, { trades: TradeRecord[]; totalPnl: number; openAction: string | null }> = {};
         displayTrades.forEach(t => {
@@ -894,9 +894,9 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
                   </div>
                 </div>
                 <div style={{ textAlign: 'right', minWidth: '100px' }}>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--color-text-secondary)' }}>Net PnL ({effectiveDate})</div>
-                  <div style={{ fontSize: '1.3rem', fontWeight: 900, color: netPnl >= 0 ? 'var(--color-green)' : 'var(--color-red)' }}>
-                    {netPnl >= 0 ? '+' : ''}${netPnl.toFixed(2)}
+                  <div style={{ fontSize: '0.72rem', color: 'var(--color-text-secondary)' }}>Realized PnL ({effectiveDate})</div>
+                  <div style={{ fontSize: '1.3rem', fontWeight: 900, color: realizedPnl >= 0 ? 'var(--color-green)' : 'var(--color-red)' }}>
+                    {realizedPnl >= 0 ? '+' : ''}${realizedPnl.toFixed(2)}
                   </div>
                 </div>
               </div>
