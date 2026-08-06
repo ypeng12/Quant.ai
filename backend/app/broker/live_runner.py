@@ -255,57 +255,68 @@ class LiveTradingRunner:
             print(f"Error loading trade_history.json: {e}")
 
     def recalculate_trade_pnls(self):
-        """Recalculate PnL for closed trades by matching FIFO positions across trade history (daytrade.pdf)."""
+        """按交易日期按日隔离计算 FIFO 匹配盈亏，彻底避免隔日订单混匹配导致的盈亏错乱。"""
         if not self.trade_history:
             return
             
-        position_tracker = {}
         self.trade_history.sort(key=lambda x: x.get("time", ""))
-        
+        trades_by_date = {}
         for trade in self.trade_history:
-            ticker = trade.get("ticker", "")
-            action = trade.get("action", "").upper()
-            qty = trade.get("shares", 0)
-            price = trade.get("price", 0.0)
-            
-            if not ticker or qty <= 0 or price <= 0:
-                continue
+            d = trade.get("date") or (trade.get("time", "")[:10] if trade.get("time") else "")
+            d = d.strip()
+            if d not in trades_by_date:
+                trades_by_date[d] = []
+            trades_by_date[d].append(trade)
+
+        for d, day_trades in trades_by_date.items():
+            position_tracker = {}
+            for trade in day_trades:
+                ticker = trade.get("ticker", "")
+                action = trade.get("action", "").upper()
+                qty = trade.get("shares", 0)
+                price = trade.get("price", 0.0)
                 
-            if ticker not in position_tracker:
-                position_tracker[ticker] = []
+                if not ticker or qty <= 0 or price <= 0:
+                    continue
+                    
+                if ticker not in position_tracker:
+                    position_tracker[ticker] = []
+                queue = position_tracker[ticker]
                 
-            if action in ("BUY", "PYRAMID_BUY"):
-                position_tracker[ticker].append({"price": price, "qty": qty})
-            elif action in ("SELL", "PARTIAL_SELL"):
-                realized = 0.0
-                remaining = qty
-                queue = position_tracker[ticker]
-                while remaining > 0 and queue:
-                    entry = queue[0]
-                    matched_qty = min(remaining, entry["qty"])
-                    realized += (price - entry["price"]) * matched_qty
-                    entry["qty"] -= matched_qty
-                    remaining -= matched_qty
-                    if entry["qty"] <= 0:
-                        queue.pop(0)
-                if trade.get("pnl", 0.0) == 0.0 or realized != 0.0:
-                    trade["pnl"] = round(realized, 2)
-            elif action in ("SHORT",):
-                position_tracker[ticker].append({"price": price, "qty": -qty})
-            elif action in ("COVER", "PARTIAL_COVER"):
-                realized = 0.0
-                remaining = qty
-                queue = position_tracker[ticker]
-                while remaining > 0 and queue:
-                    entry = queue[0]
-                    matched_qty = min(remaining, abs(entry["qty"]))
-                    realized += (entry["price"] - price) * matched_qty
-                    entry["qty"] += matched_qty
-                    remaining -= matched_qty
-                    if abs(entry["qty"]) <= 0:
-                        queue.pop(0)
-                if trade.get("pnl", 0.0) == 0.0 or realized != 0.0:
-                    trade["pnl"] = round(realized, 2)
+                if action in ("BUY", "PYRAMID_BUY"):
+                    queue.append({"price": price, "qty": qty})
+                    if "pnl" not in trade or trade["pnl"] is None:
+                        trade["pnl"] = 0.0
+                elif action in ("SHORT",):
+                    queue.append({"price": price, "qty": -qty})
+                    if "pnl" not in trade or trade["pnl"] is None:
+                        trade["pnl"] = 0.0
+                elif action in ("SELL", "PARTIAL_SELL"):
+                    realized = 0.0
+                    remaining = qty
+                    while remaining > 0 and queue:
+                        entry = queue[0]
+                        matched_qty = min(remaining, entry["qty"])
+                        realized += (price - entry["price"]) * matched_qty
+                        entry["qty"] -= matched_qty
+                        remaining -= matched_qty
+                        if entry["qty"] <= 0:
+                            queue.pop(0)
+                    if (trade.get("pnl") is None or trade.get("pnl") == 0.0) and realized != 0.0:
+                        trade["pnl"] = round(realized, 2)
+                elif action in ("COVER", "PARTIAL_COVER"):
+                    realized = 0.0
+                    remaining = qty
+                    while remaining > 0 and queue:
+                        entry = queue[0]
+                        matched_qty = min(remaining, abs(entry["qty"]))
+                        realized += (entry["price"] - price) * matched_qty
+                        entry["qty"] += matched_qty
+                        remaining -= matched_qty
+                        if abs(entry["qty"]) <= 0:
+                            queue.pop(0)
+                    if (trade.get("pnl") is None or trade.get("pnl") == 0.0) and realized != 0.0:
+                        trade["pnl"] = round(realized, 2)
 
     def save_trade_history(self):
         """保存交易历史与动作日志到本地磁盘。"""
@@ -392,14 +403,13 @@ class LiveTradingRunner:
         try:
             if hasattr(self.adapter, "get_account_summary"):
                 acc_info = self.adapter.get_account_summary()
-                if acc_info and acc_info.get("success"):
+                if acc_info and acc_info.get("success") and "today_pnl" in acc_info:
                     alpaca_official_today_pnl = acc_info.get("today_pnl")
         except Exception:
             pass
 
         # Priority: use Alpaca's official today_pnl (equity - last_equity) as the ground truth
-        # Fall back to our calculated realized_pnl only if Alpaca doesn't provide one
-        final_today_pnl = round(alpaca_official_today_pnl, 2) if (alpaca_official_today_pnl is not None and alpaca_official_today_pnl != 0.0) else round(realized_pnl, 2)
+        final_today_pnl = round(alpaca_official_today_pnl, 2) if alpaca_official_today_pnl is not None else round(realized_pnl, 2)
 
         return {
             "date": today,

@@ -770,9 +770,9 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
         const closedTrades = displayTrades.filter(t => t.action === 'SELL' || t.action === 'COVER' || t.action === 'PARTIAL_SELL' || t.action === 'PARTIAL_COVER');
         const winsCount = closedTrades.filter(t => (t.pnl || 0) > 0).length;
         const lossesCount = closedTrades.filter(t => (t.pnl || 0) < 0).length;
-        // Use Alpaca official today PnL when viewing today's date - it's the authoritative source
-        const netPnl = (effectiveDate === todayStr && todaySummary?.alpaca_official_pnl !== undefined)
-          ? todaySummary.alpaca_official_pnl
+        // Use Alpaca official today PnL when viewing today's date - it's the authoritative ground truth
+        const netPnl = (effectiveDate === todayStr)
+          ? (todaySummary?.alpaca_official_pnl ?? account?.today_pnl ?? closedTrades.reduce((sum, t) => sum + (t.pnl || 0), 0))
           : closedTrades.reduce((sum, t) => sum + (t.pnl || 0), 0);
 
         const tickerMap: Record<string, { trades: TradeRecord[]; totalPnl: number; openAction: string | null }> = {};
