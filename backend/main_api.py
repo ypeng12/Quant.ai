@@ -51,11 +51,11 @@ from app.broker.live_runner import LiveTradingRunner
 class LiveStartRequest(BaseModel):
     params: Optional[dict] = None
     tickers: Optional[List[str]] = None
-    ignore_market_hours: Optional[bool] = True
+    ignore_market_hours: Optional[bool] = None
     market_mode: Optional[str] = None
 
 class MarketModeRequest(BaseModel):
-    market_mode: str  # "MANUAL_OPEN", "MANUAL_CLOSE", "AUTO_EXCHANGE"
+    market_mode: Optional[str] = "AUTO_EXCHANGE"
 
 class WatchlistSyncRequest(BaseModel):
     tickers: List[str]
@@ -74,11 +74,9 @@ live_runner = LiveTradingRunner()
 @app.on_event("startup")
 def auto_start_live_runner():
     """
-    后端服务启动时，自动初始化开启 AI 量化托管交易机器人，继承持久化开盘模式与状态配置。
+    后端服务启动时，自动初始化开启 AI 量化托管交易机器人（开盘状态由 Alpaca 官方交易所 API 实时判定）。
     """
     try:
-        saved_mode = getattr(live_runner, "market_mode", "MANUAL_OPEN")
-        mode_to_start = saved_mode if saved_mode in ("MANUAL_OPEN", "MANUAL_CLOSE", "AUTO_EXCHANGE") else "MANUAL_OPEN"
         live_runner.start(
             strategy_params={
                 "strategy_mode": "dynamic",
@@ -88,11 +86,9 @@ def auto_start_live_runner():
                 "trailing_stop_atr_mult": 2.0,
                 "rsi_threshold_buy": 70.0,
                 "market_open_focus": False
-            },
-            market_mode=mode_to_start,
-            ignore_market_hours=(mode_to_start == "MANUAL_OPEN")
+            }
         )
-        print(f"[System Startup] 🚀 AI 量化托管交易机器人已在后台自动启动上线 (当前开盘控制模式: {mode_to_start})！")
+        print("[System Startup] 🚀 AI 量化托管交易机器人已在后台自动启动上线（开盘状态 100% 依从 Alpaca 官方交易所 API 时钟）！")
     except Exception as e:
         print(f"[System Startup Warning] 自动启动交易机器人异常: {e}")
 
@@ -1446,16 +1442,14 @@ def get_broker_positions():
 def start_live_trading(req: LiveStartRequest):
     success = live_runner.start(
         strategy_params=req.params, 
-        tickers=req.tickers,
-        ignore_market_hours=req.ignore_market_hours if req.ignore_market_hours is not None else True,
-        market_mode=req.market_mode
+        tickers=req.tickers
     )
     return {"success": success, "status": live_runner.get_status()}
 
 
 @app.post("/api/live/market_mode")
-def set_live_market_mode(req: MarketModeRequest):
-    res = live_runner.set_market_mode(req.market_mode)
+def set_live_market_mode(req: Optional[MarketModeRequest] = None):
+    res = live_runner.set_market_mode()
     return {"success": res.get("success", False), "data": res, "status": live_runner.get_status()}
 
 
@@ -1463,7 +1457,7 @@ def set_live_market_mode(req: MarketModeRequest):
 def get_live_market_mode():
     return {
         "success": True,
-        "market_mode": live_runner.market_mode,
+        "market_mode": "AUTO_EXCHANGE",
         "is_market_open": live_runner.is_market_open(),
         "status": live_runner.get_status()
     }

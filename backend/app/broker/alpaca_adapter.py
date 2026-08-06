@@ -113,41 +113,47 @@ class AlpacaAdapter:
         except Exception:
             return None
 
-    def submit_market_order(self, symbol: str, qty: int, side: str) -> Dict:
+    def submit_market_order(self, symbol: str, qty: int, side: str, price: Optional[float] = None, client_order_id: Optional[str] = None) -> Dict:
         """
         Submit a market order to Alpaca.
         Args:
             symbol: Ticker symbol (e.g. 'TSLA')
             qty: Quantity of shares to buy/sell
             side: 'buy' or 'sell'
+            price: Optional price hint (ignored for market orders on Alpaca API)
+            client_order_id: Optional client order ID for tracking
         """
-        order_side = OrderSide.BUY if side.lower() == "buy" else OrderSide.SELL
+        order_side = OrderSide.BUY if side.lower() in ("buy", "cover") else OrderSide.SELL
         
         try:
-            order_request = MarketOrderRequest(
-                symbol=symbol.upper(),
-                qty=qty,
-                side=order_side,
-                time_in_force=TimeInForce.DAY
-            )
+            kwargs = {
+                "symbol": symbol.upper(),
+                "qty": qty,
+                "side": order_side,
+                "time_in_force": TimeInForce.DAY
+            }
+            if client_order_id:
+                kwargs["client_order_id"] = client_order_id
+
+            order_request = MarketOrderRequest(**kwargs)
             order = self.client.submit_order(order_data=order_request)
             return {
                 "success": True,
                 "order_id": str(order.id),
-                "client_order_id": str(order.client_order_id),
-                "status": str(order.status.value),
-                "filled_qty": int(order.filled_qty or 0),
-                "filled_avg_price": float(order.filled_avg_price or 0.0),
+                "client_order_id": str(getattr(order, 'client_order_id', client_order_id or '')),
+                "status": str(getattr(order.status, 'value', order.status)),
+                "filled_qty": int(getattr(order, 'filled_qty', 0) or 0),
+                "filled_avg_price": float(getattr(order, 'filled_avg_price', 0.0) or 0.0),
                 "message": f"Successfully submitted {side.upper()} order for {qty} shares of {symbol}."
             }
         except Exception as e:
             return {
                 "success": False,
                 "error": str(e),
-                "message": f"Failed to submit market order: {str(e)}"
+                "message": f"Failed to submit market order for {symbol}: {str(e)}"
             }
 
-    def submit_limit_order(self, symbol: str, qty: int, side: str, limit_price: float, extended_hours: bool = True) -> Dict:
+    def submit_limit_order(self, symbol: str, qty: int, side: str, limit_price: float, extended_hours: bool = True, client_order_id: Optional[str] = None) -> Dict:
         """
         Submit a Limit order to Alpaca supporting Pre-market (4:00 AM EST) and Post-market (8:00 PM EST).
         Args:
@@ -156,25 +162,30 @@ class AlpacaAdapter:
             side: 'buy' or 'sell'
             limit_price: Limit price for execution
             extended_hours: Allow trading during pre-market / post-market extended hours
+            client_order_id: Optional client order ID
         """
-        order_side = OrderSide.BUY if side.lower() == "buy" else OrderSide.SELL
+        order_side = OrderSide.BUY if side.lower() in ("buy", "cover") else OrderSide.SELL
         try:
-            order_request = LimitOrderRequest(
-                symbol=symbol.upper(),
-                qty=qty,
-                side=order_side,
-                limit_price=round(limit_price, 2),
-                time_in_force=TimeInForce.DAY,
-                extended_hours=extended_hours
-            )
+            kwargs = {
+                "symbol": symbol.upper(),
+                "qty": qty,
+                "side": order_side,
+                "limit_price": round(limit_price, 2),
+                "time_in_force": TimeInForce.DAY,
+                "extended_hours": extended_hours
+            }
+            if client_order_id:
+                kwargs["client_order_id"] = client_order_id
+
+            order_request = LimitOrderRequest(**kwargs)
             order = self.client.submit_order(order_data=order_request)
             return {
                 "success": True,
                 "order_id": str(order.id),
-                "client_order_id": str(order.client_order_id),
-                "status": str(order.status.value),
-                "filled_qty": int(order.filled_qty or 0),
-                "filled_avg_price": float(order.filled_avg_price or limit_price),
+                "client_order_id": str(getattr(order, 'client_order_id', client_order_id or '')),
+                "status": str(getattr(order.status, 'value', order.status)),
+                "filled_qty": int(getattr(order, 'filled_qty', 0) or 0),
+                "filled_avg_price": float(getattr(order, 'filled_avg_price', limit_price) or limit_price),
                 "message": f"Successfully submitted Extended-Hours LIMIT {side.upper()} order for {qty} shares of {symbol} at ${limit_price:.2f}."
             }
         except Exception as e:
