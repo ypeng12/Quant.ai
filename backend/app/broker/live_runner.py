@@ -263,10 +263,10 @@ class LiveTradingRunner:
             print(f"Error loading trade_history.json: {e}")
 
     def recalculate_trade_pnls(self):
-        """按交易日期按日隔离计算 FIFO 匹配盈亏，彻底避免隔日订单混匹配导致的盈亏错乱。"""
+        """按交易日期按日隔离计算 FIFO 匹配盈亏，全面支持多头与空头 (BUY/SELL/SHORT/COVER) 的精准全封闭匹配。"""
         if not self.trade_history:
             return
-            
+
         self.trade_history.sort(key=lambda x: x.get("time", ""))
         trades_by_date = {}
         for trade in self.trade_history:
@@ -277,50 +277,66 @@ class LiveTradingRunner:
             trades_by_date[d].append(trade)
 
         for d, day_trades in trades_by_date.items():
-            position_tracker = {}
+            ticker_queues = {}  # symbol -> {'long': [], 'short': []}
             for trade in day_trades:
                 ticker = trade.get("ticker", "")
-                action = trade.get("action", "").upper()
-                qty = trade.get("shares", 0)
-                price = trade.get("price", 0.0)
-                
+                raw_action = trade.get("action", "").upper()
+                qty = int(trade.get("shares", 0))
+                price = float(trade.get("price", 0.0))
+
                 if not ticker or qty <= 0 or price <= 0:
                     continue
-                    
-                if ticker not in position_tracker:
-                    position_tracker[ticker] = []
-                queue = position_tracker[ticker]
-                
-                if action in ("BUY", "PYRAMID_BUY"):
-                    queue.append({"price": price, "qty": qty})
-                    trade["pnl"] = 0.0
-                elif action in ("SHORT",):
-                    queue.append({"price": price, "qty": -qty})
-                    trade["pnl"] = 0.0
-                elif action in ("SELL", "PARTIAL_SELL"):
-                    realized = 0.0
-                    remaining = qty
-                    while remaining > 0 and queue:
-                        entry = queue[0]
-                        matched_qty = min(remaining, entry["qty"])
-                        realized += (price - entry["price"]) * matched_qty
-                        entry["qty"] -= matched_qty
-                        remaining -= matched_qty
-                        if entry["qty"] <= 0:
-                            queue.pop(0)
-                    trade["pnl"] = round(realized, 2)
-                elif action in ("COVER", "PARTIAL_COVER"):
-                    realized = 0.0
-                    remaining = qty
-                    while remaining > 0 and queue:
-                        entry = queue[0]
-                        matched_qty = min(remaining, abs(entry["qty"]))
-                        realized += (entry["price"] - price) * matched_qty
-                        entry["qty"] += matched_qty
-                        remaining -= matched_qty
-                        if abs(entry["qty"]) <= 0:
-                            queue.pop(0)
-                    trade["pnl"] = round(realized, 2)
+
+                if ticker not in ticker_queues:
+                    ticker_queues[ticker] = {"long": [], "short": []}
+
+                long_q = ticker_queues[ticker]["long"]
+                short_q = ticker_queues[ticker]["short"]
+                trade_pnl = 0.0
+
+                if raw_action in ("BUY", "PYRAMID_BUY", "COVER", "PARTIAL_COVER"):
+                    if short_q:
+                        trade["action"] = "COVER"
+                        trade["action_cn"] = "平空"
+                        rem_qty = qty
+                        while rem_qty > 0 and short_q:
+                            entry = short_q[0]
+                            matched = min(rem_qty, entry["qty"])
+                            trade_pnl += (entry["price"] - price) * matched
+                            entry["qty"] -= matched
+                            rem_qty -= matched
+                            if entry["qty"] <= 0:
+                                short_q.pop(0)
+                        if rem_qty > 0:
+                            long_q.append({"price": price, "qty": rem_qty})
+                    else:
+                        trade["action"] = "BUY"
+                        trade["action_cn"] = "买入"
+                        long_q.append({"price": price, "qty": qty})
+                        trade_pnl = 0.0
+
+                elif raw_action in ("SELL", "PARTIAL_SELL", "SHORT"):
+                    if long_q:
+                        trade["action"] = "SELL"
+                        trade["action_cn"] = "卖出"
+                        rem_qty = qty
+                        while rem_qty > 0 and long_q:
+                            entry = long_q[0]
+                            matched = min(rem_qty, entry["qty"])
+                            trade_pnl += (price - entry["price"]) * matched
+                            entry["qty"] -= matched
+                            rem_qty -= matched
+                            if entry["qty"] <= 0:
+                                long_q.pop(0)
+                        if rem_qty > 0:
+                            short_q.append({"price": price, "qty": rem_qty})
+                    else:
+                        trade["action"] = "SHORT"
+                        trade["action_cn"] = "做空"
+                        short_q.append({"price": price, "qty": qty})
+                        trade_pnl = 0.0
+
+                trade["pnl"] = round(trade_pnl, 2)
 
     def save_trade_history(self):
         """保存交易历史与动作日志到本地磁盘。"""
@@ -360,63 +376,30 @@ class LiveTradingRunner:
         client_order_id: Optional[str] = None,
         order_status: Optional[str] = None,
     ):
-        """Record trade action to action_logs and trade_history for UI display and analysis."""
+        """记录发单交易动作到 action_logs 用于 UI 动态日志流展示。只有 Alpaca 真正的成单才进入历史账本。"""
         est = pytz.timezone('America/New_York')
         now = datetime.datetime.now(est)
         timestamp_str = now.strftime("%Y-%m-%d %H:%M:%S")
-        date_str = now.strftime("%Y-%m-%d")
 
-        # Action Feed (English)
         action_emoji = {"BUY": "🟢", "SELL": "🔴", "SHORT": "🔻", "COVER": "🔼"}.get(action, "⚪")
-        action_cn = {"BUY": "BUY (Long)", "SELL": "SELL (Exit Long)", "SHORT": "SHORT (Sell Short)", "COVER": "COVER (Exit Short)"}.get(action, action)
         pnl_str = f" | PnL: {'+'if pnl>=0 else ''}{pnl:.2f} USD" if pnl != 0.0 else ""
         feed_msg = f"[{timestamp_str}] {action_emoji} [{ticker}] {action} × {shares} shs @ ${price:.2f}{pnl_str} | {reason}"
 
         self.action_logs.append(feed_msg)
-        if len(self.action_logs) > 200:
+        if len(self.action_logs) > 300:
             self.action_logs.pop(0)
 
-        # Persistent trade history. If the fast broker sync won the race, update
-        # that broker row instead of appending the same order twice.
-        trade_record = {
-            "date": date_str,
-            "time": timestamp_str,
-            "action": action,
-            "action_cn": action,
-            "ticker": ticker,
-            "shares": shares,
-            "price": round(price, 4),
-            "pnl": round(pnl, 2),
-            "reason": reason
-        }
-        if order_id:
-            trade_record["order_id"] = str(order_id)
-        if client_order_id:
-            trade_record["client_order_id"] = str(client_order_id)
-        if order_status:
-            trade_record["order_status"] = str(order_status)
-
-        existing = None
+        # 仅当此 order_id 在交易历史中已被同步确认时，补全 reason 与扩展信息
         if order_id:
             existing = next(
                 (trade for trade in self.trade_history if str(trade.get("order_id") or "") == str(order_id)),
                 None,
             )
-        if existing is not None:
-            broker_fields = {
-                key: existing[key]
-                for key in ("date", "time", "shares", "price", "source")
-                if key in existing and existing[key] not in (None, "")
-            }
-            existing.update(trade_record)
-            existing.update(broker_fields)
-        else:
-            self.trade_history.append(trade_record)
-            if len(self.trade_history) > 1000:
-                self.trade_history.pop(0)
-
-        # Save to disk
-        self.save_trade_history()
+            if existing is not None:
+                existing["reason"] = reason
+                if client_order_id:
+                    existing["client_order_id"] = str(client_order_id)
+                self.save_trade_history()
 
     def get_today_summary(self) -> dict:
         """Calculate today's trade summary and realized/unrealized PnL."""
@@ -1282,6 +1265,11 @@ class LiveTradingRunner:
                             if ticker not in user_watchlist and action in ("BUY", "SHORT"):
                                 action = "HOLD"
                                 reason = f"[{ticker}] removed from Watchlist (Exit-Only Mode). Blocked new entry order."
+
+                            # EOD Entry Lock Check (15:45-16:00 EST): Block any new long/short/pyramid entries
+                            if self.is_eod_no_entry_window() and action in ("BUY", "SHORT", "PYRAMID_BUY"):
+                                action = "HOLD"
+                                reason = f"[{ticker}] EOD No-Entry Window (15:45-16:00 EST). Blocked new entry order to guarantee zero overnight risk."
 
                             # Deduplication Lock Check (60s TTL Auto-expiring daytrade.pdf)
                             if action in ("BUY", "SHORT") and self.is_entry_locked(ticker):
