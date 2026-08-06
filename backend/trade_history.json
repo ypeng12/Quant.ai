@@ -117,7 +117,7 @@
       "ticker": "AAPL",
       "shares": 142,
       "price": 331.73,
-      "pnl": -58.75,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -141,7 +141,7 @@
       "ticker": "MSFT",
       "shares": 104,
       "price": 454.727692,
-      "pnl": 7.04,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -153,7 +153,7 @@
       "ticker": "AMD",
       "shares": 97,
       "price": 484.465155,
-      "pnl": -111.05,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -165,7 +165,7 @@
       "ticker": "NVDA",
       "shares": 245,
       "price": 193.38,
-      "pnl": -19.5,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -249,7 +249,7 @@
       "ticker": "TSLA",
       "shares": 155,
       "price": 305.62,
-      "pnl": -34.24,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -273,7 +273,7 @@
       "ticker": "AAPL",
       "shares": 1,
       "price": 332.41,
-      "pnl": 0.33,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -285,7 +285,7 @@
       "ticker": "TSLA",
       "shares": 147,
       "price": 305.65,
-      "pnl": -48.51,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -309,7 +309,7 @@
       "ticker": "AMD",
       "shares": 97,
       "price": 485.474227,
-      "pnl": 88.68,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -321,7 +321,7 @@
       "ticker": "MSFT",
       "shares": 104,
       "price": 455.4325,
-      "pnl": 80.34,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -405,7 +405,7 @@
       "ticker": "TSLA",
       "shares": 154,
       "price": 305.87,
-      "pnl": -1.11,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -417,7 +417,7 @@
       "ticker": "NVDA",
       "shares": 245,
       "price": 193.50049,
-      "pnl": -4.78,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -429,7 +429,7 @@
       "ticker": "TSLA",
       "shares": 155,
       "price": 305.8,
-      "pnl": -20.02,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -489,7 +489,7 @@
       "ticker": "AAPL",
       "shares": 142,
       "price": 332.18669,
-      "pnl": 15.15,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -513,7 +513,7 @@
       "ticker": "MSFT",
       "shares": 104,
       "price": 455.24,
-      "pnl": 30.89,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -525,7 +525,7 @@
       "ticker": "SNDK",
       "shares": 1,
       "price": 1262.4,
-      "pnl": -0.02,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -537,7 +537,7 @@
       "ticker": "MSFT",
       "shares": 104,
       "price": 455.247308,
-      "pnl": -25.66,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -585,7 +585,7 @@
       "ticker": "NVDA",
       "shares": 1,
       "price": 193.59,
-      "pnl": -0.09,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -597,7 +597,7 @@
       "ticker": "AAPL",
       "shares": 1,
       "price": 331.99,
-      "pnl": -0.1,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -609,7 +609,7 @@
       "ticker": "MU",
       "shares": 1,
       "price": 870.07,
-      "pnl": 13.19,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -633,7 +633,7 @@
       "ticker": "NVDA",
       "shares": 244,
       "price": 193.49,
-      "pnl": -47.01,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -645,7 +645,7 @@
       "ticker": "SNDK",
       "shares": 37,
       "price": 1259.405405,
-      "pnl": -131.89,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -669,7 +669,7 @@
       "ticker": "AAPL",
       "shares": 142,
       "price": 331.891338,
-      "pnl": -68.37,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -681,7 +681,7 @@
       "ticker": "SNDK",
       "shares": 37,
       "price": 1260.041351,
-      "pnl": -97.52,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -693,7 +693,7 @@
       "ticker": "MU",
       "shares": 1,
       "price": 870.6,
-      "pnl": 13.72,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -717,7 +717,7 @@
       "ticker": "AMD",
       "shares": 97,
       "price": 487.14,
-      "pnl": 218.25,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -741,7 +741,7 @@
       "ticker": "MSFT",
       "shares": 1,
       "price": 456.72,
-      "pnl": 1.05,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -777,7 +777,7 @@
       "ticker": "AMD",
       "shares": 97,
       "price": 487.0,
-      "pnl": 99.07,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -789,7 +789,7 @@
       "ticker": "AMD",
       "shares": 97,
       "price": 486.72,
-      "pnl": -25.22,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -897,7 +897,7 @@
       "ticker": "SNDK",
       "shares": 1,
       "price": 1259.52,
-      "pnl": -5.93,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -909,7 +909,7 @@
       "ticker": "MU",
       "shares": 54,
       "price": 871.39,
-      "pnl": 772.76,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -933,7 +933,7 @@
       "ticker": "SNDK",
       "shares": 37,
       "price": 1259.27,
-      "pnl": -228.57,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -945,7 +945,7 @@
       "ticker": "MU",
       "shares": 1,
       "price": 869.16,
-      "pnl": -2.79,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -957,7 +957,7 @@
       "ticker": "MU",
       "shares": 53,
       "price": 869.75,
-      "pnl": -68.37,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -981,7 +981,7 @@
       "ticker": "MSFT",
       "shares": 103,
       "price": 455.849903,
-      "pnl": 18.45,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -993,7 +993,7 @@
       "ticker": "MU",
       "shares": 53,
       "price": 870.196226,
-      "pnl": -15.56,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1005,7 +1005,7 @@
       "ticker": "MSFT",
       "shares": 102,
       "price": 455.93,
-      "pnl": -80.67,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1041,7 +1041,7 @@
       "ticker": "AAPL",
       "shares": 141,
       "price": 333.215958,
-      "pnl": 102.17,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1053,7 +1053,7 @@
       "ticker": "TSLA",
       "shares": 1,
       "price": 307.4,
-      "pnl": 0.94,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1077,7 +1077,7 @@
       "ticker": "TSLA",
       "shares": 152,
       "price": 307.06,
-      "pnl": 90.84,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1113,7 +1113,7 @@
       "ticker": "NVDA",
       "shares": 1,
       "price": 193.63,
-      "pnl": -0.12,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1125,7 +1125,7 @@
       "ticker": "MU",
       "shares": 53,
       "price": 871.291321,
-      "pnl": -155.91,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1137,7 +1137,7 @@
       "ticker": "NVDA",
       "shares": 242,
       "price": 193.58748,
-      "pnl": -46.59,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1161,7 +1161,7 @@
       "ticker": "AMD",
       "shares": 90,
       "price": 487.35,
-      "pnl": -56.05,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1173,7 +1173,7 @@
       "ticker": "MU",
       "shares": 53,
       "price": 870.619246,
-      "pnl": -224.32,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1197,7 +1197,7 @@
       "ticker": "AAPL",
       "shares": 140,
       "price": 333.257429,
-      "pnl": 108.56,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1221,7 +1221,7 @@
       "ticker": "AAPL",
       "shares": 140,
       "price": 333.06,
-      "pnl": -36.77,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1245,7 +1245,7 @@
       "ticker": "AAPL",
       "shares": 139,
       "price": 332.897266,
-      "pnl": -56.1,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1269,7 +1269,7 @@
       "ticker": "MSFT",
       "shares": 102,
       "price": 457.42,
-      "pnl": 81.38,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1329,7 +1329,7 @@
       "ticker": "MU",
       "shares": 53,
       "price": 871.77,
-      "pnl": -86.27,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1353,7 +1353,7 @@
       "ticker": "MU",
       "shares": 50,
       "price": 871.1424,
-      "pnl": -108.49,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1389,7 +1389,7 @@
       "ticker": "AMD",
       "shares": 1,
       "price": 487.69,
-      "pnl": -0.28,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1401,7 +1401,7 @@
       "ticker": "MU",
       "shares": 53,
       "price": 867.66,
-      "pnl": -252.62,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1413,7 +1413,7 @@
       "ticker": "SNDK",
       "shares": 37,
       "price": 1252.18,
-      "pnl": -178.34,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1437,7 +1437,7 @@
       "ticker": "SNDK",
       "shares": 37,
       "price": 1250.8,
-      "pnl": -283.05,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1449,7 +1449,7 @@
       "ticker": "MSFT",
       "shares": 101,
       "price": 457.31,
-      "pnl": 71.72,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1461,7 +1461,7 @@
       "ticker": "AMD",
       "shares": 94,
       "price": 487.27,
-      "pnl": -71.1,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1497,7 +1497,7 @@
       "ticker": "TSLA",
       "shares": 151,
       "price": 307.29,
-      "pnl": -96.89,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1509,7 +1509,7 @@
       "ticker": "TSLA",
       "shares": 150,
       "price": 307.2,
-      "pnl": -105.24,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1521,7 +1521,7 @@
       "ticker": "MSFT",
       "shares": 101,
       "price": 456.16,
-      "pnl": -147.64,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1545,7 +1545,7 @@
       "ticker": "MSFT",
       "shares": 101,
       "price": 456.100693,
-      "pnl": -125.68,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1593,7 +1593,7 @@
       "ticker": "AMD",
       "shares": 94,
       "price": 486.259894,
-      "pnl": -175.81,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1629,7 +1629,7 @@
       "ticker": "NVDA",
       "shares": 238,
       "price": 193.47,
-      "pnl": -38.79,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1641,7 +1641,7 @@
       "ticker": "NVDA",
       "shares": 238,
       "price": 193.38,
-      "pnl": -59.51,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1653,7 +1653,7 @@
       "ticker": "AAPL",
       "shares": 1,
       "price": 333.51,
-      "pnl": 0.21,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1737,7 +1737,7 @@
       "ticker": "AAPL",
       "shares": 138,
       "price": 333.559855,
-      "pnl": 12.91,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1761,7 +1761,7 @@
       "ticker": "AAPL",
       "shares": 127,
       "price": 333.580945,
-      "pnl": -20.48,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1773,7 +1773,7 @@
       "ticker": "AAPL",
       "shares": 138,
       "price": 333.55,
-      "pnl": -29.42,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1809,7 +1809,7 @@
       "ticker": "AMD",
       "shares": 1,
       "price": 489.55,
-      "pnl": 1.42,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1821,7 +1821,7 @@
       "ticker": "TSLA",
       "shares": 150,
       "price": 309.2244,
-      "pnl": 226.54,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1869,7 +1869,7 @@
       "ticker": "AMD",
       "shares": 6,
       "price": 489.06,
-      "pnl": 7.3,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1881,7 +1881,7 @@
       "ticker": "NVDA",
       "shares": 2,
       "price": 194.49,
-      "pnl": 1.72,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1905,7 +1905,7 @@
       "ticker": "AAPL",
       "shares": 124,
       "price": 333.611774,
-      "pnl": -25.54,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1929,7 +1929,7 @@
       "ticker": "AAPL",
       "shares": 138,
       "price": 333.385724,
-      "pnl": -57.55,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1965,7 +1965,7 @@
       "ticker": "SNDK",
       "shares": 36,
       "price": 1265.25,
-      "pnl": 405.0,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -1989,7 +1989,7 @@
       "ticker": "AMD",
       "shares": 16,
       "price": 487.62,
-      "pnl": -1.28,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -2001,7 +2001,7 @@
       "ticker": "MU",
       "shares": 2,
       "price": 877.19,
-      "pnl": 9.71,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -2025,7 +2025,7 @@
       "ticker": "NVDA",
       "shares": 181,
       "price": 194.08989,
-      "pnl": 96.26,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -2037,7 +2037,7 @@
       "ticker": "NVDA",
       "shares": 238,
       "price": 194.103277,
-      "pnl": -28.95,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -2061,7 +2061,7 @@
       "ticker": "NVDA",
       "shares": 238,
       "price": 194.019874,
-      "pnl": -10.11,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -2073,7 +2073,7 @@
       "ticker": "MU",
       "shares": 13,
       "price": 875.301539,
-      "pnl": 70.72,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -2085,7 +2085,7 @@
       "ticker": "MU",
       "shares": 52,
       "price": 874.528846,
-      "pnl": 156.93,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -2097,7 +2097,7 @@
       "ticker": "SNDK",
       "shares": 34,
       "price": 1266.2,
-      "pnl": 455.39,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -2121,7 +2121,7 @@
       "ticker": "SNDK",
       "shares": 36,
       "price": 1266.34,
-      "pnl": 48.96,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -2133,7 +2133,7 @@
       "ticker": "MSFT",
       "shares": 4,
       "price": 456.34,
-      "pnl": -2.66,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -2193,7 +2193,7 @@
       "ticker": "MSFT",
       "shares": 101,
       "price": 455.640792,
-      "pnl": -38.7,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -2205,7 +2205,7 @@
       "ticker": "MSFT",
       "shares": 101,
       "price": 456.17,
-      "pnl": -20.44,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -2217,7 +2217,7 @@
       "ticker": "TSLA",
       "shares": 149,
       "price": 309.8,
-      "pnl": 317.18,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -2241,7 +2241,7 @@
       "ticker": "TSLA",
       "shares": 149,
       "price": 309.74,
-      "pnl": 56.75,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -2253,7 +2253,7 @@
       "ticker": "TSLA",
       "shares": 148,
       "price": 309.85,
-      "pnl": 7.81,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -2265,7 +2265,7 @@
       "ticker": "NVDA",
       "shares": 223,
       "price": 194.629283,
-      "pnl": -2.58,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -2471,18 +2471,6 @@
       "reason": "[Bearish-VWAP] Price dropped below VWAP ($495.29)."
     },
     {
-      "order_id": "7fa9430a-3547-4728-a57e-aba0b333c47f",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:39:26",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "MSFT",
-      "shares": 1,
-      "price": 462.62,
-      "pnl": -0.12,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
       "order_id": "6a649477-9264-4be5-8f17-b60bbddb6b1c",
       "date": "2026-07-31",
       "time": "2026-07-31 12:39:40",
@@ -2491,19 +2479,7 @@
       "ticker": "TSLA",
       "shares": 278,
       "price": 309.3,
-      "pnl": 21.43,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "84940d9d-c825-485f-81af-07427e8e214e",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:39:40",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "PLTR",
-      "shares": 1,
-      "price": 122.44,
-      "pnl": -0.03,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -2515,42 +2491,6 @@
       "ticker": "NVDA",
       "shares": 436,
       "price": 197.93,
-      "pnl": 1297.53,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "dba747de-436b-4b4b-a81d-386aa8145ab1",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:39:41",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "AAPL",
-      "shares": 144,
-      "price": 300.66,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "a317444c-ceba-4979-81b7-ee63ceea48b2",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:40:00",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "NVDA",
-      "shares": 218,
-      "price": 197.98,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "3e284508-bbd1-42ff-840a-60db0b915d42",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:40:00",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "TSLA",
-      "shares": 139,
-      "price": 309.36,
       "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
@@ -2563,7 +2503,7 @@
       "ticker": "AAPL",
       "shares": 143,
       "price": 300.53,
-      "pnl": -4770.03,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -2579,42 +2519,6 @@
       "reason": "Alpaca Broker Executed Sync"
     },
     {
-      "order_id": "db265746-bcbe-44d3-865b-3c4142212f8c",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:40:06",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "PLTR",
-      "shares": 77,
-      "price": 122.476494,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "afcaa753-c8cd-4ee0-9bc3-025550c3391d",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:40:58",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "PLTR",
-      "shares": 348,
-      "price": 122.5,
-      "pnl": 4.11,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "80e0040f-8520-4a6d-b90f-c789095c5cf7",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:40:59",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "TSLA",
-      "shares": 139,
-      "price": 309.7,
-      "pnl": 47.26,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
       "order_id": "221dc3e6-754d-40af-8111-38e9b816ad41",
       "date": "2026-07-31",
       "time": "2026-07-31 12:40:59",
@@ -2627,42 +2531,6 @@
       "reason": "Alpaca Broker Executed Sync"
     },
     {
-      "order_id": "c296eb6d-1e1c-42c9-95de-7386fa21066f",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:41:00",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "NVDA",
-      "shares": 218,
-      "price": 197.935137,
-      "pnl": 102.71,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "5ce310c5-ae1d-4b68-883c-4870bb40810e",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:41:07",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "TSLA",
-      "shares": 139,
-      "price": 309.44,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "2f693d61-c1e4-4fca-949c-b2f87ee73d5b",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:41:08",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "NVDA",
-      "shares": 218,
-      "price": 197.91,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
       "order_id": "b0c9f13b-824e-471b-b99b-30c1ffe2ec22",
       "date": "2026-07-31",
       "time": "2026-07-31 12:41:09",
@@ -2671,7 +2539,7 @@
       "ticker": "AAPL",
       "shares": 143,
       "price": 300.69,
-      "pnl": -4714.68,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -2687,30 +2555,6 @@
       "reason": "Alpaca Broker Executed Sync"
     },
     {
-      "order_id": "f9d2b677-df87-42b7-9d5f-a6537c7d4339",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:41:16",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "PLTR",
-      "shares": 17,
-      "price": 122.53,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "295f7511-ec23-46ac-89cc-f06ccb5455a2",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:43:27",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "AMD",
-      "shares": 88,
-      "price": 488.14,
-      "pnl": 16.9,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
       "order_id": "d5a75f83-5125-4ddd-822a-792171983579",
       "date": "2026-07-31",
       "time": "2026-07-31 12:45:07",
@@ -2719,30 +2563,6 @@
       "ticker": "MSFT",
       "shares": 88,
       "price": 463.56,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "82d97437-5616-4f83-9419-30aa335f575a",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:51:21",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "SNDK",
-      "shares": 1,
-      "price": 1242.21,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "662e0a9b-57be-40af-a42b-9593350ee716",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:51:22",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "MU",
-      "shares": 1,
-      "price": 837.39,
       "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
@@ -2767,43 +2587,7 @@
       "ticker": "MSFT",
       "shares": 88,
       "price": 462.65,
-      "pnl": -77.45,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "dba5df8c-02a7-468c-9d70-dfba523e1cc6",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:52:33",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "AAPL",
-      "shares": 1,
-      "price": 301.12,
       "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "1828d6b5-b76b-4495-8254-2ba23dcbc506",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:52:34",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "MSFT",
-      "shares": 1,
-      "price": 462.84,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "d217ccb2-60b0-4ee9-bed5-15d907cff707",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:53:03",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "MSFT",
-      "shares": 1,
-      "price": 462.6,
-      "pnl": -0.24,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -2815,174 +2599,6 @@
       "ticker": "PLTR",
       "shares": 351,
       "price": 122.26,
-      "pnl": -92.36,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "33895f46-ef38-4e72-87b7-acf01352ced1",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:53:10",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "MSFT",
-      "shares": 93,
-      "price": 462.62914,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "f2f5889c-56c3-4516-97a0-1b42439e12a1",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:53:13",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "PLTR",
-      "shares": 49,
-      "price": 122.26,
-      "pnl": -12.15,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "6a5aa1af-d9fd-4f96-928d-18b43dd868aa",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:55:31",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "TSLA",
-      "shares": 139,
-      "price": 309.72,
-      "pnl": 38.92,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "4a57251b-15cb-4e61-9ed1-ee6be57322e4",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:55:31",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "SNDK",
-      "shares": 1,
-      "price": 1236.4,
-      "pnl": -29.69,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "8078978c-ccda-4859-877a-9115796e22fc",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:55:31",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "MU",
-      "shares": 1,
-      "price": 835.32,
-      "pnl": -42.28,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "30dd8e19-8555-463d-835c-746cb425d1e0",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:55:31",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "MSFT",
-      "shares": 93,
-      "price": 462.32,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "157f46e4-5766-4d97-b0ff-b0ed4087d75f",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:55:31",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "AMD",
-      "shares": 88,
-      "price": 489.25,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "dfc1e502-10c1-4bb0-995c-b2c0002fb5cd",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:55:31",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "AAPL",
-      "shares": 1,
-      "price": 300.7,
-      "pnl": -0.18,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "7e4c5650-1d6e-4f9b-a3dd-48b3a34facf4",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:55:32",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "PLTR",
-      "shares": 49,
-      "price": 122.25,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "7056cea1-ccf7-4855-8f16-1f025bf7064b",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:55:34",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "NVDA",
-      "shares": 218,
-      "price": 198.160918,
-      "pnl": 36.22,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "5a7dd747-0322-4a0d-a83e-f2c0b2291b3b",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:55:50",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "TSLA",
-      "shares": 139,
-      "price": 309.791439,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "4d206edf-9b12-4f6b-838c-109338a8db4b",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:55:53",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "AMD",
-      "shares": 88,
-      "price": 488.94,
-      "pnl": -50.64,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "52fa3874-8f53-4e5c-a456-ddbe8b481e65",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:55:55",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "NVDA",
-      "shares": 213,
-      "price": 198.229765,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "6200ecf8-003d-4deb-86da-8220e52c413a",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:55:57",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "AMD",
-      "shares": 88,
-      "price": 488.946137,
       "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
@@ -2999,18 +2615,6 @@
       "reason": "Alpaca Broker Executed Sync"
     },
     {
-      "order_id": "c3dbc1a9-ee80-488e-a52e-743b15efd635",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:58:11",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "AAPL",
-      "shares": 142,
-      "price": 300.410915,
-      "pnl": -67.89,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
       "date": "2026-07-31",
       "time": "2026-07-31 12:58:23",
       "action": "BUY",
@@ -3020,30 +2624,6 @@
       "price": 490.41,
       "pnl": 0.0,
       "reason": "[Bullish-Cross] EMA 9/21 Golden Cross formed."
-    },
-    {
-      "order_id": "c4df968d-66e6-497c-b900-743d40a2a0dc",
-      "date": "2026-07-31",
-      "time": "2026-07-31 12:58:33",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "AMD",
-      "shares": 83,
-      "price": 490.420241,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "7cb279c6-7d42-4228-a53f-c38c0693321f",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:01:04",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "AAPL",
-      "shares": 142,
-      "price": 300.99,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
     },
     {
       "date": "2026-07-31",
@@ -3057,30 +2637,6 @@
       "reason": "[Bearish-VWAP] Price dropped below VWAP ($302.75)."
     },
     {
-      "order_id": "bd71587c-67b0-4149-84c8-1a736756e3a7",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:01:22",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "AAPL",
-      "shares": 142,
-      "price": 301.1,
-      "pnl": -4.11,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "face482c-1b26-447e-a24d-08ebb18fc89a",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:01:37",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "AAPL",
-      "shares": 142,
-      "price": 301.19,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
       "date": "2026-07-31",
       "time": "2026-07-31 13:01:47",
       "action": "SHORT",
@@ -3092,30 +2648,6 @@
       "reason": "[Bearish-VWAP] Price dropped below VWAP ($302.75)."
     },
     {
-      "order_id": "ba19506c-6f6c-4ade-afbc-a1abf5d52f79",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:01:55",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "AAPL",
-      "shares": 142,
-      "price": 301.22,
-      "pnl": -42.8,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "1434cdcb-2f2e-4c82-bf52-906e9cbf2c2d",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:02:07",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "AAPL",
-      "shares": 142,
-      "price": 301.090141,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
       "date": "2026-07-31",
       "time": "2026-07-31 13:02:20",
       "action": "BUY",
@@ -3125,30 +2657,6 @@
       "price": 301.165,
       "pnl": 0.0,
       "reason": "[Bullish-Cross] EMA 9/21 Golden Cross formed."
-    },
-    {
-      "order_id": "8e12ca7a-5007-4dd8-a97a-d18e000ff6b4",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:02:28",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "AAPL",
-      "shares": 1,
-      "price": 301.02,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "45ea6e09-2a6c-424f-aec4-0f671b61dacc",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:07:30",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "AMD",
-      "shares": 83,
-      "price": 488.36,
-      "pnl": -181.15,
-      "reason": "Alpaca Broker Executed Sync"
     },
     {
       "date": "2026-07-31",
@@ -3173,42 +2681,6 @@
       "reason": "[Bearish-Cross] EMA 9/21 Death Cross formed."
     },
     {
-      "order_id": "9bddd91c-e149-4f78-8010-0a6915d06ccd",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:08:02",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "AMD",
-      "shares": 87,
-      "price": 488.4,
-      "pnl": -186.4,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "40282cf1-0e81-44e6-a797-128546e31745",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:08:03",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "NVDA",
-      "shares": 213,
-      "price": 198.22,
-      "pnl": 14.23,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "709557bb-a964-4bd2-9b40-19596ac5658f",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:08:04",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "AMD",
-      "shares": 87,
-      "price": 488.43,
-      "pnl": -173.06,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
       "order_id": "a816516a-5c52-4f6d-8273-1e990e1f3e49",
       "date": "2026-07-31",
       "time": "2026-07-31 13:08:17",
@@ -3217,18 +2689,6 @@
       "ticker": "PLTR",
       "shares": 350,
       "price": 122.12,
-      "pnl": -6.37,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "cfac1288-0b8a-40c8-83ff-1fae1fdfae6f",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:08:17",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "NVDA",
-      "shares": 215,
-      "price": 198.324418,
       "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
@@ -3244,54 +2704,6 @@
       "reason": "[Bullish-VWAP] Price holding above VWAP ($307.73)."
     },
     {
-      "order_id": "e0507f40-c520-4b0e-b700-e3b431446a9c",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:09:37",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "TSLA",
-      "shares": 139,
-      "price": 309.870072,
-      "pnl": 10.93,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "225f94fd-2ec1-4c79-a476-6aef886976c3",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:09:42",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "TSLA",
-      "shares": 137,
-      "price": 309.9,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "17fd7006-bb7b-4ca4-9658-122e70eab425",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:10:29",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "TSLA",
-      "shares": 137,
-      "price": 310.17,
-      "pnl": -2.05,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "fa8c4d75-f6b5-4dc6-b725-b856403b6d1a",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:10:40",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "TSLA",
-      "shares": 137,
-      "price": 310.31,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
       "order_id": "5ee3b3b1-70d9-43c4-a051-77e2ffc64227",
       "date": "2026-07-31",
       "time": "2026-07-31 13:11:15",
@@ -3300,30 +2712,6 @@
       "ticker": "PLTR",
       "shares": 350,
       "price": 122.49,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "ae5d115a-0567-4a37-8638-66d7b7eb0e04",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:11:44",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "AAPL",
-      "shares": 1,
-      "price": 301.03,
-      "pnl": -0.06,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "6b106cd6-9d6b-43a8-981c-5199e7a3abfe",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:11:46",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "PLTR",
-      "shares": 348,
-      "price": 122.51,
       "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
@@ -3351,42 +2739,6 @@
       "reason": "[Bearish-VWAP] Price dropped below VWAP ($495.08)."
     },
     {
-      "order_id": "b859d19c-7bea-4d97-a86f-288da0b9e62d",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:12:31",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "AMD",
-      "shares": 87,
-      "price": 490.208506,
-      "pnl": -136.28,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "2545a6e9-eab3-4d49-a86d-77badc0716c3",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:12:41",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "AMD",
-      "shares": 87,
-      "price": 490.45,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "a94d5d0e-ca14-4012-a2b9-934becc48787",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:12:44",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "AMD",
-      "shares": 87,
-      "price": 490.27,
-      "pnl": -54.95,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
       "date": "2026-07-31",
       "time": "2026-07-31 13:12:54",
       "action": "COVER",
@@ -3396,18 +2748,6 @@
       "price": 489.97,
       "pnl": 38.28,
       "reason": "[Short-Reversal] EMA Golden Cross and reclaimed VWAP."
-    },
-    {
-      "order_id": "8bda4e8e-b9fd-4712-b66c-58572d164b9e",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:13:06",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "AMD",
-      "shares": 87,
-      "price": 490.067816,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
     },
     {
       "order_id": "ed5123e1-cd0b-4ae5-b26a-b3d5d65039e2",
@@ -3431,102 +2771,6 @@
       "price": 122.26,
       "pnl": 0.0,
       "reason": "[Bullish-VWAP] Price holding above VWAP ($121.36)."
-    },
-    {
-      "order_id": "43f9bbc6-acd9-4ae3-8331-0852a8252052",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:17:58",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "PLTR",
-      "shares": 348,
-      "price": 122.220144,
-      "pnl": -93.91,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "635b388e-d6a2-489e-9de2-69293ff358a3",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:18:05",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "PLTR",
-      "shares": 1,
-      "price": 122.29,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "18f21f77-128a-4026-9d8e-b288d4bfc1a1",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:18:20",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "PLTR",
-      "shares": 1,
-      "price": 122.24,
-      "pnl": -0.25,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "b561c56c-53f9-4e9d-8a98-6cf2d739b86d",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:18:29",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "PLTR",
-      "shares": 1,
-      "price": 122.33,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "4b427499-e0e0-4eec-bdbb-4ad671a24e59",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:19:24",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "MSFT",
-      "shares": 1,
-      "price": 462.57,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "6aa2e06d-c0f9-4126-939e-b743ed74ed49",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:22:13",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "CRWV",
-      "shares": 592,
-      "price": 71.83,
-      "pnl": -1403.04,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "21c12371-1797-4b01-b020-31b1f0806681",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:22:39",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "TSLA",
-      "shares": 137,
-      "price": 309.82,
-      "pnl": -10.96,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "93fad046-89ae-467b-9944-339fe69c497b",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:22:47",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "TSLA",
-      "shares": 137,
-      "price": 309.872336,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
     },
     {
       "order_id": "4cf24b97-41de-40ba-a81e-56676d957827",
@@ -3553,18 +2797,6 @@
       "reason": "Alpaca Broker Executed Sync"
     },
     {
-      "order_id": "b06966ff-db1e-46da-a071-5405d0360ae1",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:27:16",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "CRWV",
-      "shares": 592,
-      "price": 72.13,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
       "date": "2026-07-31",
       "time": "2026-07-31 13:27:23",
       "action": "SHORT",
@@ -3574,102 +2806,6 @@
       "price": 72.03,
       "pnl": 0.0,
       "reason": "[Bearish-VWAP] Price dropped below VWAP ($73.14)."
-    },
-    {
-      "order_id": "bbc7f8b1-674f-4b90-9c2d-7bf3a3a4e21c",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:27:32",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "CRWV",
-      "shares": 592,
-      "price": 72.026605,
-      "pnl": -133.66,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "38b03577-1664-440e-b0ce-239f8ff78c3b",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:27:45",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "AAPL",
-      "shares": 141,
-      "price": 301.1,
-      "pnl": 1.39,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "6161c985-df20-4f07-887c-9117f97d7ab8",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:31:01",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "TSLA",
-      "shares": 137,
-      "price": 310.145036,
-      "pnl": -22.6,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "30904ff1-55fc-46bb-acfb-e8c7de2b1daf",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:31:05",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "TSLA",
-      "shares": 137,
-      "price": 310.26,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "2c01a037-0d53-4283-bd1e-e5b3771f71ce",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:32:07",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "AAPL",
-      "shares": 141,
-      "price": 301.428014,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "1d4ca6cc-f64d-4274-89ad-9213c74634a8",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:32:14",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "AAPL",
-      "shares": 141,
-      "price": 301.28,
-      "pnl": -20.2,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "21808e1e-ca5e-4494-9ad8-1252300dd15e",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:32:37",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "TSLA",
-      "shares": 137,
-      "price": 310.11,
-      "pnl": 32.56,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "a36c4ac6-064d-4ef1-8ad0-e70ced6e0672",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:32:51",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "TSLA",
-      "shares": 137,
-      "price": 310.221751,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
     },
     {
       "date": "2026-07-31",
@@ -3683,18 +2819,6 @@
       "reason": "[Long-TrailingStop] Price pulled back from peak $310.82 to trigger stop $310.12."
     },
     {
-      "order_id": "e8dccd06-015a-4dbb-8cd2-ae7c338b1178",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:33:05",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "TSLA",
-      "shares": 137,
-      "price": 310.11,
-      "pnl": -15.31,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
       "order_id": "d89be720-9d81-4692-8677-2541ea853308",
       "date": "2026-07-31",
       "time": "2026-07-31 13:33:18",
@@ -3703,67 +2827,7 @@
       "ticker": "SNDK",
       "shares": 36,
       "price": 1371.563056,
-      "pnl": 3728.99,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "430b9ffc-79a5-41aa-9c4f-b92897223ab9",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:33:23",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "TSLA",
-      "shares": 137,
-      "price": 310.18,
       "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "47f6f983-8a05-49c0-b0d5-c9fff6ed13f6",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:33:42",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "AAPL",
-      "shares": 141,
-      "price": 301.484539,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "b0b94383-0109-46de-8acc-e079c03370da",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:33:43",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "CRWV",
-      "shares": 592,
-      "price": 72.144899,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "ef5705bc-c033-44ba-b119-06f3b3f340d5",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:33:56",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "AAPL",
-      "shares": 141,
-      "price": 301.48,
-      "pnl": -0.53,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "2d4e4118-58a1-4be6-a76d-394e47fbf851",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:33:58",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "CRWV",
-      "shares": 591,
-      "price": 72.14,
-      "pnl": -67.67,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -3787,30 +2851,6 @@
       "price": 72.17,
       "pnl": 1199.73,
       "reason": "[Short-Reversal] EMA Golden Cross and reclaimed VWAP."
-    },
-    {
-      "order_id": "837c46e9-6757-490e-aa9c-b543c3f406ec",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:34:14",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "AAPL",
-      "shares": 141,
-      "price": 301.47,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "63481b5b-a742-4b20-890d-e1777b0ff411",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:34:16",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "CRWV",
-      "shares": 591,
-      "price": 72.186294,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
     },
     {
       "order_id": "df36c753-c56e-4dca-8ccb-9e27fcd526ac",
@@ -3849,66 +2889,6 @@
       "reason": "Alpaca Broker Executed Sync"
     },
     {
-      "order_id": "d9458bc1-90cd-4de3-862d-4dcfa037209a",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:36:22",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "TSLA",
-      "shares": 137,
-      "price": 310.551606,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "849311b5-7749-47a9-a147-49f6e45c8943",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:36:52",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "TSLA",
-      "shares": 1,
-      "price": 310.58,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "e89889cd-5d48-40eb-97ca-f67a53125030",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:37:16",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "MSFT",
-      "shares": 1,
-      "price": 462.29,
-      "pnl": -0.03,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "e634028a-dc08-4fac-9850-9622aadb5f7c",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:37:18",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "PLTR",
-      "shares": 1,
-      "price": 122.63,
-      "pnl": 0.14,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "f4de9fd3-7df6-4e1a-8d35-65c502d95b09",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:37:23",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "MSFT",
-      "shares": 1,
-      "price": 462.45,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
       "date": "2026-07-31",
       "time": "2026-07-31 13:37:24",
       "action": "SELL",
@@ -3920,18 +2900,6 @@
       "reason": "[Long-TrailingStop] Price pulled back from peak $463.65 to trigger stop $462.67."
     },
     {
-      "order_id": "720d4dab-b60c-41da-bfd6-5d31de794915",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:37:24",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "PLTR",
-      "shares": 1,
-      "price": 122.66,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
       "date": "2026-07-31",
       "time": "2026-07-31 13:37:26",
       "action": "SELL",
@@ -3941,54 +2909,6 @@
       "price": 122.666,
       "pnl": 0.16,
       "reason": "[Long-TrailingStop] Price pulled back from peak $123.03 to trigger stop $122.70."
-    },
-    {
-      "order_id": "f890dc0d-4284-4922-8234-371fc5a8fe0f",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:37:32",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "MSFT",
-      "shares": 1,
-      "price": 462.32,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "a452b0c2-50b7-422a-af03-4970a83803d8",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:37:34",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "PLTR",
-      "shares": 1,
-      "price": 122.62,
-      "pnl": 0.11,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "c4a2c653-c5dd-49b5-8441-394e96e5e6e0",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:37:50",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "MSFT",
-      "shares": 1,
-      "price": 462.31,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "f4370b28-1624-4047-815d-ea9f477a68e6",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:37:53",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "PLTR",
-      "shares": 1,
-      "price": 122.68,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
     },
     {
       "date": "2026-07-31",
@@ -4013,30 +2933,6 @@
       "reason": "[Long-Reversal] EMA Death Cross and below VWAP."
     },
     {
-      "order_id": "43228bf6-26a4-425f-8420-b924fc579044",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:39:14",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "MSFT",
-      "shares": 1,
-      "price": 462.46,
-      "pnl": 0.14,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "68a29b0f-0b02-4983-9b91-6d42558d55d1",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:39:18",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "NVDA",
-      "shares": 215,
-      "price": 199.403999,
-      "pnl": 55.06,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
       "order_id": "9257142a-42c5-493a-8d84-ea34d8230f29",
       "date": "2026-07-31",
       "time": "2026-07-31 13:39:31",
@@ -4057,7 +2953,7 @@
       "ticker": "NVDA",
       "shares": 2,
       "price": 199.32,
-      "pnl": -0.06,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -4069,55 +2965,7 @@
       "ticker": "AMD",
       "shares": 1,
       "price": 491.01,
-      "pnl": 0.94,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "c253bb66-b976-4106-8d6c-f5d52200aed6",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:39:33",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "MSFT",
-      "shares": 92,
-      "price": 462.45,
-      "pnl": 11.46,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "e815ecb1-52d1-4225-82a2-a5fc351edacd",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:39:34",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "MSFT",
-      "shares": 92,
-      "price": 462.45,
       "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "93633433-e1f8-4330-9106-eab20ba15817",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:40:04",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "TSLA",
-      "shares": 1,
-      "price": 310.03,
-      "pnl": -0.52,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "4a062c57-75c7-42e7-91a0-47c08c4c2137",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:40:06",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "PLTR",
-      "shares": 1,
-      "price": 122.42,
-      "pnl": -0.09,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -4129,7 +2977,7 @@
       "ticker": "MU",
       "shares": 2,
       "price": 848.565,
-      "pnl": -58.07,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -4141,7 +2989,7 @@
       "ticker": "CRWV",
       "shares": 30,
       "price": 72.07,
-      "pnl": -3.49,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -4167,42 +3015,6 @@
       "reason": "[Bullish-VWAP] Price holding above VWAP ($121.43)."
     },
     {
-      "order_id": "b04f9058-7c9a-4266-a340-a3fc4385cc99",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:40:22",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "TSLA",
-      "shares": 137,
-      "price": 310.15,
-      "pnl": -55.05,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "d68fa5b1-2480-4db2-9805-495a46d0fa06",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:40:23",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "PLTR",
-      "shares": 348,
-      "price": 122.5,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "cd63288a-5d2d-4869-af4f-01f8b6fd577d",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:40:40",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "PLTR",
-      "shares": 348,
-      "price": 122.473305,
-      "pnl": -12.12,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
       "date": "2026-07-31",
       "time": "2026-07-31 13:40:48",
       "action": "BUY",
@@ -4212,30 +3024,6 @@
       "price": 122.46,
       "pnl": 0.0,
       "reason": "[Bullish-VWAP] Price holding above VWAP ($121.43)."
-    },
-    {
-      "order_id": "7da5f825-25cf-4eb5-bf52-680e909577dc",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:40:57",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "PLTR",
-      "shares": 348,
-      "price": 122.58,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "4324ce37-b768-41f4-9b2e-5889ad7c685b",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:41:17",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "PLTR",
-      "shares": 348,
-      "price": 122.566696,
-      "pnl": 36.71,
-      "reason": "Alpaca Broker Executed Sync"
     },
     {
       "date": "2026-07-31",
@@ -4249,18 +3037,6 @@
       "reason": "[Bearish-Cross] EMA 9/21 Death Cross formed."
     },
     {
-      "order_id": "9a18a742-3a40-4db4-8680-e8554f5def67",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:41:33",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "PLTR",
-      "shares": 348,
-      "price": 122.55,
-      "pnl": 17.48,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
       "order_id": "67bed754-cd81-49ce-b4a1-caa744ad7b4a",
       "date": "2026-07-31",
       "time": "2026-07-31 13:46:00",
@@ -4269,42 +3045,6 @@
       "ticker": "AAPL",
       "shares": 135,
       "price": 301.21,
-      "pnl": -37.06,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "200c5e50-66b3-43c3-9f10-6ca908b70159",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:46:12",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "AAPL",
-      "shares": 142,
-      "price": 301.24,
-      "pnl": -32.78,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "88578ecd-b1bc-454a-8015-9b1ad5670eab",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:47:05",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "TSLA",
-      "shares": 137,
-      "price": 310.69,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "7982bd17-cac3-4894-9c62-5a9efa23dbef",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:47:39",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "TSLA",
-      "shares": 137,
-      "price": 310.676204,
       "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
@@ -4317,7 +3057,7 @@
       "ticker": "NVDA",
       "shares": 1,
       "price": 198.98,
-      "pnl": -0.37,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -4329,7 +3069,7 @@
       "ticker": "SNDK",
       "shares": 31,
       "price": 1260.39,
-      "pnl": -180.68,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -4344,78 +3084,6 @@
       "reason": "[Bullish-VWAP] Price holding above VWAP ($197.60)."
     },
     {
-      "order_id": "39704a58-d78d-4e3f-b485-a9de99b968b3",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:49:19",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "NVDA",
-      "shares": 214,
-      "price": 199.126028,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "568e0704-3f0f-439f-973f-24ad32217182",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:49:28",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "NVDA",
-      "shares": 214,
-      "price": 199.09,
-      "pnl": -6.42,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "bf508567-b2b1-47c7-ab2f-af709691ecce",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:49:33",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "NVDA",
-      "shares": 214,
-      "price": 199.146822,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "a74e90a6-2f31-4055-b9b8-d57e3175d355",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:49:58",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "NVDA",
-      "shares": 214,
-      "price": 199.12,
-      "pnl": -1.29,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "c7f9108a-a3bf-4983-bb26-446e2db97b8a",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:52:07",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "NVDA",
-      "shares": 213,
-      "price": 199.541925,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "6dbc894d-e405-465d-a999-6a6c27b76fa1",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:54:46",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "PLTR",
-      "shares": 348,
-      "price": 122.53,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
       "date": "2026-07-31",
       "time": "2026-07-31 13:54:47",
       "action": "BUY",
@@ -4425,18 +3093,6 @@
       "price": 311.195,
       "pnl": 0.0,
       "reason": "[Bullish-VWAP] Price holding above VWAP ($307.94)."
-    },
-    {
-      "order_id": "938c257d-7890-4b08-81b8-2974f6cf16b2",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:54:47",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "TSLA",
-      "shares": 137,
-      "price": 311.222409,
-      "pnl": -8.74,
-      "reason": "Alpaca Broker Executed Sync"
     },
     {
       "order_id": "586661df-2590-4544-ba12-9ce7a1838222",
@@ -4451,18 +3107,6 @@
       "reason": "Alpaca Broker Executed Sync"
     },
     {
-      "order_id": "50334039-712b-4ba1-b567-a4a7f9a444df",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:54:47",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "AAPL",
-      "shares": 142,
-      "price": 300.65,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
       "date": "2026-07-31",
       "time": "2026-07-31 13:54:48",
       "action": "BUY",
@@ -4472,18 +3116,6 @@
       "price": 199.42,
       "pnl": 0.0,
       "reason": "[Bullish-VWAP] Price holding above VWAP ($197.62)."
-    },
-    {
-      "order_id": "6b6a1010-b053-467f-80f9-e7a33fc59376",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:54:48",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "NVDA",
-      "shares": 213,
-      "price": 199.429108,
-      "pnl": 60.13,
-      "reason": "Alpaca Broker Executed Sync"
     },
     {
       "date": "2026-07-31",
@@ -4506,78 +3138,6 @@
       "price": 490.27,
       "pnl": 0.0,
       "reason": "[Bearish-VWAP] Price dropped below VWAP ($494.75)."
-    },
-    {
-      "order_id": "132d5b57-8191-46bf-9fb2-abeda1076fa4",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:54:56",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "NVDA",
-      "shares": 214,
-      "price": 199.47,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "b253abb8-5483-4f54-a83a-e9b2796eda52",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:54:57",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "TSLA",
-      "shares": 137,
-      "price": 311.3,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "dbea332b-fb51-4e93-b215-75e51215a30f",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:54:59",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "AMD",
-      "shares": 87,
-      "price": 490.119655,
-      "pnl": 4.62,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "1a3fbdfa-b00f-4cc8-975e-ab86c80588c6",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:54:59",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "AAPL",
-      "shares": 142,
-      "price": 300.663381,
-      "pnl": -113.19,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "1fd4d681-434a-45c1-b8c5-5a1392d0e8e4",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:56:42",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "CRCL",
-      "shares": 690,
-      "price": 61.9,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "29d12e28-d6a7-4784-bb64-431df526efba",
-      "date": "2026-07-31",
-      "time": "2026-07-31 13:58:49",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "SNDK",
-      "shares": 33,
-      "price": 1258.53,
-      "pnl": 224.82,
-      "reason": "Alpaca Broker Executed Sync"
     },
     {
       "date": "2026-07-31",
@@ -4624,18 +3184,6 @@
       "reason": "[Bearish-VWAP] Price dropped below VWAP ($73.09)."
     },
     {
-      "order_id": "15cc25a1-bf87-406a-9e46-4a86bf16aee9",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:06:14",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "SNDK",
-      "shares": 33,
-      "price": 1256.33,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
       "date": "2026-07-31",
       "time": "2026-07-31 14:06:15",
       "action": "BUY",
@@ -4647,198 +3195,6 @@
       "reason": "[Bullish-VWAP] Price holding above VWAP ($60.57)."
     },
     {
-      "order_id": "7caa60af-89c4-4afd-9f19-bb89fd02daa8",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:06:16",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "CRCL",
-      "shares": 690,
-      "price": 62.11,
-      "pnl": 144.9,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "a5d40e74-28f1-41c2-8c68-4da0c6b1b29c",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:06:16",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "AAPL",
-      "shares": 142,
-      "price": 301.02,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "9ef15e0c-9ee9-4ee9-9cf7-c5ddcba3b5ce",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:06:18",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "NVDA",
-      "shares": 214,
-      "price": 199.681309,
-      "pnl": 30.22,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "a23efd56-7afb-455a-96a3-32a233bb3426",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:06:18",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "AMD",
-      "shares": 87,
-      "price": 488.85046,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "211e2c37-44e3-43d3-be50-8d89ca2cbb04",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:06:19",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "TSLA",
-      "shares": 137,
-      "price": 311.357081,
-      "pnl": 22.21,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "186cf104-782c-4f7f-87e1-aa148ce587f1",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:06:20",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "AAPL",
-      "shares": 142,
-      "price": 301.02,
-      "pnl": 52.54,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "ef9ee7e8-4602-4e7c-b8d1-b0ef4577afa1",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:06:21",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "SNDK",
-      "shares": 34,
-      "price": 1255.86,
-      "pnl": -107.25,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "e1d12452-2431-4cab-b26b-9e1efb7deb73",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:06:23",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "CRWV",
-      "shares": 594,
-      "price": 72.31,
-      "pnl": -61.25,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "f39284b3-e803-43dc-9392-a9ad71dae5fb",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:06:25",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "CRCL",
-      "shares": 690,
-      "price": 62.157826,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "d92b7119-dc23-41f9-a16c-4168f55fc809",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:06:26",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "MU",
-      "shares": 50,
-      "price": 846.5836,
-      "pnl": -1487.97,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "b0bc6186-7ec3-4722-b42e-d3ce5e7fe8d3",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:06:34",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "NVDA",
-      "shares": 214,
-      "price": 199.745981,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "31de1390-c53f-423b-8554-47cbaa393623",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:06:34",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "TSLA",
-      "shares": 137,
-      "price": 311.36,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "d0a8bc8b-e253-44f7-a209-29fcc4e39abb",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:08:53",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "CRCL",
-      "shares": 690,
-      "price": 61.85,
-      "pnl": -125.99,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "22a481b2-3277-4a9f-855e-3d1b6aee01ca",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:11:14",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "NVDA",
-      "shares": 214,
-      "price": 199.43,
-      "pnl": 2.14,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "8c100d7c-ca06-47cb-b94b-72657796cc44",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:11:16",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "AAPL",
-      "shares": 142,
-      "price": 301.34,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "aaa702f7-aca0-4dc7-aee7-6edde369b475",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:11:18",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "AMD",
-      "shares": 88,
-      "price": 487.199545,
-      "pnl": 123.5,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
       "date": "2026-07-31",
       "time": "2026-07-31 14:11:21",
       "action": "BUY",
@@ -4848,42 +3204,6 @@
       "price": 199.445,
       "pnl": 0.0,
       "reason": "[Bullish-VWAP] Price holding above VWAP ($197.68)."
-    },
-    {
-      "order_id": "9b5da4de-e1c9-4e78-85a5-deed4930fdf6",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:11:30",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "NVDA",
-      "shares": 217,
-      "price": 199.28,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "e7a6d474-7aa8-4816-a9a0-88b379252c87",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:12:16",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "NVDA",
-      "shares": 217,
-      "price": 199.158802,
-      "pnl": -68.36,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "a8fdc866-6b51-487c-a8e4-f2e15d3349e1",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:12:20",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "NVDA",
-      "shares": 218,
-      "price": 199.11,
-      "pnl": -136.54,
-      "reason": "Alpaca Broker Executed Sync"
     },
     {
       "date": "2026-07-31",
@@ -4906,90 +3226,6 @@
       "price": 122.1,
       "pnl": 0.0,
       "reason": "[Bearish-Breakdown] Donchian Low breakdown ($122.10)."
-    },
-    {
-      "order_id": "5f91edef-99d9-4899-b802-034431cbab59",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:12:42",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "NVDA",
-      "shares": 218,
-      "price": 199.227248,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "a38c3e06-690f-443e-89fc-b3876c38f9c6",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:12:43",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "PLTR",
-      "shares": 355,
-      "price": 122.04,
-      "pnl": -149.78,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "a9f6c0f9-c2ec-448e-ad29-4e41fd556800",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:18:07",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "SNDK",
-      "shares": 34,
-      "price": 1241.130588,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "c4558776-c9e3-4386-ade9-c1229226db19",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:18:09",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "MU",
-      "shares": 50,
-      "price": 837.4526,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "352b5b45-7932-433f-8380-3f7bfb631039",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:18:10",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "SNDK",
-      "shares": 34,
-      "price": 1239.94,
-      "pnl": -40.48,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "58aee52d-9383-43e9-9ef5-fc4c43f792b9",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:18:11",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "MSFT",
-      "shares": 93,
-      "price": 462.01,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "fdbb84e4-7a53-428c-9d56-dbaf61bee979",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:18:13",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "CRWV",
-      "shares": 594,
-      "price": 71.76,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
     },
     {
       "date": "2026-07-31",
@@ -5025,150 +3261,6 @@
       "reason": "[Bullish-VWAP] Price holding above VWAP ($60.59)."
     },
     {
-      "order_id": "94c820dd-a461-48c5-a8fe-454543a00940",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:18:20",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "TSLA",
-      "shares": 137,
-      "price": 311.706788,
-      "pnl": 55.73,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "4a2c638f-5be6-4c6d-ae5f-b22039631036",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:18:20",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "MSFT",
-      "shares": 93,
-      "price": 461.96,
-      "pnl": 47.43,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "411d39b9-b5f9-48cd-b238-43d8a7b11f4b",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:18:21",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "SNDK",
-      "shares": 34,
-      "price": 1241.88,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "d658baba-5f82-4db4-8e6b-3d64f2f2a2ac",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:18:21",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "AMD",
-      "shares": 88,
-      "price": 487.73,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "fbb3f852-c8c4-4263-9b7b-512994b37810",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:18:22",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "PLTR",
-      "shares": 355,
-      "price": 122.18,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "80fe29d0-3233-46a6-9142-9be6791d8db5",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:18:24",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "CRWV",
-      "shares": 603,
-      "price": 71.75,
-      "pnl": -66.24,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "b31a146f-525a-4350-9c79-5a3d43c988a7",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:18:24",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "MU",
-      "shares": 51,
-      "price": 837.430588,
-      "pnl": -4206.62,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "b95d63e1-f3e2-4ae7-8c59-5d08696e9271",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:18:25",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "CRCL",
-      "shares": 698,
-      "price": 62.016648,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "704834bf-7471-4013-8a81-958abd4356ad",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:18:32",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "MSFT",
-      "shares": 93,
-      "price": 462.02,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "387e7d3c-5909-4d34-9296-a8ec9d978cf4",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:18:34",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "AMD",
-      "shares": 88,
-      "price": 487.654773,
-      "pnl": -6.62,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "a0f0e237-03a1-4414-b9ee-0faa70c4795c",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:18:34",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "TSLA",
-      "shares": 138,
-      "price": 311.719565,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "86d751be-fbf6-4280-8464-b593b27f5970",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:26:34",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "TSLA",
-      "shares": 138,
-      "price": 311.37,
-      "pnl": 1.02,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
       "date": "2026-07-31",
       "time": "2026-07-31 14:26:43",
       "action": "BUY",
@@ -5180,54 +3272,6 @@
       "reason": "[Bullish-VWAP] Price holding above VWAP ($308.11)."
     },
     {
-      "order_id": "5a7f4600-829c-4bd8-9d9a-50e94dabce65",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:26:55",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "TSLA",
-      "shares": 139,
-      "price": 311.238561,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "3cc41509-0162-4e0c-be42-c895cd676eca",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:27:35",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "TSLA",
-      "shares": 139,
-      "price": 311.059425,
-      "pnl": -91.53,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "3c64c0e7-1bbc-4417-83de-3fbb5e198903",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:27:38",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "SNDK",
-      "shares": 34,
-      "price": 1236.04,
-      "pnl": -198.56,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "10987afc-62b1-457c-a0fb-9380e16822fa",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:28:12",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "CRCL",
-      "shares": 698,
-      "price": 61.98,
-      "pnl": -122.26,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
       "date": "2026-07-31",
       "time": "2026-07-31 14:28:26",
       "action": "BUY",
@@ -5237,18 +3281,6 @@
       "price": 311.2201,
       "pnl": 0.0,
       "reason": "[Bullish-VWAP] Price holding above VWAP ($308.12)."
-    },
-    {
-      "order_id": "c342a921-7303-4a16-97de-7a1ea52b8aa9",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:28:39",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "TSLA",
-      "shares": 138,
-      "price": 311.187174,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
     },
     {
       "date": "2026-07-31",
@@ -5273,102 +3305,6 @@
       "reason": "[Bullish-VWAP] Price holding above VWAP ($60.61)."
     },
     {
-      "order_id": "ae63af75-a96b-432e-8927-9ecd08ffaf76",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:29:08",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "TSLA",
-      "shares": 138,
-      "price": 310.87,
-      "pnl": -50.86,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "9aaecc89-93a4-4b68-9c41-b4cf45c1d052",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:29:11",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "CRCL",
-      "shares": 698,
-      "price": 62.01,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "7c3e1615-b540-44e8-aed7-4ead794f276e",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:30:17",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "MU",
-      "shares": 51,
-      "price": 836.84,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "66a4d271-2393-4fc0-8ddc-328c2e537c3b",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:30:27",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "MU",
-      "shares": 51,
-      "price": 836.0,
-      "pnl": 34.93,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "51a68422-7e55-4622-849f-71b09fb28a07",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:30:53",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "CRCL",
-      "shares": 698,
-      "price": 61.98,
-      "pnl": 37.66,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "4e468bda-b371-4dca-b1a7-65af3f3897a0",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:31:03",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "CRCL",
-      "shares": 691,
-      "price": 62.04,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "bd545ec5-4bff-4d00-8936-985c2b34d22e",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:31:26",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "CRWV",
-      "shares": 603,
-      "price": 72.03,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "9b5abe09-45aa-478d-9e68-1ada30238ebe",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:31:35",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "CRWV",
-      "shares": 595,
-      "price": 71.98,
-      "pnl": -29.75,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
       "date": "2026-07-31",
       "time": "2026-07-31 14:31:52",
       "action": "SHORT",
@@ -5380,66 +3316,6 @@
       "reason": "[Bearish-VWAP] Price dropped below VWAP ($73.05)."
     },
     {
-      "order_id": "2202d019-db50-4b79-8220-52cf1148bd2a",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:31:55",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "CRWV",
-      "shares": 595,
-      "price": 72.03,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "b93bedf4-35e1-4a35-8f58-3c6e71a1a71b",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:32:03",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "CRWV",
-      "shares": 595,
-      "price": 72.009932,
-      "pnl": -6.11,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "38e9a143-b692-491a-b214-9d58768dc631",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:32:09",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "CRWV",
-      "shares": 595,
-      "price": 72.03,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "1108dfa0-eda5-454b-a9d5-60228c309c09",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:32:43",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "CRWV",
-      "shares": 595,
-      "price": 72.02,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "47d689b1-c564-42d4-956d-c3cb563a8b01",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:32:54",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "SNDK",
-      "shares": 34,
-      "price": 1248.45,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
       "date": "2026-07-31",
       "time": "2026-07-31 14:33:00",
       "action": "BUY",
@@ -5449,42 +3325,6 @@
       "price": 1248.1801,
       "pnl": 0.0,
       "reason": "[Bullish-Cross] EMA 9/21 Golden Cross formed."
-    },
-    {
-      "order_id": "1fa66052-cb93-4235-a598-ec1184380896",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:33:08",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "SNDK",
-      "shares": 32,
-      "price": 1250.0,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "2fcc86ba-f0d8-440a-bee5-c3c82c998015",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:34:01",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "CRCL",
-      "shares": 691,
-      "price": 61.86,
-      "pnl": -108.24,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "c9f4d4a5-c6f9-4c23-a94f-b254ff04f967",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:34:03",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "AMD",
-      "shares": 88,
-      "price": 488.25,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
     },
     {
       "date": "2026-07-31",
@@ -5509,42 +3349,6 @@
       "reason": "[Bearish-Cross] EMA 9/21 Death Cross formed."
     },
     {
-      "order_id": "ce6eb202-8970-4f87-9710-c08e70b061d4",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:34:17",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "AMD",
-      "shares": 4,
-      "price": 488.42,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "4994e87f-9c59-404e-8159-2fe23fa92be7",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:34:23",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "CRCL",
-      "shares": 692,
-      "price": 61.871127,
-      "pnl": -96.1,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "2d61dbae-5db2-4596-9e42-cbab63c19d38",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:34:32",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "CRCL",
-      "shares": 692,
-      "price": 61.93,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
       "date": "2026-07-31",
       "time": "2026-07-31 14:34:45",
       "action": "SHORT",
@@ -5554,30 +3358,6 @@
       "price": 61.86,
       "pnl": 0.0,
       "reason": "[Bearish-Cross] EMA 9/21 Death Cross formed."
-    },
-    {
-      "order_id": "7ca3a843-3bd2-40e9-9d7b-3ea7a02b35c9",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:34:53",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "CRCL",
-      "shares": 691,
-      "price": 61.89,
-      "pnl": -82.92,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "39c35db6-578e-4f2b-81de-22df9953200f",
-      "date": "2026-07-31",
-      "time": "2026-07-31 14:35:36",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "TSLA",
-      "shares": 137,
-      "price": 310.4,
-      "pnl": -112.35,
-      "reason": "Alpaca Broker Executed Sync"
     },
     {
       "date": "2026-07-31",
@@ -6116,7 +3896,7 @@
       "ticker": "AAPL",
       "shares": 139,
       "price": 300.42,
-      "pnl": -98.56,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -6128,7 +3908,7 @@
       "ticker": "NVDA",
       "shares": 237,
       "price": 197.768228,
-      "pnl": -397.39,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -6140,7 +3920,7 @@
       "ticker": "MU",
       "shares": 49,
       "price": 835.41,
-      "pnl": 163.65,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -6168,126 +3948,6 @@
       "reason": "Alpaca Broker Executed Sync"
     },
     {
-      "order_id": "84b7099c-1742-44e3-99c0-0f05d9fdc80d",
-      "date": "2026-07-31",
-      "time": "2026-07-31 16:33:11",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "TSLA",
-      "shares": 139,
-      "price": 309.24,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "821762ba-f945-4444-9c8f-bb38e5edd342",
-      "date": "2026-07-31",
-      "time": "2026-07-31 16:33:12",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "MSFT",
-      "shares": 10,
-      "price": 464.15,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "597ca0f6-6103-4dc3-8b26-dfb19234e1cc",
-      "date": "2026-07-31",
-      "time": "2026-07-31 16:33:12",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "NVDA",
-      "shares": 218,
-      "price": 198.064954,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "49fe2150-83dd-415b-947c-aa6d17e9d64f",
-      "date": "2026-07-31",
-      "time": "2026-07-31 16:33:12",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "TSLA",
-      "shares": 139,
-      "price": 309.24036,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "64beb98a-95e2-4bb6-8e9d-d40b7f898657",
-      "date": "2026-07-31",
-      "time": "2026-07-31 16:33:13",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "MSFT",
-      "shares": 10,
-      "price": 464.15,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "c1555778-567b-4c47-a328-a2d37ba07f4c",
-      "date": "2026-07-31",
-      "time": "2026-07-31 16:33:13",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "AAPL",
-      "shares": 144,
-      "price": 300.130486,
-      "pnl": -109.22,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "73076234-bc86-48ca-9a4a-05f955229f34",
-      "date": "2026-07-31",
-      "time": "2026-07-31 16:33:13",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "NVDA",
-      "shares": 218,
-      "price": 198.059083,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "95d038b6-874f-4194-9919-6ccd67f740bf",
-      "date": "2026-07-31",
-      "time": "2026-07-31 16:36:03",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "MSFT",
-      "shares": 20,
-      "price": 462.65,
-      "pnl": 12.8,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "f5d1e798-f6e9-468d-b4bb-07be87d44c1a",
-      "date": "2026-07-31",
-      "time": "2026-07-31 16:36:36",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "MSFT",
-      "shares": 1,
-      "price": 462.82,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "79c392ab-661d-47af-b151-0632e82c5d3d",
-      "date": "2026-07-31",
-      "time": "2026-07-31 16:37:11",
-      "action": "BUY",
-      "action_cn": "买入",
-      "ticker": "PLTR",
-      "shares": 1,
-      "price": 122.41,
-      "pnl": 0.0,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
       "order_id": "b02d4fd3-2fa1-40ad-82f7-2e58d4c9ec5e",
       "date": "2026-08-04",
       "time": "2026-08-04 11:29:14",
@@ -6308,7 +3968,7 @@
       "ticker": "SNDK",
       "shares": 28,
       "price": 1411.72,
-      "pnl": 4571.56,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -6344,7 +4004,7 @@
       "ticker": "NVDA",
       "shares": 104,
       "price": 209.850288,
-      "pnl": 1082.15,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -6356,7 +4016,7 @@
       "ticker": "MSFT",
       "shares": 1,
       "price": 498.03,
-      "pnl": 36.02,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -6476,7 +4136,7 @@
       "ticker": "AMD",
       "shares": 1,
       "price": 518.99,
-      "pnl": 30.74,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -6488,7 +4148,7 @@
       "ticker": "TSLA",
       "shares": 68,
       "price": 323.476912,
-      "pnl": 835.64,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -6560,7 +4220,7 @@
       "ticker": "MSFT",
       "shares": 39,
       "price": 497.142051,
-      "pnl": 1370.15,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -6872,7 +4532,7 @@
       "ticker": "MU",
       "shares": 30,
       "price": 894.97,
-      "pnl": -47.11,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -6932,7 +4592,7 @@
       "ticker": "MU",
       "shares": 1,
       "price": 893.74,
-      "pnl": -0.25,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -6980,7 +4640,7 @@
       "ticker": "SNDK",
       "shares": 102,
       "price": 1423.103627,
-      "pnl": -4983.06,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -7040,7 +4700,7 @@
       "ticker": "SNDK",
       "shares": 10,
       "price": 1417.0,
-      "pnl": -86.7,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -7052,7 +4712,7 @@
       "ticker": "NVDA",
       "shares": 1,
       "price": 210.5,
-      "pnl": 11.06,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -7076,7 +4736,7 @@
       "ticker": "AMD",
       "shares": 2,
       "price": 522.225,
-      "pnl": 67.95,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -7112,7 +4772,7 @@
       "ticker": "NVDA",
       "shares": 72,
       "price": 210.48,
-      "pnl": 794.52,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -7124,7 +4784,7 @@
       "ticker": "SNDK",
       "shares": 15,
       "price": 1418.0,
-      "pnl": -99.0,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -7136,7 +4796,7 @@
       "ticker": "AMD",
       "shares": 42,
       "price": 521.241905,
-      "pnl": 1385.66,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -7148,7 +4808,7 @@
       "ticker": "NVDA",
       "shares": 104,
       "price": 210.385577,
-      "pnl": 1152.67,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -7184,7 +4844,7 @@
       "ticker": "TSLA",
       "shares": 67,
       "price": 324.69,
-      "pnl": 904.69,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -7196,7 +4856,7 @@
       "ticker": "AMD",
       "shares": 42,
       "price": 521.574286,
-      "pnl": 1399.74,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -7232,7 +4892,7 @@
       "ticker": "SNDK",
       "shares": 10,
       "price": 1413.05,
-      "pnl": -94.8,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -7364,7 +5024,7 @@
       "ticker": "MSFT",
       "shares": 44,
       "price": 496.43,
-      "pnl": 1514.48,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -7412,7 +5072,7 @@
       "ticker": "MU",
       "shares": 1,
       "price": 892.68,
-      "pnl": -2.69,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -7424,7 +5084,7 @@
       "ticker": "NVDA",
       "shares": 104,
       "price": 210.34,
-      "pnl": 1150.24,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -7448,7 +5108,7 @@
       "ticker": "MU",
       "shares": 21,
       "price": 892.27,
-      "pnl": -29.08,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -7484,7 +5144,7 @@
       "ticker": "NVDA",
       "shares": 92,
       "price": 210.345979,
-      "pnl": 1021.71,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -7496,7 +5156,7 @@
       "ticker": "TSLA",
       "shares": 67,
       "price": 324.89,
-      "pnl": 909.23,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -7508,7 +5168,7 @@
       "ticker": "MU",
       "shares": 1,
       "price": 893.09,
-      "pnl": -1.08,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -7520,7 +5180,7 @@
       "ticker": "NVDA",
       "shares": 104,
       "price": 210.34,
-      "pnl": 1155.73,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -7544,7 +5204,7 @@
       "ticker": "TSLA",
       "shares": 46,
       "price": 324.44,
-      "pnl": 677.09,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -7556,7 +5216,7 @@
       "ticker": "MSFT",
       "shares": 44,
       "price": 495.862727,
-      "pnl": 1489.52,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -7616,7 +5276,7 @@
       "ticker": "AMD",
       "shares": 62,
       "price": 523.6,
-      "pnl": -2759.89,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -7652,7 +5312,7 @@
       "ticker": "AMD",
       "shares": 14,
       "price": 523.83,
-      "pnl": -5.68,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -7676,7 +5336,7 @@
       "ticker": "AMD",
       "shares": 41,
       "price": 523.87,
-      "pnl": -10.18,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -7772,7 +5432,7 @@
       "ticker": "SNDK",
       "shares": 24,
       "price": 1440.69,
-      "pnl": 383.47,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -7784,7 +5444,7 @@
       "ticker": "SNDK",
       "shares": 12,
       "price": 1439.31,
-      "pnl": 113.58,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -7820,7 +5480,7 @@
       "ticker": "TSLA",
       "shares": 1,
       "price": 324.77,
-      "pnl": 14.52,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -7844,7 +5504,7 @@
       "ticker": "AMD",
       "shares": 14,
       "price": 523.6,
-      "pnl": -8.58,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -7856,7 +5516,7 @@
       "ticker": "MU",
       "shares": 32,
       "price": 895.79,
-      "pnl": -11.36,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -7952,7 +5612,7 @@
       "ticker": "MU",
       "shares": 24,
       "price": 894.330833,
-      "pnl": -40.06,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -7988,7 +5648,7 @@
       "ticker": "SNDK",
       "shares": 44,
       "price": 1435.067273,
-      "pnl": -150.89,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -8024,7 +5684,7 @@
       "ticker": "SNDK",
       "shares": 10,
       "price": 1433.26,
-      "pnl": -27.3,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -8060,7 +5720,7 @@
       "ticker": "AMD",
       "shares": 3,
       "price": 524.88,
-      "pnl": 1.95,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -8072,7 +5732,7 @@
       "ticker": "MSFT",
       "shares": 1,
       "price": 493.56,
-      "pnl": 31.55,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -8084,7 +5744,7 @@
       "ticker": "TSLA",
       "shares": 90,
       "price": 321.728222,
-      "pnl": 1023.31,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -8096,7 +5756,7 @@
       "ticker": "NVDA",
       "shares": 18,
       "price": 220.794444,
-      "pnl": 388.21,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -8108,7 +5768,7 @@
       "ticker": "TSLA",
       "shares": 68,
       "price": 322.28,
-      "pnl": 723.52,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -8144,7 +5804,7 @@
       "ticker": "NVDA",
       "shares": 9,
       "price": 220.872222,
-      "pnl": 194.8,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -8168,7 +5828,7 @@
       "ticker": "NVDA",
       "shares": 5,
       "price": 220.95,
-      "pnl": 108.61,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -8180,7 +5840,7 @@
       "ticker": "NVDA",
       "shares": 2,
       "price": 220.87,
-      "pnl": 43.29,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -8192,7 +5852,7 @@
       "ticker": "NVDA",
       "shares": 1,
       "price": 220.86,
-      "pnl": 21.63,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -8204,7 +5864,7 @@
       "ticker": "NVDA",
       "shares": 1,
       "price": 220.76,
-      "pnl": 21.53,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -8216,7 +5876,7 @@
       "ticker": "NVDA",
       "shares": 1,
       "price": 220.99,
-      "pnl": 21.76,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -8228,7 +5888,7 @@
       "ticker": "MU",
       "shares": 23,
       "price": 918.998696,
-      "pnl": -47.95,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -8240,7 +5900,7 @@
       "ticker": "MU",
       "shares": 23,
       "price": 919.65,
-      "pnl": -29.67,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -8252,7 +5912,7 @@
       "ticker": "MSFT",
       "shares": 45,
       "price": 487.653778,
-      "pnl": 1153.95,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -8312,7 +5972,7 @@
       "ticker": "AMD",
       "shares": 45,
       "price": 486.4,
-      "pnl": -227.74,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -8372,7 +6032,7 @@
       "ticker": "TSLA",
       "shares": 67,
       "price": 322.12,
-      "pnl": 714.49,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -8396,7 +6056,7 @@
       "ticker": "SNDK",
       "shares": 15,
       "price": 1414.51,
-      "pnl": -39.9,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -8408,7 +6068,7 @@
       "ticker": "AMD",
       "shares": 44,
       "price": 487.19,
-      "pnl": -28.79,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -8420,7 +6080,7 @@
       "ticker": "MU",
       "shares": 23,
       "price": 918.56,
-      "pnl": -54.74,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -8432,7 +6092,7 @@
       "ticker": "MSFT",
       "shares": 30,
       "price": 489.443333,
-      "pnl": 822.7,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -8444,7 +6104,7 @@
       "ticker": "NVDA",
       "shares": 99,
       "price": 221.39,
-      "pnl": 2222.06,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -8468,7 +6128,7 @@
       "ticker": "MU",
       "shares": 23,
       "price": 917.73,
-      "pnl": -84.41,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -8492,7 +6152,7 @@
       "ticker": "AMD",
       "shares": 44,
       "price": 486.583182,
-      "pnl": -54.01,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -8504,7 +6164,7 @@
       "ticker": "MSFT",
       "shares": 44,
       "price": 489.192273,
-      "pnl": 1195.58,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -8564,7 +6224,7 @@
       "ticker": "NVDA",
       "shares": 98,
       "price": 221.617347,
-      "pnl": 2224.33,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -8588,7 +6248,7 @@
       "ticker": "NVDA",
       "shares": 68,
       "price": 221.52,
-      "pnl": 1533.72,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -8600,7 +6260,7 @@
       "ticker": "AMD",
       "shares": 44,
       "price": 487.138864,
-      "pnl": -23.83,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -8648,31 +6308,7 @@
       "ticker": "NVDA",
       "shares": 98,
       "price": 219.868368,
-      "pnl": 2046.08,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "934ba04f-edfd-4f25-ad10-b4e2dfec5b85",
-      "date": "2026-08-06",
-      "time": "2026-08-06 13:41:18",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "TSLA",
-      "shares": 33,
-      "price": 317.3,
-      "pnl": 268.15,
-      "reason": "Alpaca Broker Executed Sync"
-    },
-    {
-      "order_id": "79345ffa-4ded-488d-8865-b1356e5c6a5d",
-      "date": "2026-08-06",
-      "time": "2026-08-06 13:41:49",
-      "action": "SELL",
-      "action_cn": "卖出",
-      "ticker": "NVDA",
-      "shares": 48,
-      "price": 218.64,
-      "pnl": 943.2,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Executed Sync"
     },
     {
@@ -8795,6 +6431,118 @@
       "price": 1282.12,
       "pnl": 0.0,
       "reason": "[Standard-Entry Score:40/100 [Watchlist Top-15%]] EMA 9/21 Death Cross. Initial Stop: 0.26% (1.0R)."
+    },
+    {
+      "date": "2026-08-06",
+      "time": "2026-08-06 14:07:08",
+      "action": "PARTIAL_COVER",
+      "action_cn": "PARTIAL_COVER",
+      "ticker": "SNDK",
+      "shares": 2,
+      "price": 1276.032,
+      "pnl": 9.94,
+      "reason": "[TP1-ShortCover 40%] Reached +1.42R (+0.39% gain). Cover 40%."
+    },
+    {
+      "date": "2026-08-06",
+      "time": "2026-08-06 14:12:08",
+      "action": "PARTIAL_COVER",
+      "action_cn": "PARTIAL_COVER",
+      "ticker": "SNDK",
+      "shares": 1,
+      "price": 1276.955,
+      "pnl": 4.05,
+      "reason": "[TP1-ShortCover 40%] Reached +0.91R (+0.32% gain). Cover 40%."
+    },
+    {
+      "order_id": "42cb1295-74a2-4737-bf7d-c664b47f2854",
+      "date": "2026-08-06",
+      "time": "2026-08-06 14:14:05",
+      "action": "BUY",
+      "action_cn": "买入",
+      "ticker": "MU",
+      "shares": 11,
+      "price": 890.282727,
+      "pnl": 0.0,
+      "reason": "Alpaca Broker Executed Sync"
+    },
+    {
+      "date": "2026-08-06",
+      "time": "2026-08-06 14:15:27",
+      "action": "PARTIAL_SELL",
+      "action_cn": "PARTIAL_SELL",
+      "ticker": "MU",
+      "shares": 4,
+      "price": 892.59,
+      "pnl": 9.23,
+      "reason": "[TP1-TakeProfit 40%] Reached +1.04R (+0.26% gain). Scaling out 40%."
+    },
+    {
+      "date": "2026-08-06",
+      "time": "2026-08-06 14:16:34",
+      "action": "PARTIAL_SELL",
+      "action_cn": "PARTIAL_SELL",
+      "ticker": "MU",
+      "shares": 2,
+      "price": 893.525,
+      "pnl": 6.48,
+      "reason": "[TP1-TakeProfit 40%] Reached +1.46R (+0.36% gain). Scaling out 40%."
+    },
+    {
+      "date": "2026-08-06",
+      "time": "2026-08-06 14:16:34",
+      "action": "BUY",
+      "action_cn": "BUY",
+      "ticker": "SNDK",
+      "shares": 8,
+      "price": 1285.08,
+      "pnl": 0.0,
+      "reason": "[Conviction-Top Score:60/100 [Watchlist Top-0%]] EMA 9/21 Golden Cross. Initial Stop: 0.34% (1.0R)."
+    },
+    {
+      "order_id": "16b7d2bc-8fb2-44b3-9d23-a951ba74e353",
+      "date": "2026-08-06",
+      "time": "2026-08-06 14:16:41",
+      "action": "BUY",
+      "action_cn": "买入",
+      "ticker": "NVDA",
+      "shares": 47,
+      "price": 220.25,
+      "pnl": 0.0,
+      "reason": "Alpaca Broker Executed Sync"
+    },
+    {
+      "date": "2026-08-06",
+      "time": "2026-08-06 14:17:10",
+      "action": "BUY",
+      "action_cn": "BUY",
+      "ticker": "AMD",
+      "shares": 21,
+      "price": 492.255,
+      "pnl": 0.0,
+      "reason": "[Conviction-Top Score:50/100 [Watchlist Top-15%]] EMA 9/21 Golden Cross. Initial Stop: 0.26% (1.0R)."
+    },
+    {
+      "date": "2026-08-06",
+      "time": "2026-08-06 14:17:41",
+      "action": "PARTIAL_SELL",
+      "action_cn": "PARTIAL_SELL",
+      "ticker": "SNDK",
+      "shares": 3,
+      "price": 1293.0,
+      "pnl": 18.0,
+      "reason": "[TP1-TakeProfit 40%] Reached +0.91R (+0.47% gain). Scaling out 40%."
+    },
+    {
+      "date": "2026-08-06",
+      "time": "2026-08-06 14:17:55",
+      "action": "PARTIAL_SELL",
+      "action_cn": "PARTIAL_SELL",
+      "ticker": "MU",
+      "shares": 1,
+      "price": 895.7305,
+      "pnl": 5.45,
+      "reason": "[TP1-TakeProfit 40%] Reached +2.15R (+0.61% gain). Scaling out 40%."
     }
   ],
   "action_logs": [
@@ -8917,6 +6665,14 @@
     "[2026-08-06 14:00:17] 🔼 [MSFT] COVER × 21 shs @ $496.25 | PnL: -6.82 USD | [Short-Reversal] EMA Golden Cross and reclaimed VWAP.",
     "[2026-08-06 14:00:50] 🟢 [MSFT] BUY × 21 shs @ $496.41 | [Conviction-Top Score:60/100 [Watchlist Top-0%]] EMA 9/21 Golden Cross. Initial Stop: 0.25% (1.0R).",
     "[2026-08-06 14:01:27] 🔴 [SNDK] SELL × 8 shs @ $1283.82 | PnL: -27.60 USD | [InitialStopLoss] Loss reached -1.0R (-0.27%).",
-    "[2026-08-06 14:02:01] 🔻 [SNDK] SHORT × 8 shs @ $1282.12 | [Standard-Entry Score:40/100 [Watchlist Top-15%]] EMA 9/21 Death Cross. Initial Stop: 0.26% (1.0R)."
+    "[2026-08-06 14:02:01] 🔻 [SNDK] SHORT × 8 shs @ $1282.12 | [Standard-Entry Score:40/100 [Watchlist Top-15%]] EMA 9/21 Death Cross. Initial Stop: 0.26% (1.0R).",
+    "[2026-08-06 14:07:08] ⚪ [SNDK] PARTIAL_COVER × 2 shs @ $1276.03 | PnL: +9.94 USD | [TP1-ShortCover 40%] Reached +1.42R (+0.39% gain). Cover 40%.",
+    "[2026-08-06 14:12:08] ⚪ [SNDK] PARTIAL_COVER × 1 shs @ $1276.95 | PnL: +4.05 USD | [TP1-ShortCover 40%] Reached +0.91R (+0.32% gain). Cover 40%.",
+    "[2026-08-06 14:15:27] ⚪ [MU] PARTIAL_SELL × 4 shs @ $892.59 | PnL: +9.23 USD | [TP1-TakeProfit 40%] Reached +1.04R (+0.26% gain). Scaling out 40%.",
+    "[2026-08-06 14:16:34] ⚪ [MU] PARTIAL_SELL × 2 shs @ $893.53 | PnL: +6.48 USD | [TP1-TakeProfit 40%] Reached +1.46R (+0.36% gain). Scaling out 40%.",
+    "[2026-08-06 14:16:34] 🟢 [SNDK] BUY × 8 shs @ $1285.08 | [Conviction-Top Score:60/100 [Watchlist Top-0%]] EMA 9/21 Golden Cross. Initial Stop: 0.34% (1.0R).",
+    "[2026-08-06 14:17:10] 🟢 [AMD] BUY × 21 shs @ $492.26 | [Conviction-Top Score:50/100 [Watchlist Top-15%]] EMA 9/21 Golden Cross. Initial Stop: 0.26% (1.0R).",
+    "[2026-08-06 14:17:41] ⚪ [SNDK] PARTIAL_SELL × 3 shs @ $1293.00 | PnL: +18.00 USD | [TP1-TakeProfit 40%] Reached +0.91R (+0.47% gain). Scaling out 40%.",
+    "[2026-08-06 14:17:55] ⚪ [MU] PARTIAL_SELL × 1 shs @ $895.73 | PnL: +5.45 USD | [TP1-TakeProfit 40%] Reached +2.15R (+0.61% gain). Scaling out 40%."
   ]
 }

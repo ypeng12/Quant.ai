@@ -283,6 +283,10 @@ class LiveTradingRunner:
                     position_tracker[ticker] = []
                 queue = position_tracker[ticker]
                 
+                if trade.get("reason") == "Alpaca Broker Executed Sync":
+                    trade["pnl"] = 0.0
+                    continue
+
                 if action in ("BUY", "PYRAMID_BUY"):
                     queue.append({"price": price, "qty": qty})
                     if "pnl" not in trade or trade["pnl"] is None:
@@ -577,14 +581,27 @@ class LiveTradingRunner:
                 action_str = order.side.value.upper() if hasattr(order.side, "value") else str(order.side).upper()
                 qty = int(order.filled_qty or 0)
                 price = float(order.filled_avg_price or 0.0)
+                symbol_str = str(order.symbol)
                 
+                # Check if a bot trade for same ticker and shares exists nearby to avoid duplicate records
+                is_duplicate = any(
+                    t.get("ticker") == symbol_str and 
+                    abs(t.get("shares", 0) - qty) == 0 and
+                    t.get("reason") != "Alpaca Broker Executed Sync" and
+                    t.get("date") == date_str
+                    for t in self.trade_history
+                )
+                if is_duplicate:
+                    existing_ids.add(order_id_str)
+                    continue
+
                 trade_record = {
                     "order_id": order_id_str,
                     "date": date_str,
                     "time": time_str,
                     "action": action_str,
                     "action_cn": "买入" if action_str == "BUY" else "卖出",
-                    "ticker": str(order.symbol),
+                    "ticker": symbol_str,
                     "shares": qty,
                     "price": price,
                     "pnl": 0.0,
