@@ -1,0 +1,27 @@
+{
+  "is_running": false,
+  "strategy_params": {
+    "strategy_mode": "dynamic",
+    "risk_per_trade_pct": 0.003,
+    "max_position_size_pct": 0.12,
+    "daily_loss_limit_pct": 0.012,
+    "initial_stop_atr_mult": 1.05,
+    "stop_min_pct": 0.0025,
+    "stop_max_pct": 0.006,
+    "tp1_r": 0.9,
+    "tp2_r": 1.6,
+    "runner_size_pct": 0.25,
+    "breakeven_trigger_r": 0.85,
+    "trail_start_r": 1.1,
+    "trailing_stop_atr_mult": 2.0,
+    "max_hold_minutes": 35,
+    "min_reward_to_cost_ratio": 1.5,
+    "max_expected_slippage_pct": 0.0002,
+    "stop_loss_pct": 0.015,
+    "profit_target_pct": 0.03,
+    "trailing_stop_mode": "atr",
+    "rsi_threshold_buy": 70.0,
+    "market_open_focus": false
+  },
+  "updated_at": "2026-08-06 13:49:01"
+}
