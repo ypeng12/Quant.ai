@@ -8,8 +8,25 @@ import json
 import time
 from typing import Dict, List
 
+def is_valid_quality_stock_symbol(sym: str) -> bool:
+    """Filter out Warrants (W/WS), Rights (R/RT), Units (U/UN/Z), and non-standard 5+ letter symbols."""
+    if not sym or not isinstance(sym, str):
+        return False
+    s = sym.upper().strip()
+    if not s.isascii() or not s.replace(".", "").isalnum():
+        return False
+    if len(s) > 5 or len(s) < 1:
+        return False
+    # Filter 5-letter warrants/units/rights (e.g. ANSCW, TMCWW, LIDRW, HUBCZ, SRZNW)
+    if len(s) == 5:
+        if s.endswith(("W", "R", "U", "Z")) or "WS" in s or "RT" in s or "UN" in s:
+            return False
+    if s.endswith(".W") or s.endswith("-W") or s.endswith("WS") or s.endswith(".U"):
+        return False
+    return True
+
 def extract_screener_symbols(payload) -> List[str]:
-    """Recursively extract stock ticker symbols from Alpaca screener JSON response or SDK objects."""
+    """Recursively extract stock ticker symbols from Alpaca screener JSON response or SDK objects, excluding warrants and penny derivatives."""
     symbols = []
 
     def visit(value, depth=0):
@@ -35,7 +52,8 @@ def extract_screener_symbols(payload) -> List[str]:
                 visit(getattr(value, attr), depth + 1)
 
     visit(payload)
-    return list(dict.fromkeys(sym for sym in symbols if sym.isascii() and sym.replace(".", "").isalnum()))
+    return list(dict.fromkeys(sym for sym in symbols if is_valid_quality_stock_symbol(sym)))
+
 
 def fetch_screener_via_rest(get_credentials_func, active_count: int, mover_count: int) -> List[str]:
     """Standard-library fallback for deployments that use REST API directly."""
