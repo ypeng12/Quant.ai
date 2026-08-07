@@ -1271,10 +1271,15 @@ class LiveTradingRunner:
         if not (15.8333 <= ny_time < 16.0):
             return False
 
+        today = now_ny.date()
+        if getattr(self, "_eod_liquidation_done_date", None) == today:
+            return True  # Already performed EOD liquidation once for today's session! Do not repeat!
+
         seconds_left = (16.0 - ny_time) * 3600.0
-        if 0.0 < seconds_left <= 300.0:
+        if 0.0 < seconds_left <= 600.0:
             mins_left = seconds_left / 60.0
-            self.add_log(f"🌇 [交易所尾盘双重清场风控] 距关盘仅剩 {mins_left:.1f} 分钟！执行【双重清场】：全量撤销所有挂单 + 强行全平 {len(positions_list)} 笔持仓，确保零挂单零持仓过夜...")
+            self.add_log(f"🌇 [交易所尾盘单次清场风控] 距关盘仅剩 {mins_left:.1f} 分钟！执行一次性【双重清场】：全量撤销所有挂单 + 强行全平 {len(positions_list)} 笔持仓，确保零挂单零持仓过夜...")
+            self._eod_liquidation_done_date = today  # Mark as executed once today!
             try:
                 if hasattr(self.adapter, "cancel_all_orders"):
                     c_res = self.adapter.cancel_all_orders()
@@ -1292,7 +1297,7 @@ class LiveTradingRunner:
                             ticker=sym,
                             shares=abs(shares),
                             price=pos.get("current_price", 0.0),
-                            reason="EOD Dual Liquidation (日内收盘撤单+全平彻底不过夜)"
+                            reason="EOD Single Liquidation (日内关盘前无条件撤单平仓·只卖一次不重复)"
                         )
                 return True
             except Exception as e:
