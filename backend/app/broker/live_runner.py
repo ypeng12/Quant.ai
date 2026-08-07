@@ -565,21 +565,21 @@ class LiveTradingRunner:
             short_score += 8.0
 
         reversal_short = (
-            up_from_open_pct >= 1.50
-            and high_to_now_pct <= -1.50
+            up_from_open_pct >= 1.20
+            and high_to_now_pct <= -1.00
             and close < vwap
-            and momentum_3_pct < -0.10
+            and momentum_3_pct < -0.08
         )
         reversal_long = (
-            down_from_open_pct <= -1.50
-            and low_to_now_pct >= 1.50
+            down_from_open_pct <= -1.20
+            and low_to_now_pct >= 1.00
             and close > vwap
-            and momentum_3_pct > 0.10
+            and momentum_3_pct > 0.08
         )
         if reversal_short:
-            short_score += 15.0
+            short_score += 18.0
         if reversal_long:
-            long_score += 15.0
+            long_score += 18.0
 
         long_score = round(max(0.0, min(100.0, long_score)), 1)
         short_score = round(max(0.0, min(100.0, short_score)), 1)
