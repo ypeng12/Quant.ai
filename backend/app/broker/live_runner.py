@@ -81,6 +81,7 @@ class LiveTradingRunner:
             "entry_score_min": 78.0,
             "full_size_score": 90.0,
             "min_expected_value_r": 0.15,
+            "min_stock_price": 5.00,
             "buying_power_utilization_pct": 0.95,
             "starter_buying_power_pct": 0.35,
             "max_position_buying_power_pct": 0.95,
@@ -698,6 +699,13 @@ class LiveTradingRunner:
 
         if current_shares == 0:
             self.position_extremes.pop(ticker, None)
+            from app.broker.universe_screener import is_valid_quality_stock_symbol
+            min_price = self._safe_float(self.strategy_params.get("min_stock_price"), 5.00)
+            if close < min_price:
+                return "HOLD", f"{base_reason} | 股价低于 ${min_price:.2f} (${close:.2f})，拒绝低价毛票/仙股"
+            if not is_valid_quality_stock_symbol(ticker):
+                return "HOLD", f"{base_reason} | 标的属于权证/衍生单元 (Warrant/Unit)，拒绝交易"
+
             if direction == "NEUTRAL" or score < entry_min or not opportunity.get("_entry_confirmed", False):
                 return "HOLD", f"{base_reason} | 未达到方向/确认门槛"
             if not is_pos_ev:
