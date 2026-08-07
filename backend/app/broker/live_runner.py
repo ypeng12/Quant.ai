@@ -73,7 +73,7 @@ class LiveTradingRunner:
             "strategy_mode": "aggressive_intraday",
             "paper_only_aggressive": True,
             "allow_aggressive_live": False,
-            "dynamic_screener_enabled": True,
+            "dynamic_screener_enabled": False,
             "screener_refresh_seconds": 120,
             "screener_top_actives": 6,
             "screener_top_movers": 4,
@@ -1317,7 +1317,7 @@ class LiveTradingRunner:
                     self.add_log(f"🌙 [美股盘后研判/休市监控中] 24/7 持续实时计算多因子与形态（休市期间仅研判记录，暂停实盘买卖发单）...")
                 
                 # Pre-market Catalyst Pre-loader (9:15 - 9:30 EST)
-                if (now_ny.weekday() <= 4) and (9.25 <= ny_time < 9.50) and not getattr(self, "_premarket_preloaded", False):
+                if (now_ny.weekday() <= 4) and (9.25 <= ny_time < 9.50) and self.strategy_params.get("dynamic_screener_enabled", False) and not getattr(self, "_premarket_preloaded", False):
                     user_wl = load_watchlist() or WATCHLIST.copy()
                     self.active_tickers = self.screener.preload_premarket_catalysts(user_wl)
                     self._premarket_preloaded = True
