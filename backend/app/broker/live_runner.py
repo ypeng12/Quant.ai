@@ -1309,12 +1309,22 @@ class LiveTradingRunner:
                 is_market_opening_window = (now_ny.weekday() <= 4) and (9.50 <= ny_time < 9.75)
 
                 if is_open:
+                    self._afterhours_scan_logged = False
                     if is_market_opening_window:
-                        self.add_log(f"⚡ [开盘黄金 Blitz 9:30-9:45 EST] 开启 3 秒极速高频秒开枪！监控池 [{len(self.active_tickers)} 支标的]...")
+                        if not getattr(self, "_opening_blitz_logged", False):
+                            self.add_log(f"⚡ [开盘黄金 Blitz 9:30-9:45 EST] 开启 3 秒极速高频秒开枪！监控池 [{len(self.active_tickers)} 支标的]...")
+                            self._opening_blitz_logged = True
                     else:
-                        self.add_log(f"📡 [美股开盘交易中·全频段扫描发单] 正在研判监控池股票 [{len(self.active_tickers)} 支标的]...")
+                        self._opening_blitz_logged = False
+                        if not getattr(self, "_intraday_scan_logged", False):
+                            self.add_log(f"📡 [美股开盘交易中·全频段扫描发单] 正在研判监控池股票 [{len(self.active_tickers)} 支标的]...")
+                            self._intraday_scan_logged = True
                 else:
-                    self.add_log(f"🌙 [美股盘后研判/休市监控中] 24/7 持续实时计算多因子与形态（休市期间仅研判记录，暂停实盘买卖发单）...")
+                    self._opening_blitz_logged = False
+                    self._intraday_scan_logged = False
+                    if not getattr(self, "_afterhours_scan_logged", False):
+                        self.add_log(f"🌙 [美股盘后研判/休市监控中] 24/7 持续实时计算多因子与形态（休市期间仅研判记录，暂停实盘买卖发单）...")
+                        self._afterhours_scan_logged = True
                 
                 # Pre-market Catalyst Pre-loader (9:15 - 9:30 EST)
                 if (now_ny.weekday() <= 4) and (9.25 <= ny_time < 9.50) and self.strategy_params.get("dynamic_screener_enabled", False) and not getattr(self, "_premarket_preloaded", False):
