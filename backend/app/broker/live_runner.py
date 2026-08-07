@@ -1258,7 +1258,7 @@ class LiveTradingRunner:
         if now_ny.weekday() > 4:
             return False
         ny_time = now_ny.hour + now_ny.minute / 60.0 + now_ny.second / 3600.0
-        return 15.75 <= ny_time < 16.0
+        return 15.9167 <= ny_time < 16.0
 
     def check_and_trigger_eod_close(self, positions_list: list) -> bool:
         if not positions_list:
@@ -1268,7 +1268,7 @@ class LiveTradingRunner:
         if now_ny.weekday() > 4:
             return False
         ny_time = now_ny.hour + now_ny.minute / 60.0 + now_ny.second / 3600.0
-        if not (15.8333 <= ny_time < 16.0):
+        if not (15.9833 <= ny_time < 16.0):
             return False
 
         today = now_ny.date()
@@ -1276,9 +1276,8 @@ class LiveTradingRunner:
             return True  # Already performed EOD liquidation once for today's session! Do not repeat!
 
         seconds_left = (16.0 - ny_time) * 3600.0
-        if 0.0 < seconds_left <= 600.0:
-            mins_left = seconds_left / 60.0
-            self.add_log(f"🌇 [交易所尾盘单次清场风控] 距关盘仅剩 {mins_left:.1f} 分钟！执行一次性【双重清场】：全量撤销所有挂单 + 强行全平 {len(positions_list)} 笔持仓，确保零挂单零持仓过夜...")
+        if 0.0 < seconds_left <= 60.0:
+            self.add_log(f"🌇 [美东 15:59 关盘前 1 分钟终极清场风控] 距关盘仅剩 {seconds_left:.0f} 秒！执行一次性【双重清场】：全量撤销所有挂单 + 强行全平 {len(positions_list)} 笔持仓，确保零挂单零持仓过夜...")
             self._eod_liquidation_done_date = today  # Mark as executed once today!
             try:
                 if hasattr(self.adapter, "cancel_all_orders"):
