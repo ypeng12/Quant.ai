@@ -106,8 +106,24 @@ class UDPFeedHandler:
         """
         Runs complete UDP Sender/Receiver loop simulation with simulated network packet loss & out-of-order delivery.
         """
-        # Create UDP Server Socket
+        # Create Low-Latency UDP Server Socket with HFT-Grade Kernel Socket Buffer & Busy-Poll Tuning
         server_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        server_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        
+        # 1. Expand Receive & Send Buffers (8MB) to handle high-volatility micro-bursts without Ring-Buffer drops
+        try:
+            server_sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 8 * 1024 * 1024)
+            server_sock.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 8 * 1024 * 1024)
+        except Exception:
+            pass
+
+        # 2. SO_BUSY_POLL (Kernel Busy Polling): Spins CPU on socket queue to eliminate OS interrupt context-switch jitter (50us)
+        SO_BUSY_POLL = getattr(socket, "SO_BUSY_POLL", 50)
+        try:
+            server_sock.setsockopt(socket.SOL_SOCKET, SO_BUSY_POLL, 50) # 50us busy-poll
+        except Exception:
+            pass
+
         server_sock.bind((self.host, self.port))
         server_sock.settimeout(1.0)
 
