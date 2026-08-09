@@ -231,3 +231,27 @@ def evaluate_zero_delay_opening_trigger(
 
     return False
 
+def evaluate_lob_microstructure_sor(lob_data: Dict) -> Dict:
+    """
+    Evaluates LOB Microstructure ML Suite (idea.txt implementation):
+    1. Net Edge Calculation (Expected Return - Friction > Threshold)
+    2. Fill Probability P(Fill in 500ms | X)
+    3. Adverse Selection Risk P(Adverse | X, Filled)
+    4. Smart Order Router (SOR): Maker (Limit Order) vs Taker (Market Order) Choice
+    """
+    try:
+        from app.ml.lob_microstructure_ml import LOBMicrostructureMLSuite
+        suite = LOBMicrostructureMLSuite()
+        return suite.evaluate_maker_vs_taker_sor(lob_data)
+    except Exception as e:
+        return {
+            "expected_return_bps": 0.0,
+            "p_fill_500ms": 0.5,
+            "p_adverse_selection": 0.2,
+            "ev_maker_bps": 0.0,
+            "ev_taker_bps": 0.0,
+            "expected_net_edge_bps": 0.0,
+            "recommended_order_type": "LIMIT_MAKER",
+            "decision_reason": f"Fallback default: {e}"
+        }
+
