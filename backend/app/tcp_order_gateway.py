@@ -51,6 +51,18 @@ class TCPOrderGatewayServer:
         while self.is_running:
             try:
                 conn, addr = self.server_sock.accept()
+                # Low-Latency HFT Socket Optimizations:
+                # 1. TCP_NODELAY: Disable Nagle's Algorithm to eliminate 40ms buffering delay
+                # 2. TCP_QUICKACK: Disable TCP delayed ACK timer for immediate ACK transmission
+                # 3. SO_BUSY_POLL: Enable Kernel Busy Polling (50us) to eliminate interrupt context-switch jitter
+                try:
+                    conn.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+                    TCP_QUICKACK = getattr(socket, "TCP_QUICKACK", 12)
+                    conn.setsockopt(socket.IPPROTO_TCP, TCP_QUICKACK, 1)
+                    SO_BUSY_POLL = getattr(socket, "SO_BUSY_POLL", 50)
+                    conn.setsockopt(socket.SOL_SOCKET, SO_BUSY_POLL, 50)
+                except Exception:
+                    pass
                 t_conn = threading.Thread(target=self._handle_client, args=(conn,), daemon=True)
                 t_conn.start()
             except socket.timeout:
@@ -123,6 +135,11 @@ class TCPOrderGatewayClient:
             try:
                 self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 self.sock.settimeout(2.0)
+                # Low-Latency Client Optimization: Disable Nagle's Algorithm for instant packet transmission
+                try:
+                    self.sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+                except Exception:
+                    pass
                 self.sock.connect((self.host, self.port))
                 return True
             except Exception:
