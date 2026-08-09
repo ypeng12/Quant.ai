@@ -6,7 +6,51 @@ Mathematical Expectation E[PnL], and Kelly Criterion position sizing adjustments
 """
 
 import math
-from typing import Dict
+import os
+import joblib
+import pandas as pd
+from typing import Dict, Optional
+
+import math
+import os
+import joblib
+import pandas as pd
+from typing import Dict, Optional, Tuple
+
+MODELS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "ml", "models")
+_ML_MODELS_CACHE = {}
+
+def get_ml_zoo_model():
+    """Loads and caches QuantMLModelZoo."""
+    if "ml_zoo" in _ML_MODELS_CACHE:
+        return _ML_MODELS_CACHE["ml_zoo"]
+
+    zoo_path = os.path.join(MODELS_DIR, "quant_ml_zoo.joblib")
+    if os.path.exists(zoo_path):
+        try:
+            from app.ml.ml_model_zoo import QuantMLModelZoo
+            zoo = QuantMLModelZoo.load_zoo(zoo_path)
+            _ML_MODELS_CACHE["ml_zoo"] = zoo
+            return zoo
+        except Exception as e:
+            print(f"⚠️ Failed to load QuantMLModelZoo from {zoo_path}: {e}")
+    return None
+
+def get_calibrated_ml_model(direction: str = "long"):
+    """Loads and caches the calibrated LightGBM ML model for long/short win probability."""
+    direction = direction.lower()
+    if direction in _ML_MODELS_CACHE:
+        return _ML_MODELS_CACHE[direction]
+
+    model_path = os.path.join(MODELS_DIR, f"win_rate_model_{direction}.joblib")
+    if os.path.exists(model_path):
+        try:
+            model = joblib.load(model_path)
+            _ML_MODELS_CACHE[direction] = model
+            return model
+        except Exception as e:
+            print(f"⚠️ Failed to load ML model from {model_path}: {e}")
+    return None
 
 def sigmoid(x: float) -> float:
     """Standard Sigmoid Logistic Function."""
@@ -17,14 +61,57 @@ def calculate_win_rate_probability(
     rvol: float = 1.0,
     momentum_3_pct: float = 0.0,
     atr_pct: float = 0.5,
-    regime: str = "RANGE"
-) -> float:
+    regime: str = "RANGE",
+    opportunity: Optional[Dict] = None
+) -> Tuple[float, float, float]:
     """
-    Logistic Win-Rate Estimator:
-    Maps multi-factor AI score, relative volume (RVOL), momentum/ATR ratio,
-    and market structural regime (e.g. SHORT_REVERSAL) to a calibrated win probability P_win in [0.35, 0.88].
+    Evaluates calibrated win probability P_win and prediction uncertainty std_dev.
+    Applies uncertainty penalization P_win_adj = P_win - 1.5 * p_std.
+    Returns:
+        Tuple of (p_win_adjusted, p_std_uncertainty, rank_score)
     """
-    # Normalize score centered at entry threshold 78
+    direction = "long"
+    if opportunity:
+        dir_str = opportunity.get("direction", "LONG").lower()
+        if "short" in dir_str:
+            direction = "short"
+
+    zoo_model = get_ml_zoo_model()
+    ml_model = get_calibrated_ml_model(direction)
+
+    p_std = 0.05
+    rank_score = 0.0
+
+    if opportunity is not None and (zoo_model is not None or ml_model is not None):
+        try:
+            feature_dict = {
+                "feature_rvol": float(opportunity.get("rvol", rvol)),
+                "feature_vwap_dist_pct": float(opportunity.get("vwap_dist_pct", 0.0)),
+                "feature_mom_3_pct": float(opportunity.get("momentum_3_pct", momentum_3_pct)),
+                "feature_mom_10_pct": float(opportunity.get("momentum_10_pct", 0.0)),
+                "feature_atr_pct": float(opportunity.get("atr_pct", atr_pct)),
+                "feature_high_to_now_pct": float(opportunity.get("high_to_now_pct", 0.0)),
+                "feature_low_to_now_pct": float(opportunity.get("low_to_now_pct", 0.0)),
+                "feature_session_range_pct": float(opportunity.get("session_range_pct", 1.0)),
+            }
+            df_feat = pd.DataFrame([feature_dict])
+
+            if zoo_model is not None:
+                joint_res = zoo_model.predict_joint(df_feat)
+                prob_calibrated = joint_res["p_win"]
+                p_std = joint_res["p_std"]
+                rank_score = joint_res["rank_score"]
+            else:
+                prob_calibrated = float(ml_model.predict_proba(df_feat)[0, 1])
+
+            # Apply prediction uncertainty penalization
+            prob_adj = prob_calibrated - 1.5 * p_std
+            bounded_p_win = max(0.35, min(0.88, prob_adj))
+            return round(bounded_p_win, 4), round(p_std, 4), round(rank_score, 4)
+        except Exception:
+            pass # Fall back to heuristic if feature mapping fails
+
+    # --- Heuristic Fallback ---
     z_score = (score - 78.0) / 10.0
     z_rvol = max(-1.0, min(2.0, rvol - 1.0)) * 0.4
     z_mom = max(-2.0, min(2.0, abs(momentum_3_pct) / max(0.2, atr_pct))) * 0.3
@@ -33,9 +120,8 @@ def calculate_win_rate_probability(
     logits = z_score + z_rvol + z_mom + regime_bonus
     base_p = sigmoid(logits)
 
-    # Scale to realistic intraday win rate bounds [0.35, 0.88]
     p_win = 0.35 + base_p * (0.88 - 0.35)
-    return round(p_win, 4)
+    return round(p_win, 4), 0.05, round(z_score, 4)
 
 def calculate_expected_rr_ratio(
     atr_pct: float,
@@ -63,17 +149,33 @@ def evaluate_mathematical_expectation(opportunity: Dict, strategy_params: Dict) 
     regime = opportunity.get("regime", "RANGE")
     stop_pct = float(opportunity.get("_stop_pct", 0.0100))
 
-    p_win = calculate_win_rate_probability(score, rvol, momentum_3, atr_pct, regime)
+    p_win, p_std, rank_score = calculate_win_rate_probability(score, rvol, momentum_3, atr_pct, regime, opportunity=opportunity)
     rr_est = calculate_expected_rr_ratio(atr_pct, float(opportunity.get("session_range_pct", 1.0)), stop_pct)
 
+    # Check HMM Regime if MarketRegimeHMM model is available
+    hmm_path = os.path.join(MODELS_DIR, "market_regime_hmm.joblib")
+    hmm_regime = regime
+    vol_penalty = 1.0
+    if os.path.exists(hmm_path):
+        try:
+            from app.ml.market_regime_hmm import MarketRegimeHMM
+            hmm_engine = MarketRegimeHMM.load(hmm_path)
+            # Create minimal dataframe for HMM prediction
+            df_hmm = pd.DataFrame([{"feature_mom_3_pct": momentum_3, "feature_atr_pct": atr_pct}])
+            hmm_res = hmm_engine.predict_regime_probabilities(df_hmm)
+            hmm_regime = hmm_res.get("dominant_regime", regime)
+            vol_penalty = hmm_res.get("volatility_penalty", 1.0)
+        except Exception:
+            pass
+
     slippage_r = 0.04 # 0.04R estimated execution friction
-    # Expected Value E[PnL] in units of R (Risk)
-    e_pnl_r = (p_win * rr_est) - ((1.0 - p_win) * 1.0) - slippage_r
+    # Expected Value E[PnL] in units of R (Risk), adjusted by HMM volatility penalty
+    e_pnl_r = ((p_win * rr_est) - ((1.0 - p_win) * 1.0) - slippage_r) * vol_penalty
 
     # Kelly Criterion optimal position fraction f* = (p*b - q) / b
     q = 1.0 - p_win
     b = rr_est
-    kelly_f = max(0.0, (p_win * b - q) / b) if b > 0 else 0.0
+    kelly_f = (max(0.0, (p_win * b - q) / b) if b > 0 else 0.0) * vol_penalty
 
     # Entry is approved mathematically only if Expected Value E[PnL] >= +0.15R
     min_ev_r = float(strategy_params.get("min_expected_value_r", 0.15))
@@ -82,6 +184,10 @@ def evaluate_mathematical_expectation(opportunity: Dict, strategy_params: Dict) 
     return {
         "win_probability": p_win,
         "win_rate_pct": round(p_win * 100.0, 1),
+        "prediction_uncertainty_std": p_std,
+        "rank_score": rank_score,
+        "hmm_regime": hmm_regime,
+        "volatility_penalty": vol_penalty,
         "expected_rr": rr_est,
         "expected_value_r": round(e_pnl_r, 3),
         "kelly_fraction": round(kelly_f, 3),

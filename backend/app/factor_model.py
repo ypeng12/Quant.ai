@@ -41,12 +41,45 @@ class CrossSectionalFactorModel:
             return series * 0.0
         return (series - series.mean()) / std
 
+    def robust_mad_z_score(self, series: pd.Series) -> pd.Series:
+        """
+        Robust Z-Score Normalization using Median Absolute Deviation (MAD):
+        Z_robust = 0.6745 * (X - Median) / (MAD + eps)
+        Resistant to extreme outliers in cross-sectional factor distributions.
+        """
+        median = series.median()
+        mad = (series - median).abs().median()
+        if mad == 0 or pd.isna(mad):
+            return self.z_score_normalize(series)
+        return 0.6745 * (series - median) / (mad + 1e-6)
+
     def rank_normalize(self, series: pd.Series) -> pd.Series:
         """
         Cross-Sectional Rank Normalization mapped to [-1.0, +1.0].
         """
         ranks = series.rank(pct=True) # Map to [0.0, 1.0]
         return (ranks - 0.5) * 2.0 # Map to [-1.0, +1.0]
+
+    @staticmethod
+    def calculate_rank_ic(factor_scores: pd.Series, forward_returns: pd.Series) -> float:
+        """
+        Calculates Spearman Rank Information Coefficient (Rank IC) between factor predictions and forward returns.
+        """
+        aligned = pd.concat([factor_scores, forward_returns], axis=1).dropna()
+        if len(aligned) < 3:
+            return 0.0
+        return float(aligned.iloc[:, 0].corr(aligned.iloc[:, 1], method="spearman"))
+
+    @staticmethod
+    def calculate_information_ratio(ic_series: pd.Series) -> float:
+        """
+        Calculates Factor Information Ratio: IR = Mean(Rank_IC) / Std(Rank_IC)
+        """
+        mean_ic = ic_series.mean()
+        std_ic = ic_series.std()
+        if std_ic == 0 or pd.isna(std_ic):
+            return 0.0
+        return float(mean_ic / std_ic)
 
     def neutralize_factor(self, factor_series: pd.Series, market_beta_series: pd.Series) -> pd.Series:
         """
