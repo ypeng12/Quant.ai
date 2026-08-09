@@ -1,0 +1,52 @@
+{
+  "dataset_name": "daily",
+  "num_samples": 156,
+  "feature_cols": [
+    "feature_rvol",
+    "feature_vwap_dist_pct",
+    "feature_mom_3_pct",
+    "feature_mom_10_pct",
+    "feature_atr_pct",
+    "feature_high_to_now_pct",
+    "feature_low_to_now_pct",
+    "feature_session_range_pct"
+  ],
+  "long_model": {
+    "direction": "long",
+    "model_file": "win_rate_model_long.joblib",
+    "cv_brier_mean": 0.09961079632283394,
+    "cv_auc_mean": 0.5,
+    "final_brier": 0.0602956962295607,
+    "final_auc": 0.65,
+    "final_logloss": 0.24428601842368713,
+    "feature_cols": [
+      "feature_rvol",
+      "feature_vwap_dist_pct",
+      "feature_mom_3_pct",
+      "feature_mom_10_pct",
+      "feature_atr_pct",
+      "feature_high_to_now_pct",
+      "feature_low_to_now_pct",
+      "feature_session_range_pct"
+    ]
+  },
+  "short_model": {
+    "direction": "short",
+    "model_file": "win_rate_model_short.joblib",
+    "cv_brier_mean": 0.07223340553747994,
+    "cv_auc_mean": 0.6479885057471264,
+    "final_brier": 0.08587414938081417,
+    "final_auc": 0.4367816091954023,
+    "final_logloss": 0.31575951821225046,
+    "feature_cols": [
+      "feature_rvol",
+      "feature_vwap_dist_pct",
+      "feature_mom_3_pct",
+      "feature_mom_10_pct",
+      "feature_atr_pct",
+      "feature_high_to_now_pct",
+      "feature_low_to_now_pct",
+      "feature_session_range_pct"
+    ]
+  }
+}
