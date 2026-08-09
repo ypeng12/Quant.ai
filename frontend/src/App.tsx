@@ -20,6 +20,7 @@ import { SameDayReplayPanel } from './components/SameDayReplayPanel';
 import { InstitutionalPanel } from './components/InstitutionalPanel';
 import { PortfolioHistoryChart } from './components/PortfolioHistoryChart';
 import { ReplayAndExperimentsPanel } from './components/ReplayAndExperimentsPanel';
+import { MLAssistantPanel } from './components/MLAssistantPanel';
 import { API_BASE } from './config';
 
 interface SummaryData {
@@ -146,7 +147,7 @@ const INTERVAL_LABELS: Record<string, string> = {
   "1d": "Daily"
 };
 
-type ActiveTab = 'dashboard' | 'research' | 'report' | 'walkforward' | 'experiments' | 'replay' | 'broker' | 'institutional' | 'portfolio';
+type ActiveTab = 'dashboard' | 'research' | 'report' | 'walkforward' | 'experiments' | 'replay' | 'broker' | 'institutional' | 'portfolio' | 'ml_assistant';
 
 function App() {
   const [watchlist, setWatchlist] = useState<string[]>(["NVDA", "SNDK", "TSLA", "AMD", "MSFT", "MU"]);
