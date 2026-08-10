@@ -82,6 +82,12 @@ export const MLAssistantPanel: React.FC<{ activeTicker: string }> = ({ activeTic
   };
 
   useEffect(() => {
+    if (activeTicker) {
+      setTicker(activeTicker);
+    }
+  }, [activeTicker]);
+
+  useEffect(() => {
     fetchMLInference(ticker);
   }, [ticker]);
 
@@ -147,7 +153,7 @@ export const MLAssistantPanel: React.FC<{ activeTicker: string }> = ({ activeTic
 
         {/* Ticker Switcher */}
         <div style={{ display: 'flex', gap: '8px' }}>
-          {["TSLA", "NVDA", "AAPL", "AMD", "MSFT", "SNDK"].map(t => (
+          {["TSLA", "NVDA", "AAPL", "AMD", "MSFT", "SNDK", "MU"].map(t => (
             <button
               key={t}
               onClick={() => { setTicker(t); }}
