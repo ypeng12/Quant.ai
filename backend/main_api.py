@@ -1569,9 +1569,41 @@ def get_action_feed(limit: int = 100):
 
 @app.get("/api/live/trade_history")
 def get_trade_history():
-    """直接返回 trade_history.json 原始文件，零中间层。"""
-    history_file = os.path.join(os.path.dirname(__file__), "trade_history.json")
-    return FileResponse(history_file, media_type="application/json")
+    """返回合并后的全量 trade_history (活跃 json + 本地归档 archive.json)，保证下拉框历史日期 100% 可选。"""
+    active_file = os.path.join(os.path.dirname(__file__), "trade_history.json")
+    archive_file = os.path.join(os.path.dirname(__file__), "data", "datasets", "trade_history_archive.json")
+
+    trades = []
+    seen_ids = set()
+
+    # 1. 加载活跃交易记录
+    if os.path.exists(active_file):
+        try:
+            with open(active_file, "r", encoding="utf-8") as f:
+                active_trades = json.load(f).get("trade_history", [])
+                for t in active_trades:
+                    uid = t.get("order_id") or f"{t.get('ticker')}-{t.get('time')}"
+                    if uid not in seen_ids:
+                        trades.append(t)
+                        seen_ids.add(uid)
+        except Exception as e:
+            print(f"⚠️ Error loading active trade_history: {e}")
+
+    # 2. 逻辑合并归档交易记录
+    if os.path.exists(archive_file):
+        try:
+            with open(archive_file, "r", encoding="utf-8") as f:
+                archived_trades = json.load(f).get("trade_history", [])
+                for t in archived_trades:
+                    uid = t.get("order_id") or f"{t.get('ticker')}-{t.get('time')}"
+                    if uid not in seen_ids:
+                        trades.append(t)
+                        seen_ids.add(uid)
+        except Exception as e:
+            print(f"⚠️ Error loading archive trade_history: {e}")
+
+    trades.sort(key=lambda x: x.get("time", ""))
+    return {"trade_history": trades}
 
 
 @app.get("/api/live/today_summary")
