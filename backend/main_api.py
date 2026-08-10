@@ -1874,37 +1874,81 @@ def get_latest_research_results():
 @app.get("/api/ml/predict")
 def get_ml_prediction(ticker: str = "TSLA"):
     """
-    Returns real-time ML prediction, probability calibration, HMM regime, and SOR execution decision.
+    Returns real-time ML prediction, probability calibration, HMM regime, and SOR execution decision for a specific stock.
     """
+    clean_ticker = ticker.strip().upper()
     try:
-        from app.broker.probability_engine import QuantProbabilityEngine
+        from app.data_manager import fetch_and_prepare_data
+        from app.broker.probability_engine import evaluate_mathematical_expectation
         from app.ml.lob_microstructure_ml import LOBMicrostructureMLSuite
-        
-        prob_engine = QuantProbabilityEngine()
-        win_rate_res = prob_engine.calculate_win_rate_probability(ticker.strip().upper(), lookback=20)
 
+        # 1. Fetch real historical candles & features for requested ticker
+        df = fetch_and_prepare_data(clean_ticker, period="1mo", interval="1d")
+        row = df.iloc[-1]
+        prev_row = df.iloc[-2] if len(df) >= 2 else row
+        close = float(row.get("Close", 100.0))
+        prev_close = float(prev_row.get("Close", close))
+        vwap = float(row.get("VWAP", close))
+        rvol = float(row.get("RVOL", 1.2))
+        atr = float(row.get("ATR", close * 0.015))
+        atr_pct = (atr / close * 100.0) if close > 0 else 1.5
+
+        base_3 = float(df.iloc[-4]["Close"]) if len(df) >= 4 else prev_close
+        base_10 = float(df.iloc[-11]["Close"]) if len(df) >= 11 else base_3
+
+        momentum_3_pct = ((close / base_3) - 1.0) * 100.0 if base_3 > 0 else 0.0
+        momentum_10_pct = ((close / base_10) - 1.0) * 100.0 if base_10 > 0 else 0.0
+        vwap_dist_pct = ((close - vwap) / vwap) * 100.0 if vwap > 0 else 0.0
+
+        # Construct opportunity dict
+        score = 50.0 + min(30.0, max(-30.0, momentum_3_pct * 5.0 + (rvol - 1.0) * 10.0))
+        direction = "LONG" if close >= vwap else "SHORT"
+        regime = "TREND_BULL" if close > vwap and momentum_3_pct > 0 else "RANGE_SIDEWAYS"
+
+        opp = {
+            "ticker": clean_ticker,
+            "direction": direction,
+            "score": score,
+            "rvol": rvol,
+            "vwap_dist_pct": vwap_dist_pct,
+            "momentum_3_pct": momentum_3_pct,
+            "momentum_10_pct": momentum_10_pct,
+            "atr_pct": atr_pct,
+            "session_range_pct": float((row.get("High", close) - row.get("Low", close)) / close * 100.0),
+            "high_to_now_pct": float((close / row.get("High", close) - 1.0) * 100.0) if row.get("High", close) > 0 else 0.0,
+            "low_to_now_pct": float((close / row.get("Low", close) - 1.0) * 100.0) if row.get("Low", close) > 0 else 0.0,
+            "regime": regime,
+            "_stop_pct": max(0.005, atr_pct / 100.0 * 1.5)
+        }
+
+        # 2. Evaluate Mathematical Expectation & Calibrated ML Probability
+        eval_res = evaluate_mathematical_expectation(opp, {"min_expected_value_r": 0.15})
+
+        # 3. Evaluate Smart Order Router (SOR) for ticker's spread & imbalance
         sor_suite = LOBMicrostructureMLSuite().fit_synthetic_microstructure()
+        imbalance = 0.4 if direction == "LONG" else -0.4
+        spread_bps = max(0.5, atr_pct * 0.4)
         sor_res = sor_suite.evaluate_maker_vs_taker_sor({
-            "imbalance": 0.35,
-            "spread_bps": 1.2,
-            "queue_ahead": 80
+            "imbalance": imbalance,
+            "spread_bps": spread_bps,
+            "queue_ahead": 60
         })
 
         return {
             "success": True,
             "result": {
-                "ticker": ticker.strip().upper(),
-                "p_win": win_rate_res.get("win_rate_calibrated", 0.654),
-                "win_rate_pct": round(win_rate_res.get("win_rate_calibrated", 0.654) * 100, 1),
-                "p_std": win_rate_res.get("p_std", 0.042),
-                "rank_score": round(win_rate_res.get("rank_score", 0.852), 3),
-                "hmm_regime": win_rate_res.get("hmm_regime", "TREND_BULL"),
-                "volatility_penalty": win_rate_res.get("volatility_penalty", 1.0),
-                "expected_rr": win_rate_res.get("expected_rr", 2.2),
-                "expected_value_r": win_rate_res.get("expected_value_r", 0.458),
-                "kelly_fraction": win_rate_res.get("kelly_fraction", 0.21),
-                "is_positive_ev": win_rate_res.get("is_positive_ev", True),
-                "ev_status": win_rate_res.get("ev_status", "POSITIVE_EV✅"),
+                "ticker": clean_ticker,
+                "p_win": eval_res["win_probability"],
+                "win_rate_pct": eval_res["win_rate_pct"],
+                "p_std": eval_res["prediction_uncertainty_std"],
+                "rank_score": eval_res["rank_score"],
+                "hmm_regime": eval_res["hmm_regime"],
+                "volatility_penalty": eval_res["volatility_penalty"],
+                "expected_rr": eval_res["expected_rr"],
+                "expected_value_r": eval_res["expected_value_r"],
+                "kelly_fraction": eval_res["kelly_fraction"],
+                "is_positive_ev": eval_res["is_positive_ev"],
+                "ev_status": eval_res["ev_status"],
                 "sor_decision": sor_res
             }
         }
