@@ -1,4 +1,5 @@
 import os
+import json
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -1875,9 +1876,21 @@ def get_latest_research_results():
 def get_ml_prediction(ticker: str = "TSLA"):
     """
     Returns real-time ML prediction, probability calibration, HMM regime, and SOR execution decision for a specific stock.
-    Robust against cloud IP yfinance rate-limiting (e.g., HuggingFace Spaces).
+    Prioritizes pre-computed real ML prediction cache for zero-latency, rate-limit-proof response in HuggingFace Space.
     """
     clean_ticker = ticker.strip().upper()
+    
+    # 1. Primary path: Load from pre-computed real ML predictions cache
+    cache_path = os.path.join(os.path.dirname(__file__), "data", "ml_predictions_cache.json")
+    if os.path.exists(cache_path):
+        try:
+            with open(cache_path, "r", encoding="utf-8") as f:
+                cache_dict = json.load(f)
+                if clean_ticker in cache_dict:
+                    return {"success": True, "result": cache_dict[clean_ticker]}
+        except Exception as e:
+            print(f"⚠️ Warning loading ML prediction cache: {e}")
+
     try:
         from app.broker.probability_engine import evaluate_mathematical_expectation
         from app.ml.lob_microstructure_ml import LOBMicrostructureMLSuite
