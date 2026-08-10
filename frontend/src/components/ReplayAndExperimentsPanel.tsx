@@ -7,12 +7,14 @@ interface ReplayAndExperimentsPanelProps {
   watchlist: string[];
   activeTicker: string;
   onSelectTicker: (ticker: string) => void;
+  dashboardContent?: React.ReactNode;
 }
 
 export const ReplayAndExperimentsPanel: React.FC<ReplayAndExperimentsPanelProps> = ({
   watchlist,
   activeTicker,
-  onSelectTicker
+  onSelectTicker,
+  dashboardContent
 }) => {
   const [subTab, setSubTab] = useState<'replay' | 'experiments' | 'portfolio'>('replay');
 
@@ -64,7 +66,7 @@ export const ReplayAndExperimentsPanel: React.FC<ReplayAndExperimentsPanelProps>
               boxShadow: subTab === 'experiments' ? '0 0 12px rgba(59, 130, 246, 0.4)' : 'none'
             }}
           >
-            🧪 策略回填与回撤评估仪器 (Experiment Compare)
+            📊 策略回测仪表盘 & 回撤评估仪器 (Backtest & Experiments)
           </button>
 
           <button
@@ -88,7 +90,7 @@ export const ReplayAndExperimentsPanel: React.FC<ReplayAndExperimentsPanelProps>
 
         <div style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>
           {subTab === 'replay' && '🔴 逐秒驱动多因子与 Signal 历史复盘'}
-          {subTab === 'experiments' && '📊 策略不同风控参数与回撤矩阵对比'}
+          {subTab === 'experiments' && '📊 K线指标、风控优化与多实验回撤矩阵'}
           {subTab === 'portfolio' && '⚡ Alpaca 官方实时账户 Asset History 曲线'}
         </div>
       </div>
@@ -103,7 +105,18 @@ export const ReplayAndExperimentsPanel: React.FC<ReplayAndExperimentsPanelProps>
       )}
 
       {subTab === 'experiments' && (
-        <ExperimentCompare />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          {/* Main Backtest Dashboard Content */}
+          {dashboardContent}
+
+          {/* Strategy Experiments Matrix Panel */}
+          <div style={{ marginTop: '1rem' }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#fff', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span>🧪</span> 多策略历史实验与风控回撤矩阵 (Strategy Experiments & Drawdown Matrix)
+            </h3>
+            <ExperimentCompare />
+          </div>
+        </div>
       )}
 
       {subTab === 'portfolio' && (
