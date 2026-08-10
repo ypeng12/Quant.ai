@@ -619,6 +619,24 @@ function App() {
         {/* Core Modes Navigation */}
         <div className="nav-tabs" style={{ background: '#09090b', padding: '4px', borderRadius: '8px', border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', gap: '4px' }}>
           <button
+            className={`nav-tab ${activeTab === 'ml_assistant' ? 'active' : ''}`}
+            onClick={() => setActiveTab('ml_assistant')}
+            style={{
+              padding: '8px 18px',
+              fontSize: '0.9rem',
+              fontWeight: 800,
+              background: activeTab === 'ml_assistant' ? 'linear-gradient(135deg, #0284c7, #0369a1)' : 'transparent',
+              color: '#ffffff',
+              borderRadius: '6px',
+              border: activeTab === 'ml_assistant' ? 'none' : '1px solid rgba(56, 189, 248, 0.4)',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            🤖 ML 决策与概率诊断
+          </button>
+
+          <button
             className={`nav-tab ${activeTab === 'broker' ? 'active' : ''}`}
             onClick={() => setActiveTab('broker')}
             style={{
@@ -739,6 +757,11 @@ function App() {
           {/* Experiments Tab */}
           {activeTab === 'experiments' && (
             <ExperimentCompare />
+          )}
+
+          {/* ML Assistant & Diagnostic Dashboard Tab */}
+          {activeTab === 'ml_assistant' && (
+            <MLAssistantPanel activeTicker={activeTicker} />
           )}
 
           {/* Alpaca Live Tab (Mode 1) */}
