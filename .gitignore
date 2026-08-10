@@ -29,4 +29,6 @@ backend/data_cache/
 backend/app/experiments.db
 *.db
 *.joblib
+low_latency_network_test
+scratch/
 
