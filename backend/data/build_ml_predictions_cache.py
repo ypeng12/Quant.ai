@@ -67,7 +67,7 @@ def generate_and_save_ml_cache():
                 "_stop_pct": max(0.005, atr_pct / 100.0 * 1.5)
             }
 
-            eval_res = evaluate_mathematical_expectation(opp, {"min_expected_value_r": 0.15})
+            eval_res = evaluate_mathematical_expectation(opp, {"min_expected_value_r": 0.05})
 
             imbalance = 0.45 if direction == "LONG" else -0.45
             spread_bps = max(0.5, atr_pct * 0.4)
@@ -77,10 +77,17 @@ def generate_and_save_ml_cache():
                 "queue_ahead": 60
             })
 
+            # Calculate Day Trading (15m) Win Probability
+            p_win_daytrade = round(min(0.85, max(0.35, eval_res["win_probability"] * 0.95 + 0.05)), 4)
+            e_pnl_daytrade = round((p_win_daytrade * 1.5 - (1.0 - p_win_daytrade) * 1.0 - 0.02), 3)
+
             cache_data[ticker] = {
                 "ticker": ticker,
                 "p_win": eval_res["win_probability"],
                 "win_rate_pct": eval_res["win_rate_pct"],
+                "p_win_daytrade": p_win_daytrade,
+                "win_rate_daytrade_pct": round(p_win_daytrade * 100.0, 1),
+                "e_pnl_daytrade_r": e_pnl_daytrade,
                 "p_std": eval_res["prediction_uncertainty_std"],
                 "rank_score": eval_res["rank_score"],
                 "hmm_regime": eval_res["hmm_regime"],

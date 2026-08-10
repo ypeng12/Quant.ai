@@ -177,8 +177,8 @@ def evaluate_mathematical_expectation(opportunity: Dict, strategy_params: Dict) 
     b = rr_est
     kelly_f = (max(0.0, (p_win * b - q) / b) if b > 0 else 0.0) * vol_penalty
 
-    # Entry is approved mathematically only if Expected Value E[PnL] >= +0.15R
-    min_ev_r = float(strategy_params.get("min_expected_value_r", 0.15))
+    # Entry is approved mathematically if Expected Value E[PnL] >= min_expected_value_r (default relaxed to +0.05R for practice)
+    min_ev_r = float(strategy_params.get("min_expected_value_r", 0.05))
     is_positive_ev = e_pnl_r >= min_ev_r
 
     return {
@@ -194,6 +194,21 @@ def evaluate_mathematical_expectation(opportunity: Dict, strategy_params: Dict) 
         "is_positive_ev": is_positive_ev,
         "ev_status": "POSITIVE_EV✅" if is_positive_ev else "NEGATIVE_EV⚠️",
     }
+
+def get_daytrade_calibrated_model():
+    """Loads and caches the 5m Day Trading Calibrated LightGBM ML model."""
+    if "daytrade" in _ML_MODELS_CACHE:
+        return _ML_MODELS_CACHE["daytrade"]
+
+    model_path = os.path.join(MODELS_DIR, "daytrade_win_rate_model.joblib")
+    if os.path.exists(model_path):
+        try:
+            model = joblib.load(model_path)
+            _ML_MODELS_CACHE["daytrade"] = model
+            return model
+        except Exception as e:
+            print(f"⚠️ Failed to load Day Trading ML model from {model_path}: {e}")
+    return None
 
 def evaluate_zero_delay_opening_trigger(
     opportunity: Dict,
