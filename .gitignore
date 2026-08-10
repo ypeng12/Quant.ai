@@ -24,8 +24,9 @@ node_modules/
 dist/
 build/
 
-# Local cache and databases
+# Local cache, databases and binary ML models
 backend/data_cache/
 backend/app/experiments.db
 *.db
+*.joblib
 
