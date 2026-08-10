@@ -1114,14 +1114,6 @@ class LiveTradingRunner:
 
     def archive_to_hf_dataset(self, keep_days: int = 2) -> dict:
         try:
-            # 1. 首先在本地执行极速解耦归档 (将 2 天前的旧交易移入 data/datasets/trade_history_archive.json)
-            try:
-                from data.archive_local_trades import run_local_archival
-                run_local_archival(keep_days=keep_days)
-                self.load_trade_history()
-            except Exception as e_local:
-                print(f"⚠️ 本地交易归档小提示: {e_local}")
-
             from huggingface_hub import HfApi, hf_hub_download
             token = os.getenv("HF_TOKEN") or os.getenv("HUGGINGFACE_TOKEN") or os.getenv("HF_HUB_TOKEN")
             repo_id = "Ypeng12/quant-ai-trade-history"
