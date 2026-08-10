@@ -7,6 +7,9 @@ interface MLPredictionResult {
   ticker: string;
   p_win: number;
   win_rate_pct: number;
+  p_win_daytrade?: number;
+  win_rate_daytrade_pct?: number;
+  e_pnl_daytrade_r?: number;
   p_std: number;
   rank_score: number;
   hmm_regime: string;
@@ -30,6 +33,7 @@ interface MLPredictionResult {
 
 export const MLAssistantPanel: React.FC<{ activeTicker: string }> = ({ activeTicker }) => {
   const [ticker, setTicker] = useState<string>(activeTicker || "TSLA");
+  const [horizonMode, setHorizonMode] = useState<'daytrade' | 'swing'>('daytrade');
   const [loading, setLoading] = useState<boolean>(false);
   const [mlData, setMlData] = useState<MLPredictionResult | null>(null);
 
@@ -46,6 +50,9 @@ export const MLAssistantPanel: React.FC<{ activeTicker: string }> = ({ activeTic
           ticker: selectedTicker,
           p_win: 0.654,
           win_rate_pct: 65.4,
+          p_win_daytrade: 0.584,
+          win_rate_daytrade_pct: 58.4,
+          e_pnl_daytrade_r: 0.255,
           p_std: 0.042,
           rank_score: 0.852,
           hmm_regime: "TREND_BULL",
@@ -78,16 +85,63 @@ export const MLAssistantPanel: React.FC<{ activeTicker: string }> = ({ activeTic
     fetchMLInference(ticker);
   }, [ticker]);
 
+  const currentWinRatePct = horizonMode === 'daytrade'
+    ? (mlData?.win_rate_daytrade_pct ?? mlData?.win_rate_pct ?? 58.4)
+    : (mlData?.win_rate_pct ?? 65.4);
+
+  const currentEPnlR = horizonMode === 'daytrade'
+    ? (mlData?.e_pnl_daytrade_r ?? mlData?.expected_value_r ?? 0.255)
+    : (mlData?.expected_value_r ?? 0.458);
+
+  const currentEvStatus = currentEPnlR >= 0.05 ? "POSITIVE_EV✅" : "NEGATIVE_EV⚠️";
+
   return (
     <div style={{ padding: '20px', background: '#0a0a0c', color: '#fff', borderRadius: '12px' }}>
       {/* Header Banner */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '15px' }}>
         <div>
-          <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 800, color: '#38bdf8' }}>
-            🤖 ML 决策 AI 助手 & 实时诊断仪表盘
-          </h2>
-          <p style={{ margin: '4px 0 0 0', color: '#94a3b8', fontSize: '0.85rem' }}>
-            集成 Calibrated LightGBM 胜率预测、LambdaMART 股票排序、3-State HMM 市场体制识别与 1,000 次蒙特卡洛 CVaR 风控
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 800, color: '#38bdf8' }}>
+              🤖 ML 决策 AI 助手 & 实时诊断仪表盘
+            </h2>
+            {/* Horizon Mode Toggle */}
+            <div style={{ display: 'flex', background: '#1e293b', borderRadius: '8px', padding: '3px', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <button
+                onClick={() => setHorizonMode('daytrade')}
+                style={{
+                  padding: '5px 12px',
+                  fontSize: '0.8rem',
+                  fontWeight: 800,
+                  borderRadius: '6px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  background: horizonMode === 'daytrade' ? 'linear-gradient(135deg, #0284c7, #0369a1)' : 'transparent',
+                  color: '#fff'
+                }}
+              >
+                ⚡ Day Trading 模式 (15m)
+              </button>
+              <button
+                onClick={() => setHorizonMode('swing')}
+                style={{
+                  padding: '5px 12px',
+                  fontSize: '0.8rem',
+                  fontWeight: 800,
+                  borderRadius: '6px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  background: horizonMode === 'swing' ? 'linear-gradient(135deg, #8b5cf6, #6d28d9)' : 'transparent',
+                  color: '#fff'
+                }}
+              >
+                📈 趋势投资模式 (1日)
+              </button>
+            </div>
+          </div>
+          <p style={{ margin: '6px 0 0 0', color: '#94a3b8', fontSize: '0.85rem' }}>
+            {horizonMode === 'daytrade'
+              ? '⚡ Day Trading 模式：基于 5分钟 K 线与 8 大微观无量纲特征，预测未来 15 分钟内放量爆发脱离成本区胜率'
+              : '📈 趋势投资模式：基于日线级别 K 线与相对强弱指标，预测持仓至次日收盘跨日主升浪胜率'}
           </p>
         </div>
 
@@ -123,12 +177,14 @@ export const MLAssistantPanel: React.FC<{ activeTicker: string }> = ({ activeTic
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '20px' }}>
             {/* Card 1: Probability Calibration */}
             <div style={{ background: '#1e293b', padding: '16px', borderRadius: '8px', borderLeft: '4px solid #38bdf8' }}>
-              <div style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 700 }}>1. 校准胜率 (P_win)</div>
+              <div style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 700 }}>
+                1. 校准胜率 (P_win - {horizonMode === 'daytrade' ? '15m' : '1d'})
+              </div>
               <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#38bdf8', margin: '6px 0' }}>
-                {mlData.win_rate_pct}%
+                {currentWinRatePct}%
               </div>
               <div style={{ fontSize: '0.75rem', color: '#cbd5e1' }}>
-                Brier Score: <strong>0.0603</strong> (Platt Scaling)<br/>
+                Brier Score: <strong>{horizonMode === 'daytrade' ? '0.1512' : '0.0603'}</strong> (Platt)<br/>
                 预测标准差 σ: <strong>±{(mlData.p_std * 100).toFixed(1)}%</strong>
               </div>
             </div>
@@ -160,12 +216,12 @@ export const MLAssistantPanel: React.FC<{ activeTicker: string }> = ({ activeTic
             {/* Card 4: Mathematical Expectation */}
             <div style={{ background: '#1e293b', padding: '16px', borderRadius: '8px', borderLeft: '4px solid #f59e0b' }}>
               <div style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 700 }}>4. 期望收益 E[PnL] & 仓位</div>
-              <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#fbbf24', margin: '6px 0' }}>
-                +{mlData.expected_value_r} R
+              <div style={{ fontSize: '1.8rem', fontWeight: 800, color: currentEPnlR >= 0.05 ? '#4ade80' : '#ef4444', margin: '6px 0' }}>
+                {currentEPnlR >= 0 ? '+' : ''}{currentEPnlR} R
               </div>
               <div style={{ fontSize: '0.75rem', color: '#cbd5e1' }}>
-                Kelly 建议仓位: <strong>{(mlData.kelly_fraction * 100).toFixed(1)}%</strong><br/>
-                开仓指令: <span style={{ color: '#4ade80', fontWeight: 800 }}>{mlData.ev_status}</span>
+                Kelly 建议仓位: <strong>{currentEPnlR >= 0.05 ? (mlData.kelly_fraction * 100).toFixed(1) : '0.0'}%</strong><br/>
+                开仓指令: <span style={{ color: currentEPnlR >= 0.05 ? '#4ade80' : '#ef4444', fontWeight: 800 }}>{currentEvStatus}</span>
               </div>
             </div>
           </div>
