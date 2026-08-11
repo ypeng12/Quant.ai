@@ -631,14 +631,8 @@ class LiveTradingRunner:
         vwap_dist_pct = ((close - vwap) / vwap * 100.0) if vwap > 0 else 0.0
         rsi = self._safe_float(row.get("RSI"), 50.0)
 
-        # Volatility-Adaptive Anti-FOMO: Uses stock-specific ATR% scaling (max(2.5, 3.0 * atr_pct))
-        # High volatility momentum stocks (CRCL, SNDK) get wide tolerance for large bar moves.
+        # Pure ML Model Control: Traditional rule-based overextension blockers removed.
         is_overextended = False
-        dynamic_vwap_limit = max(2.5, 3.0 * atr_pct)
-        if direction == "LONG" and (vwap_dist_pct > dynamic_vwap_limit or rsi > 78.0):
-            is_overextended = True
-        elif direction == "SHORT" and (vwap_dist_pct < -dynamic_vwap_limit or rsi < 22.0):
-            is_overextended = True
 
         # Stock-adaptive ATR Noise Stop:
         # High volatility / high ATR stocks (e.g. CRCL/SNDK with ATR% >= 2.0%) get expanded initial stop buffer to avoid micro noise shakeout
@@ -763,17 +757,8 @@ class LiveTradingRunner:
                 return "HOLD", f"{base_reason} | 未达到方向/确认门槛"
             if not is_pos_ev:
                 return "HOLD", f"{base_reason} | 概率期望值偏低 (E[PnL]={ev_r:+.2f}R < +0.10R 门槛)，拒绝下发盲目交易"
-            # Volatility-Adaptive Anti-FOMO: High ML conviction / high EV signals (Score >= 80 or EV >= +0.20R)
-            # are NOT blocked from chasing momentum, allowing the model to bravely enter high-volatility moves.
-            if opportunity.get("_is_overextended", False) and score < 80.0 and ev_r < 0.20:
-                atr_pct_opp = self._safe_float(opportunity.get("atr_pct"), 1.0)
-                rsi_val = self._safe_float(opportunity.get("_rsi"), 50.0)
-                vwap_dist = self._safe_float(opportunity.get("_vwap_dist_pct"), 0.0)
-                return "HOLD", (
-                    f"{base_reason} | ❌ 偏离较大 (VWAP {vwap_dist:+.2f}%, RSI={rsi_val:.0f}) 且 ML置信度不足(Score={score:.0f}<80)，等待回踩"
-                )
             last_exit = self.last_exit_times.get(ticker)
-            cooldown = self._safe_float(self.strategy_params.get("reentry_cooldown_seconds"), 120.0)
+            cooldown = self._safe_float(self.strategy_params.get("reentry_cooldown_seconds"), 60.0)
             if last_exit and (time.time() - last_exit) < cooldown:
                 return "HOLD", f"{base_reason} | 平仓冷却中，避免同一走势反复追单"
             if open_position_count >= int(self.strategy_params.get("max_concurrent_positions", 2)):
