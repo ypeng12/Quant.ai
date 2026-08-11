@@ -70,7 +70,7 @@ class LiveTradingRunner:
     @staticmethod
     def _aggressive_intraday_defaults() -> Dict:
         return {
-            "strategy_version": "aggressive_intraday_v2",
+            "strategy_version": "aggressive_intraday_v3",
             "strategy_mode": "aggressive_intraday",
             "paper_only_aggressive": True,
             "allow_aggressive_live": False,
@@ -79,15 +79,19 @@ class LiveTradingRunner:
             "screener_top_actives": 6,
             "screener_top_movers": 4,
             "max_scan_symbols": 14,
-            "entry_score_min": 78.0,
-            "full_size_score": 90.0,
-            "min_expected_value_r": 0.15,
+            # ↓↓ Relaxed for higher intraday trade frequency ↓↓
+            "entry_score_min": 62.0,        # was 78 — too selective, misses most valid entries
+            "full_size_score": 80.0,        # was 90 — scale to full size at 80
+            "min_expected_value_r": 0.10,   # was 0.15 — allow trades with lighter EV gate
+            "reentry_cooldown_seconds": 60, # was 120 — faster re-entry after exit
+            "max_concurrent_positions": 3,  # was 2 — allow up to 3 simultaneous positions
+            "pyramid_trigger_pct": 0.004,   # 0.4% profit triggers pyramid add
+            # ↑↑ Risk / sizing unchanged ↑↑
             "min_stock_price": 5.00,
             "buying_power_utilization_pct": 0.95,
             "starter_buying_power_pct": 0.35,
             "max_position_buying_power_pct": 0.95,
             "max_position_risk_pct": 0.040,
-            "max_concurrent_positions": 2,
             "daily_loss_limit_pct": 0.040,
             "initial_stop_atr_mult": 1.60,
             "stop_min_pct": 0.0050,
@@ -98,8 +102,7 @@ class LiveTradingRunner:
             "trailing_stop_max_pct": 0.0250,
             "minimum_hold_minutes": 4,
             "max_hold_minutes": 300,
-            "time_stop_min_score": 52.0,
-            "reentry_cooldown_seconds": 120,
+            "time_stop_min_score": 48.0,    # was 52 — slightly more tolerant of held positions
             "orders_sync_interval_seconds": 2.0,
         }
 
@@ -584,7 +587,8 @@ class LiveTradingRunner:
 
         long_score = round(max(0.0, min(100.0, long_score)), 1)
         short_score = round(max(0.0, min(100.0, short_score)), 1)
-        if abs(long_score - short_score) < 5.0:
+        # Relaxed directional classification: gap of 3.0 (was 5.0) → fewer NEUTRAL signals
+        if abs(long_score - short_score) < 3.0:
             direction = "NEUTRAL"
             score = max(long_score, short_score)
             regime = "RANGE"
@@ -599,8 +603,18 @@ class LiveTradingRunner:
 
         prev_long_structure = prev_close > prev_vwap or prev_close > prev_ema_21
         prev_short_structure = prev_close < prev_vwap or prev_close < prev_ema_21
-        long_confirmed = long_breakout and (prev_long_structure or momentum_3_pct >= 0.70 or reversal_long)
-        short_confirmed = short_breakdown and (prev_short_structure or momentum_3_pct <= -0.70 or reversal_short)
+        # Relaxed _entry_confirmed: also allow VWAP+EMA alignment without strict prev-bar guard
+        # This prevents the system from being silent when current bar is valid but prev bar was ambiguous
+        vwap_ema_long_alignment = close > vwap and ema_9 > ema_21 and momentum_3_pct > 0.05
+        vwap_ema_short_alignment = close < vwap and ema_9 < ema_21 and momentum_3_pct < -0.05
+        long_confirmed = (
+            (long_breakout and (prev_long_structure or momentum_3_pct >= 0.70 or reversal_long))
+            or (vwap_ema_long_alignment and direction == "LONG" and score >= 60.0)
+        )
+        short_confirmed = (
+            (short_breakdown and (prev_short_structure or momentum_3_pct <= -0.70 or reversal_short))
+            or (vwap_ema_short_alignment and direction == "SHORT" and score >= 60.0)
+        )
         
         vwap_dist_pct = ((close - vwap) / vwap * 100.0) if vwap > 0 else 0.0
         rsi = self._safe_float(row.get("RSI"), 50.0)
