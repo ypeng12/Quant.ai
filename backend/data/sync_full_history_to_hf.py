@@ -69,8 +69,14 @@ def sync_full_history_to_hf():
             df_trades.to_csv(train_csv_path, index=False, encoding="utf-8")
             api.upload_file(path_or_fileobj=train_csv_path, path_in_repo="train.csv", repo_id=repo_id, repo_type="dataset")
             api.upload_file(path_or_fileobj=train_csv_path, path_in_repo="data/train.csv", repo_id=repo_id, repo_type="dataset")
+
+            # Export Parquet format for instant HuggingFace Viewer rendering
+            parquet_path = os.path.join(base_dir, "data", "datasets", "train-00000-of-00001.parquet")
+            df_trades.to_parquet(parquet_path, index=False)
+            api.upload_file(path_or_fileobj=parquet_path, path_in_repo="data/train-00000-of-00001.parquet", repo_id=repo_id, repo_type="dataset")
+            print(f"   ├─ Uploaded Parquet split for instant HF Viewer rendering: data/train-00000-of-00001.parquet")
         except Exception as csv_err:
-            print(f"   ⚠️ Could not generate train.csv: {csv_err}")
+            print(f"   ⚠️ Could not generate train.csv/parquet: {csv_err}")
 
         api.upload_file(path_or_fileobj=train_json_path, path_in_repo="train.json", repo_id=repo_id, repo_type="dataset")
         api.upload_file(path_or_fileobj=train_jsonl_path, path_in_repo="train.jsonl", repo_id=repo_id, repo_type="dataset")
