@@ -1848,6 +1848,12 @@ class LiveTradingRunner:
 
                     self._score_warmup_complete = True
 
+                    # EOD HuggingFace Auto-Sync: Runs once at market close (16:01 - 16:05 EST)
+                    now_time = datetime.datetime.now().time()
+                    if datetime.time(16, 1) <= now_time <= datetime.time(16, 5) and not getattr(self, "_eod_hf_synced_today", False):
+                        self._eod_hf_synced_today = True
+                        threading.Thread(target=self.sync_to_huggingface, daemon=True).start()
+
                 loop_delay = 5 if is_market_opening_window else 30
                 await asyncio.sleep(loop_delay)
 
@@ -1857,3 +1863,16 @@ class LiveTradingRunner:
             except Exception as e:
                 self.add_log(f"⚠️ Main loop exception: {str(e)}")
                 await asyncio.sleep(30)
+
+    def sync_to_huggingface(self) -> Dict:
+        """Uploads full master trade_history.json and daily partitions to HuggingFace Dataset repository (Ypeng12/quant-ai-trade-history)."""
+        try:
+            from data.sync_full_history_to_hf import sync_full_history_to_hf
+            self.add_log("☁️ [HF Auto-Sync] 正在全量推送到 HuggingFace Dataset (Ypeng12/quant-ai-trade-history)...")
+            sync_full_history_to_hf()
+            self.add_log("✅ [HF Auto-Sync] 远端 HuggingFace 数据集同步成功！")
+            return {"success": True, "message": "Synced to HuggingFace Dataset (Ypeng12/quant-ai-trade-history)"}
+        except Exception as e:
+            err_msg = f"⚠️ [HF Auto-Sync Error] {str(e)}"
+            self.add_log(err_msg)
+            return {"success": False, "error": str(e)}
