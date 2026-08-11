@@ -630,11 +630,11 @@ class LiveTradingRunner:
         vwap_dist_pct = ((close - vwap) / vwap * 100.0) if vwap > 0 else 0.0
         rsi = self._safe_float(row.get("RSI"), 50.0)
 
-        # Anti-FOMO Overextension Detector: Flags entries that are chasing extended prices far above VWAP / RSI > 70
+        # Anti-FOMO Overextension Detector: Flags entries that are chasing extended prices far above/below VWAP / RSI > 70 or < 30
         is_overextended = False
-        if direction == "LONG" and (vwap_dist_pct > max(1.5, 1.8 * atr_pct) or rsi > 70.0 or high_to_now_pct < -1.2):
+        if direction == "LONG" and (vwap_dist_pct > max(1.5, 1.8 * atr_pct) or rsi > 70.0):
             is_overextended = True
-        elif direction == "SHORT" and (vwap_dist_pct < -max(1.5, 1.8 * atr_pct) or rsi < 30.0 or low_to_now_pct > 1.2):
+        elif direction == "SHORT" and (vwap_dist_pct < -max(1.5, 1.8 * atr_pct) or rsi < 30.0):
             is_overextended = True
 
         # Stock-adaptive ATR Noise Stop:
