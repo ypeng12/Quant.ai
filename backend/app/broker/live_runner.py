@@ -169,8 +169,19 @@ class LiveTradingRunner:
                 with open(self.config_file, 'r', encoding='utf-8') as f:
                     data = json.load(f)
                     if "strategy_params" in data and isinstance(data["strategy_params"], dict):
-                        self._loaded_strategy_version = data["strategy_params"].get("strategy_version")
-                        self.strategy_params.update(data["strategy_params"])
+                        saved = data["strategy_params"]
+                        saved_mode = saved.get("strategy_mode", "")
+                        current_mode = self.strategy_params.get("strategy_mode", "")
+                        # Guard: never let a stale config from a different strategy mode
+                        # overwrite the engine defaults (e.g. old "dynamic" config clobbering aggressive_intraday_v3)
+                        if saved_mode and current_mode and saved_mode != current_mode:
+                            print(
+                                f"[Config] Skipping runner_config.json — saved mode '{saved_mode}' "
+                                f"does not match active mode '{current_mode}'. Using engine defaults."
+                            )
+                            return
+                        self._loaded_strategy_version = saved.get("strategy_version")
+                        self.strategy_params.update(saved)
         except Exception as e:
             print(f"Error loading runner_config.json: {e}")
 
