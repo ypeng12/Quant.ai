@@ -113,7 +113,7 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
         fetch(`${API_BASE}/api/live/status`),
         fetch(`${API_BASE}/api/live/action_feed?limit=50`),
         fetch(`${API_BASE}/api/live/analysis_feed?limit=80`),
-        fetch(`${API_BASE}/api/live/trade_history?days=30`),
+        fetch(`${API_BASE}/api/live/trade_history`, { cache: 'no-store' }),
         fetch(`${API_BASE}/api/live/today_summary`),
       ]);
 
