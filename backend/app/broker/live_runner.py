@@ -45,6 +45,7 @@ class LiveTradingRunner:
         self.last_exit_times = {}
         self.entry_times = {}
         self._score_warmup_complete = False
+        self.pyramid_done = {}  # {ticker: bool} tracks whether a pyramid add has been done for current position
 
         self.screener = UniverseScreener(self._get_alpaca_credentials, self.add_log)
         self.risk_sizer = RiskPositionSizer()
@@ -600,12 +601,27 @@ class LiveTradingRunner:
         prev_short_structure = prev_close < prev_vwap or prev_close < prev_ema_21
         long_confirmed = long_breakout and (prev_long_structure or momentum_3_pct >= 0.70 or reversal_long)
         short_confirmed = short_breakdown and (prev_short_structure or momentum_3_pct <= -0.70 or reversal_short)
+        
+        vwap_dist_pct = ((close - vwap) / vwap * 100.0) if vwap > 0 else 0.0
+        rsi = self._safe_float(row.get("RSI"), 50.0)
+
+        # Anti-FOMO Overextension Detector: Flags entries that are chasing extended prices far above VWAP / RSI > 70
+        is_overextended = False
+        if direction == "LONG" and (vwap_dist_pct > max(1.5, 1.8 * atr_pct) or rsi > 70.0 or high_to_now_pct < -1.2):
+            is_overextended = True
+        elif direction == "SHORT" and (vwap_dist_pct < -max(1.5, 1.8 * atr_pct) or rsi < 30.0 or low_to_now_pct > 1.2):
+            is_overextended = True
+
+        # Stock-adaptive ATR Noise Stop:
+        # High volatility / high ATR stocks (e.g. CRCL/SNDK with ATR% >= 2.0%) get expanded initial stop buffer to avoid micro noise shakeout
+        initial_mult = self._safe_float(self.strategy_params.get("initial_stop_atr_mult"), 1.60)
+        if atr_pct >= 2.0:
+            initial_mult = max(1.85, initial_mult * 1.15)
         stop_pct = min(
-            self._safe_float(self.strategy_params.get("stop_max_pct"), 0.0200),
+            self._safe_float(self.strategy_params.get("stop_max_pct"), 0.0250),
             max(
                 self._safe_float(self.strategy_params.get("stop_min_pct"), 0.0050),
-                self._safe_float(self.strategy_params.get("initial_stop_atr_mult"), 1.60)
-                * (atr / close if close > 0 else 0.0050),
+                initial_mult * (atr / close if close > 0 else 0.0050),
             ),
         )
 
@@ -627,6 +643,9 @@ class LiveTradingRunner:
             "price": round(close, 4),
             "_entry_confirmed": long_confirmed if direction == "LONG" else short_confirmed,
             "_stop_pct": stop_pct,
+            "_vwap_dist_pct": vwap_dist_pct,
+            "_rsi": rsi,
+            "_is_overextended": is_overextended,
             "_ema_9": ema_9,
             "_ema_21": ema_21,
             "_prev_ema_21": prev_ema_21,
@@ -635,6 +654,7 @@ class LiveTradingRunner:
             "_prev_close": prev_close,
             "_atr": atr,
         }
+
 
         # Evaluate Probabilistic Win Rate P_win and Expected Value E[PnL]
         prob_eval = evaluate_mathematical_expectation(opp, self.strategy_params)
@@ -699,6 +719,9 @@ class LiveTradingRunner:
 
         if current_shares == 0:
             self.position_extremes.pop(ticker, None)
+            # Reset pyramid state when flat
+            if ticker in self.pyramid_done:
+                del self.pyramid_done[ticker]
             from app.broker.universe_screener import is_valid_quality_stock_symbol
             min_price = self._safe_float(self.strategy_params.get("min_stock_price"), 5.00)
             if close < min_price:
@@ -710,6 +733,15 @@ class LiveTradingRunner:
                 return "HOLD", f"{base_reason} | 未达到方向/确认门槛"
             if not is_pos_ev:
                 return "HOLD", f"{base_reason} | 概率期望值偏低 (E[PnL]={ev_r:+.2f}R < +0.15R 门槛)，拒绝下发盲目交易"
+            # Anti-FOMO Overextension Filter: Do NOT chase a stock that has run far above VWAP or is overbought
+            if opportunity.get("_is_overextended", False):
+                atr_pct_opp = self._safe_float(opportunity.get("atr_pct"), 1.0)
+                rsi_val = self._safe_float(opportunity.get("_rsi"), 50.0)
+                vwap_dist = self._safe_float(opportunity.get("_vwap_dist_pct"), 0.0)
+                return "HOLD", (
+                    f"{base_reason} | ❌ [Anti-FOMO] 拒绝追高：股价偏离VWAP {vwap_dist:+.2f}% / RSI={rsi_val:.0f} / "
+                    f"ATR%={atr_pct_opp:.2f}% — 等待回踩 VWAP/EMA 企稳后再建仓"
+                )
             last_exit = self.last_exit_times.get(ticker)
             cooldown = self._safe_float(self.strategy_params.get("reentry_cooldown_seconds"), 120.0)
             if last_exit and (time.time() - last_exit) < cooldown:
@@ -779,10 +811,48 @@ class LiveTradingRunner:
         if minutes_held >= max_hold and same_side_score < self._safe_float(self.strategy_params.get("time_stop_min_score"), 52.0) and pnl_pct <= 0.0:
             return ("SELL" if side == "LONG" else "COVER"), f"{base_reason} | 尾段趋势消失且未盈利"
 
+        # ─── Pyramiding Buy / Short (浮盈加仓/补仓) ─────────────────────────────
+        # Fires once per position when:
+        #   - Position is profitable >= 0.4% (configurable via pyramid_trigger_pct)
+        #   - Same-side score strong (>= entry_score_min) AND positive EV >= +0.20R
+        #   - RVOL >= 1.2 and trend structure still valid above VWAP + EMA21
+        #   - Not already pyramided for this trade (pyramid_done[ticker] == False)
+        pyramid_threshold_pct = self._safe_float(self.strategy_params.get("pyramid_trigger_pct"), 0.004)
+        pyramid_min_score = self._safe_float(self.strategy_params.get("entry_score_min"), 78.0)
+        can_pyramid = (
+            pnl_pct >= pyramid_threshold_pct
+            and same_side_score >= pyramid_min_score
+            and is_pos_ev
+            and ev_r >= 0.20
+            and self._safe_float(opportunity.get("rvol"), 1.0) >= 1.2
+            and not self.pyramid_done.get(ticker, False)
+            and self._aggressive_orders_allowed()
+        )
+        if can_pyramid:
+            if side == "LONG":
+                trend_ok = close >= opportunity.get("_vwap", close) and close >= opportunity.get("_ema_21", close)
+            else:
+                trend_ok = close <= opportunity.get("_vwap", close) and close <= opportunity.get("_ema_21", close)
+            if trend_ok:
+                action_str = "PYRAMID_BUY" if side == "LONG" else "PYRAMID_SHORT"
+                return action_str, (
+                    f"{base_reason} | 📈 [浮盈加仓 +{pnl_pct*100:.2f}% PnL] 趋势强劲 Score={same_side_score:.0f} / "
+                    f"E[R]={ev_r:+.2f}R — 触发 {action_str}，顺势补强"
+                )
+
         return "HOLD", f"{base_reason} | {side} 趋势仍有效，整仓持有，不做碎片止盈"
 
     def _size_aggressive_entry(self, account: Dict, close_price: float, opportunity: Dict) -> Dict:
         return self.risk_sizer.size_aggressive_entry(
+            account=account,
+            close_price=close_price,
+            opportunity=opportunity,
+            strategy_params=self.strategy_params,
+            prob_eval=opportunity
+        )
+
+    def _size_pyramid_entry(self, account: Dict, close_price: float, opportunity: Dict) -> Dict:
+        return self.risk_sizer.size_pyramid_entry(
             account=account,
             close_price=close_price,
             opportunity=opportunity,
@@ -1503,6 +1573,8 @@ class LiveTradingRunner:
                                 decision_icon = "⏳ WATCH"
                             elif action in ("BUY", "SHORT"):
                                 decision_icon = f"🚀 TRIGGER {action}"
+                            elif action in ("PYRAMID_BUY", "PYRAMID_SHORT"):
+                                decision_icon = f"📈 {action} (浮盈加仓)"
                             elif action in ("PARTIAL_SELL", "PARTIAL_COVER"):
                                 decision_icon = f"🟢 PARTIAL EXIT {action}"
                             else:
@@ -1630,6 +1702,74 @@ class LiveTradingRunner:
                                 else:
                                     self.unlock_exit(ticker)
                                     self.add_log(f"❌ [{ticker}] COVER order failed. Reason: {order_res.get('error')}")
+
+                            elif action == "PYRAMID_BUY" and current_shares > 0:
+                                # Pyramiding Buy (浮盈加仓): Add to a profitable long position
+                                if not is_open:
+                                    self.add_log(f"🌙 [盘后研判] [{ticker}] 浮盈加仓信号 (PYRAMID_BUY) | 非盘中，仅研判记录。")
+                                elif self.is_entry_locked(ticker):
+                                    self.add_log(f"⏳ [{ticker}] 浮盈加仓跳过：订单锁定中 (避免重复)")
+                                else:
+                                    account = self.adapter.get_account_summary()
+                                    pyr_sizing = self._size_pyramid_entry(account, close_price, opportunity)
+                                    pyr_shares = pyr_sizing["shares"]
+                                    if pyr_shares <= 0:
+                                        self.add_log(f"⚠️ [{ticker}] Buying power 不足以执行浮盈加仓，跳过。")
+                                    else:
+                                        pnl_float = (close_price - avg_cost) / avg_cost * 100.0 if avg_cost > 0 else 0.0
+                                        client_order_id = f"{ticker}-{int(datetime.datetime.now().timestamp())}-PYRAMID"
+                                        self.lock_entry(ticker)
+                                        self.add_log(
+                                            f"📈 [{ticker}] 浮盈加仓 PYRAMID_BUY! 当前浮盈 +{pnl_float:.2f}% — 追加 {pyr_shares} 股 @ ${close_price:.2f}，"
+                                            f"名义 ${pyr_sizing['notional']:,.0f} | Score={live_score:.0f} E[R]={opportunity.get('expected_value_r', 0):+.2f}R"
+                                        )
+                                        order_res = self.adapter.submit_market_order(ticker, pyr_shares, "buy", client_order_id=client_order_id)
+                                        if order_res.get("success"):
+                                            self.pyramid_done[ticker] = True
+                                            self.add_log(f"✅ [{ticker}] PYRAMID_BUY order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
+                                            self.add_trade_action(
+                                                "PYRAMID_BUY", ticker, pyr_shares, close_price, reason,
+                                                order_id=order_res.get("order_id") or order_res.get("id"),
+                                                client_order_id=client_order_id,
+                                                order_status=order_res.get("status") or "submitted",
+                                            )
+                                        else:
+                                            self.unlock_entry(ticker)
+                                            self.add_log(f"❌ [{ticker}] PYRAMID_BUY order failed. Reason: {order_res.get('error')}")
+
+                            elif action == "PYRAMID_SHORT" and current_shares < 0:
+                                # Pyramiding Short (浮盈加空): Add to a profitable short position
+                                if not is_open:
+                                    self.add_log(f"🌙 [盘后研判] [{ticker}] 浮盈加空信号 (PYRAMID_SHORT) | 非盘中，仅研判记录。")
+                                elif self.is_entry_locked(ticker):
+                                    self.add_log(f"⏳ [{ticker}] 浮盈加空跳过：订单锁定中 (避免重复)")
+                                else:
+                                    account = self.adapter.get_account_summary()
+                                    pyr_sizing = self._size_pyramid_entry(account, close_price, opportunity)
+                                    pyr_shares = pyr_sizing["shares"]
+                                    if pyr_shares <= 0:
+                                        self.add_log(f"⚠️ [{ticker}] Buying power 不足以执行浮盈加空，跳过。")
+                                    else:
+                                        pnl_float = (avg_cost - close_price) / avg_cost * 100.0 if avg_cost > 0 else 0.0
+                                        client_order_id = f"{ticker}-{int(datetime.datetime.now().timestamp())}-PYRAMID"
+                                        self.lock_entry(ticker)
+                                        self.add_log(
+                                            f"📉 [{ticker}] 浮盈加空 PYRAMID_SHORT! 当前浮盈 +{pnl_float:.2f}% — 追加卖空 {pyr_shares} 股 @ ${close_price:.2f}，"
+                                            f"名义 ${pyr_sizing['notional']:,.0f} | Score={live_score:.0f} E[R]={opportunity.get('expected_value_r', 0):+.2f}R"
+                                        )
+                                        order_res = self.adapter.submit_market_order(ticker, pyr_shares, "sell", client_order_id=client_order_id)
+                                        if order_res.get("success"):
+                                            self.pyramid_done[ticker] = True
+                                            self.add_log(f"✅ [{ticker}] PYRAMID_SHORT order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
+                                            self.add_trade_action(
+                                                "SHORT", ticker, pyr_shares, close_price, reason,
+                                                order_id=order_res.get("order_id") or order_res.get("id"),
+                                                client_order_id=client_order_id,
+                                                order_status=order_res.get("status") or "submitted",
+                                            )
+                                        else:
+                                            self.unlock_entry(ticker)
+                                            self.add_log(f"❌ [{ticker}] PYRAMID_SHORT order failed. Reason: {order_res.get('error')}")
                                     
                         except Exception as ex:
                             self.add_log(f"⚠️ Error scanning {ticker}: {str(ex)}")
