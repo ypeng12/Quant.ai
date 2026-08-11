@@ -95,7 +95,18 @@ def sync_full_history_to_hf():
             pushed_count += 1
             print(f"   ├─ Uploaded daily archive to HF: daily_archives/trades_{d}.json")
 
-        print(f"✅ Successfully synced full dataset to HF Dataset ({repo_id})! (Uploaded {pushed_count} daily partitions + full master JSON)")
+        # Also sync to HuggingFace Space (Ypeng12/quant-ai)
+        space_id = "Ypeng12/quant-ai"
+        print(f"[*] Uploading trade history and archives to HF Space ({space_id})...")
+        try:
+            api.upload_file(path_or_fileobj=full_file, path_in_repo="backend/trade_history.json", repo_id=space_id, repo_type="space")
+            for d, df_path, _ in daily_files:
+                api.upload_file(path_or_fileobj=df_path, path_in_repo=f"backend/data/datasets/daily_archives/trades_{d}.json", repo_id=space_id, repo_type="space")
+            print(f"✅ Successfully synced trade history to HF Space ({space_id})!")
+        except Exception as space_err:
+            print(f"   ⚠️ Could not sync to HF Space ({space_id}): {space_err}")
+
+        print(f"✅ Successfully synced full dataset to HF Dataset ({repo_id}) & HF Space ({space_id})!")
     except Exception as e:
         print(f"⚠️ Error uploading to HuggingFace Dataset: {e}")
 
