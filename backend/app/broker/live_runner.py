@@ -46,6 +46,7 @@ class LiveTradingRunner:
         self.entry_times = {}
         self._score_warmup_complete = False
         self.pyramid_done = {}  # {ticker: bool} tracks whether a pyramid add has been done for current position
+        self.partial_tp_done = {}  # {ticker: bool} tracks whether partial profit scaling has been taken
 
         self.screener = UniverseScreener(self._get_alpaca_credentials, self.add_log)
         self.risk_sizer = RiskPositionSizer()
@@ -630,11 +631,13 @@ class LiveTradingRunner:
         vwap_dist_pct = ((close - vwap) / vwap * 100.0) if vwap > 0 else 0.0
         rsi = self._safe_float(row.get("RSI"), 50.0)
 
-        # Anti-FOMO Overextension Detector: Flags entries that are chasing extended prices far above/below VWAP / RSI > 70 or < 30
+        # Volatility-Adaptive Anti-FOMO: Uses stock-specific ATR% scaling (max(2.5, 3.0 * atr_pct))
+        # High volatility momentum stocks (CRCL, SNDK) get wide tolerance for large bar moves.
         is_overextended = False
-        if direction == "LONG" and (vwap_dist_pct > max(1.5, 1.8 * atr_pct) or rsi > 70.0):
+        dynamic_vwap_limit = max(2.5, 3.0 * atr_pct)
+        if direction == "LONG" and (vwap_dist_pct > dynamic_vwap_limit or rsi > 78.0):
             is_overextended = True
-        elif direction == "SHORT" and (vwap_dist_pct < -max(1.5, 1.8 * atr_pct) or rsi < 30.0):
+        elif direction == "SHORT" and (vwap_dist_pct < -dynamic_vwap_limit or rsi < 22.0):
             is_overextended = True
 
         # Stock-adaptive ATR Noise Stop:
@@ -744,9 +747,11 @@ class LiveTradingRunner:
 
         if current_shares == 0:
             self.position_extremes.pop(ticker, None)
-            # Reset pyramid state when flat
+            # Reset pyramid and partial TP state when flat
             if ticker in self.pyramid_done:
                 del self.pyramid_done[ticker]
+            if ticker in self.partial_tp_done:
+                del self.partial_tp_done[ticker]
             from app.broker.universe_screener import is_valid_quality_stock_symbol
             min_price = self._safe_float(self.strategy_params.get("min_stock_price"), 5.00)
             if close < min_price:
@@ -757,15 +762,15 @@ class LiveTradingRunner:
             if direction == "NEUTRAL" or score < entry_min or not opportunity.get("_entry_confirmed", False):
                 return "HOLD", f"{base_reason} | 未达到方向/确认门槛"
             if not is_pos_ev:
-                return "HOLD", f"{base_reason} | 概率期望值偏低 (E[PnL]={ev_r:+.2f}R < +0.15R 门槛)，拒绝下发盲目交易"
-            # Anti-FOMO Overextension Filter: Do NOT chase a stock that has run far above VWAP or is overbought
-            if opportunity.get("_is_overextended", False):
+                return "HOLD", f"{base_reason} | 概率期望值偏低 (E[PnL]={ev_r:+.2f}R < +0.10R 门槛)，拒绝下发盲目交易"
+            # Volatility-Adaptive Anti-FOMO: High ML conviction / high EV signals (Score >= 80 or EV >= +0.20R)
+            # are NOT blocked from chasing momentum, allowing the model to bravely enter high-volatility moves.
+            if opportunity.get("_is_overextended", False) and score < 80.0 and ev_r < 0.20:
                 atr_pct_opp = self._safe_float(opportunity.get("atr_pct"), 1.0)
                 rsi_val = self._safe_float(opportunity.get("_rsi"), 50.0)
                 vwap_dist = self._safe_float(opportunity.get("_vwap_dist_pct"), 0.0)
                 return "HOLD", (
-                    f"{base_reason} | ❌ [Anti-FOMO] 拒绝追高：股价偏离VWAP {vwap_dist:+.2f}% / RSI={rsi_val:.0f} / "
-                    f"ATR%={atr_pct_opp:.2f}% — 等待回踩 VWAP/EMA 企稳后再建仓"
+                    f"{base_reason} | ❌ 偏离较大 (VWAP {vwap_dist:+.2f}%, RSI={rsi_val:.0f}) 且 ML置信度不足(Score={score:.0f}<80)，等待回踩"
                 )
             last_exit = self.last_exit_times.get(ticker)
             cooldown = self._safe_float(self.strategy_params.get("reentry_cooldown_seconds"), 120.0)
@@ -793,9 +798,26 @@ class LiveTradingRunner:
         minutes_held = max(0.0, (datetime.datetime.now() - entry_at).total_seconds() / 60.0)
         pnl_pct = ((close - avg_cost) / avg_cost) if side == "LONG" and avg_cost > 0 else ((avg_cost - close) / avg_cost if avg_cost > 0 else 0.0)
         stop_pct = self._safe_float(opportunity.get("_stop_pct"), 0.0100)
+        
+        # Breakeven Stop: If partial TP has been taken, protect remaining shares at cost price (avg_cost)
+        if self.partial_tp_done.get(ticker, False) and pnl_pct <= 0.0:
+            return ("SELL" if side == "LONG" else "COVER"), f"{base_reason} | 🛡️ 半仓止盈后触及保本线 (${avg_cost:.2f})，平余仓保本离场"
+
         hard_stop = (side == "LONG" and close <= avg_cost * (1.0 - stop_pct)) or (side == "SHORT" and close >= avg_cost * (1.0 + stop_pct))
         if hard_stop:
             return ("SELL" if side == "LONG" else "COVER"), f"{base_reason} | 初始硬止损 {stop_pct*100:.2f}%"
+
+        # ─── Partial Take-Profit (分批止盈/锁利) ──────────────────────────────────
+        # When unrealized gain reaches >= 1.2% (or 1.2 * stop_pct) and position has > 1 share,
+        # scale out 50% to lock in profit, then set Breakeven stop for the rest!
+        tp1_pct = max(0.0100, 1.2 * stop_pct)
+        if pnl_pct >= tp1_pct and not self.partial_tp_done.get(ticker, False) and abs(current_shares) > 1:
+            action_str = "PARTIAL_SELL" if side == "LONG" else "PARTIAL_COVER"
+            est_pnl_usd = pnl_pct * close * abs(current_shares) / 2.0
+            return action_str, (
+                f"{base_reason} | 🟢 [分批止盈 50%] 浮盈 +{pnl_pct*100:.2f}% (预估锁利 +${est_pnl_usd:.2f}) — "
+                f"落袋为安半仓，余仓开启移动止盈与保本风控"
+            )
 
         atr = self._safe_float(opportunity.get("_atr"), close * 0.004)
         regime = opportunity.get("regime", "RANGE")
@@ -1727,6 +1749,46 @@ class LiveTradingRunner:
                                 else:
                                     self.unlock_exit(ticker)
                                     self.add_log(f"❌ [{ticker}] COVER order failed. Reason: {order_res.get('error')}")
+
+                            elif action == "PARTIAL_SELL" and current_shares > 0:
+                                sell_qty = max(1, current_shares // 2)
+                                pnl = (close_price - avg_cost) * sell_qty
+                                client_order_id = f"{ticker}-{int(datetime.datetime.now().timestamp())}-PARTIAL"
+                                self.lock_exit(ticker)
+                                self.add_log(f"🟢 [{ticker}] PARTIAL_SELL 触发分批止盈！市价平半仓 {sell_qty} 股 (预估锁利 ${pnl:.2f})...")
+                                order_res = self.adapter.submit_market_order(ticker, sell_qty, "sell", client_order_id=client_order_id)
+                                if order_res.get("success"):
+                                    self.partial_tp_done[ticker] = True
+                                    self.add_log(f"✅ [{ticker}] PARTIAL_SELL 订单已提交！ID: {order_res.get('order_id', order_res.get('id'))}")
+                                    self.add_trade_action(
+                                        "PARTIAL_SELL", ticker, sell_qty, close_price, reason, pnl=pnl,
+                                        order_id=order_res.get("order_id") or order_res.get("id"),
+                                        client_order_id=client_order_id,
+                                        order_status=order_res.get("status") or "submitted",
+                                    )
+                                else:
+                                    self.unlock_exit(ticker)
+                                    self.add_log(f"❌ [{ticker}] PARTIAL_SELL 订单失败. 原因: {order_res.get('error')}")
+
+                            elif action == "PARTIAL_COVER" and current_shares < 0:
+                                cover_qty = max(1, abs(current_shares) // 2)
+                                pnl = (avg_cost - close_price) * cover_qty
+                                client_order_id = f"{ticker}-{int(datetime.datetime.now().timestamp())}-PARTIAL"
+                                self.lock_exit(ticker)
+                                self.add_log(f"🟢 [{ticker}] PARTIAL_COVER 触发分批止盈！市价买回半仓 {cover_qty} 股 (预估锁利 ${pnl:.2f})...")
+                                order_res = self.adapter.submit_market_order(ticker, cover_qty, "buy", client_order_id=client_order_id)
+                                if order_res.get("success"):
+                                    self.partial_tp_done[ticker] = True
+                                    self.add_log(f"✅ [{ticker}] PARTIAL_COVER 订单已提交！ID: {order_res.get('order_id', order_res.get('id'))}")
+                                    self.add_trade_action(
+                                        "PARTIAL_COVER", ticker, cover_qty, close_price, reason, pnl=pnl,
+                                        order_id=order_res.get("order_id") or order_res.get("id"),
+                                        client_order_id=client_order_id,
+                                        order_status=order_res.get("status") or "submitted",
+                                    )
+                                else:
+                                    self.unlock_exit(ticker)
+                                    self.add_log(f"❌ [{ticker}] PARTIAL_COVER 订单失败. 原因: {order_res.get('error')}")
 
                             elif action == "PYRAMID_BUY" and current_shares > 0:
                                 # Pyramiding Buy (浮盈加仓): Add to a profitable long position
