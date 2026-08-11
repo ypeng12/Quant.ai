@@ -49,20 +49,33 @@ def sync_full_history_to_hf():
         api = HfApi(token=token) if token else HfApi()
         api.create_repo(repo_id=repo_id, repo_type="dataset", exist_ok=True)
 
-        # Upload full file
-        print(f"[*] Uploading full trade_history.json (25,810+ lines) to HF Dataset ({repo_id})...")
-        api.upload_file(
-            path_or_fileobj=full_file,
-            path_in_repo="trade_history.json",
-            repo_id=repo_id,
-            repo_type="dataset"
-        )
-        api.upload_file(
-            path_or_fileobj=full_file,
-            path_in_repo="historical_trades_archive.json",
-            repo_id=repo_id,
-            repo_type="dataset"
-        )
+        # Upload full master files and train split files for HF Dataset Viewer (default/train)
+        print(f"[*] Uploading master trade history and train split files to HF Dataset ({repo_id})...")
+        train_json_path = os.path.join(base_dir, "data", "datasets", "train.json")
+        train_csv_path = os.path.join(base_dir, "data", "datasets", "train.csv")
+        train_jsonl_path = os.path.join(base_dir, "data", "datasets", "train.jsonl")
+        
+        # Write train.json as flat list of trades or dict for HF viewer
+        with open(train_json_path, "w", encoding="utf-8") as f:
+            json.dump(all_trades, f, ensure_ascii=False, indent=2)
+
+        with open(train_jsonl_path, "w", encoding="utf-8") as f:
+            for item in all_trades:
+                f.write(json.dumps(item, ensure_ascii=False) + "\n")
+
+        try:
+            import pandas as pd
+            df_trades = pd.DataFrame(all_trades)
+            df_trades.to_csv(train_csv_path, index=False, encoding="utf-8")
+            api.upload_file(path_or_fileobj=train_csv_path, path_in_repo="train.csv", repo_id=repo_id, repo_type="dataset")
+            api.upload_file(path_or_fileobj=train_csv_path, path_in_repo="data/train.csv", repo_id=repo_id, repo_type="dataset")
+        except Exception as csv_err:
+            print(f"   ⚠️ Could not generate train.csv: {csv_err}")
+
+        api.upload_file(path_or_fileobj=train_json_path, path_in_repo="train.json", repo_id=repo_id, repo_type="dataset")
+        api.upload_file(path_or_fileobj=train_jsonl_path, path_in_repo="train.jsonl", repo_id=repo_id, repo_type="dataset")
+        api.upload_file(path_or_fileobj=full_file, path_in_repo="trade_history.json", repo_id=repo_id, repo_type="dataset")
+        api.upload_file(path_or_fileobj=full_file, path_in_repo="historical_trades_archive.json", repo_id=repo_id, repo_type="dataset")
 
         # Upload daily partition files
         pushed_count = 0
