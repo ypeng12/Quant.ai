@@ -43,32 +43,32 @@ pinned: false
 
 ```mermaid
 flowchart TD
-    subgraph Data_Ingestion ["1. Data Ingestion & Microstructure Layer"]
+    subgraph Data_Ingestion["1. Data Ingestion & Microstructure Layer"]
         HF["Hugging Face ETF Datasets"] --> PIT
-        AP_WS["Alpaca WebSockets (Tick Data)"] --> PIT
+        AP_WS["Alpaca WebSockets"] --> PIT
         UDP_Feed["L2/L3 UDP Feed Handler"] --> PIT
     end
 
-    subgraph PIT_Engine ["2. Point-in-Time & Feature Pipeline"]
-        PIT["Point-in-Time Universe Filter\n(Min ADV $10M, Age > 100d)"] --> FEAT
-        FEAT["Feature & Alpha Signal Library\n- Order Flow Imbalance (OFI)\n- Micro-Price Depth Drift\n- Residual Momentum (OLS)\n- Barra Risk Factors (Value/Vol/Size)"]
+    subgraph PIT_Engine["2. Point-in-Time & Feature Pipeline"]
+        PIT["Point-in-Time Universe Filter<br/>ADV > USD 10M, Age > 100d"] --> FEAT
+        FEAT["Feature & Alpha Signal Library<br/>• Order Flow Imbalance (OFI)<br/>• Micro-Price Depth Drift<br/>• Residual Momentum (OLS)<br/>• Barra Risk Factors"]
     end
 
-    subgraph Validation ["3. Validation & ML Research Engine"]
+    subgraph Validation["3. Validation & ML Research Engine"]
         FEAT --> PWF
-        PWF["Purged Walk-Forward CV\n(5-Day Embargo, Zero Lookahead)"] --> ML
-        ML["Machine Learning Suite\n(LightGBM / Ridge / Composite Ensemble)"] --> EVAL
-        EVAL["Statistical Quality Controls\n- Deflated Sharpe Ratio (DSR)\n- Stationary Bootstrap 95% CI"]
+        PWF["Purged Walk-Forward CV<br/>5-Day Embargo, Zero Lookahead"] --> ML
+        ML["Machine Learning Suite<br/>LightGBM / Ridge / Ensemble"] --> EVAL
+        EVAL["Statistical Quality Controls<br/>• Deflated Sharpe Ratio (DSR)<br/>• Stationary Bootstrap 95% CI"]
     end
 
-    subgraph Risk_Manager ["4. Portfolio & Institutional Risk Analyst"]
+    subgraph Risk_Manager["4. Portfolio & Institutional Risk Analyst"]
         EVAL --> RISK
-        RISK["Risk & Position Sizing Engine\n- Kelly Criterion & Vol Parity\n- Portfolio VaR / CVaR Limits\n- Daily Drawdown Circuit Breaker"]
+        RISK["Risk & Position Sizing Engine<br/>• Kelly Criterion & Vol Parity<br/>• Portfolio VaR / CVaR Limits<br/>• Daily Drawdown Circuit Breaker"]
     end
 
-    subgraph Execution ["5. High-Frequency Execution Gateway"]
+    subgraph Execution["5. High-Frequency Execution Gateway"]
         RISK --> EXEC
-        EXEC["Execution Algorithmic Suite\n- TWAP / VWAP / Implementation Shortfall\n- C++ Low-Latency Orderbook Engine\n- Binary TCP Gateway"] --> ALPACA
+        EXEC["Execution Algorithmic Suite<br/>• TWAP / VWAP / IS Algos<br/>• C++ Low-Latency Orderbook Core<br/>• Binary TCP Gateway"] --> ALPACA
         ALPACA["Alpaca Live / Paper Broker API"]
     end
 ```
