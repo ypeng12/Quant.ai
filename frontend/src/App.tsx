@@ -21,6 +21,7 @@ import { InstitutionalPanel } from './components/InstitutionalPanel';
 import { PortfolioHistoryChart } from './components/PortfolioHistoryChart';
 import { ReplayAndExperimentsPanel } from './components/ReplayAndExperimentsPanel';
 import { MLAssistantPanel } from './components/MLAssistantPanel';
+import { TradeComparisonPanel } from './components/TradeComparisonPanel';
 import { API_BASE } from './config';
 
 interface SummaryData {
@@ -147,7 +148,7 @@ const INTERVAL_LABELS: Record<string, string> = {
   "1d": "Daily"
 };
 
-type ActiveTab = 'dashboard' | 'research' | 'report' | 'walkforward' | 'experiments' | 'replay' | 'broker' | 'institutional' | 'portfolio' | 'ml_assistant';
+type ActiveTab = 'dashboard' | 'research' | 'report' | 'walkforward' | 'experiments' | 'replay' | 'broker' | 'institutional' | 'portfolio' | 'ml_assistant' | 'trade_comparison';
 
 function App() {
   const [watchlist, setWatchlist] = useState<string[]>(["NVDA", "SNDK", "TSLA", "AMD", "MSFT", "MU"]);
@@ -690,6 +691,24 @@ function App() {
             🔬 机构级 Alpha 研究
           </button>
 
+          <button
+            className={`nav-tab ${activeTab === 'trade_comparison' ? 'active' : ''}`}
+            onClick={() => setActiveTab('trade_comparison')}
+            style={{
+              padding: '8px 18px',
+              fontSize: '0.9rem',
+              fontWeight: 800,
+              background: activeTab === 'trade_comparison' ? 'linear-gradient(135deg, #10b981, #059669)' : 'transparent',
+              color: '#ffffff',
+              borderRadius: '6px',
+              border: activeTab === 'trade_comparison' ? 'none' : '1px solid rgba(16, 185, 129, 0.4)',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            📈 策略对比与复盘 (Trade Comparison)
+          </button>
+
           {/* Optional Advanced Tools */}
           <select
             value={['broker', 'portfolio', 'replay', 'institutional'].includes(activeTab) ? '' : activeTab}
@@ -762,6 +781,15 @@ function App() {
           {/* ML Assistant & Diagnostic Dashboard Tab */}
           {activeTab === 'ml_assistant' && (
             <MLAssistantPanel activeTicker={activeTicker} />
+          )}
+
+          {/* Trade Comparison & Retrospective Dashboard Tab */}
+          {activeTab === 'trade_comparison' && (
+            <TradeComparisonPanel
+              watchlist={watchlist}
+              activeTicker={activeTicker}
+              onSelectTicker={setActiveTicker}
+            />
           )}
 
           {/* Alpaca Live Tab (Mode 1) */}
