@@ -691,24 +691,6 @@ function App() {
             🔬 机构级 Alpha 研究
           </button>
 
-          <button
-            className={`nav-tab ${activeTab === 'trade_comparison' ? 'active' : ''}`}
-            onClick={() => setActiveTab('trade_comparison')}
-            style={{
-              padding: '8px 18px',
-              fontSize: '0.9rem',
-              fontWeight: 800,
-              background: activeTab === 'trade_comparison' ? 'linear-gradient(135deg, #10b981, #059669)' : 'transparent',
-              color: '#ffffff',
-              borderRadius: '6px',
-              border: activeTab === 'trade_comparison' ? 'none' : '1px solid rgba(16, 185, 129, 0.4)',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease'
-            }}
-          >
-            📈 策略对比与复盘 (Trade Comparison)
-          </button>
-
           {/* Optional Advanced Tools */}
           <select
             value={['broker', 'portfolio', 'replay', 'institutional'].includes(activeTab) ? '' : activeTab}

@@ -1355,12 +1355,17 @@ def get_intraday_data(ticker: str, date: str):
     except Exception as e:
         return {"success": False, "error": str(e)}
 
+_CACHED_SIMULATION_TRADES = None
+
 @app.get("/api/trade_comparison_data")
 def get_trade_comparison_data(ticker: str = "SNDK", interval: str = "1m"):
+    global _CACHED_SIMULATION_TRADES
     ticker = ticker.upper()
     try:
         from data.generate_trade_comparison_report import run_full_simulation, TODAY_STR
-        trades = run_full_simulation()
+        if _CACHED_SIMULATION_TRADES is None:
+            _CACHED_SIMULATION_TRADES = run_full_simulation()
+        trades = _CACHED_SIMULATION_TRADES
         
         # Filter trades for this ticker
         ticker_trades = [t for t in trades if t["ticker"] == ticker]
