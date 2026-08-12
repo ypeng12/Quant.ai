@@ -29,7 +29,11 @@ FEATURE_COLS = [
     "feature_atr_pct",
     "feature_high_to_now_pct",
     "feature_low_to_now_pct",
-    "feature_session_range_pct"
+    "feature_session_range_pct",
+    "feature_upper_wick_ratio",
+    "feature_lower_wick_ratio",
+    "feature_mom_decay",
+    "feature_vwap_overextension"
 ]
 
 class QuantMLModelZoo:
