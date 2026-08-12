@@ -19,6 +19,7 @@ from app.broker.mock_adapter import MockAlpacaAdapter
 from app.broker.universe_screener import UniverseScreener
 from app.broker.risk_position_sizer import RiskPositionSizer
 from app.broker.probability_engine import evaluate_mathematical_expectation
+from app.alpha_engine import InstitutionalAlphaEngine
 from app.config import ALPACA_API_KEY, ALPACA_SECRET_KEY, ALPACA_BASE_URL, WATCHLIST, save_watchlist, load_watchlist
 from app.data_manager import fetch_and_prepare_data
 from app.data_cache import invalidate_cache
@@ -50,6 +51,7 @@ class LiveTradingRunner:
 
         self.screener = UniverseScreener(self._get_alpaca_credentials, self.add_log)
         self.risk_sizer = RiskPositionSizer()
+        self.alpha_engine = InstitutionalAlphaEngine()
 
         self.loop_task = None
         self.order_sync_thread = None
@@ -661,6 +663,9 @@ class LiveTradingRunner:
             ),
         )
 
+        # Evaluate Institutional Composite Alpha Factors
+        alpha_eval = self.alpha_engine.evaluate_composite_alpha(row=row, prev_row=prev_row)
+
         opp = {
             "ticker": ticker,
             "direction": direction,
@@ -668,6 +673,11 @@ class LiveTradingRunner:
             "score": score,
             "long_score": long_score,
             "short_score": short_score,
+            "composite_alpha_score": alpha_eval["composite_alpha_score"],
+            "alpha_ofi": alpha_eval["alpha_ofi"],
+            "alpha_micro": alpha_eval["alpha_micro"],
+            "alpha_ou": alpha_eval["alpha_ou"],
+            "alpha_lead_lag": alpha_eval["alpha_lead_lag"],
             "session_move_pct": round(session_move_pct, 2),
             "session_range_pct": round(session_range_pct, 2),
             "high_to_now_pct": round(high_to_now_pct, 2),
@@ -805,6 +815,13 @@ class LiveTradingRunner:
         hard_stop = (side == "LONG" and close <= avg_cost * (1.0 - stop_pct)) or (side == "SHORT" and close >= avg_cost * (1.0 + stop_pct))
         if hard_stop:
             return ("SELL" if side == "LONG" else "COVER"), f"{base_reason} | 初始硬止损 {stop_pct*100:.2f}%"
+
+        # ─── Alpha Decay Exit (Alpha 动能衰减离场) ──────────────────────────────────
+        alpha_score = self._safe_float(opportunity.get("composite_alpha_score"), 0.0)
+        if side == "LONG" and alpha_score < 15.0 and pnl_pct >= 0.0025:
+            return "SELL", f"{base_reason} | 📉 Composite Alpha 动能衰减 (Alpha={alpha_score:+.1f} < +15.0)，主动落袋锁利"
+        if side == "SHORT" and alpha_score > -15.0 and pnl_pct >= 0.0025:
+            return "COVER", f"{base_reason} | 📈 Composite Alpha 做空动能衰减 (Alpha={alpha_score:+.1f} > -15.0)，主动平空锁利"
 
         # ─── Partial Take-Profit (分批止盈/锁利) ──────────────────────────────────
         # When unrealized gain reaches >= 1.2% (or 1.2 * stop_pct) and position has > 1 share,
