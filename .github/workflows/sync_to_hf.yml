@@ -11,10 +11,17 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          lfs: true
+      - name: Install Git LFS and Configure Git
+        run: |
+          git lfs install
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
       - name: Push to hub
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        run: git push --force https://Ypeng12:${HF_TOKEN}@huggingface.co/spaces/Ypeng12/quant-ai main:main
+        run: |
+          git push --force https://Ypeng12:${HF_TOKEN}@huggingface.co/spaces/Ypeng12/quant-ai main:main
