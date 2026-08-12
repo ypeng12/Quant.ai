@@ -98,26 +98,6 @@ def calculate_confidence_score(row, prev_row, is_bullish=True):
     elif not is_bullish and 32 <= rsi <= 55:
         score += 15
 
-    # 6. Upper Wick Rejection & VWAP Overextension Guard (Anti-Bull Trap)
-    high = row.get('High', close)
-    low = row.get('Low', close)
-    open_p = row.get('Open', close)
-    candle_range = max(1e-6, high - low)
-    upper_wick_ratio = (high - max(open_p, close)) / candle_range
-
-    vwap_dist_pct = (close - vwap) / vwap if vwap > 0 else 0.0
-
-    if is_bullish:
-        if upper_wick_ratio >= 0.35:
-            score -= 35  # Severe penalty for upper wick rejection at highs
-        if vwap_dist_pct >= 0.018:
-            score -= 25  # Overextended above VWAP
-    else:
-        if upper_wick_ratio >= 0.35 and vwap_dist_pct >= 0.010:
-            score += 35  # Strong short signal on upper wick rejection at highs
-        elif close < vwap:
-            score += 10
-
     return max(0, min(100, score))
 
 
