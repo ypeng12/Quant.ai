@@ -1,12 +1,11 @@
 # backend/data/generate_trade_comparison_report.py
 """
-Robinhood-Style Interactive Trade Retrospective & Comparison Dashboard Generator
+Real Intraday K-Line Retrospective Dashboard Generator
 Features:
-1. Pure White Clean Robinhood Aesthetic (#ffffff background, Inter font, #00c805 Robinhood green, #ff5000 Robinhood red).
-2. Timeframe Selection Tabs: 1m, 5m, 15m, 30m bars.
-3. Interactive Ticker Switcher (NVDA, NBIS, MU, AMD, PLTR, TSLA, SNDK, MSFT).
-4. Plotly.js Candlestick Chart with exact Buy, Short, Pyramid, TP, and Decay Exit Markers on K-lines.
-5. Detailed Trade Ledger & Old vs New Performance Comparison.
+1. Fetches REAL 1m, 5m, 15m, 30m intraday bar data for today (2026-08-12) for all watchlist stocks.
+2. Runs the exact new strategy simulation to generate exact trade entry & exit records.
+3. Plots exact Buy/Short/Exit markers, trade duration, and PnL directly onto the intraday K-line charts.
+4. Provides Robinhood pure white aesthetic with interactive ticker pills (SNDK, MU, PLTR, NVDA, TSLA, MSFT, NBIS, AMD) and timeframe switchers.
 """
 
 import os
@@ -29,39 +28,26 @@ DATASETS_DIR = os.path.join(BASE_DIR, "data", "datasets")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 os.makedirs(DATASETS_DIR, exist_ok=True)
 
-WATCHLIST = ["NVDA", "NBIS", "MU", "AMD", "PLTR", "TSLA", "SNDK", "MSFT"]
+WATCHLIST = ["SNDK", "MU", "PLTR", "NVDA", "TSLA", "MSFT", "NBIS", "AMD"]
 TODAY_STR = "2026-08-12"
 
 
-def run_simulation(strategy_mode="new"):
+def run_full_simulation():
     """Runs deterministic simulation for today across watchlist symbols."""
     engine = InstitutionalAlphaEngine()
     sizer = RiskPositionSizer()
 
-    if strategy_mode == "old":
-        params = {
-            "entry_score_min": 62.0,
-            "full_size_score": 80.0,
-            "starter_buying_power_pct": 0.95,
-            "max_position_buying_power_pct": 0.95,
-            "buying_power_utilization_pct": 0.95,
-            "stop_loss_pct": 0.015,
-            "profit_target_pct": 0.03,
-            "time_stop_min_score": 48.0,
-            "enable_anti_trap_flip": False,
-        }
-    else:
-        params = {
-            "entry_score_min": 50.0,
-            "full_size_score": 75.0,
-            "starter_buying_power_pct": 0.25,
-            "max_position_buying_power_pct": 0.95,
-            "buying_power_utilization_pct": 0.95,
-            "stop_loss_pct": 0.02,
-            "profit_target_pct": 0.035,
-            "time_stop_min_score": 50.0,
-            "enable_anti_trap_flip": True,
-        }
+    params = {
+        "entry_score_min": 50.0,
+        "full_size_score": 75.0,
+        "starter_buying_power_pct": 0.25,
+        "max_position_buying_power_pct": 0.95,
+        "buying_power_utilization_pct": 0.95,
+        "stop_loss_pct": 0.02,
+        "profit_target_pct": 0.035,
+        "time_stop_min_score": 50.0,
+        "enable_anti_trap_flip": True,
+    }
 
     account = {"equity": 100000.0, "cash": 100000.0, "multiplier": 4.0, "buying_power": 400000.0}
     completed_trades = []
@@ -118,7 +104,6 @@ def run_simulation(strategy_mode="new"):
                         reason = "PROFIT_TARGET" if is_tp else ("STOP_LOSS" if is_sl else "SIGNAL_DECAY")
                         real_pnl = (close_p - entry_p) * shs
                         completed_trades.append({
-                            "strategy": strategy_mode,
                             "ticker": ticker,
                             "side": "LONG",
                             "entry_time": position["entry_time"],
@@ -143,7 +128,6 @@ def run_simulation(strategy_mode="new"):
                         reason = "PROFIT_TARGET" if is_tp else ("STOP_LOSS" if is_sl else "SIGNAL_DECAY")
                         real_pnl = (entry_p - close_p) * shs
                         completed_trades.append({
-                            "strategy": strategy_mode,
                             "ticker": ticker,
                             "side": "SHORT",
                             "entry_time": position["entry_time"],
@@ -163,10 +147,7 @@ def run_simulation(strategy_mode="new"):
             if position is None and abs_score >= params["entry_score_min"]:
                 opp = {"score": score, "_stop_pct": 0.015}
                 is_probe = abs_score < params["full_size_score"]
-                if strategy_mode == "old":
-                    sizing = sizer.size_aggressive_entry(account, close_p, opp, params)
-                else:
-                    sizing = sizer.size_probe_entry(account, close_p, opp, params) if is_probe else sizer.size_aggressive_entry(account, close_p, opp, params)
+                sizing = sizer.size_probe_entry(account, close_p, opp, params) if is_probe else sizer.size_aggressive_entry(account, close_p, opp, params)
 
                 shs = sizing["shares"]
                 if shs > 0:
@@ -182,8 +163,8 @@ def run_simulation(strategy_mode="new"):
     return completed_trades
 
 
-def prepare_chart_data():
-    """Fetches intraday bar data for 1m, 5m, 15m, 30m intervals for all tickers."""
+def prepare_real_kline_data():
+    """Fetches REAL 1m, 5m, 15m, 30m intraday candle bars for today for all tickers."""
     chart_data = {}
     intervals = ["1m", "5m", "15m", "30m"]
 
@@ -196,32 +177,25 @@ def prepare_chart_data():
                 if not today_df.empty:
                     chart_data[ticker][tf] = {
                         "time": [str(t).split()[-1][:5] for t in today_df.index],
-                        "open": [round(x, 2) for x in today_df["Open"]],
-                        "high": [round(x, 2) for x in today_df["High"]],
-                        "low": [round(x, 2) for x in today_df["Low"]],
-                        "close": [round(x, 2) for x in today_df["Close"]],
+                        "full_time": [str(t) for t in today_df.index],
+                        "open": [round(float(x), 2) for x in today_df["Open"]],
+                        "high": [round(float(x), 2) for x in today_df["High"]],
+                        "low": [round(float(x), 2) for x in today_df["Low"]],
+                        "close": [round(float(x), 2) for x in today_df["Close"]],
                         "volume": [int(x) for x in today_df["Volume"]],
                     }
     return chart_data
 
 
-def build_robinhood_dashboard():
-    """Generates pure white Robinhood-style clean interactive dashboard with timeframe tabs (1m, 5m, 15m, 30m)."""
-    print("[*] Running Old vs New Strategy Simulations...")
-    old_trades = run_simulation("old")
-    new_trades = run_simulation("new")
+def build_real_kline_dashboard():
+    """Builds interactive HTML dashboard with REAL intraday K-lines and exact buy/sell markers."""
+    print("[*] Running strategy simulation for today...")
+    new_trades = run_full_simulation()
 
-    old_pnl = sum(t["pnl"] for t in old_trades)
-    new_pnl = sum(t["pnl"] for t in new_trades)
-    old_wins = [t for t in old_trades if t["pnl"] > 0]
-    new_wins = [t for t in new_trades if t["pnl"] > 0]
-    old_wr = (len(old_wins) / len(old_trades) * 100) if old_trades else 0
-    new_wr = (len(new_wins) / len(new_trades) * 100) if new_trades else 0
+    print("[*] Fetching REAL intraday K-lines (1m, 5m, 15m, 30m) for all tickers...")
+    chart_data = prepare_real_kline_data()
 
-    print("[*] Fetching Multi-Timeframe K-Line Data (1m, 5m, 15m, 30m)...")
-    chart_data = prepare_chart_data()
-
-    # Export HuggingFace Dataset files
+    # Save dataset files for Hugging Face Viewer
     all_trades_df = pd.DataFrame(new_trades)
     if not all_trades_df.empty:
         all_trades_df.to_parquet(os.path.join(DATASETS_DIR, "train-00000-of-00001.parquet"), index=False)
@@ -235,13 +209,12 @@ def build_robinhood_dashboard():
     chart_data_json = json.dumps(chart_data)
     new_trades_json = json.dumps(new_trades)
 
-    # Pure White Robinhood HTML Template
     html_content = f"""<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quant.ai - Robinhood 风格极简买卖复盘看板</title>
+    <title>Quant.ai - 真实 K 线买卖位置与持仓复盘看板</title>
     <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -253,17 +226,7 @@ def build_robinhood_dashboard():
         .header .brand {{ font-size: 22px; font-weight: 700; color: #0f1419; letter-spacing: -0.5px; }}
         .header .sub {{ color: #536471; font-size: 13px; margin-top: 4px; }}
         
-        .metrics-grid {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }}
-        .metric-card {{ background: #ffffff; border: 1px solid #e1e8ed; border-radius: 12px; padding: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); }}
-        .metric-card .title {{ font-size: 12px; font-weight: 600; color: #536471; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }}
-        .metric-card .value {{ font-size: 26px; font-weight: 700; }}
-        .metric-card .sub {{ font-size: 13px; font-weight: 500; margin-top: 6px; }}
-        
-        .rh-green {{ color: #00c805; }}
-        .rh-red {{ color: #ff5000; }}
-        
-        /* Timeframe and Ticker Switcher */
-        .controls-row {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; }}
+        .controls-row {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }}
         .ticker-pills {{ display: flex; gap: 8px; flex-wrap: wrap; }}
         .ticker-pill {{ padding: 8px 16px; border-radius: 20px; border: 1px solid #e1e8ed; background: #ffffff; color: #0f1419; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s ease; }}
         .ticker-pill:hover {{ background: #f7f9fa; border-color: #cfd9de; }}
@@ -273,10 +236,11 @@ def build_robinhood_dashboard():
         .tf-pill {{ padding: 6px 14px; border-radius: 16px; border: none; background: transparent; color: #536471; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s ease; }}
         .tf-pill.active {{ background: #ffffff; color: #00c805; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }}
         
-        .chart-box {{ background: #ffffff; border: 1px solid #e1e8ed; border-radius: 12px; padding: 16px; margin-bottom: 24px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); }}
+        .rh-green {{ color: #00c805; }}
+        .rh-red {{ color: #ff5000; }}
         
-        .ledger-box {{ background: #ffffff; border: 1px solid #e1e8ed; border-radius: 12px; padding: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); }}
-        .ledger-box h3 {{ font-size: 16px; font-weight: 700; margin: 0 0 16px 0; color: #0f1419; }}
+        .section-box {{ background: #ffffff; border: 1px solid #e1e8ed; border-radius: 12px; padding: 20px; margin-bottom: 24px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); }}
+        .section-box h3 {{ font-size: 16px; font-weight: 700; margin: 0 0 16px 0; color: #0f1419; }}
         
         table {{ width: 100%; border-collapse: collapse; font-size: 13px; }}
         th {{ text-align: left; padding: 12px; color: #536471; font-weight: 600; border-bottom: 1px solid #e1e8ed; background: #f7f9fa; }}
@@ -292,43 +256,14 @@ def build_robinhood_dashboard():
 
     <div class="header">
         <div>
-            <div class="brand">🌱 Quant.ai | Robinhood 极简复盘看板</div>
-            <div class="sub">数据日期：{TODAY_STR} | 1M / 5M / 15M / 30M 多周期买卖点与纯白背景看板</div>
-        </div>
-        <div style="font-weight: 600; font-size: 13px; color: #536471;">
-            实盘模式：Paper / Live Executed
+            <div class="brand">🌱 Quant.ai | 真实 K 线买卖位置与持仓复盘</div>
+            <div class="sub">数据日期：{TODAY_STR} | 每一个股票真实 1M/5M/15M/30M K 线与买卖精准对应</div>
         </div>
     </div>
 
-    <!-- Performance Cards -->
-    <div class="metrics-grid">
-        <div class="metric-card">
-            <div class="title">旧逻辑实际盈亏</div>
-            <div class="value rh-red">${old_pnl:+,.2f}</div>
-            <div class="sub rh-red">胜率: {old_wr:.1f}% ({len(old_wins)} 胜 / {len(old_trades) - len(old_wins)} 负)</div>
-        </div>
-        <div class="metric-card">
-            <div class="title">新架构重演盈亏</div>
-            <div class="value rh-green">${new_pnl:+,.2f}</div>
-            <div class="sub rh-green">胜率: {new_wr:.1f}% ({len(new_wins)} 胜 / {len(new_trades) - len(new_wins)} 负)</div>
-        </div>
-        <div class="metric-card">
-            <div class="title">净盈利改善幅度</div>
-            <div class="value rh-green">+${(new_pnl - old_pnl):,.2f}</div>
-            <div class="sub rh-green">试探建仓 + 诱多做空反败为胜</div>
-        </div>
-        <div class="metric-card">
-            <div class="title">Hugging Face Sync</div>
-            <div class="value rh-green">ONLINE</div>
-            <div class="sub" style="color: #536471;">Parquet / JSON Viewer 自动同步</div>
-        </div>
-    </div>
-
-    <!-- Interactive Ticker & Timeframe Switchers -->
+    <!-- Ticker & Timeframe Switchers -->
     <div class="controls-row">
-        <div class="ticker-pills" id="tickerPills">
-            <!-- Dynamically generated ticker pills -->
-        </div>
+        <div class="ticker-pills" id="tickerPills"></div>
         <div class="timeframe-pills" id="tfPills">
             <button class="tf-pill active" onclick="setTimeframe('1m')">1M</button>
             <button class="tf-pill" onclick="setTimeframe('5m')">5M</button>
@@ -337,14 +272,14 @@ def build_robinhood_dashboard():
         </div>
     </div>
 
-    <!-- Pure White Plotly Candlestick Chart -->
-    <div class="chart-box">
-        <div id="plotlyChart" style="width: 100%; height: 500px;"></div>
+    <!-- Real Plotly Candlestick Chart -->
+    <div class="section-box">
+        <div id="plotlyChart" style="width: 100%; height: 560px;"></div>
     </div>
 
-    <!-- Trade Execution Table -->
-    <div class="ledger-box">
-        <h3 id="ledgerTitle">📋 买卖位置与持仓时长明细</h3>
+    <!-- Matched Trades Table -->
+    <div class="section-box">
+        <h3 id="ledgerTitle">📋 买卖位置与持仓分钟数明细</h3>
         <table>
             <thead>
                 <tr>
@@ -362,9 +297,7 @@ def build_robinhood_dashboard():
                     <th>离场原因</th>
                 </tr>
             </thead>
-            <tbody id="ledgerBody">
-                <!-- Dynamically populated rows -->
-            </tbody>
+            <tbody id="ledgerBody"></tbody>
         </table>
     </div>
 
@@ -373,7 +306,7 @@ def build_robinhood_dashboard():
         const newTrades = {new_trades_json};
         const tickers = {json.dumps(WATCHLIST)};
 
-        let currentTicker = "NVDA";
+        let currentTicker = "SNDK";
         let currentTimeframe = "1m";
 
         function initPills() {{
@@ -405,7 +338,7 @@ def build_robinhood_dashboard():
 
         function renderChart() {{
             const tkData = chartData[currentTicker] && chartData[currentTicker][currentTimeframe];
-            if (!tkData) {{
+            if (!tkData || !tkData.time || tkData.time.length === 0) {{
                 Plotly.purge("plotlyChart");
                 return;
             }}
@@ -436,16 +369,16 @@ def build_robinhood_dashboard():
                 if (t.side === "LONG") {{
                     buyX.push(enTime);
                     buyY.push(t.entry_price);
-                    buyText.push(`🛒 BUY LONG @ $${{t.entry_price.toFixed(2)}}`);
+                    buyText.push(`🛒 BUY LONG @ $${{t.entry_price.toFixed(2)}} (${{enTime}})`);
                 }} else {{
                     shortX.push(enTime);
                     shortY.push(t.entry_price);
-                    shortText.push(`📉 SHORT @ $${{t.entry_price.toFixed(2)}}`);
+                    shortText.push(`📉 SHORT @ $${{t.entry_price.toFixed(2)}} (${{enTime}})`);
                 }}
 
                 exitX.push(exTime);
                 exitY.push(t.exit_price);
-                exitText.push(`🔴 EXIT @ $${{t.exit_price.toFixed(2)}} (PnL: $${{t.pnl.toFixed(2)}})`);
+                exitText.push(`🔴 EXIT @ $${{t.exit_price.toFixed(2)}} (${{exTime}}) | 持仓: ${{t.duration_min}} 分钟 | 盈亏: $${{t.pnl.toFixed(2)}}`);
             }});
 
             const buyTrace = {{
@@ -467,7 +400,7 @@ def build_robinhood_dashboard():
             }};
 
             const layout = {{
-                title: {{ text: `${{currentTicker}} - ${{currentTimeframe.toUpperCase()}} 纯白 K 线与买卖点标记`, font: {{ size: 16, color: '#0f1419', family: 'Inter' }} }},
+                title: {{ text: `${{currentTicker}} - Today (${{currentTimeframe.toUpperCase()}}) 真实 K 线与买卖点标记`, font: {{ size: 16, color: '#0f1419', family: 'Inter' }} }},
                 paper_bgcolor: '#ffffff',
                 plot_bgcolor: '#ffffff',
                 margin: {{ l: 50, r: 30, t: 50, b: 40 }},
@@ -491,12 +424,12 @@ def build_robinhood_dashboard():
         function renderLedger() {{
             const container = document.getElementById("ledgerBody");
             const title = document.getElementById("ledgerTitle");
-            title.innerText = `📋 [${{currentTicker}}] 买卖位置与持仓时长明细`;
+            title.innerText = `📋 [${{currentTicker}}] 买卖位置与持仓分钟数明细 (${{newTrades.filter(t => t.ticker === currentTicker).length}} 笔交易)`;
             container.innerHTML = "";
 
             const tkTrades = newTrades.filter(t => t.ticker === currentTicker);
             if (tkTrades.length === 0) {{
-                container.innerHTML = `<tr><td colspan="12" style="text-align:center; color:#536471; padding:20px;">暂无交易记录</td></tr>`;
+                container.innerHTML = `<tr><td colspan="12" style="text-align:center; color:#536471; padding:20px;">该股票今日暂无触发离场的交易记录</td></tr>`;
                 return;
             }}
 
@@ -514,7 +447,7 @@ def build_robinhood_dashboard():
                     <td>$${{t.entry_price.toFixed(2)}}</td>
                     <td>${{exT}}</td>
                     <td>$${{t.exit_price.toFixed(2)}}</td>
-                    <td>${{t.duration_min}} 分钟</td>
+                    <td><b>${{t.duration_min}} 分钟</b></td>
                     <td>${{t.shares}} 股</td>
                     <td>$${{t.notional.toLocaleString('en-US', {{maximumFractionDigits: 0}})}}</td>
                     <td class="${{pnlCls}}"><b>$${{t.pnl >= 0 ? '+' : ''}}${{t.pnl.toFixed(2)}}</b></td>
@@ -525,7 +458,6 @@ def build_robinhood_dashboard():
             }});
         }}
 
-        // Initial setup
         window.onload = () => {{
             initPills();
             renderChart();
@@ -540,9 +472,9 @@ def build_robinhood_dashboard():
     with open(dashboard_path, "w", encoding="utf-8") as f:
         f.write(html_content)
 
-    print(f"[+] Successfully generated Robinhood Pure White Dashboard at: {dashboard_path}")
+    print(f"[+] Successfully generated Real Intraday K-Line Dashboard at: {dashboard_path}")
     return dashboard_path
 
 
 if __name__ == "__main__":
-    build_robinhood_dashboard()
+    build_real_kline_dashboard()
