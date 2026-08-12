@@ -256,8 +256,8 @@ def build_real_kline_dashboard():
 
     <div class="header">
         <div>
-            <div class="brand">🌱 Quant.ai | 真实 K 线买卖位置与持仓复盘</div>
-            <div class="sub">数据日期：{TODAY_STR} | 每一个股票真实 1M/5M/15M/30M K 线与买卖精准对应</div>
+            <div class="brand">Quant.ai | 策略对比与 K 线复盘</div>
+            <div class="sub">交易日期：{TODAY_STR}</div>
         </div>
     </div>
 
@@ -400,10 +400,9 @@ def build_real_kline_dashboard():
             }};
 
             const layout = {{
-                title: {{ text: `${{currentTicker}} - Today (${{currentTimeframe.toUpperCase()}}) 真实 K 线与买卖点标记`, font: {{ size: 16, color: '#0f1419', family: 'Inter' }} }},
                 paper_bgcolor: '#ffffff',
                 plot_bgcolor: '#ffffff',
-                margin: {{ l: 50, r: 30, t: 50, b: 40 }},
+                margin: {{ l: 50, r: 30, t: 20, b: 40 }},
                 xaxis: {{
                     rangeslider: {{ visible: false }},
                     gridcolor: '#f0f3f5',
