@@ -62,6 +62,34 @@ pinned: false
 
 ---
 
+## 🧠 Machine Learning Suite & Technology Matrix
+
+### 🤖 1. Machine Learning & Deep Learning Models
+* **Gradient Boosted Decision Trees (LightGBM & XGBoost)**: Non-linear rank IC alpha modeling, automatic feature interaction discovery, and tree depth pruning.
+* **Sequence Neural Networks (LSTM & GRU)**: High-frequency L2/L3 tick data sequence modeling & orderbook depth drift prediction.
+* **Reinforcement Learning (PPO & DQN)**: Deep Q-Networks & Proximal Policy Optimization for automated limit order execution & dynamic market making.
+* **Gaussian Process (GP) Uncertainty Estimation**: Non-parametric Bayesian regression delivering predicted mean & variance confidence intervals for risk-aware position sizing.
+* **Hidden Markov Models (HMM)**: Latent market regime identification (Bull Trend vs. Range Bound) for dynamic strategy weight allocation.
+* **Kalman Filtering & Ornstein-Uhlenbeck (OU) Process**: Recursive state-space filtering for cointegration pairs trading & statistical arbitrage.
+
+### 📐 2. Quantitative Finance & Risk Engineering
+* **Barra 7-Factor Model**: Style risk factor decomposition covering **Value, Growth, Momentum, Size, Volatility, Quality, and Liquidity**.
+* **Purged Walk-Forward CV + Embargo**: 5-day embargo purging label overlap leakage to enforce strict Point-in-Time data hygiene.
+* **Deflated Sharpe Ratio (DSR) & Stationary Bootstrap**: Multiple hypothesis testing correction and 95% confidence interval bootstrapping.
+* **Order Flow Imbalance (OFI) & Micro-Price**: High-frequency orderbook depth pressure & aggressor flow modeling.
+* **Institutional Risk Analyst**: Kelly Criterion position sizing, Portfolio VaR / CVaR limits, trailing stops, and daily drawdown circuit breakers.
+
+### ⚡ 3. High-Frequency Trading (HFT) & Microstructure
+* **C++17 Engine Core**: Red-black tree & doubly-linked list orderbook matching engine headers (`orderbook.hpp`).
+* **Sub-Millisecond Low-Latency Networking**: UDP Multicast feed handler and binary TCP order gateway (**p99 latency < 3.8μs**, **507k ev/sec**).
+
+### 🛠️ 4. Full-Stack Technology Stack
+* **Backend Core**: Python 3.9+, PyTorch, LightGBM, Scikit-Learn, Pandas, NumPy, SciPy, Statsmodels, FastAPI, Uvicorn, AsyncIO, WebSockets.
+* **Frontend Terminal**: React 18, TypeScript, Vite, Recharts, Canvas, CSS Modules.
+* **Execution & Deployment**: Alpaca Markets API (REST & WebSockets), Docker, Hugging Face Datasets & Spaces, GitHub Actions CI/CD.
+
+---
+
 ## 📊 Quantitative Model Benchmark Results
 
 Out-of-sample (OOS) evaluation across liquid U.S. ETFs with **5.0 bps transaction costs** and **5-day embargo purged walk-forward CV**:
