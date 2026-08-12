@@ -121,6 +121,38 @@ class RiskPositionSizer:
             "stop_pct": stop_pct,
         }
 
+    def size_probe_entry(
+        self,
+        account: Dict,
+        close_price: float,
+        opportunity: Dict,
+        strategy_params: Dict,
+        prob_eval: Optional[Dict] = None
+    ) -> Dict:
+        """
+        Calculates position sizing for Early Probe Entry (试探建仓).
+        Allocates a starter fraction (25%) of target buying power so the algorithm can enter
+        early before major momentum spikes, securing better cost basis.
+        """
+        equity = max(0.0, self._safe_float(account.get("equity"), account.get("portfolio_value", 0.0)))
+        cash = max(0.0, self._safe_float(account.get("cash"), 0.0))
+        multiplier = max(1.0, self._safe_float(account.get("multiplier"), 1.0))
+        available_bp = max(0.0, self._safe_float(account.get("buying_power"), cash * multiplier))
+        probe_bp_pct = self._safe_float(strategy_params.get("starter_buying_power_pct"), 0.25)
+        utilization = self._safe_float(strategy_params.get("buying_power_utilization_pct"), 0.95)
+        notional = available_bp * min(utilization, probe_bp_pct)
+        stop_pct = max(0.001, self._safe_float(opportunity.get("_stop_pct"), 0.0100))
+        shares = int(notional / close_price) if close_price > 0 else 0
+
+        return {
+            "shares": shares,
+            "notional": shares * close_price,
+            "available_buying_power": available_bp,
+            "buying_power_fraction": probe_bp_pct,
+            "stop_pct": stop_pct,
+            "is_probe": True,
+        }
+
     def size_pyramid_entry(
         self,
         account: Dict,
@@ -150,4 +182,5 @@ class RiskPositionSizer:
             "buying_power_fraction": pyramid_bp_pct,
             "stop_pct": stop_pct,
         }
+
 

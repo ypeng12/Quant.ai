@@ -652,6 +652,15 @@ class LiveTradingRunner:
         # Evaluate Institutional Composite Alpha Factors
         alpha_eval = self.alpha_engine.evaluate_composite_alpha(row=row, prev_row=prev_row)
 
+        is_trap = alpha_eval.get("is_trap", False)
+        trap_reason = alpha_eval.get("trap_reason", "")
+
+        # Anti-Bull Trap Veto: Block LONG entries if upper wick rejection or ask depth wall detected
+        if is_trap and direction == "LONG" and ("Bull Trap" in trap_reason or "Upper Wick" in trap_reason or "Ask Depth" in trap_reason):
+            long_confirmed = False
+        elif is_trap and direction == "SHORT" and ("Bear Trap" in trap_reason or "Lower Wick" in trap_reason or "Bid Depth" in trap_reason):
+            short_confirmed = False
+
         opp = {
             "ticker": ticker,
             "direction": direction,
@@ -664,6 +673,8 @@ class LiveTradingRunner:
             "alpha_micro": alpha_eval["alpha_micro"],
             "alpha_ou": alpha_eval["alpha_ou"],
             "alpha_lead_lag": alpha_eval["alpha_lead_lag"],
+            "is_trap": is_trap,
+            "trap_reason": trap_reason,
             "session_move_pct": round(session_move_pct, 2),
             "session_range_pct": round(session_range_pct, 2),
             "high_to_now_pct": round(high_to_now_pct, 2),
@@ -893,6 +904,15 @@ class LiveTradingRunner:
 
     def _size_aggressive_entry(self, account: Dict, close_price: float, opportunity: Dict) -> Dict:
         return self.risk_sizer.size_aggressive_entry(
+            account=account,
+            close_price=close_price,
+            opportunity=opportunity,
+            strategy_params=self.strategy_params,
+            prob_eval=opportunity
+        )
+
+    def _size_probe_entry(self, account: Dict, close_price: float, opportunity: Dict) -> Dict:
+        return self.risk_sizer.size_probe_entry(
             account=account,
             close_price=close_price,
             opportunity=opportunity,
@@ -1641,7 +1661,9 @@ class LiveTradingRunner:
                                     self.add_log(f"🌙 [盘后研判/休市记录] [{ticker}] 触发 BUY 买点信号 (AI Score: {live_score}分, P_win: {opportunity.get('win_rate_pct')}%) | 非盘中时段，仅保留研判日志。")
                                 else:
                                     account = self.adapter.get_account_summary()
-                                    sizing = self._size_aggressive_entry(account, close_price, opportunity)
+                                    full_score_target = self._safe_float(self.strategy_params.get("full_size_score"), 75.0)
+                                    is_probe = live_score < full_score_target
+                                    sizing = self._size_probe_entry(account, close_price, opportunity) if is_probe else self._size_aggressive_entry(account, close_price, opportunity)
                                     shares = sizing["shares"]
                                     if shares <= 0:
                                         self.add_log(f"⚠️ [{ticker}] buying power 不足以购买 1 股，跳过本次信号。")
@@ -1651,8 +1673,9 @@ class LiveTradingRunner:
                                     self.lock_entry(ticker)
                                     self.entry_times[ticker] = datetime.datetime.now()
 
+                                    entry_type_str = "🧪 PROBE STARTER (25% 试探建仓)" if is_probe else "🚀 FULL SIZE (大仓位进场)"
                                     self.add_log(
-                                        f"🛒 [{ticker}] LONG {live_score:.1f}分 (P_win: {opportunity.get('win_rate_pct')}%, E[R]: {opportunity.get('expected_value_r'):+.2f}R)："
+                                        f"🛒 [{ticker}] LONG {live_score:.1f}分 ({entry_type_str}, P_win: {opportunity.get('win_rate_pct')}%, E[R]: {opportunity.get('expected_value_r'):+.2f}R)："
                                         f"买入 {shares} 股，预计名义金额 ${sizing['notional']:,.0f}，占当前实时 Buying Power "
                                         f"(${sizing['available_buying_power']:,.2f}) 的 {sizing['buying_power_fraction']*100:.0f}%，硬止损 {sizing['stop_pct']*100:.2f}%。"
                                     )
@@ -1677,7 +1700,9 @@ class LiveTradingRunner:
                                     self.add_log(f"🌙 [盘后研判/休市记录] [{ticker}] 触发 SHORT 做空信号 (AI Score: {live_score}分, P_win: {opportunity.get('win_rate_pct')}%) | 非盘中时段，仅保留研判日志。")
                                 else:
                                     account = self.adapter.get_account_summary()
-                                    sizing = self._size_aggressive_entry(account, close_price, opportunity)
+                                    full_score_target = self._safe_float(self.strategy_params.get("full_size_score"), 75.0)
+                                    is_probe = live_score < full_score_target
+                                    sizing = self._size_probe_entry(account, close_price, opportunity) if is_probe else self._size_aggressive_entry(account, close_price, opportunity)
                                     shares = sizing["shares"]
                                     if shares <= 0:
                                         self.add_log(f"⚠️ [{ticker}] buying power 不足以卖空 1 股，跳过本次信号。")
@@ -1687,8 +1712,9 @@ class LiveTradingRunner:
                                     self.lock_entry(ticker)
                                     self.entry_times[ticker] = datetime.datetime.now()
 
+                                    entry_type_str = "🧪 PROBE STARTER (25% 试探建仓)" if is_probe else "📉 FULL SIZE (大仓位进场)"
                                     self.add_log(
-                                        f"📉 [{ticker}] SHORT {live_score:.1f}分 (P_win: {opportunity.get('win_rate_pct')}%, E[R]: {opportunity.get('expected_value_r'):+.2f}R)："
+                                        f"📉 [{ticker}] SHORT {live_score:.1f}分 ({entry_type_str}, P_win: {opportunity.get('win_rate_pct')}%, E[R]: {opportunity.get('expected_value_r'):+.2f}R)："
                                         f"卖空 {shares} 股，预计名义金额 ${sizing['notional']:,.0f}，占当前实时 Buying Power "
                                         f"(${sizing['available_buying_power']:,.2f}) 的 {sizing['buying_power_fraction']*100:.0f}%，硬止损 {sizing['stop_pct']*100:.2f}%。"
                                     )

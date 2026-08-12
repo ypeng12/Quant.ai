@@ -142,6 +142,51 @@ class InstitutionalAlphaEngine:
         alpha_lead_lag = math.tanh(residual_lag * 0.8)
         return float(np.clip(alpha_lead_lag, -1.0, 1.0))
 
+    def compute_anti_bull_trap_filter(self, row: Dict) -> Tuple[bool, float, str]:
+        """
+        Anti-Bull Trap & Upper Wick Rejection Filter:
+        Detects false breakouts where buyers attempt to push higher but are absorbed by passive sell walls
+        (long upper wick > 40% of candle range or heavy ask depth imbalance >= 2.5).
+        Returns: (is_trap, penalty_score, trap_reason)
+        """
+        close = self._safe_float(row.get("Close"), row.get("price", 0.0))
+        high = self._safe_float(row.get("High"), close)
+        low = self._safe_float(row.get("Low"), close)
+        open_p = self._safe_float(row.get("Open"), close)
+
+        candle_range = max(1e-5, high - low)
+        upper_wick_ratio = (high - max(open_p, close)) / candle_range
+        lower_wick_ratio = (min(open_p, close) - low) / candle_range
+
+        bid_size = self._safe_float(row.get("bid_size"), 100.0)
+        ask_size = self._safe_float(row.get("ask_size"), 100.0)
+        ask_to_bid_ratio = ask_size / max(1.0, bid_size)
+
+        # Trap conditions
+        is_upper_wick_trap = upper_wick_ratio >= 0.40 and (high - open_p) > 0
+        is_ask_wall_trap = ask_to_bid_ratio >= 2.5 and (close >= open_p)
+
+        if is_upper_wick_trap and is_ask_wall_trap:
+            return True, -35.0, f"Severe Bull Trap: Upper Wick {upper_wick_ratio:.0%} + Ask Wall {ask_to_bid_ratio:.1f}x"
+        elif is_upper_wick_trap:
+            return True, -25.0, f"Upper Wick Rejection: Upper Wick {upper_wick_ratio:.0%}"
+        elif is_ask_wall_trap:
+            return True, -18.0, f"Ask Depth Wall Imbalance: {ask_to_bid_ratio:.1f}x"
+
+        # Bear Trap Detection for Shorts
+        is_lower_wick_trap = lower_wick_ratio >= 0.40 and (open_p - low) > 0
+        bid_to_ask_ratio = bid_size / max(1.0, ask_size)
+        is_bid_wall_trap = bid_to_ask_ratio >= 2.5 and (close <= open_p)
+
+        if is_lower_wick_trap and is_bid_wall_trap:
+            return True, +35.0, f"Severe Bear Trap: Lower Wick {lower_wick_ratio:.0%} + Bid Wall {bid_to_ask_ratio:.1f}x"
+        elif is_lower_wick_trap:
+            return True, +25.0, f"Lower Wick Rejection: Lower Wick {lower_wick_ratio:.0%}"
+        elif is_bid_wall_trap:
+            return True, +18.0, f"Bid Depth Wall Imbalance: {bid_to_ask_ratio:.1f}x"
+
+        return False, 0.0, "Normal Microstructure"
+
     def evaluate_composite_alpha(
         self,
         row: Dict,
@@ -154,6 +199,7 @@ class InstitutionalAlphaEngine:
         """
         Combines individual Alpha signals into a unified Composite Alpha Score [-100.0, +100.0].
         Dynamically adjusts weights based on market regime (Trend vs Range).
+        Applies Anti-Bull/Bear Trap filtering.
         """
         alpha_ofi = self.compute_ofi_alpha(row, prev_row)
         alpha_micro = self.compute_micro_price_alpha(row)
@@ -188,7 +234,14 @@ class InstitutionalAlphaEngine:
             w_ml * alpha_ml
         )
 
-        composite_score = round(float(np.clip(composite_alpha_raw * 100.0, -100.0, 100.0)), 1)
+        composite_score = float(np.clip(composite_alpha_raw * 100.0, -100.0, 100.0))
+
+        # Apply Anti-Trap Filter
+        is_trap, trap_penalty, trap_reason = self.compute_anti_bull_trap_filter(row)
+        if is_trap:
+            composite_score = float(np.clip(composite_score + trap_penalty, -100.0, 100.0))
+
+        composite_score = round(composite_score, 1)
 
         return {
             "composite_alpha_score": composite_score,
@@ -197,5 +250,8 @@ class InstitutionalAlphaEngine:
             "alpha_ou": round(alpha_ou, 3),
             "alpha_lead_lag": round(alpha_lead_lag, 3),
             "alpha_ml": round(alpha_ml, 3),
+            "is_trap": is_trap,
+            "trap_reason": trap_reason,
             "regime_type": "RANGE_STAT_ARB" if adx < 22.0 else "TREND_MOMENTUM",
         }
+
