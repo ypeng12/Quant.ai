@@ -144,9 +144,10 @@ class InstitutionalAlphaEngine:
 
     def compute_anti_bull_trap_filter(self, row: Dict) -> Tuple[bool, float, str]:
         """
-        Anti-Bull Trap & Upper Wick Rejection Filter:
-        Detects false breakouts where buyers attempt to push higher but are absorbed by passive sell walls
-        (long upper wick > 40% of candle range or heavy ask depth imbalance >= 2.5).
+        Anti-Bull/Bear Trap & Upper/Lower Wick Rejection Engine:
+        Detects false breakouts where buyers/sellers attempt to push higher/lower but are absorbed by passive walls.
+        - Long upper wick >= 40% + Ask wall >= 2.5x -> Active SHORT Opportunity (Penalty -55.0)
+        - Long lower wick >= 40% + Bid wall >= 2.5x -> Active LONG Opportunity (Bonus +55.0)
         Returns: (is_trap, penalty_score, trap_reason)
         """
         close = self._safe_float(row.get("Close"), row.get("price", 0.0))
@@ -162,28 +163,28 @@ class InstitutionalAlphaEngine:
         ask_size = self._safe_float(row.get("ask_size"), 100.0)
         ask_to_bid_ratio = ask_size / max(1.0, bid_size)
 
-        # Trap conditions
+        # Bull Trap / Upper Wick Rejection -> Severe Penalty to trigger SHORT Alpha
         is_upper_wick_trap = upper_wick_ratio >= 0.40 and (high - open_p) > 0
         is_ask_wall_trap = ask_to_bid_ratio >= 2.5 and (close >= open_p)
 
         if is_upper_wick_trap and is_ask_wall_trap:
-            return True, -35.0, f"Severe Bull Trap: Upper Wick {upper_wick_ratio:.0%} + Ask Wall {ask_to_bid_ratio:.1f}x"
+            return True, -55.0, f"⚡ 诱多强做空信号 (Severe Bull Trap: 上影线{upper_wick_ratio:.0%} + 卖压墙{ask_to_bid_ratio:.1f}x)"
         elif is_upper_wick_trap:
-            return True, -25.0, f"Upper Wick Rejection: Upper Wick {upper_wick_ratio:.0%}"
+            return True, -35.0, f"上影线拒买 (Upper Wick Rejection: {upper_wick_ratio:.0%})"
         elif is_ask_wall_trap:
-            return True, -18.0, f"Ask Depth Wall Imbalance: {ask_to_bid_ratio:.1f}x"
+            return True, -25.0, f"卖盘墙压制 (Ask Depth Wall: {ask_to_bid_ratio:.1f}x)"
 
-        # Bear Trap Detection for Shorts
+        # Bear Trap / Lower Wick Rejection -> Severe Bonus to trigger LONG Alpha
         is_lower_wick_trap = lower_wick_ratio >= 0.40 and (open_p - low) > 0
         bid_to_ask_ratio = bid_size / max(1.0, ask_size)
         is_bid_wall_trap = bid_to_ask_ratio >= 2.5 and (close <= open_p)
 
         if is_lower_wick_trap and is_bid_wall_trap:
-            return True, +35.0, f"Severe Bear Trap: Lower Wick {lower_wick_ratio:.0%} + Bid Wall {bid_to_ask_ratio:.1f}x"
+            return True, +55.0, f"⚡ 诱空强买入信号 (Severe Bear Trap: 下影线{lower_wick_ratio:.0%} + 买盘墙{bid_to_ask_ratio:.1f}x)"
         elif is_lower_wick_trap:
-            return True, +25.0, f"Lower Wick Rejection: Lower Wick {lower_wick_ratio:.0%}"
+            return True, +35.0, f"下影线支撑 (Lower Wick Support: {lower_wick_ratio:.0%})"
         elif is_bid_wall_trap:
-            return True, +18.0, f"Bid Depth Wall Imbalance: {bid_to_ask_ratio:.1f}x"
+            return True, +25.0, f"买盘墙托盘 (Bid Depth Support: {bid_to_ask_ratio:.1f}x)"
 
         return False, 0.0, "Normal Microstructure"
 

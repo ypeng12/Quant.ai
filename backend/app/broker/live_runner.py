@@ -655,11 +655,17 @@ class LiveTradingRunner:
         is_trap = alpha_eval.get("is_trap", False)
         trap_reason = alpha_eval.get("trap_reason", "")
 
-        # Anti-Bull Trap Veto: Block LONG entries if upper wick rejection or ask depth wall detected
-        if is_trap and direction == "LONG" and ("Bull Trap" in trap_reason or "Upper Wick" in trap_reason or "Ask Depth" in trap_reason):
+        # Anti-Bull/Bear Trap Engine: Convert false breakouts into active SHORT/LONG opportunities
+        if is_trap and ("Bull Trap" in trap_reason or "Upper Wick" in trap_reason or "Ask Depth" in trap_reason):
             long_confirmed = False
-        elif is_trap and direction == "SHORT" and ("Bear Trap" in trap_reason or "Lower Wick" in trap_reason or "Bid Depth" in trap_reason):
+            if alpha_eval["composite_alpha_score"] <= -45.0:
+                direction = "SHORT"
+                short_confirmed = True
+        elif is_trap and ("Bear Trap" in trap_reason or "Lower Wick" in trap_reason or "Bid Depth" in trap_reason):
             short_confirmed = False
+            if alpha_eval["composite_alpha_score"] >= 45.0:
+                direction = "LONG"
+                long_confirmed = True
 
         opp = {
             "ticker": ticker,
