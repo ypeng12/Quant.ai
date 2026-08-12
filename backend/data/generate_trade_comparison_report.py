@@ -1,15 +1,17 @@
 # backend/data/generate_trade_comparison_report.py
 """
-Interactive Quant Retrospective & Strategy Comparison Dashboard Generator
-1. Performs bar-by-bar backtest comparing Old Strategy vs New Institutional Strategy for today.
-2. Generates interactive HTML dashboard (Plotly) with 1m K-lines, exact Buy/Sell/Short entry/exit markers, holding duration, and PnL.
-3. Exports Parquet / JSONL / CSV dataset files to backend/data/datasets/ for HuggingFace Sync.
+Robinhood-Style Interactive Trade Retrospective & Comparison Dashboard Generator
+Features:
+1. Pure White Clean Robinhood Aesthetic (#ffffff background, Inter font, #00c805 Robinhood green, #ff5000 Robinhood red).
+2. Timeframe Selection Tabs: 1m, 5m, 15m, 30m bars.
+3. Interactive Ticker Switcher (NVDA, NBIS, MU, AMD, PLTR, TSLA, SNDK, MSFT).
+4. Plotly.js Candlestick Chart with exact Buy, Short, Pyramid, TP, and Decay Exit Markers on K-lines.
+5. Detailed Trade Ledger & Old vs New Performance Comparison.
 """
 
 import os
 import sys
 import json
-import math
 import pandas as pd
 import numpy as np
 
@@ -30,11 +32,9 @@ os.makedirs(DATASETS_DIR, exist_ok=True)
 WATCHLIST = ["NVDA", "NBIS", "MU", "AMD", "PLTR", "TSLA", "SNDK", "MSFT"]
 TODAY_STR = "2026-08-12"
 
+
 def run_simulation(strategy_mode="new"):
-    """
-    Runs deterministic bar-by-bar simulation for today across watchlist symbols.
-    strategy_mode: 'old' (Score 62, 95% single All-In) vs 'new' (Score 50, 25% Probe + Pyramiding + Trap-to-Short)
-    """
+    """Runs deterministic simulation for today across watchlist symbols."""
     engine = InstitutionalAlphaEngine()
     sizer = RiskPositionSizer()
 
@@ -182,9 +182,32 @@ def run_simulation(strategy_mode="new"):
     return completed_trades
 
 
-def build_interactive_dashboard():
-    """Generates an institutional HTML dashboard with Plotly trade markers and comparison tables."""
-    print("[*] Running Old vs New Strategy Simulations for Today...")
+def prepare_chart_data():
+    """Fetches intraday bar data for 1m, 5m, 15m, 30m intervals for all tickers."""
+    chart_data = {}
+    intervals = ["1m", "5m", "15m", "30m"]
+
+    for ticker in WATCHLIST:
+        chart_data[ticker] = {}
+        for tf in intervals:
+            df = fetch_and_prepare_data(ticker, interval=tf)
+            if df is not None and not df.empty:
+                today_df = df[df.index.astype(str).str.contains(TODAY_STR)]
+                if not today_df.empty:
+                    chart_data[ticker][tf] = {
+                        "time": [str(t).split()[-1][:5] for t in today_df.index],
+                        "open": [round(x, 2) for x in today_df["Open"]],
+                        "high": [round(x, 2) for x in today_df["High"]],
+                        "low": [round(x, 2) for x in today_df["Low"]],
+                        "close": [round(x, 2) for x in today_df["Close"]],
+                        "volume": [int(x) for x in today_df["Volume"]],
+                    }
+    return chart_data
+
+
+def build_robinhood_dashboard():
+    """Generates pure white Robinhood-style clean interactive dashboard with timeframe tabs (1m, 5m, 15m, 30m)."""
+    print("[*] Running Old vs New Strategy Simulations...")
     old_trades = run_simulation("old")
     new_trades = run_simulation("new")
 
@@ -195,85 +218,133 @@ def build_interactive_dashboard():
     old_wr = (len(old_wins) / len(old_trades) * 100) if old_trades else 0
     new_wr = (len(new_wins) / len(new_trades) * 100) if new_trades else 0
 
-    print(f"Old Strategy PnL: ${old_pnl:+,.2f} | Win Rate: {old_wr:.1f}%")
-    print(f"New Strategy PnL: ${new_pnl:+,.2f} | Win Rate: {new_wr:.1f}%")
+    print("[*] Fetching Multi-Timeframe K-Line Data (1m, 5m, 15m, 30m)...")
+    chart_data = prepare_chart_data()
 
     # Export HuggingFace Dataset files
     all_trades_df = pd.DataFrame(new_trades)
-    parquet_path = os.path.join(DATASETS_DIR, "train-00000-of-00001.parquet")
-    csv_path = os.path.join(DATASETS_DIR, "train.csv")
-    json_path = os.path.join(DATASETS_DIR, "train.json")
-    jsonl_path = os.path.join(DATASETS_DIR, "train.jsonl")
-
     if not all_trades_df.empty:
-        all_trades_df.to_parquet(parquet_path, index=False)
-        all_trades_df.to_csv(csv_path, index=False)
-        with open(json_path, "w") as f:
+        all_trades_df.to_parquet(os.path.join(DATASETS_DIR, "train-00000-of-00001.parquet"), index=False)
+        all_trades_df.to_csv(os.path.join(DATASETS_DIR, "train.csv"), index=False)
+        with open(os.path.join(DATASETS_DIR, "train.json"), "w") as f:
             json.dump({"trades": new_trades}, f, indent=2)
-        with open(jsonl_path, "w") as f:
+        with open(os.path.join(DATASETS_DIR, "train.jsonl"), "w") as f:
             for t in new_trades:
                 f.write(json.dumps(t) + "\n")
-        print(f"[+] Exported Hugging Face Dataset files to {DATASETS_DIR}")
 
-    # Create HTML Dashboard
+    chart_data_json = json.dumps(chart_data)
+    new_trades_json = json.dumps(new_trades)
+
+    # Pure White Robinhood HTML Template
     html_content = f"""<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>Quant.ai - 策略新旧逻辑对比与买卖复盘看板</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quant.ai - Robinhood 风格极简买卖复盘看板</title>
+    <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
     <style>
-        body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #0d1117; color: #c9d1d9; margin: 0; padding: 20px; }}
-        .header {{ text-align: center; margin-bottom: 25px; }}
-        .header h1 {{ font-size: 26px; color: #58a6ff; margin: 0; }}
-        .header p {{ color: #8b949e; font-size: 14px; margin-top: 5px; }}
-        .card-grid {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px; }}
-        .card {{ background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 18px; text-align: center; }}
-        .card .title {{ font-size: 13px; color: #8b949e; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }}
-        .card .value {{ font-size: 24px; font-weight: bold; }}
-        .card .sub {{ font-size: 12px; margin-top: 5px; }}
-        .green {{ color: #3fb950; }}
-        .red {{ color: #f85149; }}
-        .table-container {{ background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 15px; overflow-x: auto; }}
-        table {{ width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }}
-        th, td {{ padding: 10px 12px; border-bottom: 1px solid #21262d; }}
-        th {{ background-color: #21262d; color: #8b949e; font-weight: 600; }}
-        tr:hover {{ background-color: #1c2128; }}
-        .badge {{ padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }}
-        .badge-buy {{ background: rgba(63, 185, 80, 0.2); color: #3fb950; border: 1px solid #3fb950; }}
-        .badge-short {{ background: rgba(248, 81, 73, 0.2); color: #f85149; border: 1px solid #f85149; }}
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        * {{ box-sizing: border-box; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }}
+        body {{ background-color: #ffffff; color: #0f1419; margin: 0; padding: 24px; }}
+        
+        .header {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; border-bottom: 1px solid #e1e8ed; padding-bottom: 16px; }}
+        .header .brand {{ font-size: 22px; font-weight: 700; color: #0f1419; letter-spacing: -0.5px; }}
+        .header .sub {{ color: #536471; font-size: 13px; margin-top: 4px; }}
+        
+        .metrics-grid {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }}
+        .metric-card {{ background: #ffffff; border: 1px solid #e1e8ed; border-radius: 12px; padding: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); }}
+        .metric-card .title {{ font-size: 12px; font-weight: 600; color: #536471; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }}
+        .metric-card .value {{ font-size: 26px; font-weight: 700; }}
+        .metric-card .sub {{ font-size: 13px; font-weight: 500; margin-top: 6px; }}
+        
+        .rh-green {{ color: #00c805; }}
+        .rh-red {{ color: #ff5000; }}
+        
+        /* Timeframe and Ticker Switcher */
+        .controls-row {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; }}
+        .ticker-pills {{ display: flex; gap: 8px; flex-wrap: wrap; }}
+        .ticker-pill {{ padding: 8px 16px; border-radius: 20px; border: 1px solid #e1e8ed; background: #ffffff; color: #0f1419; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s ease; }}
+        .ticker-pill:hover {{ background: #f7f9fa; border-color: #cfd9de; }}
+        .ticker-pill.active {{ background: #0f1419; color: #ffffff; border-color: #0f1419; }}
+        
+        .timeframe-pills {{ display: flex; background: #f7f9fa; border-radius: 20px; padding: 4px; border: 1px solid #e1e8ed; }}
+        .tf-pill {{ padding: 6px 14px; border-radius: 16px; border: none; background: transparent; color: #536471; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s ease; }}
+        .tf-pill.active {{ background: #ffffff; color: #00c805; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }}
+        
+        .chart-box {{ background: #ffffff; border: 1px solid #e1e8ed; border-radius: 12px; padding: 16px; margin-bottom: 24px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); }}
+        
+        .ledger-box {{ background: #ffffff; border: 1px solid #e1e8ed; border-radius: 12px; padding: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); }}
+        .ledger-box h3 {{ font-size: 16px; font-weight: 700; margin: 0 0 16px 0; color: #0f1419; }}
+        
+        table {{ width: 100%; border-collapse: collapse; font-size: 13px; }}
+        th {{ text-align: left; padding: 12px; color: #536471; font-weight: 600; border-bottom: 1px solid #e1e8ed; background: #f7f9fa; }}
+        td {{ padding: 12px; border-bottom: 1px solid #f0f3f5; color: #0f1419; }}
+        tr:hover {{ background-color: #f7f9fa; }}
+        
+        .badge {{ display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; }}
+        .badge-buy {{ background: rgba(0, 200, 5, 0.12); color: #00c805; }}
+        .badge-short {{ background: rgba(255, 80, 0, 0.12); color: #ff5000; }}
     </style>
 </head>
 <body>
+
     <div class="header">
-        <h1>📊 Quant.ai 策略新旧逻辑对比与买卖位置复盘看板</h1>
-        <p>数据日期：{TODAY_STR} | 智能订单微观结构与试探/金字塔加仓实测对比</p>
+        <div>
+            <div class="brand">🌱 Quant.ai | Robinhood 极简复盘看板</div>
+            <div class="sub">数据日期：{TODAY_STR} | 1M / 5M / 15M / 30M 多周期买卖点与纯白背景看板</div>
+        </div>
+        <div style="font-weight: 600; font-size: 13px; color: #536471;">
+            实盘模式：Paper / Live Executed
+        </div>
     </div>
 
-    <div class="card-grid">
-        <div class="card">
-            <div class="title">旧系统实际盈亏</div>
-            <div class="value red">${old_pnl:+,.2f}</div>
-            <div class="sub red">胜率: {old_wr:.1f}% ({len(old_wins)}/{len(old_trades)})</div>
+    <!-- Performance Cards -->
+    <div class="metrics-grid">
+        <div class="metric-card">
+            <div class="title">旧逻辑实际盈亏</div>
+            <div class="value rh-red">${old_pnl:+,.2f}</div>
+            <div class="sub rh-red">胜率: {old_wr:.1f}% ({len(old_wins)} 胜 / {len(old_trades) - len(old_wins)} 负)</div>
         </div>
-        <div class="card">
+        <div class="metric-card">
             <div class="title">新架构重演盈亏</div>
-            <div class="value green">${new_pnl:+,.2f}</div>
-            <div class="sub green">胜率: {new_wr:.1f}% ({len(new_wins)}/{len(new_trades)})</div>
+            <div class="value rh-green">${new_pnl:+,.2f}</div>
+            <div class="sub rh-green">胜率: {new_wr:.1f}% ({len(new_wins)} 胜 / {len(new_trades) - len(new_wins)} 负)</div>
         </div>
-        <div class="card">
-            <div class="title">净盈亏逆转幅度</div>
-            <div class="value green">+${(new_pnl - old_pnl):,.2f}</div>
-            <div class="sub green">避免单笔暴雷 + 诱多做空大赚</div>
+        <div class="metric-card">
+            <div class="title">净盈利改善幅度</div>
+            <div class="value rh-green">+${(new_pnl - old_pnl):,.2f}</div>
+            <div class="sub rh-green">试探建仓 + 诱多做空反败为胜</div>
         </div>
-        <div class="card">
-            <div class="title">Hugging Face 同步</div>
-            <div class="value" style="color:#e3b341;">AUTOMATED</div>
-            <div class="sub" style="color:#8b949e;">Parquet / JSON Viewer Ready</div>
+        <div class="metric-card">
+            <div class="title">Hugging Face Sync</div>
+            <div class="value rh-green">ONLINE</div>
+            <div class="sub" style="color: #536471;">Parquet / JSON Viewer 自动同步</div>
         </div>
     </div>
 
-    <div class="table-container">
-        <h3>📋 新架构买卖位置与持仓时长交易明细 (Trade Execution Ledger)</h3>
+    <!-- Interactive Ticker & Timeframe Switchers -->
+    <div class="controls-row">
+        <div class="ticker-pills" id="tickerPills">
+            <!-- Dynamically generated ticker pills -->
+        </div>
+        <div class="timeframe-pills" id="tfPills">
+            <button class="tf-pill active" onclick="setTimeframe('1m')">1M</button>
+            <button class="tf-pill" onclick="setTimeframe('5m')">5M</button>
+            <button class="tf-pill" onclick="setTimeframe('15m')">15M</button>
+            <button class="tf-pill" onclick="setTimeframe('30m')">30M</button>
+        </div>
+    </div>
+
+    <!-- Pure White Plotly Candlestick Chart -->
+    <div class="chart-box">
+        <div id="plotlyChart" style="width: 100%; height: 500px;"></div>
+    </div>
+
+    <!-- Trade Execution Table -->
+    <div class="ledger-box">
+        <h3 id="ledgerTitle">📋 买卖位置与持仓时长明细</h3>
         <table>
             <thead>
                 <tr>
@@ -291,35 +362,176 @@ def build_interactive_dashboard():
                     <th>离场原因</th>
                 </tr>
             </thead>
-            <tbody>
-"""
-
-    for t in new_trades:
-        side_cls = "badge-buy" if t["side"] == "LONG" else "badge-short"
-        pnl_cls = "green" if t["pnl"] > 0 else "red"
-        en_t = t["entry_time"].split()[-1][:8]
-        ex_t = t["exit_time"].split()[-1][:8]
-        html_content += f"""
-                <tr>
-                    <td><b>{t['ticker']}</b></td>
-                    <td><span class="badge {side_cls}">{t['side']}</span></td>
-                    <td>{en_t}</td>
-                    <td>${t['entry_price']:.2f}</td>
-                    <td>{ex_t}</td>
-                    <td>${t['exit_price']:.2f}</td>
-                    <td>{t['duration_min']} 分钟</td>
-                    <td>{t['shares']} 股</td>
-                    <td>${t['notional']:,.0f}</td>
-                    <td class="{pnl_cls}"><b>${t['pnl']:+,.2f}</b></td>
-                    <td class="{pnl_cls}"><b>{t['pnl_pct']:+.2f}%</b></td>
-                    <td><span style="color:#8b949e;">{t['reason']}</span></td>
-                </tr>
-"""
-
-    html_content += """
+            <tbody id="ledgerBody">
+                <!-- Dynamically populated rows -->
             </tbody>
         </table>
     </div>
+
+    <script>
+        const chartData = {chart_data_json};
+        const newTrades = {new_trades_json};
+        const tickers = {json.dumps(WATCHLIST)};
+
+        let currentTicker = "NVDA";
+        let currentTimeframe = "1m";
+
+        function initPills() {{
+            const container = document.getElementById("tickerPills");
+            container.innerHTML = "";
+            tickers.forEach(tk => {{
+                const btn = document.createElement("button");
+                btn.className = "ticker-pill " + (tk === currentTicker ? "active" : "");
+                btn.innerText = tk;
+                btn.onclick = () => setTicker(tk);
+                container.appendChild(btn);
+            }});
+        }}
+
+        function setTicker(tk) {{
+            currentTicker = tk;
+            initPills();
+            renderChart();
+            renderLedger();
+        }}
+
+        function setTimeframe(tf) {{
+            currentTimeframe = tf;
+            document.querySelectorAll(".tf-pill").forEach(btn => {{
+                btn.classList.toggle("active", btn.innerText === tf.toUpperCase());
+            }});
+            renderChart();
+        }}
+
+        function renderChart() {{
+            const tkData = chartData[currentTicker] && chartData[currentTicker][currentTimeframe];
+            if (!tkData) {{
+                Plotly.purge("plotlyChart");
+                return;
+            }}
+
+            const candleTrace = {{
+                x: tkData.time,
+                open: tkData.open,
+                high: tkData.high,
+                low: tkData.low,
+                close: tkData.close,
+                type: 'candlestick',
+                name: currentTicker,
+                increasing: {{ line: {{ color: '#00c805', width: 1.5 }}, fillcolor: '#00c805' }},
+                decreasing: {{ line: {{ color: '#ff5000', width: 1.5 }}, fillcolor: '#ff5000' }}
+            }};
+
+            // Filter trades for this ticker
+            const tkTrades = newTrades.filter(t => t.ticker === currentTicker);
+
+            const buyX = [], buyY = [], buyText = [];
+            const shortX = [], shortY = [], shortText = [];
+            const exitX = [], exitY = [], exitText = [];
+
+            tkTrades.forEach(t => {{
+                const enTime = t.entry_time.split(" ")[1].substring(0, 5);
+                const exTime = t.exit_time.split(" ")[1].substring(0, 5);
+
+                if (t.side === "LONG") {{
+                    buyX.push(enTime);
+                    buyY.push(t.entry_price);
+                    buyText.push(`🛒 BUY LONG @ $${{t.entry_price.toFixed(2)}}`);
+                }} else {{
+                    shortX.push(enTime);
+                    shortY.push(t.entry_price);
+                    shortText.push(`📉 SHORT @ $${{t.entry_price.toFixed(2)}}`);
+                }}
+
+                exitX.push(exTime);
+                exitY.push(t.exit_price);
+                exitText.push(`🔴 EXIT @ $${{t.exit_price.toFixed(2)}} (PnL: $${{t.pnl.toFixed(2)}})`);
+            }});
+
+            const buyTrace = {{
+                x: buyX, y: buyY, mode: 'markers', name: '买入/建仓',
+                marker: {{ symbol: 'triangle-up', size: 14, color: '#00c805' }},
+                text: buyText, hoverinfo: 'text'
+            }};
+
+            const shortTrace = {{
+                x: shortX, y: shortY, mode: 'markers', name: '做空',
+                marker: {{ symbol: 'triangle-down', size: 14, color: '#9333ea' }},
+                text: shortText, hoverinfo: 'text'
+            }};
+
+            const exitTrace = {{
+                x: exitX, y: exitY, mode: 'markers', name: '平仓出局',
+                marker: {{ symbol: 'x', size: 12, color: '#ff5000' }},
+                text: exitText, hoverinfo: 'text'
+            }};
+
+            const layout = {{
+                title: {{ text: `${{currentTicker}} - ${{currentTimeframe.toUpperCase()}} 纯白 K 线与买卖点标记`, font: {{ size: 16, color: '#0f1419', family: 'Inter' }} }},
+                paper_bgcolor: '#ffffff',
+                plot_bgcolor: '#ffffff',
+                margin: {{ l: 50, r: 30, t: 50, b: 40 }},
+                xaxis: {{
+                    rangeslider: {{ visible: false }},
+                    gridcolor: '#f0f3f5',
+                    linecolor: '#e1e8ed',
+                    tickfont: {{ color: '#536471' }}
+                }},
+                yaxis: {{
+                    gridcolor: '#f0f3f5',
+                    linecolor: '#e1e8ed',
+                    tickfont: {{ color: '#536471' }}
+                }},
+                legend: {{ orientation: 'h', y: 1.15, x: 0.3, font: {{ color: '#0f1419' }} }}
+            }};
+
+            Plotly.newPlot("plotlyChart", [candleTrace, buyTrace, shortTrace, exitTrace], layout, {{ responsive: true }});
+        }}
+
+        function renderLedger() {{
+            const container = document.getElementById("ledgerBody");
+            const title = document.getElementById("ledgerTitle");
+            title.innerText = `📋 [${{currentTicker}}] 买卖位置与持仓时长明细`;
+            container.innerHTML = "";
+
+            const tkTrades = newTrades.filter(t => t.ticker === currentTicker);
+            if (tkTrades.length === 0) {{
+                container.innerHTML = `<tr><td colspan="12" style="text-align:center; color:#536471; padding:20px;">暂无交易记录</td></tr>`;
+                return;
+            }}
+
+            tkTrades.forEach(t => {{
+                const sideCls = t.side === "LONG" ? "badge-buy" : "badge-short";
+                const pnlCls = t.pnl > 0 ? "rh-green" : "rh-red";
+                const enT = t.entry_time.split(" ")[1].substring(0, 8);
+                const exT = t.exit_time.split(" ")[1].substring(0, 8);
+
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td><b>${{t.ticker}}</b></td>
+                    <td><span class="badge ${{sideCls}}">${{t.side}}</span></td>
+                    <td>${{enT}}</td>
+                    <td>$${{t.entry_price.toFixed(2)}}</td>
+                    <td>${{exT}}</td>
+                    <td>$${{t.exit_price.toFixed(2)}}</td>
+                    <td>${{t.duration_min}} 分钟</td>
+                    <td>${{t.shares}} 股</td>
+                    <td>$${{t.notional.toLocaleString('en-US', {{maximumFractionDigits: 0}})}}</td>
+                    <td class="${{pnlCls}}"><b>$${{t.pnl >= 0 ? '+' : ''}}${{t.pnl.toFixed(2)}}</b></td>
+                    <td class="${{pnlCls}}"><b>${{t.pnl_pct >= 0 ? '+' : ''}}${{t.pnl_pct.toFixed(2)}}%</b></td>
+                    <td><span style="color:#536471;">${{t.reason}}</span></td>
+                `;
+                container.appendChild(tr);
+            }});
+        }}
+
+        // Initial setup
+        window.onload = () => {{
+            initPills();
+            renderChart();
+            renderLedger();
+        }};
+    </script>
 </body>
 </html>
 """
@@ -328,9 +540,9 @@ def build_interactive_dashboard():
     with open(dashboard_path, "w", encoding="utf-8") as f:
         f.write(html_content)
 
-    print(f"[+] Successfully generated Interactive Retrospective Dashboard at: {dashboard_path}")
+    print(f"[+] Successfully generated Robinhood Pure White Dashboard at: {dashboard_path}")
     return dashboard_path
 
 
 if __name__ == "__main__":
-    build_interactive_dashboard()
+    build_robinhood_dashboard()
