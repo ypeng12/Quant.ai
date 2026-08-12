@@ -26,6 +26,7 @@ build/
 
 # Local cache, databases and binary ML models
 backend/data_cache/
+backend/data/charts/
 backend/app/experiments.db
 *.db
 *.joblib
