@@ -2038,9 +2038,13 @@ def close_individual_live_position(payload: dict):
         raise HTTPException(status_code=500, detail=res.get("error", "Failed to close position"))
 
 
-# 静态文件托管（前端 React 构建产物）
+# 静态文件托管（前端 React 构建产物及复盘看板）
 _backend_dir = os.path.dirname(os.path.abspath(__file__))
 _dist_dir = os.path.join(os.path.dirname(_backend_dir), "frontend", "dist")
+_charts_dir = os.path.join(_backend_dir, "data", "charts")
+
+if os.path.exists(_charts_dir):
+    app.mount("/charts", StaticFiles(directory=_charts_dir), name="charts")
 
 if os.path.exists(_dist_dir):
     _assets_dir = os.path.join(_dist_dir, "assets")
