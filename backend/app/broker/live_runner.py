@@ -83,8 +83,8 @@ class LiveTradingRunner:
             "screener_top_movers": 4,
             "max_scan_symbols": 14,
             # ↓↓ Relaxed for higher intraday trade frequency ↓↓
-            "entry_score_min": 62.0,        # was 78 — too selective, misses most valid entries
-            "full_size_score": 80.0,        # was 90 — scale to full size at 80
+            "entry_score_min": 50.0,        # lowered to 50.0 to capture early probe entries
+            "full_size_score": 75.0,        # scale to full size at 75.0
             "min_expected_value_r": 0.10,   # was 0.15 — allow trades with lighter EV gate
             "reentry_cooldown_seconds": 60, # was 120 — faster re-entry after exit
             "max_concurrent_positions": 3,  # was 2 — allow up to 3 simultaneous positions

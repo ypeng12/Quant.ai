@@ -64,10 +64,6 @@ export function TradeComparisonPanel({ watchlist, activeTicker, onSelectTicker }
   // Map trades onto chart markers
   const markers: any[] = [];
   (data?.trades || []).forEach((t: any) => {
-    // Parse time string to timestamp if possible
-    const enTimeParts = t.entry_time.split(" ")[1]?.split(":") || ["09", "30"];
-    const exTimeParts = t.exit_time.split(" ")[1]?.split(":") || ["10", "00"];
-    
     markers.push({
       time: Math.floor(new Date(t.entry_time).getTime() / 1000) || candles[0]?.time || 0,
       position: t.side === 'LONG' ? 'belowBar' : 'aboveBar',
@@ -98,31 +94,9 @@ export function TradeComparisonPanel({ watchlist, activeTicker, onSelectTicker }
             点击下方股票按钮（如 SNDK, MU），直接查看该股票全天真实 K 线及每一个买卖点与持仓分钟数
           </div>
         </div>
-
-        {/* Timeframe Selector Pills */}
-        <div style={{ display: 'flex', background: '#f7f9fa', borderRadius: '20px', padding: '4px', border: '1px solid #e1e8ed' }}>
-          {(['1m', '5m', '15m', '30m'] as const).map(tf => (
-            <button
-              key={tf}
-              onClick={() => setSelectedInterval(tf)}
-              style={{
-                padding: '6px 16px',
-                borderRadius: '16px',
-                border: 'none',
-                background: selectedInterval === tf ? '#ffffff' : 'transparent',
-                color: selectedInterval === tf ? '#00c805' : '#536471',
-                fontWeight: 700,
-                cursor: 'pointer',
-                boxShadow: selectedInterval === tf ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
-              }}
-            >
-              {tf.toUpperCase()}
-            </button>
-          ))}
-        </div>
       </div>
 
-      {/* 1. 个股盈亏明细表 (Screen-shot summary table) */}
+      {/* 1. 个股盈亏明细表 */}
       <div style={{ marginBottom: '24px', background: '#ffffff', border: '1px solid #e1e8ed', borderRadius: '12px', padding: '16px' }}>
         <h3 style={{ fontSize: '15px', fontWeight: 700, margin: '0 0 12px 0', color: '#0f1419' }}>
           📈 新逻辑下的个股盈亏明细表 (Per-Ticker Performance)
@@ -209,14 +183,35 @@ export function TradeComparisonPanel({ watchlist, activeTicker, onSelectTicker }
         ))}
       </div>
 
-      {/* 3. Real TradingView Native K-Line Chart */}
+      {/* 3. Real TradingView Native K-Line Chart (Timeframe Pills placed directly on top!) */}
       <div style={{ background: '#000000', borderRadius: '12px', padding: '16px', marginBottom: '24px', border: '1px solid #1e293b' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
           <div style={{ color: '#ffffff', fontWeight: 700, fontSize: '16px' }}>
             [{selectedTicker}] - 今日 {selectedInterval.toUpperCase()} 真实盘中 K 线图与买卖点标注
           </div>
-          <div style={{ fontSize: '12px', color: '#94a3b8' }}>
-            🛒 绿色上箭: 买入建仓 | 🟣 紫色下箭: 诱多做空 | 🔴 红色标出: 平仓位置
+          
+          {/* Timeframe selector pills directly on top of the chart! */}
+          <div style={{ display: 'flex', background: '#1e293b', borderRadius: '20px', padding: '4px', border: '1px solid #334155' }}>
+            {(['1m', '5m', '15m', '30m'] as const).map(tf => (
+              <button
+                key={tf}
+                onClick={() => setSelectedInterval(tf)}
+                style={{
+                  padding: '6px 16px',
+                  borderRadius: '16px',
+                  border: 'none',
+                  background: selectedInterval === tf ? '#00c805' : 'transparent',
+                  color: selectedInterval === tf ? '#ffffff' : '#94a3b8',
+                  fontWeight: 700,
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  boxShadow: selectedInterval === tf ? '0 1px 4px rgba(0,200,5,0.4)' : 'none'
+                }}
+              >
+                {tf.toUpperCase()}
+              </button>
+            ))}
           </div>
         </div>
 
