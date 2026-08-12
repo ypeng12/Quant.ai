@@ -22,9 +22,11 @@ class InstitutionalAlphaEngine:
     @staticmethod
     def _safe_float(val, default: float = 0.0) -> float:
         try:
+            if isinstance(val, (pd.Series, pd.DataFrame)):
+                val = val.iloc[-1] if not val.empty else default
             n = float(val)
             return n if math.isfinite(n) else float(default)
-        except (TypeError, ValueError):
+        except (TypeError, ValueError, IndexError):
             return float(default)
 
     def compute_ofi_alpha(self, row: Dict, prev_row: Optional[Dict] = None) -> float:
@@ -33,7 +35,7 @@ class InstitutionalAlphaEngine:
         Measures aggressor buying/selling pressure from order flow volume and price tick changes.
         Range: [-1.0, +1.0]
         """
-        if not prev_row:
+        if prev_row is None or (isinstance(prev_row, (pd.Series, pd.DataFrame)) and prev_row.empty):
             return 0.0
 
         close = self._safe_float(row.get("Close"), row.get("price", 0.0))

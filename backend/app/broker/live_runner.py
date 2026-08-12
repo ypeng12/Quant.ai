@@ -582,36 +582,22 @@ class LiveTradingRunner:
         if short_breakdown:
             short_score += 8.0
 
-        # Calculate Candlestick Upper Wick Rejection Ratio
-        candle_high = self._safe_float(row.get("High"), close)
-        candle_low = self._safe_float(row.get("Low"), close)
-        candle_open = self._safe_float(row.get("Open"), close)
-        candle_range = max(1e-6, candle_high - candle_low)
-        upper_wick_ratio = (candle_high - max(candle_open, close)) / candle_range
-
-        # Anti-Bull Trap & High-Reversal Detection:
-        # Triggers short signal at highs on upper-wick rejection even before price drops below VWAP
         reversal_short = (
-            (up_from_open_pct >= 1.00 or session_move_pct >= 1.20)
-            and (high_to_now_pct <= -0.40 or upper_wick_ratio >= 0.38)
-            and momentum_3_pct <= 0.05
+            up_from_open_pct >= 1.20
+            and high_to_now_pct <= -0.80
+            and close < vwap
+            and momentum_3_pct < -0.05
         )
         reversal_long = (
-            down_from_open_pct <= -1.00
-            and low_to_now_pct >= 0.40
+            down_from_open_pct <= -1.20
+            and low_to_now_pct >= 0.80
             and close > vwap
-            and momentum_3_pct > 0.08
+            and momentum_3_pct > 0.05
         )
         if reversal_short:
-            short_score += 22.0
-            long_score -= 25.0  # Penalize buying into high-reversal upper wick
+            short_score += 18.0
         if reversal_long:
             long_score += 18.0
-
-        # Severe penalty for chasing long when upper wick rejection forms at session highs
-        if upper_wick_ratio >= 0.40 and (up_from_open_pct >= 1.00 or high_to_now_pct <= -0.30):
-            long_score -= 30.0
-            short_score += 20.0
 
         long_score = round(max(0.0, min(100.0, long_score)), 1)
         short_score = round(max(0.0, min(100.0, short_score)), 1)

@@ -109,20 +109,8 @@ class RiskPositionSizer:
         utilization = self._safe_float(strategy_params.get("buying_power_utilization_pct"), 0.95)
         notional = available_bp * min(utilization, bp_fraction)
         stop_pct = max(0.001, self._safe_float(opportunity.get("_stop_pct"), 0.0100))
-        
-        # Risk Budget Cap (Max equity risk per trade, default 1.5% equity risk)
-        max_trade_risk_pct = self._safe_float(strategy_params.get("max_position_risk_pct"), 0.015)
-        risk_budget = equity * max_trade_risk_pct if equity > 0 else 500.0
-
-        # Equity Allocation Cap (Max allocation per single ticker, default 25% of Portfolio Equity)
-        max_equity_alloc_pct = self._safe_float(strategy_params.get("max_position_equity_pct"), 0.25)
-        equity_cap_notional = equity * max_equity_alloc_pct if equity > 0 else notional
-
-        shares_by_bp = int(notional / close_price) if close_price > 0 else 0
-        shares_by_equity_cap = int(equity_cap_notional / close_price) if close_price > 0 else shares_by_bp
-        shares_by_risk = int(risk_budget / (close_price * stop_pct)) if (close_price > 0 and stop_pct > 0) else shares_by_bp
-
-        shares = max(0, min(shares_by_bp, shares_by_equity_cap, shares_by_risk))
+        risk_budget = equity * self._safe_float(strategy_params.get("max_position_risk_pct"), 0.040)
+        shares = int(notional / close_price) if close_price > 0 else 0
 
         return {
             "shares": shares,
