@@ -1,6 +1,6 @@
 {
   "date": "2026-08-11",
-  "count": 17,
+  "count": 19,
   "trade_history": [
     {
       "order_id": "8e7b2072-8a93-4b3d-9dc4-53ec571eceb1",
@@ -255,6 +255,36 @@
       "shares": 142,
       "price": 858,
       "pnl": -791.3,
+      "reason": "Alpaca Broker Confirmed Fill"
+    },
+    {
+      "order_id": "9476997b-c54d-4bcf-967d-4a3ea85b7c3b",
+      "client_order_id": "9e0dc3ab-543c-4da3-bee6-0c82e297dc6b",
+      "order_status": "filled",
+      "source": "alpaca_trading_api",
+      "date": "2026-08-11",
+      "time": "2026-08-11 23:25:23",
+      "action": "BUY",
+      "action_cn": "买入",
+      "ticker": "SNDK",
+      "shares": 100,
+      "price": 1312.42,
+      "pnl": 0.0,
+      "reason": "Alpaca Broker Confirmed Fill"
+    },
+    {
+      "order_id": "2c1b233e-81af-437f-a9ba-fd99407f44f4",
+      "client_order_id": "80a318fa-9ccc-4b75-bf36-ebd7640aad34",
+      "order_status": "filled",
+      "source": "alpaca_trading_api",
+      "date": "2026-08-11",
+      "time": "2026-08-11 23:28:39",
+      "action": "BUY",
+      "action_cn": "买入",
+      "ticker": "MU",
+      "shares": 30,
+      "price": 883.88,
+      "pnl": 0.0,
       "reason": "Alpaca Broker Confirmed Fill"
     }
   ]
