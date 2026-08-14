@@ -1,45 +1,43 @@
 DEFAULT_PARAMS = {
-    # Risk & Position Sizing Baseline (5m/10m Probabilistic Trend Strategy)
-    "risk_per_trade_pct": 0.0050,            # 0.50% account risk per trade
-    "max_position_size_pct": 0.25,           # Max 25% equity allocation per ticker
-    "max_total_open_risk_pct": 0.0150,       # Max 1.50% total account open risk
-    "daily_loss_limit_pct": 0.040,           # Stop opening new positions if daily loss reaches 4.0%
-    "daily_profit_lock_trigger_pct": 0.030,  # Half risk per trade once daily profit reaches 3.0%
-    "daily_profit_giveback_pct": 0.010,      # Halt new entries if daily profit gives back 1.0% from peak
+    # Risk & Position Sizing Baseline (daytrade.pdf)
+    "risk_per_trade_pct": 0.0030,            # 0.30% account risk per trade
+    "max_position_size_pct": 0.12,           # Max 12% equity allocation per ticker
+    "max_total_open_risk_pct": 0.0090,       # Max 0.90% total account open risk
+    "daily_loss_limit_pct": 0.012,           # Stop opening new positions if daily loss reaches 1.20%
+    "daily_profit_lock_trigger_pct": 0.015, # Half risk per trade once daily profit reaches 1.50%
+    "daily_profit_giveback_pct": 0.005,      # Halt new entries if daily profit gives back 0.50% from peak
 
-    # 5m/10m Volatility-Adaptive Stop Loss (ATR-Clipped)
-    "timeframe": "5m",
+    # Initial Volatility-Adaptive Stop Loss (ATR-Clipped)
     "initial_stop_mode": "atr_clipped",
-    "initial_stop_atr_mult": 2.50,
-    "stop_min_pct": 0.0120,                  # Min 1.20% stop (breathing space for 5m bars)
-    "stop_max_pct": 0.0350,                  # Max 3.50% stop
+    "initial_stop_atr_mult": 1.05,
+    "stop_min_pct": 0.0025,                  # Min 0.25% stop
+    "stop_max_pct": 0.0060,                  # Max 0.60% stop
 
     # R-Multiple Tiered Take Profit (1R = Initial Stop Distance)
-    "tp1_r": 2.00,                           # Take Profit 1 at 2.0R (>= 2.5%-4% gain)
-    "tp1_size_pct": 0.30,                    # Scale out 30% position at TP1
-    "tp2_r": 3.50,                           # Take Profit 2 at 3.5R
-    "tp2_size_pct": 0.30,                    # Scale out 30% position at TP2
-    "runner_size_pct": 0.40,                 # Keep 40% runner riding 5m trend to intraday peak/trough
+    "tp1_r": 0.90,                           # Take Profit 1 at 0.90R
+    "tp1_size_pct": 0.40,                    # Exit 40% position at TP1
+    "tp2_r": 1.60,                           # Take Profit 2 at 1.60R
+    "tp2_size_pct": 0.35,                    # Exit 35% position at TP2
+    "runner_size_pct": 0.25,                 # Keep 25% runner
 
     # Stop Management
-    "breakeven_trigger_r": 1.80,             # Move stop to breakeven + cost buffer at 1.80R
-    "breakeven_cost_buffer_pct": 0.0010,     # Cover spread & fees
-    "trail_start_r": 2.20,                   # Trailing stop starts at 2.20R
+    "breakeven_trigger_r": 0.85,             # Move stop to breakeven + cost buffer at 0.85R
+    "breakeven_cost_buffer_pct": 0.0006,     # Cover spread & fees
+    "trail_start_r": 1.10,                   # Trailing stop starts at 1.10R
     "trailing_stop_mode": "atr",
-    "trailing_stop_atr_mult": 2.80,          # 2.80 ATR trailing stop
+    "trailing_stop_atr_mult": 1.10,          # 1.10 ATR trailing stop
 
     # Time Controls (Time Stop)
-    "minimum_hold_minutes": 15,              # Minimum 15 mins hold (3 x 5m bars)
-    "max_hold_minutes": 360,                 # Full session hold for trending movers
-    "time_stop_minutes": 30,                 # Check progress at 30 mins
-    "time_stop_min_progress_r": 0.50,        # Require >= 0.50R progress by 30 mins
+    "max_hold_minutes": 35,                  # Exit after 35 mins if stagnant
+    "time_stop_minutes": 12,                 # Check progress at 12 mins
+    "time_stop_min_progress_r": 0.35,        # Require >= 0.35R progress by 12 mins
 
     # Execution Quality & Cost Gate
     "min_reward_to_cost_ratio": 1.5,         # Minimum 1.5 reward-to-cost ratio for liquid US equities
-    "max_spread_pct": 0.0010,                # Max 0.10% spread allowed
-    "max_expected_slippage_pct": 0.0003,     # Max 0.03% slippage allowed
+    "max_spread_pct": 0.0006,                # Max 0.06% spread allowed
+    "max_expected_slippage_pct": 0.0002,     # Max 0.02% slippage allowed for liquid tickers
 
-    "strategy_mode": "probabilistic_5m_trend"
+    "strategy_mode": "dynamic"
 }
 
 def calculate_confidence_score(row, prev_row, is_bullish=True):

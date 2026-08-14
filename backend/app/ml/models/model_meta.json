@@ -1,6 +1,6 @@
 {
-  "dataset_name": "daily",
-  "num_samples": 156,
+  "dataset_name": "SNDK",
+  "num_samples": 2713,
   "feature_cols": [
     "feature_rvol",
     "feature_vwap_dist_pct",
@@ -14,11 +14,11 @@
   "long_model": {
     "direction": "long",
     "model_file": "win_rate_model_long.joblib",
-    "cv_brier_mean": 0.09961079632283394,
-    "cv_auc_mean": 0.5,
-    "final_brier": 0.0602956962295607,
-    "final_auc": 0.65,
-    "final_logloss": 0.24428601842368713,
+    "cv_brier_mean": 0.20396870194452893,
+    "cv_auc_mean": 0.48015051535687636,
+    "final_brier": 0.18119368558635135,
+    "final_auc": 0.35196476964769646,
+    "final_logloss": 0.5505746685962501,
     "feature_cols": [
       "feature_rvol",
       "feature_vwap_dist_pct",
@@ -33,11 +33,11 @@
   "short_model": {
     "direction": "short",
     "model_file": "win_rate_model_short.joblib",
-    "cv_brier_mean": 0.07223340553747994,
-    "cv_auc_mean": 0.6479885057471264,
-    "final_brier": 0.08587414938081417,
-    "final_auc": 0.4367816091954023,
-    "final_logloss": 0.31575951821225046,
+    "cv_brier_mean": 0.20689150203591186,
+    "cv_auc_mean": 0.5555566801202234,
+    "final_brier": 0.20973984874591275,
+    "final_auc": 0.5553358088472715,
+    "final_logloss": 0.6103179845458313,
     "feature_cols": [
       "feature_rvol",
       "feature_vwap_dist_pct",
