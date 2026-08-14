@@ -73,8 +73,9 @@ class LiveTradingRunner:
     @staticmethod
     def _aggressive_intraday_defaults() -> Dict:
         return {
-            "strategy_version": "aggressive_intraday_v3",
-            "strategy_mode": "aggressive_intraday",
+            "strategy_version": "probabilistic_5m_trend_v1",
+            "strategy_mode": "probabilistic_5m_trend",
+            "timeframe": "5m",
             "paper_only_aggressive": True,
             "allow_aggressive_live": False,
             "dynamic_screener_enabled": False,
@@ -82,30 +83,29 @@ class LiveTradingRunner:
             "screener_top_actives": 6,
             "screener_top_movers": 4,
             "max_scan_symbols": 14,
-            # ↓↓ Relaxed for higher intraday trade frequency ↓↓
-            "entry_score_min": 50.0,        # lowered to 50.0 to capture early probe entries
-            "full_size_score": 75.0,        # scale to full size at 75.0
-            "min_expected_value_r": 0.10,   # was 0.15 — allow trades with lighter EV gate
-            "reentry_cooldown_seconds": 60, # was 120 — faster re-entry after exit
-            "max_concurrent_positions": 3,  # was 2 — allow up to 3 simultaneous positions
-            "pyramid_trigger_pct": 0.004,   # 0.4% profit triggers pyramid add
-            # ↑↑ Risk / sizing unchanged ↑↑
+            # ↓↓ 5m/10m Probabilistic Trend Strategy Defaults ↓↓
+            "entry_score_min": 60.0,        # 60.0 for high probability 5m entries
+            "full_size_score": 80.0,
+            "min_expected_value_r": 0.15,
+            "reentry_cooldown_seconds": 300, # 300s (5 minutes) cooldown to stop HFT churn
+            "max_concurrent_positions": 3,
+            "pyramid_trigger_pct": 0.010,   # 1.0% profit triggers pyramid add
             "min_stock_price": 5.00,
             "buying_power_utilization_pct": 0.95,
             "starter_buying_power_pct": 0.35,
             "max_position_buying_power_pct": 0.95,
             "max_position_risk_pct": 0.040,
             "daily_loss_limit_pct": 0.040,
-            "initial_stop_atr_mult": 1.60,
-            "stop_min_pct": 0.0050,
-            "stop_max_pct": 0.0200,
-            "trail_start_pct": 0.0120,
-            "trailing_stop_atr_mult": 2.20,
-            "trailing_stop_min_pct": 0.0080,
-            "trailing_stop_max_pct": 0.0250,
-            "minimum_hold_minutes": 4,
-            "max_hold_minutes": 300,
-            "time_stop_min_score": 48.0,    # was 52 — slightly more tolerant of held positions
+            "initial_stop_atr_mult": 2.50,
+            "stop_min_pct": 0.0120,          # 1.2% min stop (breathing space for 5m bars)
+            "stop_max_pct": 0.0350,          # 3.5% max stop
+            "trail_start_pct": 0.0250,       # 2.5% gain before trailing stop activates
+            "trailing_stop_atr_mult": 2.80,  # 2.8 ATR 5m trailing stop
+            "trailing_stop_min_pct": 0.0150, # 1.5% min trail stop
+            "trailing_stop_max_pct": 0.0450, # 4.5% max trail stop
+            "minimum_hold_minutes": 15,      # 15 mins minimum hold (3 x 5m bars)
+            "max_hold_minutes": 360,
+            "time_stop_min_score": 48.0,
             "orders_sync_interval_seconds": 2.0,
         }
 
@@ -809,68 +809,62 @@ class LiveTradingRunner:
         entry_at = self.entry_times.setdefault(ticker, datetime.datetime.now())
         minutes_held = max(0.0, (datetime.datetime.now() - entry_at).total_seconds() / 60.0)
         pnl_pct = ((close - avg_cost) / avg_cost) if side == "LONG" and avg_cost > 0 else ((avg_cost - close) / avg_cost if avg_cost > 0 else 0.0)
-        stop_pct = self._safe_float(opportunity.get("_stop_pct"), 0.0100)
+        stop_pct = self._safe_float(opportunity.get("_stop_pct"), 0.0120)
         
-        # Breakeven Stop: If partial TP has been taken, protect remaining shares at cost price (avg_cost)
-        if self.partial_tp_done.get(ticker, False) and pnl_pct <= 0.0:
-            return ("SELL" if side == "LONG" else "COVER"), f"{base_reason} | 🛡️ 半仓止盈后触及保本线 (${avg_cost:.2f})，平余仓保本离场"
+        # Breakeven Stop: Protect remaining position after meaningful gain
+        if self.partial_tp_done.get(ticker, False) and pnl_pct <= -0.002:
+            return ("SELL" if side == "LONG" else "COVER"), f"{base_reason} | 🛡️ 锁定部分利润后跌破保本缓冲线，平余仓保本离场"
 
         hard_stop = (side == "LONG" and close <= avg_cost * (1.0 - stop_pct)) or (side == "SHORT" and close >= avg_cost * (1.0 + stop_pct))
         if hard_stop:
-            return ("SELL" if side == "LONG" else "COVER"), f"{base_reason} | 初始硬止损 {stop_pct*100:.2f}%"
-
-        # ─── Alpha Decay Exit (Alpha 动能衰减离场) ──────────────────────────────────
-        alpha_score = self._safe_float(opportunity.get("composite_alpha_score"), 0.0)
-        if side == "LONG" and alpha_score < 15.0 and pnl_pct >= 0.0025:
-            return "SELL", f"{base_reason} | 📉 Composite Alpha 动能衰减 (Alpha={alpha_score:+.1f} < +15.0)，主动落袋锁利"
-        if side == "SHORT" and alpha_score > -15.0 and pnl_pct >= 0.0025:
-            return "COVER", f"{base_reason} | 📈 Composite Alpha 做空动能衰减 (Alpha={alpha_score:+.1f} > -15.0)，主动平空锁利"
+            return ("SELL" if side == "LONG" else "COVER"), f"{base_reason} | 5m 结构初始硬止损 {stop_pct*100:.2f}%"
 
         # ─── Partial Take-Profit (分批止盈/锁利) ──────────────────────────────────
-        # When unrealized gain reaches >= 1.2% (or 1.2 * stop_pct) and position has > 1 share,
-        # scale out 50% to lock in profit, then set Breakeven stop for the rest!
-        tp1_pct = max(0.0100, 1.2 * stop_pct)
+        # Take partial profit (30%) ONLY when gain reaches >= 2.5% (or 2.5 * stop_pct)
+        # Keeps 70% runner riding the 5m trend to capture intraday peaks/troughs!
+        tp1_pct = max(0.0250, 2.5 * stop_pct)
         if pnl_pct >= tp1_pct and not self.partial_tp_done.get(ticker, False) and abs(current_shares) > 1:
             action_str = "PARTIAL_SELL" if side == "LONG" else "PARTIAL_COVER"
-            est_pnl_usd = pnl_pct * close * abs(current_shares) / 2.0
+            scale_shares = max(1, int(abs(current_shares) * 0.3))
+            est_pnl_usd = pnl_pct * close * scale_shares
             return action_str, (
-                f"{base_reason} | 🟢 [分批止盈 50%] 浮盈 +{pnl_pct*100:.2f}% (预估锁利 +${est_pnl_usd:.2f}) — "
-                f"落袋为安半仓，余仓开启移动止盈与保本风控"
+                f"{base_reason} | 🟢 [分批止盈 30%] 5m 强趋势波段浮盈 +{pnl_pct*100:.2f}% (锁利 +${est_pnl_usd:.2f}) — "
+                f"落袋 30% 锁定部分收益，保留 70% 大仓位让利润奔跑至日内趋势极值"
             )
 
         atr = self._safe_float(opportunity.get("_atr"), close * 0.004)
         regime = opportunity.get("regime", "RANGE")
-        atr_mult = 2.80 if "REVERSAL" in regime else self._safe_float(self.strategy_params.get("trailing_stop_atr_mult"), 2.20)
-        max_trail = 0.0400 if "REVERSAL" in regime else self._safe_float(self.strategy_params.get("trailing_stop_max_pct"), 0.0250)
+        atr_mult = 3.20 if "REVERSAL" in regime else self._safe_float(self.strategy_params.get("trailing_stop_atr_mult"), 2.80)
+        max_trail = 0.0500 if "REVERSAL" in regime else self._safe_float(self.strategy_params.get("trailing_stop_max_pct"), 0.0450)
 
         trail_pct = min(
             max_trail,
             max(
-                self._safe_float(self.strategy_params.get("trailing_stop_min_pct"), 0.0080),
+                self._safe_float(self.strategy_params.get("trailing_stop_min_pct"), 0.0150),
                 atr_mult * (atr / close if close > 0 else 0.0),
             ),
         )
-        trail_start = max(self._safe_float(self.strategy_params.get("trail_start_pct"), 0.0120), stop_pct)
+        trail_start = max(self._safe_float(self.strategy_params.get("trail_start_pct"), 0.0250), stop_pct)
         best_price = self._safe_float(state.get("best_price"), close)
         trail_hit = False
         if pnl_pct >= trail_start:
             trail_hit = (side == "LONG" and close <= best_price * (1.0 - trail_pct)) or (side == "SHORT" and close >= best_price * (1.0 + trail_pct))
         if trail_hit:
-            return ("SELL" if side == "LONG" else "COVER"), f"{base_reason} | 趋势追踪回撤 {trail_pct*100:.2f}% 触发全平"
+            return ("SELL" if side == "LONG" else "COVER"), f"{base_reason} | 5m 趋势追踪从最高点回撤 {trail_pct*100:.2f}% 触发获利全平"
 
-        min_hold = self._safe_float(self.strategy_params.get("minimum_hold_minutes"), 4.0)
+        min_hold = self._safe_float(self.strategy_params.get("minimum_hold_minutes"), 15.0)
         if minutes_held >= min_hold:
             prev_close = self._safe_float(opportunity.get("_prev_close"), close)
             if side == "LONG":
                 invalid_now = close < opportunity.get("_ema_21", close) and close < opportunity.get("_vwap", close)
                 invalid_prev = prev_close < opportunity.get("_prev_ema_21", prev_close) and prev_close < opportunity.get("_prev_vwap", prev_close)
-                if invalid_now and invalid_prev and opportunity.get("short_score", 0.0) >= 70.0:
-                    return "SELL", f"{base_reason} | 连续两根跌破 EMA21/VWAP，长趋势失效"
+                if invalid_now and invalid_prev and opportunity.get("short_score", 0.0) >= 65.0:
+                    return "SELL", f"{base_reason} | 5m 周期连续两根跌破 EMA21/VWAP，长趋势确认为结构性失效"
             else:
                 invalid_now = close > opportunity.get("_ema_21", close) and close > opportunity.get("_vwap", close)
                 invalid_prev = prev_close > opportunity.get("_prev_ema_21", prev_close) and prev_close > opportunity.get("_prev_vwap", prev_close)
-                if invalid_now and invalid_prev and opportunity.get("long_score", 0.0) >= 70.0:
-                    return "COVER", f"{base_reason} | 连续两根收复 EMA21/VWAP，空趋势失效"
+                if invalid_now and invalid_prev and opportunity.get("long_score", 0.0) >= 65.0:
+                    return "COVER", f"{base_reason} | 5m 周期连续两根收复 EMA21/VWAP，空趋势确认为结构性失效"
 
         max_hold = self._safe_float(self.strategy_params.get("max_hold_minutes"), 300.0)
         same_side_score = opportunity.get("long_score", 0.0) if side == "LONG" else opportunity.get("short_score", 0.0)
@@ -1521,16 +1515,17 @@ class LiveTradingRunner:
                             break
                         try:
                             try:
-                                df = fetch_and_prepare_data(ticker, period="3d", interval="1m")
+                                tf = self.strategy_params.get("timeframe", "5m")
+                                df = fetch_and_prepare_data(ticker, period="5d", interval=tf)
                             except Exception:
                                 df = None
                             if df is None or df.empty or len(df) < 2:
                                 try:
-                                    df = fetch_and_prepare_data(ticker, period="5d", interval="5m")
+                                    df = fetch_and_prepare_data(ticker, period="1mo", interval="5m")
                                 except Exception:
                                     df = None
                             if df is None or df.empty or len(df) < 2:
-                                self.add_log(f"🔍 [{ticker}] Waiting for bar data...")
+                                self.add_log(f"🔍 [{ticker}] Waiting for 5m bar data...")
                                 continue
                                 
                             row = df.iloc[-1]
