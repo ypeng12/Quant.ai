@@ -178,25 +178,26 @@ WATCHLIST = load_watchlist()
 
 # Three Core AI Trader Profiles & Multi-Factor Weights
 TRADING_PROFILES = {
-    "INTRADAY_HIGH_FREQ_SNIPER": {
-        "id": "INTRADAY_HIGH_FREQ_SNIPER",
-        "name": "🔥 INTRADAY_HIGH_FREQ_SNIPER (Aggressive High-Frequency Sniper - Default)",
-        "description": "High frequency 1-min K-line scanning, high-momentum breakout. Factor weights: Momentum (45%), Volume (35%), Volatility (15%), RSI (5%)",
+    "PROBABILISTIC_5M_TREND_SNIPER": {
+        "id": "PROBABILISTIC_5M_TREND_SNIPER",
+        "name": "🔥 PROBABILISTIC_5M_TREND_SNIPER (5m/10m Probability Trend Holding - Default)",
+        "description": "5-min / 10-min K-line scanning with structure-based trend holding. Factor weights: Momentum (40%), Volume (30%), Volatility (20%), RSI (10%)",
         "is_default": True,
         "weights": {
-            "momentum": 0.45,
-            "volume": 0.35,
-            "volatility": 0.15,
-            "rsi": 0.05
+            "momentum": 0.40,
+            "volume": 0.30,
+            "volatility": 0.20,
+            "rsi": 0.10
         },
         "params": {
-            "strategy_mode": "opening_breakout",
-            "rsi_threshold_buy": 75.0,
-            "rvol_min": 1.1,
-            "stop_loss_pct": 0.010,
-            "profit_target_pct": 0.020,
-            "trailing_stop_atr_mult": 1.5,
-            "scan_interval": "1m"
+            "strategy_mode": "probabilistic_5m_trend",
+            "timeframe": "5m",
+            "rsi_threshold_buy": 70.0,
+            "rvol_min": 1.2,
+            "stop_loss_pct": 0.020,
+            "profit_target_pct": 0.050,
+            "trailing_stop_atr_mult": 2.8,
+            "scan_interval": "5m"
         }
     },
     "INTRADAY_DAILY_TARGET_500": {
