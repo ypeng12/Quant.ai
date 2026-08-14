@@ -1,7 +1,7 @@
 {
   "is_running": false,
   "strategy_params": {
-    "strategy_version": "probabilistic_5m_trend_v1",
+    "strategy_version": "probabilistic_5m_trend_v2",
     "strategy_mode": "probabilistic_5m_trend",
     "timeframe": "5m",
     "paper_only_aggressive": true,
@@ -11,12 +11,15 @@
     "screener_top_actives": 6,
     "screener_top_movers": 4,
     "max_scan_symbols": 14,
-    "entry_score_min": 60.0,
+    "max_daily_trades_total": 5,
+    "max_symbol_daily_trades": 2,
+    "hold_runner_trend": true,
+    "entry_score_min": 65.0,
     "full_size_score": 80.0,
     "min_expected_value_r": 0.15,
-    "reentry_cooldown_seconds": 300,
+    "reentry_cooldown_seconds": 600,
     "max_concurrent_positions": 3,
-    "pyramid_trigger_pct": 0.010,
+    "pyramid_trigger_pct": 0.012,
     "min_stock_price": 5.00,
     "buying_power_utilization_pct": 0.95,
     "starter_buying_power_pct": 0.35,
@@ -40,5 +43,5 @@
     "rsi_threshold_buy": 70.0,
     "market_open_focus": false
   },
-  "updated_at": "2026-08-14 15:00:00"
+  "updated_at": "2026-08-14 15:08:00"
 }

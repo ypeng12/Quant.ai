@@ -780,21 +780,36 @@ class LiveTradingRunner:
             if not is_valid_quality_stock_symbol(ticker):
                 return "HOLD", f"{base_reason} | 标的属于权证/衍生单元 (Warrant/Unit)，拒绝交易"
 
+            # ─── Daily Trade Frequency Control (全天精选 1-5 笔交易) ─────────────────
+            max_daily_trades = int(self.strategy_params.get("max_daily_trades_total", 5))
+            today_summary = self.get_today_summary()
+            if today_summary.get("total_trades", 0) >= max_daily_trades:
+                return "HOLD", f"{base_reason} | 🛑 今日已完成 {today_summary.get('total_trades')} 笔交易，触及全天最高 {max_daily_trades} 笔精选交易上限，停止新开仓"
+
+            max_symbol_trades = int(self.strategy_params.get("max_symbol_daily_trades", 2))
+            today_str = datetime.datetime.now().strftime("%Y-%m-%d")
+            today_symbol_trades = len([
+                t for t in self.trade_history
+                if t.get("ticker") == ticker and (t.get("date") or (t.get("time", "")[:10] if t.get("time") else "")).strip() == today_str
+            ])
+            if today_symbol_trades >= max_symbol_trades:
+                return "HOLD", f"{base_reason} | 🛑 [{ticker}] 今日已交易 {today_symbol_trades} 次，达到单股最高 {max_symbol_trades} 次限制，拒绝卖了再买回的重复洗盘"
+
             if direction == "NEUTRAL" or score < entry_min or not opportunity.get("_entry_confirmed", False):
-                return "HOLD", f"{base_reason} | 未达到方向/确认门槛"
+                return "HOLD", f"{base_reason} | 未达到方向/确认门槛 (Score < {entry_min})"
             if not is_pos_ev:
-                return "HOLD", f"{base_reason} | 概率期望值偏低 (E[PnL]={ev_r:+.2f}R < +0.10R 门槛)，拒绝下发盲目交易"
+                return "HOLD", f"{base_reason} | 概率期望值偏低 (E[PnL]={ev_r:+.2f}R < +0.15R 门槛)，拒绝盲目交易"
             last_exit = self.last_exit_times.get(ticker)
-            cooldown = self._safe_float(self.strategy_params.get("reentry_cooldown_seconds"), 60.0)
+            cooldown = self._safe_float(self.strategy_params.get("reentry_cooldown_seconds"), 600.0)
             if last_exit and (time.time() - last_exit) < cooldown:
-                return "HOLD", f"{base_reason} | 平仓冷却中，避免同一走势反复追单"
-            if open_position_count >= int(self.strategy_params.get("max_concurrent_positions", 2)):
+                return "HOLD", f"{base_reason} | 处于 {cooldown/60:.0f} 分钟冷却规则中，拒绝平仓后快速追买/做空"
+            if open_position_count >= int(self.strategy_params.get("max_concurrent_positions", 3)):
                 return "HOLD", f"{base_reason} | 已达最大同时持仓数"
             if not self._aggressive_orders_allowed():
                 return "HOLD", f"{base_reason} | 激进 buying-power 模式默认只允许 Paper"
             if direction == "SHORT" and not self._can_open_short(ticker):
                 return "HOLD", f"{base_reason} | Alpaca Asset 当前不可直接卖空/需要 locate"
-            return ("BUY" if direction == "LONG" else "SHORT"), f"{base_reason} | 正期望值 (E[R]={ev_r:+.2f}R)，按 buying power 建仓"
+            return ("BUY" if direction == "LONG" else "SHORT"), f"{base_reason} | 🎯 [高确信勇敢决策] 概率胜率兼备 (E[R]={ev_r:+.2f}R)，果断下发建仓指令"
 
         side = "LONG" if current_shares > 0 else "SHORT"
         state = self.position_extremes.get(ticker)
@@ -819,18 +834,18 @@ class LiveTradingRunner:
         if hard_stop:
             return ("SELL" if side == "LONG" else "COVER"), f"{base_reason} | 5m 结构初始硬止损 {stop_pct*100:.2f}%"
 
-        # ─── Partial Take-Profit (分批止盈/锁利) ──────────────────────────────────
-        # Take partial profit (30%) ONLY when gain reaches >= 2.5% (or 2.5 * stop_pct)
-        # Keeps 70% runner riding the 5m trend to capture intraday peaks/troughs!
-        tp1_pct = max(0.0250, 2.5 * stop_pct)
-        if pnl_pct >= tp1_pct and not self.partial_tp_done.get(ticker, False) and abs(current_shares) > 1:
-            action_str = "PARTIAL_SELL" if side == "LONG" else "PARTIAL_COVER"
-            scale_shares = max(1, int(abs(current_shares) * 0.3))
-            est_pnl_usd = pnl_pct * close * scale_shares
-            return action_str, (
-                f"{base_reason} | 🟢 [分批止盈 30%] 5m 强趋势波段浮盈 +{pnl_pct*100:.2f}% (锁利 +${est_pnl_usd:.2f}) — "
-                f"落袋 30% 锁定部分收益，保留 70% 大仓位让利润奔跑至日内趋势极值"
-            )
+        # ─── 100% Full Trend Holding (不中途小赚即跑，拿满日内波段) ──────────────────────
+        hold_runner_trend = self.strategy_params.get("hold_runner_trend", True)
+        if not hold_runner_trend:
+            tp1_pct = max(0.0250, 2.5 * stop_pct)
+            if pnl_pct >= tp1_pct and not self.partial_tp_done.get(ticker, False) and abs(current_shares) > 1:
+                action_str = "PARTIAL_SELL" if side == "LONG" else "PARTIAL_COVER"
+                scale_shares = max(1, int(abs(current_shares) * 0.3))
+                est_pnl_usd = pnl_pct * close * scale_shares
+                return action_str, (
+                    f"{base_reason} | 🟢 [分批止盈 30%] 5m 强趋势波段浮盈 +{pnl_pct*100:.2f}% (锁利 +${est_pnl_usd:.2f}) — "
+                    f"落袋 30% 锁定部分收益，保留 70% 大仓位让利润奔跑至日内趋势极值"
+                )
 
         atr = self._safe_float(opportunity.get("_atr"), close * 0.004)
         regime = opportunity.get("regime", "RANGE")
