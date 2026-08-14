@@ -164,6 +164,10 @@ if __name__ == "__main__":
         "feature_high_to_now_pct": np.random.uniform(-3.0, 0.0, n_samples),
         "feature_low_to_now_pct": np.random.uniform(0.0, 3.0, n_samples),
         "feature_session_range_pct": np.random.uniform(1.0, 4.0, n_samples),
+        "feature_upper_wick_ratio": np.random.uniform(0.0, 0.5, n_samples),
+        "feature_lower_wick_ratio": np.random.uniform(0.0, 0.5, n_samples),
+        "feature_mom_decay": np.random.normal(0, 0.5, n_samples),
+        "feature_vwap_overextension": np.random.normal(0, 1.0, n_samples),
         "future_ret_1d_pct": np.random.normal(0.1, 1.2, n_samples),
         "label_win_long": np.random.choice([0, 1], size=n_samples, p=[0.7, 0.3])
     }
