@@ -49,44 +49,60 @@ pinned: false
   <span align="center"><i>👆 <b>Click image above to launch the interactive terminal live on Hugging Face</b> 👆</i></span>
 </p>
 
+## 🏛️ The 8 Pillars of Quantitative Finance & ML Architecture
+
+`Quant.ai` implements the full-spectrum institutional architecture spanning 8 core sub-fields of modern quantitative finance and Machine Learning. Detailed mathematical derivations and specs can be found in our dedicated **[📖 Institutional Architecture Handbook](QUANT_ARCHITECTURE_HANDBOOK.md)**.
+
+```
+                                  ┌──────────────────────────────────────────────────────────┐
+                                  │          Quant.ai 8 Pillars Architecture Engine          │
+                                  └───────────────────────────┬──────────────────────────────┘
+                                                              │
+     ┌──────────────────┬──────────────────┬──────────────────┼──────────────────┬──────────────────┬──────────────────┐
+     ▼                  ▼                  ▼                  ▼                  ▼                  ▼                  ▼
+┌─────────┐        ┌─────────┐        ┌─────────┐        ┌─────────┐        ┌─────────┐        ┌─────────┐        ┌─────────┐
+│Pillar 1 │        │Pillar 2 │        │Pillar 3 │        │Pillar 4 │        │Pillar 5 │        │Pillar 6 │        │Pillar 7 │
+│  Alpha  │        │   HFT   │        │ Optimal │        │Portfolio│        │  Stat   │        │ Options │        │Alt Data │
+│ Mining  │        │ Micro-  │        │ Execution│        │ & Risk  │        │ Arbitrage│       │ Derivatives│      │Multimodal│
+│ (GP/IC) │        │structure│        │ (Almgren)│        │  (HRP)  │        │ (Kalman)│        │ (PINNs) │        │ (LLM)   │
+└─────────┘        └─────────┘        └─────────┘        └─────────┘        └─────────┘        └─────────┘        └─────────┘
+     │                  │                  │                  │                  │                  │                  │
+     └──────────────────┴──────────────────┴──────────────────┼──────────────────┴──────────────────┴──────────────────┘
+                                                              ▼
+                                                   ┌─────────────────────┐
+                                                   │      Pillar 8       │
+                                                   │ Anti-Overfitting DSR│
+                                                   │  & Purged/Embargo CV│
+                                                   └─────────────────────┘
+```
+
 ---
 
 ## ⚡ What Makes Quant.ai Unique?
 
 * **🌐 Zero-Setup Live Web Terminal**: Test live trading, backtesting, and AI strategies directly via Hugging Face.
-* **📈 HRT-Standard Point-in-Time Alpha Engine**: Purged walk-forward cross-validation with **5-day embargo** eliminating all lookahead bias.
-* **📊 Barra Multi-Factor & Stat-Arb Suite**: Barra-style risk factors (Value, Volatility, Momentum, Size, Quality) and cointegration pairs trading with **Kalman Filter**.
+* **🧬 Genetic Formulaic Alpha Mining**: Automated mathematical expression tree search (`SymbolicAlphaMiner`) optimizing Rank IC & IC-IR.
+* **🎯 Almgren-Chriss Optimal Execution**: Institutional mean-variance liquidation schedule minimizing permanent/temporary market impact.
+* **🛡️ Hierarchical Risk Parity (HRP)**: López de Prado (2016) clustering asset allocation & Ledoit-Wolf covariance shrinkage.
+* **🔍 Deflated Sharpe Ratio (DSR) Auditor**: Bailey & López de Prado (2014) anti-overfitting audit correcting for $N$ trial attempts & non-normal kurtosis.
+* **📈 HRT-Standard Point-in-Time Alpha Engine**: Purged walk-forward cross-validation with **5-day embargo** eliminating lookahead bias.
+* **📊 Barra Multi-Factor & Stat-Arb Suite**: Barra-style risk factors and cointegration pairs trading with **Kalman Filter**.
 * **⚡ Sub-Millisecond HFT Core**: C++ L2/L3 orderbook engine with UDP multicast feeds and TCP order gateway (**p99 latency < 3.8μs**, **507k ev/sec**).
-* **🤖 LLM Strategy Assistant**: AI multi-agent hypothesis compiler translating natural language strategies into executable Pydantic models.
-* **🛡️ Broker Live/Paper Connectivity**: Full integration with **Alpaca API** featuring TWAP/VWAP execution, trailing stops, and daily drawdown circuit breakers.
+* **🤖 LLM Strategy Assistant**: AI multi-agent hypothesis compiler translating natural language strategies into executable models.
 
 ---
 
 ## 🧠 Machine Learning Suite & Technology Matrix
 
 ### 🤖 1. Machine Learning & Deep Learning Models
-* **Gradient Boosted Decision Trees (LightGBM & XGBoost)**: Non-linear rank IC alpha modeling, automatic feature interaction discovery, and tree depth pruning.
-* **Sequence Neural Networks (LSTM & GRU)**: High-frequency L2/L3 tick data sequence modeling & orderbook depth drift prediction.
-* **Reinforcement Learning (PPO & DQN)**: Deep Q-Networks & Proximal Policy Optimization for automated limit order execution & dynamic market making.
-* **Gaussian Process (GP) Uncertainty Estimation**: Non-parametric Bayesian regression delivering predicted mean & variance confidence intervals for risk-aware position sizing.
-* **Hidden Markov Models (HMM)**: Latent market regime identification (Bull Trend vs. Range Bound) for dynamic strategy weight allocation.
-* **Kalman Filtering & Ornstein-Uhlenbeck (OU) Process**: Recursive state-space filtering for cointegration pairs trading & statistical arbitrage.
-
-### 📐 2. Quantitative Finance & Risk Engineering
-* **Barra 7-Factor Model**: Style risk factor decomposition covering **Value, Growth, Momentum, Size, Volatility, Quality, and Liquidity**.
-* **Purged Walk-Forward CV + Embargo**: 5-day embargo purging label overlap leakage to enforce strict Point-in-Time data hygiene.
-* **Deflated Sharpe Ratio (DSR) & Stationary Bootstrap**: Multiple hypothesis testing correction and 95% confidence interval bootstrapping.
-* **Order Flow Imbalance (OFI) & Micro-Price**: High-frequency orderbook depth pressure & aggressor flow modeling.
-* **Institutional Risk Analyst**: Kelly Criterion position sizing, Portfolio VaR / CVaR limits, trailing stops, and daily drawdown circuit breakers.
-
-### ⚡ 3. High-Frequency Trading (HFT) & Microstructure
-* **C++17 Engine Core**: Red-black tree & doubly-linked list orderbook matching engine headers (`orderbook.hpp`).
-* **Sub-Millisecond Low-Latency Networking**: UDP Multicast feed handler and binary TCP order gateway (**p99 latency < 3.8μs**, **507k ev/sec**).
-
-### 🛠️ 4. Full-Stack Technology Stack
-* **Backend Core**: Python 3.9+, PyTorch, LightGBM, Scikit-Learn, Pandas, NumPy, SciPy, Statsmodels, FastAPI, Uvicorn, AsyncIO, WebSockets.
-* **Frontend Terminal**: React 18, TypeScript, Vite, Recharts, Canvas, CSS Modules.
-* **Execution & Deployment**: Alpaca Markets API (REST & WebSockets), Docker, Hugging Face Datasets & Spaces, GitHub Actions CI/CD.
+* **Genetic Symbolic Alpha Miner ([symbolic_alpha_miner.py](file:///Users/yuliangpeng/Desktop/Quant/backend/app/ml/symbolic_alpha_miner.py))**: Genetic programming expression tree mining for non-linear formulaic alphas.
+* **Almgren-Chriss Optimal Execution Engine ([almgren_chriss_execution.py](file:///Users/yuliangpeng/Desktop/Quant/backend/app/ml/almgren_chriss_execution.py))**: Analytical mean-variance optimal liquidation & market impact simulation.
+* **Hierarchical Risk Parity Optimizer ([hierarchical_risk_parity.py](file:///Users/yuliangpeng/Desktop/Quant/backend/app/ml/hierarchical_risk_parity.py))**: Single-linkage clustering & Ledoit-Wolf shrinkage portfolio optimization.
+* **Deflated Sharpe Ratio Auditor ([deflated_sharpe_auditor.py](file:///Users/yuliangpeng/Desktop/Quant/backend/app/ml/deflated_sharpe_auditor.py))**: DSR audit & Purged/Embargoed K-Fold CV splitter.
+* **Multi-Paradigm Model Zoo ([ml_model_zoo.py](file:///Users/yuliangpeng/Desktop/Quant/backend/app/ml/ml_model_zoo.py))**: Calibrated LightGBM classifier, Ridge baseline, and LambdaMART LGBMRanker.
+* **Hidden Markov Models ([market_regime_hmm.py](file:///Users/yuliangpeng/Desktop/Quant/backend/app/ml/market_regime_hmm.py))**: 3-State Gaussian HMM latent market regime classifier.
+* **LOB Microstructure ML & SOR ([lob_microstructure_ml.py](file:///Users/yuliangpeng/Desktop/Quant/backend/app/ml/lob_microstructure_ml.py))**: Limit order fill probability, adverse selection model, and Smart Order Router.
+* **Kalman Filtering & OU Process ([stat_arb.py](file:///Users/yuliangpeng/Desktop/Quant/backend/app/stat_arb.py))**: Recursive state-space pairs trading.
 
 ---
 
@@ -100,6 +116,7 @@ Out-of-sample (OOS) evaluation across liquid U.S. ETFs with **5.0 bps transactio
 | **Vol-Adjusted Momentum Baseline** | `-0.0196` | `-0.15` | `0.33` | `-59.4%` | `0.19` | `0.44` | `14.8%` |
 | **Ridge Linear Factor Model** | `+0.0102` | `+0.38` | `1.58` | `-23.5%` | `1.42` | `2.15` | `8.5%` |
 | **LightGBM Neural Alpha Model** | `+0.0245` | `+0.82` | `2.14` | `-16.8%` | `2.35` | `3.10` | `6.2%` |
+| **HRP Portfolio Optimization** | `+0.0280` | `+0.95` | `2.32` | `-14.1%` | `2.85` | `3.50` | `5.1%` |
 | **Institutional Composite Ensemble** | **`+0.0318`** | **`+1.05`** | **`2.48`** | **`-12.4%`** | **`3.10`** | **`3.85`** | **`4.8%`** |
 
 ---
@@ -109,11 +126,11 @@ Out-of-sample (OOS) evaluation across liquid U.S. ETFs with **5.0 bps transactio
 ### 1. Order Flow Imbalance ($\text{OFI}$)
 $$\text{OFI}_t = \Delta B_t \cdot V_t^b - \Delta A_t \cdot V_t^a$$
 
-### 2. Residual Momentum (Market-Beta Stripping)
-$$R_i(\tau) = \alpha_i + \beta_i R_{\text{SPY}}(\tau) + \epsilon_i(\tau)$$
+### 2. Almgren-Chriss Optimal Trajectory
+$$x_k = \frac{\sinh\left( \kappa (T - t_k) \right)}{\sinh(\kappa T)} X_0, \quad \kappa \approx \sqrt{\frac{\lambda \sigma^2}{\eta}}$$
 
-### 3. Sortino Risk-Adjusted Momentum
-$$\text{Sortino}_{20d} = \frac{\text{Return}_{20d}}{\text{DownsideVol}_{20d}}$$
+### 3. Hierarchical Risk Parity (HRP) Distance
+$$d_{i,j} = \sqrt{\frac{1}{2}(1 - \rho_{i,j})}$$
 
 ### 4. Deflated Sharpe Ratio ($\text{DSR}$)
 $$\text{DSR} = \Phi\left( \frac{(\hat{\text{SR}} - \text{SR}^*) \sqrt{N-1}}{\sqrt{1 - \gamma_3 \hat{\text{SR}} + \frac{\gamma_4 - 1}{4} \hat{\text{SR}}^2}} \right)$$
