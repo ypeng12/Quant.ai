@@ -86,8 +86,9 @@ class TradingEnvironment:
         peak_equity = max(self.equity_curve)
         drawdown = (peak_equity - new_equity) / peak_equity if peak_equity > 0 else 0.0
 
-        # Reward formulation: Risk-adjusted Net Return - Drawdown Penalty - Turnover Penalty
-        reward = net_ret - (self.drawdown_penalty_factor * drawdown)
+        # Reward formulation: Upside Incentive + Net Return - Drawdown Penalty
+        upside_incentive = 1.5 * net_ret if net_ret > 0 else 0.0
+        reward = net_ret + upside_incentive - (self.drawdown_penalty_factor * drawdown)
         if action == 0 and raw_ret < 0:
             # Reward cash allocation during market downturns!
             reward += abs(raw_ret) * 0.5
