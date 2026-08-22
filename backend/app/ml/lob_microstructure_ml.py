@@ -75,8 +75,11 @@ class LOBMicrostructureMLEngine:
         df_feat["feature_ofi"] = self.calculate_order_flow_imbalance(df)
         df_feat["feature_micro_drift"] = self.calculate_microprice_drift(df)
 
-        bid_v = df["bid_size"] if "bid_size" in df.columns else df["Volume"] * 0.5
-        ask_v = df["ask_size"] if "ask_size" in df.columns else df["Volume"] * 0.5
+        vol_col = "volume" if "volume" in df.columns else ("Volume" if "Volume" in df.columns else None)
+        vol_series = df[vol_col] if vol_col else pd.Series(np.ones(len(df)))
+
+        bid_v = df["bid_size"] if "bid_size" in df.columns else vol_series * 0.5
+        ask_v = df["ask_size"] if "ask_size" in df.columns else vol_series * 0.5
         df_feat["feature_queue_imbalance"] = (bid_v - ask_v) / (bid_v + ask_v + 1e-6)
 
         return df_feat
