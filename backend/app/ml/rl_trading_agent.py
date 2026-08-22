@@ -57,7 +57,7 @@ class TradingEnvironment:
         if self.current_step >= len(self.df):
             row_features = np.zeros(len(self.feature_cols))
         else:
-            row_features = self.df.iloc[self.current_step][self.feature_cols].fillna(0.0).values
+            row_features = self.df.iloc[self.current_step][self.feature_cols].astype(float).fillna(0.0).values
         # Append current position state (0.0, 1.0, 0.5) to feature vector
         state = np.append(row_features, self.current_position)
         return state
