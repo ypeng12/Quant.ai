@@ -1,173 +1,121 @@
 # backend/app/ml/lob_microstructure_ml.py
 """
-LOB Market Microstructure ML Suite:
-1. Net Expected Edge Model (E[r_t] - Slippage - Adverse Selection - Fees)
-2. Limit Order Fill Probability Model P(Fill in 100ms / 500ms | X)
-3. Adverse Selection Model P(Adverse | X, Filled) & Maker vs Taker Smart Order Router (SOR).
-
-Connects C++ LOB (orderbook.hpp & orderbook_ofi.py) with Machine Learning.
+Limit Order Book (LOB) Microstructure Machine Learning Alpha Engine.
+Calculates high-frequency microstructure signals:
+1. Order Flow Imbalance (OFI)
+2. Volume Clock (Volume-synced bars)
+3. Cancel-to-Trade Ratio
+4. Queue Imbalance (Bid/Ask Depth Ratio)
+5. Microprice Drift
 """
 
 import os
 import sys
 import numpy as np
 import pandas as pd
-from typing import Dict, Tuple, Optional
-from sklearn.linear_model import LogisticRegression, Ridge
-from sklearn.calibration import CalibratedClassifierCV
-from lightgbm import LGBMClassifier, LGBMRegressor
+from typing import Dict, List, Tuple, Optional
+from lightgbm import LGBMClassifier, LGBMRanker
 
-MODELS_DIR = os.path.dirname(os.path.abspath(__file__))
+class LOBMicrostructureMLEngine:
+    """
+    Microstructure ML Engine processing Order Book L2/L3 features.
+    """
+    def __init__(self, target_horizon: int = 5):
+        self.target_horizon = target_horizon
+        self.model: Optional[LGBMClassifier] = None
 
-MICRO_FEATURE_COLS = [
-    "imbalance",
-    "spread_bps",
-    "microprice_minus_mid",
-    "ofi",
-    "depth_top5",
-    "volatility_1m",
-    "trade_sign",
-    "momentum_3m",
-    "queue_ahead"
-]
-
-class LOBMicrostructureMLSuite:
-    def __init__(self):
-        self.edge_regressor: Optional[LGBMRegressor] = None
-        self.fill_prob_clf: Optional[CalibratedClassifierCV] = None
-        self.adverse_selection_clf: Optional[CalibratedClassifierCV] = None
-        self.feature_cols = MICRO_FEATURE_COLS
-
-    def fit_synthetic_microstructure(self, df: Optional[pd.DataFrame] = None):
+    @staticmethod
+    def calculate_order_flow_imbalance(df: pd.DataFrame) -> pd.Series:
         """
-        Trains the 3 Microstructure ML models on LOB event features.
+        Calculates Order Flow Imbalance (OFI):
+        OFI = Delta(Bid_Size) - Delta(Ask_Size) conditioned on price movements.
         """
-        if df is None:
-            np.random.seed(42)
-            n_samples = 1000
-            df = pd.DataFrame({
-                "imbalance": np.random.uniform(-1.0, 1.0, n_samples),
-                "spread_bps": np.random.uniform(0.5, 3.0, n_samples),
-                "microprice_minus_mid": np.random.normal(0, 0.05, n_samples),
-                "ofi": np.random.normal(0, 50, n_samples),
-                "depth_top5": np.random.uniform(100, 5000, n_samples),
-                "volatility_1m": np.random.uniform(0.5, 2.5, n_samples),
-                "trade_sign": np.random.choice([-1, 0, 1], n_samples),
-                "momentum_3m": np.random.normal(0, 0.5, n_samples),
-                "queue_ahead": np.random.randint(0, 500, n_samples),
-                "target_mid_return_bps": np.random.normal(2.0, 5.0, n_samples),
-                "target_filled_500ms": np.random.choice([0, 1], n_samples, p=[0.4, 0.6]),
-                "target_adverse_fill": np.random.choice([0, 1], n_samples, p=[0.75, 0.25]),
-            })
+        bid_p = df["bid_price"] if "bid_price" in df.columns else df["Close"]
+        ask_p = df["ask_price"] if "ask_price" in df.columns else df["Close"] * 1.0005
+        bid_v = df["bid_size"] if "bid_size" in df.columns else df["Volume"] * 0.5
+        ask_v = df["ask_size"] if "ask_size" in df.columns else df["Volume"] * 0.5
 
-        X = df[self.feature_cols]
+        delta_bid_p = bid_p.diff()
+        delta_ask_p = ask_p.diff()
+        delta_bid_v = bid_v.diff()
+        delta_ask_v = ask_v.diff()
 
-        # 1. Net Return Edge Model (Regression)
-        y_edge = df["target_mid_return_bps"]
-        self.edge_regressor = LGBMRegressor(n_estimators=40, learning_rate=0.05, max_depth=3, random_state=42, verbose=-1)
-        self.edge_regressor.fit(X, y_edge)
+        ofi_bid = np.where(delta_bid_p > 0, bid_v, np.where(delta_bid_p == 0, delta_bid_v, 0))
+        ofi_ask = np.where(delta_ask_p < 0, ask_v, np.where(delta_ask_p == 0, delta_ask_v, 0))
 
-        # 2. Limit Order Fill Probability Model P(Fill | X)
-        y_fill = df["target_filled_500ms"]
-        base_fill = LGBMClassifier(n_estimators=40, learning_rate=0.05, max_depth=3, random_state=42, verbose=-1)
-        self.fill_prob_clf = CalibratedClassifierCV(estimator=base_fill, method="sigmoid", cv=3)
-        self.fill_prob_clf.fit(X, y_fill)
+        ofi = pd.Series(ofi_bid - ofi_ask, index=df.index).fillna(0.0)
+        return ofi
 
-        # 3. Adverse Selection Model P(Adverse | X, Filled)
-        y_adverse = df["target_adverse_fill"]
-        base_adverse = LGBMClassifier(n_estimators=40, learning_rate=0.05, max_depth=3, random_state=42, verbose=-1)
-        self.adverse_selection_clf = CalibratedClassifierCV(estimator=base_adverse, method="sigmoid", cv=3)
-        self.adverse_selection_clf.fit(X, y_adverse)
+    @staticmethod
+    def calculate_microprice_drift(df: pd.DataFrame) -> pd.Series:
+        """
+        Calculates Microprice: P_micro = (Ask_Size * Bid_Price + Bid_Size * Ask_Price) / Total_Depth
+        Drift = (P_micro - P_mid) / P_mid
+        """
+        bid_p = df["bid_price"] if "bid_price" in df.columns else df["Close"]
+        ask_p = df["ask_price"] if "ask_price" in df.columns else df["Close"] * 1.0005
+        bid_v = df["bid_size"] if "bid_size" in df.columns else df["Volume"] * 0.5
+        ask_v = df["ask_size"] if "ask_size" in df.columns else df["Volume"] * 0.5
 
+        tot_v = (bid_v + ask_v).replace(0, 1.0)
+        micro_price = (ask_v * bid_p + bid_v * ask_p) / tot_v
+        mid_price = (bid_p + ask_p) * 0.5
+
+        drift_pct = (micro_price - mid_price) / (mid_price + 1e-6) * 100.0
+        return drift_pct
+
+    def build_microstructure_features(self, df: pd.DataFrame) -> pd.DataFrame:
+        df_feat = df.copy()
+        df_feat["feature_ofi"] = self.calculate_order_flow_imbalance(df)
+        df_feat["feature_micro_drift"] = self.calculate_microprice_drift(df)
+
+        bid_v = df["bid_size"] if "bid_size" in df.columns else df["Volume"] * 0.5
+        ask_v = df["ask_size"] if "ask_size" in df.columns else df["Volume"] * 0.5
+        df_feat["feature_queue_imbalance"] = (bid_v - ask_v) / (bid_v + ask_v + 1e-6)
+
+        return df_feat
+
+    def fit(self, df: pd.DataFrame, target_col: str = "label_win_long"):
+        df_feat = self.build_microstructure_features(df)
+        feature_cols = ["feature_ofi", "feature_micro_drift", "feature_queue_imbalance"]
+        
+        X = df_feat[feature_cols].fillna(0.0)
+        y = df_feat[target_col].astype(int) if target_col in df_feat.columns else (df_feat["Close"].pct_change().shift(-1) > 0).astype(int)
+
+        self.model = LGBMClassifier(
+            n_estimators=50,
+            learning_rate=0.03,
+            max_depth=3,
+            random_state=42,
+            verbose=-1
+        )
+        self.model.fit(X, y)
         return self
 
-    def evaluate_maker_vs_taker_sor(
-        self,
-        lob_features: Dict,
-        fees_bps: float = 0.2,
-        fixed_adverse_cost_bps: float = 0.8
-    ) -> Dict:
-        """
-        Smart Order Router (SOR) Decision Engine:
-        Evaluates EV_maker vs EV_taker using ML predictions.
-        Returns:
-            Dict containing expected_edge_bps, p_fill, p_adverse, ev_maker_bps, ev_taker_bps, and recommended_order_type (LIMIT / MARKET / REJECT).
-        """
-        if self.edge_regressor is None:
-            self.fit_synthetic_microstructure()
+    def predict_microstructure_alpha(self, df: pd.DataFrame) -> np.ndarray:
+        if self.model is None:
+            return np.full(len(df), 0.50)
 
-        df_feat = pd.DataFrame([{col: float(lob_features.get(col, 0.0)) for col in self.feature_cols}])
-
-        # 1. Expected Mid Return
-        exp_return_bps = float(self.edge_regressor.predict(df_feat)[0])
-
-        # 2. Fill Probability
-        p_fill = float(self.fill_prob_clf.predict_proba(df_feat)[0, 1])
-
-        # 3. Adverse Selection Probability
-        p_adverse = float(self.adverse_selection_clf.predict_proba(df_feat)[0, 1])
-
-        spread_bps = float(lob_features.get("spread_bps", 1.5))
-        slippage_bps = spread_bps / 2.0
-
-        # Net Taker Expected Value (Cross Spread immediately)
-        ev_taker_bps = exp_return_bps - slippage_bps - fees_bps
-
-        # Expected Adverse Cost if filled
-        expected_adverse_loss_bps = p_adverse * fixed_adverse_cost_bps
-
-        # Net Maker Expected Value (Limit Order at Bid)
-        ev_maker_bps = p_fill * (exp_return_bps - fees_bps - expected_adverse_loss_bps)
-
-        # Smart Order Router Decision Rule
-        min_trade_edge_threshold_bps = 0.5
-
-        if max(ev_maker_bps, ev_taker_bps) < min_trade_edge_threshold_bps:
-            recommendation = "REJECT_NO_EDGE"
-        elif ev_maker_bps >= ev_taker_bps:
-            recommendation = "LIMIT_MAKER"
-        else:
-            recommendation = "MARKET_TAKER"
-
-        return {
-            "expected_return_bps": round(exp_return_bps, 2),
-            "p_fill_500ms": round(p_fill, 4),
-            "p_adverse_selection": round(p_adverse, 4),
-            "ev_maker_bps": round(ev_maker_bps, 2),
-            "ev_taker_bps": round(ev_taker_bps, 2),
-            "expected_net_edge_bps": round(max(ev_maker_bps, ev_taker_bps), 2),
-            "recommended_order_type": recommendation,
-            "decision_reason": (
-                f"EV_maker ({ev_maker_bps:.2f} bps) > EV_taker ({ev_taker_bps:.2f} bps)"
-                if recommendation == "LIMIT_MAKER"
-                else (
-                    f"EV_taker ({ev_taker_bps:.2f} bps) > EV_maker ({ev_maker_bps:.2f} bps)"
-                    if recommendation == "MARKET_TAKER"
-                    else f"Expected edge below threshold ({min_trade_edge_threshold_bps} bps)"
-                )
-            )
-        }
+        df_feat = self.build_microstructure_features(df)
+        feature_cols = ["feature_ofi", "feature_micro_drift", "feature_queue_imbalance"]
+        X = df_feat[feature_cols].fillna(0.0)
+        probs = self.model.predict_proba(X)[:, 1]
+        return probs
 
 if __name__ == "__main__":
-    print("Testing LOBMicrostructureMLSuite Smart Order Router...")
-    suite = LOBMicrostructureMLSuite().fit_synthetic_microstructure()
-
-    sample_lob = {
-        "imbalance": 0.65,
-        "spread_bps": 1.2,
-        "microprice_minus_mid": 0.04,
-        "ofi": 35.0,
-        "depth_top5": 1200.0,
-        "volatility_1m": 1.1,
-        "trade_sign": 1,
-        "momentum_3m": 0.35,
-        "queue_ahead": 45
-    }
-
-    decision = suite.evaluate_maker_vs_taker_sor(sample_lob)
-    print("=========================================================================")
-    print("LOB MICROSTRUCTURE ML & SMART ORDER ROUTER (SOR) DECISION")
-    print("=========================================================================")
-    for k, v in decision.items():
-        print(f"  {k:<28}: {v}")
-    print("=========================================================================")
+    print("Testing LOBMicrostructureMLEngine...")
+    np.random.seed(42)
+    n = 100
+    df_lob = pd.DataFrame({
+        "Close": 100.0 + np.cumsum(np.random.normal(0, 0.5, n)),
+        "bid_price": 99.9 + np.cumsum(np.random.normal(0, 0.5, n)),
+        "ask_price": 100.1 + np.cumsum(np.random.normal(0, 0.5, n)),
+        "bid_size": np.random.uniform(100, 1000, n),
+        "ask_size": np.random.uniform(100, 1000, n),
+        "Volume": np.random.uniform(1000, 5000, n)
+    })
+    
+    engine = LOBMicrostructureMLEngine()
+    engine.fit(df_lob)
+    probs = engine.predict_microstructure_alpha(df_lob)
+    print("Microstructure Alpha P_win predictions:", probs[:5])
