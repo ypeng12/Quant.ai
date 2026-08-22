@@ -30,10 +30,13 @@ class LOBMicrostructureMLEngine:
         Calculates Order Flow Imbalance (OFI):
         OFI = Delta(Bid_Size) - Delta(Ask_Size) conditioned on price movements.
         """
+        vol_col = "volume" if "volume" in df.columns else ("Volume" if "Volume" in df.columns else None)
+        vol_series = df[vol_col] if vol_col else pd.Series(np.ones(len(df)))
+
         bid_p = df["bid_price"] if "bid_price" in df.columns else df["Close"]
         ask_p = df["ask_price"] if "ask_price" in df.columns else df["Close"] * 1.0005
-        bid_v = df["bid_size"] if "bid_size" in df.columns else df["Volume"] * 0.5
-        ask_v = df["ask_size"] if "ask_size" in df.columns else df["Volume"] * 0.5
+        bid_v = df["bid_size"] if "bid_size" in df.columns else vol_series * 0.5
+        ask_v = df["ask_size"] if "ask_size" in df.columns else vol_series * 0.5
 
         delta_bid_p = bid_p.diff()
         delta_ask_p = ask_p.diff()
@@ -52,10 +55,13 @@ class LOBMicrostructureMLEngine:
         Calculates Microprice: P_micro = (Ask_Size * Bid_Price + Bid_Size * Ask_Price) / Total_Depth
         Drift = (P_micro - P_mid) / P_mid
         """
+        vol_col = "volume" if "volume" in df.columns else ("Volume" if "Volume" in df.columns else None)
+        vol_series = df[vol_col] if vol_col else pd.Series(np.ones(len(df)))
+
         bid_p = df["bid_price"] if "bid_price" in df.columns else df["Close"]
         ask_p = df["ask_price"] if "ask_price" in df.columns else df["Close"] * 1.0005
-        bid_v = df["bid_size"] if "bid_size" in df.columns else df["Volume"] * 0.5
-        ask_v = df["ask_size"] if "ask_size" in df.columns else df["Volume"] * 0.5
+        bid_v = df["bid_size"] if "bid_size" in df.columns else vol_series * 0.5
+        ask_v = df["ask_size"] if "ask_size" in df.columns else vol_series * 0.5
 
         tot_v = (bid_v + ask_v).replace(0, 1.0)
         micro_price = (ask_v * bid_p + bid_v * ask_p) / tot_v
