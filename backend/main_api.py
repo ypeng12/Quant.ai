@@ -2214,20 +2214,41 @@ _dist_dir = os.path.join(_project_root, "frontend", "dist")
 _charts_dir = os.path.join(_backend_dir, "data", "charts")
 _root_assets_dir = os.path.join(_project_root, "assets")
 
+os.makedirs(_charts_dir, exist_ok=True)
+
 if os.path.exists(_root_assets_dir):
     app.mount("/assets", StaticFiles(directory=_root_assets_dir), name="root_assets")
-elif os.path.exists(_charts_dir):
-    app.mount("/charts", StaticFiles(directory=_charts_dir), name="charts")
 
-    from fastapi import HTTPException
-    @app.get("/{full_path:path}")
-    async def serve_spa(full_path: str):
-        if full_path.startswith("api/"):
-            raise HTTPException(status_code=404, detail="API endpoint not found")
-        target_file = os.path.join(_dist_dir, full_path)
-        if full_path and os.path.exists(target_file) and os.path.isfile(target_file):
-            return FileResponse(target_file)
-        return FileResponse(os.path.join(_dist_dir, "index.html"))
+app.mount("/charts", StaticFiles(directory=_charts_dir), name="charts")
+
+from fastapi import HTTPException
+
+@app.get("/charts/quant_live_dashboard.html")
+async def get_quant_live_dashboard():
+    dashboard_file = os.path.join(_charts_dir, "quant_live_dashboard.html")
+    if not os.path.exists(dashboard_file):
+        try:
+            import sys
+            sys.path.insert(0, _project_root)
+            from generate_interactive_quant_dashboard import build_quant_dashboard
+            build_quant_dashboard()
+        except Exception as e:
+            print(f"Error generating dashboard on-the-fly: {e}")
+    if os.path.exists(dashboard_file):
+        return FileResponse(dashboard_file)
+    raise HTTPException(status_code=404, detail="Quant Live Dashboard not found")
+
+@app.get("/{full_path:path}")
+async def serve_spa(full_path: str):
+    if full_path.startswith("api/"):
+        raise HTTPException(status_code=404, detail="API endpoint not found")
+    target_file = os.path.join(_dist_dir, full_path)
+    if full_path and os.path.exists(target_file) and os.path.isfile(target_file):
+        return FileResponse(target_file)
+    index_file = os.path.join(_dist_dir, "index.html")
+    if os.path.exists(index_file):
+        return FileResponse(index_file)
+    raise HTTPException(status_code=404, detail="Frontend index.html not found")
 
 
 if __name__ == "__main__":
