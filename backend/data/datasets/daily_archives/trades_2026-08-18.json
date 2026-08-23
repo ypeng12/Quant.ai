@@ -1,0 +1,64 @@
+{
+  "trade_history": [
+    {
+      "order_id": "ORD_20260818_001",
+      "client_order_id": "CL_20260818_001",
+      "order_status": "FILLED",
+      "source": "DailyConsistencyEngine",
+      "date": "2026-08-18",
+      "time": "09:00:00",
+      "action": "sell",
+      "action_cn": "\u6b62\u635f\u5356\u51fa",
+      "ticker": "SNDK",
+      "shares": 100,
+      "price": 127.9,
+      "pnl": -14.02,
+      "reason": "Attempted buy on false momentum dip; market experienced sector-wide selloff"
+    },
+    {
+      "order_id": "ORD_20260818_002",
+      "client_order_id": "CL_20260818_002",
+      "order_status": "FILLED",
+      "source": "DailyConsistencyEngine",
+      "date": "2026-08-18",
+      "time": "09:25:00",
+      "action": "sell",
+      "action_cn": "\u6b62\u635f\u5356\u51fa",
+      "ticker": "MU",
+      "shares": 100,
+      "price": 126.11,
+      "pnl": -19.12,
+      "reason": "Attempted buy on false momentum dip; market experienced sector-wide selloff"
+    },
+    {
+      "order_id": "ORD_20260818_003",
+      "client_order_id": "CL_20260818_003",
+      "order_status": "FILLED",
+      "source": "DailyConsistencyEngine",
+      "date": "2026-08-18",
+      "time": "09:50:00",
+      "action": "sell",
+      "action_cn": "\u6b62\u635f\u5356\u51fa",
+      "ticker": "PLTR",
+      "shares": 100,
+      "price": 126.66,
+      "pnl": -19.8,
+      "reason": "Attempted buy on false momentum dip; market experienced sector-wide selloff"
+    },
+    {
+      "order_id": "ORD_20260818_004",
+      "client_order_id": "CL_20260818_004",
+      "order_status": "FILLED",
+      "source": "DailyConsistencyEngine",
+      "date": "2026-08-18",
+      "time": "10:15:00",
+      "action": "buy",
+      "action_cn": "\u4e70\u5165\u5efa\u4ed3",
+      "ticker": "NVDA",
+      "shares": 100,
+      "price": 136.63,
+      "pnl": -7.42,
+      "reason": "Attempted buy on false momentum dip; market experienced sector-wide selloff"
+    }
+  ]
+}
