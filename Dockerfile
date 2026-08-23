@@ -19,9 +19,15 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY backend/ ./backend/
 COPY src/ ./src/
 COPY run_experiment.py ./
+COPY generate_interactive_quant_dashboard.py ./
+COPY run_max_profit_simulation.py ./
+COPY run_daily_reflection.py ./
+COPY cpp_engine/ ./cpp_engine/
 COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
 
-ENV PYTHONPATH=/app/backend
+ENV PYTHONPATH=/app/backend:/app
+
+RUN python3 generate_interactive_quant_dashboard.py || true
 
 EXPOSE 7860
 
