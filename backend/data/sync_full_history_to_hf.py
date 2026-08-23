@@ -97,24 +97,19 @@ def sync_full_history_to_hf():
 
         # Also sync to HuggingFace Space (Ypeng12/quant-ai)
         space_id = "Ypeng12/quant-ai"
-        print(f"[*] Uploading trade history, README, and index.html to HF Space ({space_id})...")
+        print(f"[*] Uploading trade history and Docker README to HF Space ({space_id})...")
         try:
             readme_path = os.path.join(os.path.dirname(base_dir), "README.md")
             if not os.path.exists(readme_path):
                 readme_path = os.path.join(base_dir, "README.md")
             if os.path.exists(readme_path):
                 api.upload_file(path_or_fileobj=readme_path, path_in_repo="README.md", repo_id=space_id, repo_type="space")
-                print("   ├─ Uploaded README.md with Space configuration to HF Space!")
-
-            dashboard_path = os.path.join(base_dir, "data", "charts", "quant_live_dashboard.html")
-            if os.path.exists(dashboard_path):
-                api.upload_file(path_or_fileobj=dashboard_path, path_in_repo="index.html", repo_id=space_id, repo_type="space")
-                print("   ├─ Uploaded quant_live_dashboard.html as index.html to HF Space!")
+                print("   ├─ Uploaded Docker README.md with sdk: docker configuration to HF Space!")
 
             api.upload_file(path_or_fileobj=full_file, path_in_repo="backend/trade_history.json", repo_id=space_id, repo_type="space")
             for d, df_path, _ in daily_files:
                 api.upload_file(path_or_fileobj=df_path, path_in_repo=f"backend/data/datasets/daily_archives/trades_{d}.json", repo_id=space_id, repo_type="space")
-            print(f"✅ Successfully synced trade history and UI to HF Space ({space_id})!")
+            print(f"✅ Successfully synced trade history to HF Space ({space_id})!")
         except Exception as space_err:
             print(f"   ⚠️ Could not sync to HF Space ({space_id}): {space_err}")
 

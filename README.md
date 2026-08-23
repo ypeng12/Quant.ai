@@ -1,9 +1,10 @@
 ---
-title: Quant AI High-Consistency Autonomous Trading Platform
-emoji: 🚀
+title: Quant AI - Advanced Quant Trading Engine & Backtest Simulator
+emoji: 📈
 colorFrom: blue
-colorTo: green
-sdk: static
+colorTo: indigo
+sdk: docker
+app_port: 7860
 pinned: false
 ---
 
