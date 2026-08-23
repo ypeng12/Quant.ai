@@ -1,3 +1,12 @@
+---
+title: Quant AI High-Consistency Autonomous Trading Platform
+emoji: 🚀
+colorFrom: blue
+colorTo: green
+sdk: static
+pinned: false
+---
+
 # 🚀 Quant.ai: High-Consistency Autonomous Quant Trading Platform
 
 Quant.ai is an autonomous, high-consistency quantitative trading platform built with a 2-track low-latency architecture, advanced machine learning alpha models, and self-reflecting reinforcement learning (RL) agents.
