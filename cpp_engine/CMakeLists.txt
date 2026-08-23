@@ -25,6 +25,7 @@ include_directories(${PROJECT_SOURCE_DIR}/include)
 # Build C++ Pybind11 extension module
 pybind11_add_module(cpp_quant_engine
     src/fast_alpha_engine.cpp
+    src/simd_alpha_calculator.cpp
     src/bindings.cpp
 )
 
