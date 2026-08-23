@@ -148,7 +148,7 @@ const INTERVAL_LABELS: Record<string, string> = {
   "1d": "Daily"
 };
 
-type ActiveTab = 'dashboard' | 'research' | 'report' | 'walkforward' | 'experiments' | 'replay' | 'broker' | 'institutional' | 'portfolio' | 'ml_assistant' | 'trade_comparison';
+type ActiveTab = 'dashboard' | 'research' | 'report' | 'walkforward' | 'experiments' | 'replay' | 'broker' | 'institutional' | 'portfolio' | 'ml_assistant' | 'trade_comparison' | 'live_dashboard';
 
 function App() {
   const [watchlist, setWatchlist] = useState<string[]>(["NVDA", "SNDK", "TSLA", "AMD", "MSFT", "MU"]);
@@ -620,6 +620,24 @@ function App() {
         {/* Core Modes Navigation */}
         <div className="nav-tabs" style={{ background: '#09090b', padding: '4px', borderRadius: '8px', border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', gap: '4px' }}>
           <button
+            className={`nav-tab ${activeTab === 'live_dashboard' ? 'active' : ''}`}
+            onClick={() => setActiveTab('live_dashboard')}
+            style={{
+              padding: '8px 18px',
+              fontSize: '0.9rem',
+              fontWeight: 800,
+              background: activeTab === 'live_dashboard' ? 'linear-gradient(135deg, #10b981, #059669)' : 'transparent',
+              color: '#ffffff',
+              borderRadius: '6px',
+              border: activeTab === 'live_dashboard' ? 'none' : '1px solid rgba(16, 185, 129, 0.4)',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            🚀 实时 Alpha 收益大屏
+          </button>
+
+          <button
             className={`nav-tab ${activeTab === 'ml_assistant' ? 'active' : ''}`}
             onClick={() => setActiveTab('ml_assistant')}
             style={{
@@ -763,6 +781,17 @@ function App() {
           {/* ML Assistant & Diagnostic Dashboard Tab */}
           {activeTab === 'ml_assistant' && (
             <MLAssistantPanel activeTicker={activeTicker} />
+          )}
+
+          {/* Live Interactive Alpha Dashboard Tab */}
+          {activeTab === 'live_dashboard' && (
+            <div style={{ width: '100%', height: 'calc(100vh - 120px)', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--color-border)' }}>
+              <iframe
+                src="/charts/quant_live_dashboard.html"
+                title="Quant.ai Alpha Live Dashboard"
+                style={{ width: '100%', height: '100%', border: 'none' }}
+              />
+            </div>
           )}
 
           {/* Trade Comparison & Retrospective Dashboard Tab */}
