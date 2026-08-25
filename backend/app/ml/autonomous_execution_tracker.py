@@ -28,17 +28,27 @@ class AutonomousExecutionTracker:
         self.daily_engine = DailyConsistencyQuantEngine(p_win_threshold=0.55)
         self.reflection_engine = AutoReflectionEngine()
 
-    def is_prime_trading_window(self, dt: pd.Timestamp) -> bool:
+    def is_prime_trading_window(
+        self,
+        dt: pd.Timestamp,
+        news_catalyst_score: float = 0.0,
+        has_catalyst: bool = False
+    ) -> bool:
         """
-        Optimizes trading timing windows:
-        - Blocked: 09:30 - 09:45 EST (Market Open Whipsaw)
-        - Blocked: 15:55 - 16:00 EST (Market Close Liquidation)
-        - Allowed: 09:45 - 11:30 EST & 13:30 - 15:45 EST (Prime Liquidity Windows)
+        Optimizes trading timing windows with Catalyst-Aware Dynamic Evaluation:
+        - 09:30 - 09:45 EST: Market Open Window.
+          - Blocked by default if no high-conviction catalyst (prevents false breakout noise).
+          - ALLOWED if strong news/catalyst is present (news_catalyst_score >= 0.7 or has_catalyst=True).
+        - 15:55 - 16:00 EST: Blocked (Market Close Liquidation noise).
+        - 09:45 - 11:30 & 13:30 - 15:45 EST: Allowed (Prime Liquidity Windows).
         """
         t = dt.time()
         
-        # Open Whipsaw Noise Block (09:30 ~ 09:45)
+        # Open Whipsaw Noise Window (09:30 ~ 09:45)
         if time(9, 30) <= t < time(9, 45):
+            # If significant pre-market news / event catalyst detected, allow early trade entry
+            if has_catalyst or news_catalyst_score >= 0.7:
+                return True
             return False
         
         # Close Liquidation Block (15:55 ~ 16:00)

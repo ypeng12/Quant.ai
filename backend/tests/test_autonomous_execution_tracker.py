@@ -15,9 +15,13 @@ from backend.app.ml.autonomous_execution_tracker import AutonomousExecutionTrack
 def test_is_prime_trading_window():
     tracker = AutonomousExecutionTracker()
     
-    # 09:30 - Market Open Noise (Blocked)
+    # 09:35 - Market Open without catalyst (Blocked)
     dt_open_noise = pd.Timestamp("2026-08-22 09:35:00")
     assert tracker.is_prime_trading_window(dt_open_noise) is False
+
+    # 09:35 - Market Open WITH News/Event Catalyst (Allowed!)
+    assert tracker.is_prime_trading_window(dt_open_noise, has_catalyst=True) is True
+    assert tracker.is_prime_trading_window(dt_open_noise, news_catalyst_score=0.85) is True
 
     # 10:00 - Morning Prime Window (Allowed)
     dt_morning_prime = pd.Timestamp("2026-08-22 10:00:00")
