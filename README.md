@@ -7,7 +7,7 @@ sdk: docker
 app_port: 7860
 pinned: true
 license: mit
-short_description: Institutional-grade ML quant trading platform with Pybind11 C++ OFI engine, DP compounding models & Alpaca API.
+short_description: ML Quant Trading Platform with C++ OFI Engine
 tags:
   - quant
   - trading
