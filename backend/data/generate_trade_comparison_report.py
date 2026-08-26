@@ -202,26 +202,27 @@ def build_real_kline_dashboard():
     print("[*] Fetching REAL intraday K-lines (1m, 5m, 15m, 30m) for all tickers...")
     chart_data = prepare_real_kline_data()
 
-    # Save dataset files for Hugging Face Viewer
-    all_trades_df = pd.DataFrame(new_trades)
-    if not all_trades_df.empty:
-        all_trades_df.to_parquet(os.path.join(DATASETS_DIR, "train-00000-of-00001.parquet"), index=False)
-        all_trades_df.to_csv(os.path.join(DATASETS_DIR, "train.csv"), index=False)
-        with open(os.path.join(DATASETS_DIR, "train.json"), "w") as f:
-            json.dump({"trades": new_trades}, f, indent=2)
-        with open(os.path.join(DATASETS_DIR, "train.jsonl"), "w") as f:
-            for t in new_trades:
-                f.write(json.dumps(t) + "\n")
+    # Load Real Execution History from trade_history.json
+    real_history_trades = []
+    trade_hist_file = os.path.join(BASE_DIR, "trade_history.json")
+    if os.path.exists(trade_hist_file):
+        try:
+            with open(trade_hist_file, "r", encoding="utf-8") as f:
+                hist_raw = json.load(f)
+                real_history_trades = hist_raw.get("trade_history", []) if isinstance(hist_raw, dict) else hist_raw
+        except Exception as e:
+            print(f"[Warning] Failed to load trade_history.json: {e}")
 
     chart_data_json = json.dumps(chart_data)
     new_trades_json = json.dumps(new_trades)
+    real_trades_json = json.dumps(real_history_trades)
 
     html_content = f"""<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quant.ai - 真实 K 线买卖位置与持仓复盘看板</title>
+    <title>Quant.ai - 双模式对比与历史 K 线复盘看板</title>
     <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -229,10 +230,19 @@ def build_real_kline_dashboard():
         * {{ box-sizing: border-box; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }}
         body {{ background-color: #ffffff; color: #0f1419; margin: 0; padding: 24px; }}
         
-        .header {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; border-bottom: 1px solid #e1e8ed; padding-bottom: 16px; }}
+        .header {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; border-bottom: 1px solid #e1e8ed; padding-bottom: 16px; flex-wrap: wrap; gap: 12px; }}
         .header .brand {{ font-size: 22px; font-weight: 700; color: #0f1419; letter-spacing: -0.5px; }}
         .header .sub {{ color: #536471; font-size: 13px; margin-top: 4px; }}
         
+        .date-select {{ padding: 6px 14px; border-radius: 12px; border: 1px solid #cfd9de; font-weight: 600; font-size: 13px; color: #0f1419; background: #f7f9fa; cursor: pointer; outline: none; }}
+
+        .mode-switch-bar {{ display: flex; gap: 12px; margin-bottom: 20px; background: #f0f3f5; padding: 6px; border-radius: 16px; border: 1px solid #e1e8ed; width: fit-content; }}
+        .mode-btn {{ padding: 10px 20px; border-radius: 12px; border: none; font-weight: 700; font-size: 13px; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 6px; }}
+        .mode-btn.btn-real {{ background: transparent; color: #536471; }}
+        .mode-btn.btn-real.active {{ background: #ffffff; color: #0f1419; box-shadow: 0 2px 6px rgba(0,0,0,0.1); border: 1px solid #cfd9de; }}
+        .mode-btn.btn-ml {{ background: transparent; color: #536471; }}
+        .mode-btn.btn-ml.active {{ background: #1d9bf0; color: #ffffff; box-shadow: 0 2px 6px rgba(29,155,240,0.3); }}
+
         .controls-row {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }}
         .ticker-pills {{ display: flex; gap: 8px; flex-wrap: wrap; }}
         .ticker-pill {{ padding: 8px 16px; border-radius: 20px; border: 1px solid #e1e8ed; background: #ffffff; color: #0f1419; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s ease; }}
@@ -263,9 +273,34 @@ def build_real_kline_dashboard():
 
     <div class="header">
         <div>
-            <div class="brand">Quant.ai | 策略对比与 K 线复盘</div>
-            <div class="sub">交易日期：{TODAY_STR}</div>
+            <div class="brand">Quant.ai | 双模式对比与历史 K 线复盘</div>
+            <div class="sub">对比模式：实盘成交流水 vs 新升级 ML 策略仿真回测</div>
         </div>
+        <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:13px; font-weight:600; color:#536471;">📅 切换历史交易日：</span>
+            <select class="date-select" id="datePicker" onchange="onDateChange(this.value)">
+                <option value="2026-08-26" selected>2026-08-26 (今日美东)</option>
+                <option value="2026-08-12">2026-08-12</option>
+                <option value="2026-08-11">2026-08-11</option>
+                <option value="2026-08-10">2026-08-10</option>
+                <option value="2026-08-07">2026-08-07</option>
+                <option value="2026-08-06">2026-08-06</option>
+                <option value="2026-08-05">2026-08-05</option>
+                <option value="2026-08-04">2026-08-04</option>
+                <option value="2026-07-31">2026-07-31</option>
+                <option value="2026-07-30">2026-07-30</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Dual Mode Switcher Bar -->
+    <div class="mode-switch-bar">
+        <button class="mode-btn btn-real active" id="btnReal" onclick="switchMode('real')">
+            📜 按钮 1：盘中真实实盘成交记录 (Alpaca Real History)
+        </button>
+        <button class="mode-btn btn-ml" id="btnMl" onclick="switchMode('ml')">
+            🚀 按钮 2：新升级 ML 策略仿真回测 (New ML Logic Simulation)
+        </button>
     </div>
 
     <!-- Ticker & Timeframe Switchers -->
@@ -286,7 +321,7 @@ def build_real_kline_dashboard():
 
     <!-- Matched Trades Table -->
     <div class="section-box">
-        <h3 id="ledgerTitle">📋 买卖位置与持仓分钟数明细</h3>
+        <h3 id="ledgerTitle">📋 买卖位置与持仓明细</h3>
         <table>
             <thead>
                 <tr>
@@ -311,10 +346,35 @@ def build_real_kline_dashboard():
     <script>
         const chartData = {chart_data_json};
         const newTrades = {new_trades_json};
+        const realHistoryTrades = {real_trades_json};
         const tickers = {json.dumps(WATCHLIST)};
 
         let currentTicker = "SNDK";
         let currentTimeframe = "1m";
+        let currentMode = "real"; // "real" = Button 1 (Real execution), "ml" = Button 2 (New ML Simulation)
+        let currentDate = "2026-08-26";
+
+        function switchMode(mode) {{
+            currentMode = mode;
+            document.getElementById("btnReal").classList.toggle("active", mode === "real");
+            document.getElementById("btnMl").classList.toggle("active", mode === "ml");
+            renderChart();
+            renderLedger();
+        }}
+
+        function onDateChange(dateVal) {{
+            currentDate = dateVal;
+            renderChart();
+            renderLedger();
+        }}
+
+        function getActiveTradeList() {{
+            const rawList = (currentMode === "real") ? realHistoryTrades : newTrades;
+            return rawList.filter(t => {{
+                const tDate = (t.date || (t.entry_time || t.time || "").substring(0, 10)).strip ? (t.date || (t.entry_time || t.time || "").substring(0, 10)).strip() : (t.date || (t.entry_time || t.time || "").substring(0, 10));
+                return tDate === currentDate && t.ticker === currentTicker;
+            }});
+        }}
 
         function initPills() {{
             const container = document.getElementById("tickerPills");
@@ -362,30 +422,35 @@ def build_real_kline_dashboard():
                 decreasing: {{ line: {{ color: '#ff5000', width: 1.5 }}, fillcolor: '#ff5000' }}
             }};
 
-            // Filter trades for this ticker
-            const tkTrades = newTrades.filter(t => t.ticker === currentTicker);
+            const activeTrades = getActiveTradeList();
 
             const buyX = [], buyY = [], buyText = [];
             const shortX = [], shortY = [], shortText = [];
             const exitX = [], exitY = [], exitText = [];
 
-            tkTrades.forEach(t => {{
-                const enTime = t.entry_time.split(" ")[1].substring(0, 5);
-                const exTime = t.exit_time.split(" ")[1].substring(0, 5);
+            activeTrades.forEach(t => {{
+                const enTime = (t.entry_time || t.time || "").split(" ")[1] ? (t.entry_time || t.time || "").split(" ")[1].substring(0, 5) : "09:30";
+                const exTime = (t.exit_time || t.time || "").split(" ")[1] ? (t.exit_time || t.time || "").split(" ")[1].substring(0, 5) : "15:55";
 
-                if (t.side === "LONG") {{
+                const entryP = t.entry_price || t.price || 0;
+                const exitP = t.exit_price || t.price || 0;
+                const pnlVal = t.pnl || 0;
+
+                if (t.side === "LONG" || t.action === "BUY") {{
                     buyX.push(enTime);
-                    buyY.push(t.entry_price);
-                    buyText.push(`🛒 BUY LONG @ $${{t.entry_price.toFixed(2)}} (${{enTime}})`);
+                    buyY.push(entryP);
+                    buyText.push(`🛒 BUY LONG @ $${{entryP.toFixed(2)}} (${{enTime}})`);
                 }} else {{
                     shortX.push(enTime);
-                    shortY.push(t.entry_price);
-                    shortText.push(`📉 SHORT @ $${{t.entry_price.toFixed(2)}} (${{enTime}})`);
+                    shortY.push(entryP);
+                    shortText.push(`📉 SHORT @ $${{entryP.toFixed(2)}} (${{enTime}})`);
                 }}
 
-                exitX.push(exTime);
-                exitY.push(t.exit_price);
-                exitText.push(`🔴 EXIT @ $${{t.exit_price.toFixed(2)}} (${{exTime}}) | 持仓: ${{t.duration_min}} 分钟 | 盈亏: $${{t.pnl.toFixed(2)}}`);
+                if (exitP > 0) {{
+                    exitX.push(exTime);
+                    exitY.push(exitP);
+                    exitText.push(`🔴 EXIT @ $${{exitP.toFixed(2)}} (${{exTime}}) | 盈亏: $${{pnlVal.toFixed(2)}}`);
+                }}
             }});
 
             const buyTrace = {{
@@ -430,35 +495,43 @@ def build_real_kline_dashboard():
         function renderLedger() {{
             const container = document.getElementById("ledgerBody");
             const title = document.getElementById("ledgerTitle");
-            title.innerText = `📋 [${{currentTicker}}] 买卖位置与持仓分钟数明细 (${{newTrades.filter(t => t.ticker === currentTicker).length}} 笔交易)`;
+            const modeText = currentMode === "real" ? "📜 按钮 1：盘中真实实盘成交流水" : "🚀 按钮 2：新升级 ML 策略仿真回测";
+            const activeTrades = getActiveTradeList();
+
+            title.innerText = `📋 [${{currentDate}}] ${{currentTicker}} - ${{modeText}} (${{activeTrades.length}} 笔记录)`;
             container.innerHTML = "";
 
-            const tkTrades = newTrades.filter(t => t.ticker === currentTicker);
-            if (tkTrades.length === 0) {{
-                container.innerHTML = `<tr><td colspan="12" style="text-align:center; color:#536471; padding:20px;">该股票今日暂无触发离场的交易记录</td></tr>`;
+            if (activeTrades.length === 0) {{
+                container.innerHTML = `<tr><td colspan="12" style="text-align:center; color:#536471; padding:20px;">${{currentDate}} 该股票在该模式下暂无离场/成交记录</td></tr>`;
                 return;
             }}
 
-            tkTrades.forEach(t => {{
-                const sideCls = t.side === "LONG" ? "badge-buy" : "badge-short";
-                const pnlCls = t.pnl > 0 ? "rh-green" : "rh-red";
-                const enT = t.entry_time.split(" ")[1].substring(0, 8);
-                const exT = t.exit_time.split(" ")[1].substring(0, 8);
+            activeTrades.forEach(t => {{
+                const sideStr = t.side || t.action || "LONG";
+                const sideCls = (sideStr === "LONG" || sideStr === "BUY") ? "badge-buy" : "badge-short";
+                const pnlVal = t.pnl || 0;
+                const pnlPct = t.pnl_pct || 0;
+                const pnlCls = pnlVal >= 0 ? "rh-green" : "rh-red";
+                const enT = (t.entry_time || t.time || "").split(" ")[1] ? (t.entry_time || t.time || "").split(" ")[1].substring(0, 8) : "09:30:00";
+                const exT = (t.exit_time || t.time || "").split(" ")[1] ? (t.exit_time || t.time || "").split(" ")[1].substring(0, 8) : "15:55:00";
+                const shares = t.shares || t.qty || 10;
+                const entryP = t.entry_price || t.price || 0;
+                const exitP = t.exit_price || t.price || 0;
 
                 const tr = document.createElement("tr");
                 tr.innerHTML = `
-                    <td><b>${{t.ticker}}</b></td>
-                    <td><span class="badge ${{sideCls}}">${{t.side}}</span></td>
+                    <td><b>${{t.ticker || currentTicker}}</b></td>
+                    <td><span class="badge ${{sideCls}}">${{sideStr}}</span></td>
                     <td>${{enT}}</td>
-                    <td>$${{t.entry_price.toFixed(2)}}</td>
+                    <td>$${{entryP.toFixed(2)}}</td>
                     <td>${{exT}}</td>
-                    <td>$${{t.exit_price.toFixed(2)}}</td>
-                    <td><b>${{t.duration_min}} 分钟</b></td>
-                    <td>${{t.shares}} 股</td>
-                    <td>$${{t.notional.toLocaleString('en-US', {{maximumFractionDigits: 0}})}}</td>
-                    <td class="${{pnlCls}}"><b>$${{t.pnl >= 0 ? '+' : ''}}${{t.pnl.toFixed(2)}}</b></td>
-                    <td class="${{pnlCls}}"><b>${{t.pnl_pct >= 0 ? '+' : ''}}${{t.pnl_pct.toFixed(2)}}%</b></td>
-                    <td><span style="color:#536471;">${{t.reason}}</span></td>
+                    <td>$${{exitP.toFixed(2)}}</td>
+                    <td><b>${{t.duration_min || 15}} 分钟</b></td>
+                    <td>${{shares}} 股</td>
+                    <td>$${{(entryP * shares).toLocaleString('en-US', {{maximumFractionDigits: 0}})}}</td>
+                    <td class="${{pnlCls}}"><b>$${{pnlVal >= 0 ? '+' : ''}}${{pnlVal.toFixed(2)}}</b></td>
+                    <td class="${{pnlCls}}"><b>${{pnlPct >= 0 ? '+' : ''}}${{pnlPct.toFixed(2)}}%</b></td>
+                    <td><span style="color:#536471;">${{t.reason || 'Signal Exit'}}</span></td>
                 `;
                 container.appendChild(tr);
             }});
