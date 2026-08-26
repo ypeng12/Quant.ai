@@ -57,41 +57,58 @@ interface BrokerPanelProps {
 type ActiveTab = 'portfolio' | 'analysis' | 'actions' | 'history';
 
 export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
-  const [account, setAccount] = useState<any | null>({
-    success: true,
-    account_number: "PA39102938 (Paper)",
-    status: "ACTIVE",
-    currency: "USD",
-    cash: 54050.33,
-    portfolio_value: 54050.33,
-    buying_power: 216201.32,
-    multiplier: 4.0,
-    shorting_enabled: true,
-    equity: 54050.33,
-    today_pnl: -2262.57,
-    today_pnl_pct: -4.02,
-    is_simulated: true
-  });
+  // Read persistent cached account & todaySummary from localStorage on cold startup
+  const getInitialAccount = () => {
+    try {
+      const saved = localStorage.getItem('cached_account');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return {
+      success: true,
+      account_number: "PA39102938 (Paper)",
+      status: "ACTIVE",
+      currency: "USD",
+      cash: 54050.33,
+      portfolio_value: 54050.33,
+      buying_power: 216201.32,
+      multiplier: 4.0,
+      shorting_enabled: true,
+      equity: 54050.33,
+      today_pnl: -2262.57,
+      today_pnl_pct: -4.02,
+      is_simulated: true
+    };
+  };
+
+  const getInitialTodaySummary = () => {
+    try {
+      const saved = localStorage.getItem('cached_today_summary');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return {
+      date: '2026-08-26',
+      total_trades: 0,
+      closed_trades: 0,
+      wins: 0,
+      losses: 0,
+      win_rate: 0,
+      realized_pnl: -2262.57,
+      alpaca_official_pnl: -2262.57,
+      unrealized_pnl: 0,
+      total_pnl: -2262.57,
+      best_trade: 0,
+      worst_trade: 0
+    };
+  };
+
+  const [account, setAccount] = useState<any | null>(getInitialAccount);
   const [positions, setPositions] = useState<BrokerPosition[]>([]);
   const [isBotRunning, setIsBotRunning] = useState<boolean>(false);
   const [activeTickers, setActiveTickers] = useState<string[]>([]);
   const [actionFeed, setActionFeed] = useState<string[]>([]);
   const [analysisFeed, setAnalysisFeed] = useState<string[]>([]);
   const [tradeHistory, setTradeHistory] = useState<TradeRecord[]>([]);
-  const [todaySummary, setTodaySummary] = useState<TodaySummary | null>({
-    date: '2026-08-26',
-    total_trades: 0,
-    closed_trades: 0,
-    wins: 0,
-    losses: 0,
-    win_rate: 0,
-    realized_pnl: -2262.57,
-    alpaca_official_pnl: -2262.57,
-    unrealized_pnl: 0,
-    total_pnl: -2262.57,
-    best_trade: 0,
-    worst_trade: 0
-  });
+  const [todaySummary, setTodaySummary] = useState<TodaySummary | null>(getInitialTodaySummary);
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -133,7 +150,18 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
   const fetchBrokerData = async () => {
     try {
       fetch(`${API_BASE}/api/broker/account`).then(r => r.json()).then(accJson => {
-        if (accJson && accJson.success !== false) setAccount(accJson);
+        if (accJson && accJson.success !== false) {
+          // Guard: If API returns 0 or empty today_pnl while we have a cached non-zero value, retain last known non-zero value
+          setAccount((prevAcc: any) => {
+            const updated = { ...accJson };
+            if ((!updated.today_pnl || updated.today_pnl === 0) && prevAcc?.today_pnl && prevAcc.today_pnl !== 0) {
+              updated.today_pnl = prevAcc.today_pnl;
+              updated.today_pnl_pct = prevAcc.today_pnl_pct;
+            }
+            try { localStorage.setItem('cached_account', JSON.stringify(updated)); } catch (e) {}
+            return updated;
+          });
+        }
       }).catch(e => console.error(e));
 
       fetch(`${API_BASE}/api/broker/positions`).then(r => r.json()).then(posJson => {
@@ -163,7 +191,18 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
       }).catch(e => console.error(e));
 
       fetch(`${API_BASE}/api/live/today_summary`).then(r => r.json()).then(todayJson => {
-        if (todayJson && todayJson.success) setTodaySummary(todayJson.summary);
+        if (todayJson && todayJson.success && todayJson.summary) {
+          setTodaySummary((prevSummary: any) => {
+            const updated = { ...todayJson.summary };
+            if ((!updated.total_pnl || updated.total_pnl === 0) && prevSummary?.total_pnl && prevSummary.total_pnl !== 0) {
+              updated.total_pnl = prevSummary.total_pnl;
+              updated.alpaca_official_pnl = prevSummary.alpaca_official_pnl;
+              updated.realized_pnl = prevSummary.realized_pnl;
+            }
+            try { localStorage.setItem('cached_today_summary', JSON.stringify(updated)); } catch (e) {}
+            return updated;
+          });
+        }
       }).catch(e => console.error(e));
 
     } catch (e) {
