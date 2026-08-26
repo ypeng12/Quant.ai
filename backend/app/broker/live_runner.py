@@ -20,7 +20,7 @@ from app.broker.universe_screener import UniverseScreener
 from app.broker.risk_position_sizer import RiskPositionSizer
 from app.broker.probability_engine import evaluate_mathematical_expectation
 from app.alpha_engine import InstitutionalAlphaEngine
-from app.config import ALPACA_API_KEY, ALPACA_SECRET_KEY, ALPACA_BASE_URL, WATCHLIST, save_watchlist, load_watchlist
+from app.config import ALPACA_API_KEY, ALPACA_SECRET_KEY, ALPACA_BASE_URL, WATCHLIST, EXCLUDED_TICKERS, save_watchlist, load_watchlist
 from app.data_manager import fetch_and_prepare_data
 from app.data_cache import invalidate_cache
 
@@ -1563,13 +1563,10 @@ class LiveTradingRunner:
                                 df = fetch_and_prepare_data(ticker, period="3d", interval="1m")
                             except Exception:
                                 df = None
+                            if ticker in EXCLUDED_TICKERS:
+                                continue
                             if df is None or df.empty or len(df) < 2:
-                                try:
-                                    df = fetch_and_prepare_data(ticker, period="5d", interval="5m")
-                                except Exception:
-                                    df = None
-                            if df is None or df.empty or len(df) < 2:
-                                self.add_log(f"🔍 [{ticker}] Waiting for bar data...")
+                                # Suppress repetitive log spam when waiting for bar data
                                 continue
                                 
                             row = df.iloc[-1]

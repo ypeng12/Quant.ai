@@ -95,7 +95,7 @@ HOT_SECTORS = {
 
 # Persistent Watchlist File Path (backend/watchlist.json)
 WATCHLIST_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "watchlist.json")
-EXCLUDED_TICKERS = {"MSFT", "META", "AMD"}  # Low intraday volatility / non-focus tickers blacklisted
+EXCLUDED_TICKERS = {"MSFT", "META", "AMD", "MU"}  # Low intraday volatility / non-focus tickers blacklisted
 DEFAULT_WATCHLIST = ["SNDK", "TSLA", "MSTR", "NVDA"]
 
 def load_watchlist() -> list:
