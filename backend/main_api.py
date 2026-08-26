@@ -2224,9 +2224,11 @@ from fastapi import HTTPException
 from fastapi.responses import HTMLResponse, FileResponse
 
 @app.get("/charts/trade_comparison_dashboard.html")
-async def get_trade_comparison_dashboard():
+async def get_trade_comparison_dashboard(force_refresh: bool = True):
     dash_file = os.path.join(_charts_dir, "trade_comparison_dashboard.html")
-    if not os.path.exists(dash_file):
+    mtime = os.path.getmtime(dash_file) if os.path.exists(dash_file) else 0
+    # Always rebuild if missing or older than 30 seconds
+    if not os.path.exists(dash_file) or force_refresh or (time.time() - mtime) > 30.0:
         try:
             import sys
             sys.path.insert(0, _project_root)
@@ -2235,7 +2237,7 @@ async def get_trade_comparison_dashboard():
         except Exception as e:
             print(f"Error generating trade comparison dashboard: {e}")
     if os.path.exists(dash_file):
-        return FileResponse(dash_file, headers={"Cache-Control": "no-cache, no-store, must-revalidate", "Pragma": "no-cache"})
+        return FileResponse(dash_file, headers={"Cache-Control": "no-cache, no-store, must-revalidate", "Pragma": "no-cache", "Expires": "0"})
     raise HTTPException(status_code=404, detail="Dashboard not found")
 
 @app.get("/charts/quant_live_dashboard.html")
