@@ -211,35 +211,35 @@ class InstitutionalAlphaEngine:
         alpha_ml = (ml_p_win_long - ml_p_win_short) * 2.0
         alpha_ml = float(np.clip(alpha_ml, -1.0, 1.0))
 
-        # Intraday Multi-Wave Regime Calibration (美股日内波段时段动态自适应引擎)
-        # 09:30-10:35: 开盘突破浪 (Opening Surge) -> 提升动量与订单流权重，追击多头主升
-        # 10:35-12:00: 冲高衰竭浪 (Mid-Day Exhaustion) -> 提升均值回归权重，捕获空头回调
-        # 12:00-13:30: 午盘 VWAP 支撑浪 (Noon Rebound) -> 提升 VWAP 支撑与订单流买盘，捕获反弹
-        # 13:30-14:35: 下行调整浪 (Afternoon Dip) -> 捕获二次调整空头
-        # 14:35-15:55: 尾盘冲刺浪 (Power Hour Surge) -> 机构 MOC 动量追击
-        current_est_hour = row.get("est_hour", 10)
-        current_est_minute = row.get("est_minute", 0)
-        est_float = current_est_hour + current_est_minute / 60.0
+        # 🧠 Pure ML & Market Microstructure Dynamic Regime Engine (纯特征与 ML 驱动，非硬套时间段)
+        # 1. 强趋势/订单流失衡突破段 (High Momentum Trend Wave): 由 ADX >= 22 与 OFI 深度决定
+        # 2. 均值回归/高位衰竭逆转段 (Mean-Reversion Reversal Wave): 由 OU Stat-Arb Z-Score 与 Micro-Price 偏离度决定
+        # 3. 机器学习模型胜率融合 (ML Model Win Probability Fusion): 由 XGBoost/LOB 模型预测胜率 ml_p_win 实时驱动
 
-        if 9.5 <= est_float < 10.6:
-            # 开盘冲刺浪：主打订单流与动量
-            w_ofi, w_micro, w_ou, w_lead_lag, w_ml = 0.40, 0.20, 0.05, 0.20, 0.15
-        elif 10.6 <= est_float < 12.0:
-            # 冲高衰竭做空浪：主打均值回归与微观结构
-            w_ofi, w_micro, w_ou, w_lead_lag, w_ml = 0.15, 0.35, 0.35, 0.05, 0.10
-        elif 12.0 <= est_float < 13.5:
-            # 午盘反弹浪：主打订单流与 lead-lag 联动
-            w_ofi, w_micro, w_ou, w_lead_lag, w_ml = 0.35, 0.20, 0.15, 0.20, 0.10
-        elif 13.5 <= est_float < 14.6:
-            # 下午调整浪：均值回归做空
-            w_ofi, w_micro, w_ou, w_lead_lag, w_ml = 0.20, 0.30, 0.35, 0.05, 0.10
+        ofi_abs = abs(alpha_ofi)
+        ou_abs = abs(alpha_ou)
+
+        if adx >= 22.0 or ofi_abs > 0.40:
+            # 趋势与订单流爆破形态：ML 胜率与订单流 OFI 主导 (权重 65%)
+            w_ofi = 0.35
+            w_ml = 0.30
+            w_lead_lag = 0.20
+            w_micro = 0.10
+            w_ou = 0.05
+        elif ou_abs > 0.45:
+            # 冲高/探底衰竭逆转形态：均值回归 OU 与微观结构主导 (权重 70%)
+            w_ou = 0.40
+            w_micro = 0.30
+            w_ofi = 0.15
+            w_ml = 0.10
+            w_lead_lag = 0.05
         else:
-            # 尾盘冲刺浪：动量与 ML 主导
-            w_ofi, w_micro, w_ou, w_lead_lag, w_ml = 0.35, 0.15, 0.05, 0.25, 0.20
-
-        if adx >= 25.0:
-            # 强趋势修正：增加趋势与 OFI 权重
-            w_ofi = min(0.50, w_ofi + 0.10)
+            # 标准多因子均衡研判
+            w_ofi = 0.25
+            w_ml = 0.25
+            w_micro = 0.20
+            w_ou = 0.20
+            w_lead_lag = 0.10
 
         composite_alpha_raw = (
             w_ofi * alpha_ofi +
