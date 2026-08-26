@@ -1,14 +1,28 @@
 ---
-title: Quant AI - Advanced Quant Trading Engine & Backtest Simulator
-emoji: 📈
+title: Quant AI - Autonomous Institutional Algorithmic Trading Platform
+emoji: 🚀
 colorFrom: blue
 colorTo: indigo
 sdk: docker
 app_port: 7860
-pinned: false
+pinned: true
+license: mit
+short_description: Institutional-grade ML quant trading platform with Pybind11 C++ OFI engine, DP compounding models & Alpaca API.
+tags:
+  - quant
+  - trading
+  - algorithmic-trading
+  - machine-learning
+  - finance
+  - high-frequency-trading
 ---
 
 # 🚀 Quant.ai: High-Consistency Autonomous Quant Trading Platform
+
+[![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Space-blue)](https://huggingface.co/spaces/Ypeng12/quant-ai)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.11](https://img.shields.io/badge/Python-3.11-green.svg)](https://www.python.org/)
+[![C++20](https://img.shields.io/badge/C++-20-blue.svg)](https://isocpp.org/)
 
 Quant.ai is an autonomous, high-consistency quantitative trading platform built with a 2-track low-latency architecture, advanced machine learning alpha models, and self-reflecting reinforcement learning (RL) agents.
 
