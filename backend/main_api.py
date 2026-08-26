@@ -2232,8 +2232,8 @@ async def get_trade_comparison_dashboard(force_refresh: bool = True):
         try:
             import sys
             sys.path.insert(0, _project_root)
-            from backend.data.generate_trade_comparison_report import run_full_simulation
-            run_full_simulation()
+            from backend.data.generate_trade_comparison_report import build_real_kline_dashboard
+            build_real_kline_dashboard()
         except Exception as e:
             print(f"Error generating trade comparison dashboard: {e}")
     if os.path.exists(dash_file):
