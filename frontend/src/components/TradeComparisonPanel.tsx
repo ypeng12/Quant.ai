@@ -21,7 +21,7 @@ export function TradeComparisonPanel({ watchlist, activeTicker, onSelectTicker }
       boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
     }}>
       <iframe
-        src={`${API_BASE}/charts/trade_comparison_dashboard.html`}
+        src={`${API_BASE}/charts/trade_comparison_dashboard.html?v=${Date.now()}`}
         title="Trade Comparison Dashboard"
         style={{
           width: '100%',

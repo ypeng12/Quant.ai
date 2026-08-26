@@ -2223,7 +2223,22 @@ app.mount("/charts", StaticFiles(directory=_charts_dir), name="charts")
 
 from fastapi import HTTPException
 
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, FileResponse
+
+@app.get("/charts/trade_comparison_dashboard.html")
+async def get_trade_comparison_dashboard():
+    dash_file = os.path.join(_charts_dir, "trade_comparison_dashboard.html")
+    if not os.path.exists(dash_file):
+        try:
+            import sys
+            sys.path.insert(0, _project_root)
+            from backend.data.generate_trade_comparison_report import run_full_simulation
+            run_full_simulation()
+        except Exception as e:
+            print(f"Error generating trade comparison dashboard: {e}")
+    if os.path.exists(dash_file):
+        return FileResponse(dash_file, headers={"Cache-Control": "no-cache, no-store, must-revalidate", "Pragma": "no-cache"})
+    raise HTTPException(status_code=404, detail="Dashboard not found")
 
 @app.get("/charts/quant_live_dashboard.html")
 async def get_quant_live_dashboard():
