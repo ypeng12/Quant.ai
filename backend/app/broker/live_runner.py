@@ -375,10 +375,9 @@ class LiveTradingRunner:
 
         alpaca_official_today_pnl = None
         try:
-            if hasattr(self.adapter, "get_account_summary"):
-                acc_info = self.adapter.get_account_summary()
-                if acc_info and acc_info.get("success") and "today_pnl" in acc_info:
-                    alpaca_official_today_pnl = acc_info.get("today_pnl")
+            acc_info = self.get_cached_account_summary()
+            if acc_info and acc_info.get("success") and "today_pnl" in acc_info:
+                alpaca_official_today_pnl = acc_info.get("today_pnl")
         except Exception:
             pass
 

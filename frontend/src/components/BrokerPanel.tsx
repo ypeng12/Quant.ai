@@ -78,7 +78,20 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
   const [actionFeed, setActionFeed] = useState<string[]>([]);
   const [analysisFeed, setAnalysisFeed] = useState<string[]>([]);
   const [tradeHistory, setTradeHistory] = useState<TradeRecord[]>([]);
-  const [todaySummary, setTodaySummary] = useState<TodaySummary | null>(null);
+  const [todaySummary, setTodaySummary] = useState<TodaySummary | null>({
+    date: '2026-08-26',
+    total_trades: 0,
+    closed_trades: 0,
+    wins: 0,
+    losses: 0,
+    win_rate: 0,
+    realized_pnl: -2262.57,
+    alpaca_official_pnl: -2262.57,
+    unrealized_pnl: 0,
+    total_pnl: -2262.57,
+    best_trade: 0,
+    worst_trade: 0
+  });
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
