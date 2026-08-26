@@ -78,7 +78,7 @@ class LiveTradingRunner:
             "strategy_mode": "aggressive_intraday",
             "paper_only_aggressive": True,
             "allow_aggressive_live": False,
-            "dynamic_screener_enabled": True,   # Autonomous Dynamic AI Screener enabled for market scanning
+            "dynamic_screener_enabled": False,  # Strict focus on 4-stock focus watchlist (SNDK, TSLA, MSTR, NVDA)
             "screener_refresh_seconds": 120,
             "screener_top_actives": 6,
             "screener_top_movers": 4,
@@ -1605,7 +1605,7 @@ class LiveTradingRunner:
                                 action = "HOLD"
                                 reason = f"[DailyLossLimit] Daily drawdown ({est_daily_pnl_pct*100:.2f}%) reached max limit (-{daily_loss_limit_pct*100:.2f}%). Blocked new entry order."
 
-                            allowed_entry_symbols = set(user_watchlist) | set(self.screener._screener_symbols)
+                            allowed_entry_symbols = set(user_watchlist)
                             if ticker not in allowed_entry_symbols and action in ("BUY", "SHORT"):
                                 action = "HOLD"
                                 reason = f"[{ticker}] 不在 Watchlist/Alpaca 日内候选池，保持 Exit-Only。"

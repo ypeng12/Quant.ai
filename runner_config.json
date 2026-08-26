@@ -3,7 +3,7 @@
   "strategy_mode": "aggressive_intraday",
   "paper_only_aggressive": true,
   "allow_aggressive_live": false,
-  "dynamic_screener_enabled": true,
+  "dynamic_screener_enabled": false,
   "screener_refresh_seconds": 120,
   "screener_top_actives": 6,
   "screener_top_movers": 4,

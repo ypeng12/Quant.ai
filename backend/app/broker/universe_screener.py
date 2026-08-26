@@ -131,7 +131,9 @@ class UniverseScreener:
                         self._screener_last_error_at = now
                     self._screener_refreshed_at = now
 
-        candidates = list(dict.fromkeys(user_watchlist + list(active_pos_tickers) + self._screener_symbols))
+        # Strictly restrict active trading universe to user_watchlist focus pool (SNDK, TSLA, MSTR, NVDA)
+        allowed = set(user_watchlist) | set(active_pos_tickers)
+        candidates = [s for s in list(dict.fromkeys(user_watchlist + list(active_pos_tickers))) if s in allowed]
         positions = set(active_pos_tickers)
         max_scan = max(len(positions), int(strategy_params.get("max_scan_symbols", 14)))
         candidates.sort(
