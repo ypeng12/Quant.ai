@@ -3093,6 +3093,20 @@
       "pnl": -59.125,
       "pnl_pct": -0.059233284709786546,
       "reason": "SIGNAL_DECAY"
+    },
+    {
+      "ticker": "NVDA",
+      "side": "SHORT",
+      "entry_time": "2026-08-26 14:57:00-04:00",
+      "exit_time": "2026-08-26 14:58:00-04:00",
+      "entry_price": 211.0850067138672,
+      "exit_price": 211.0800018310547,
+      "shares": 473,
+      "notional": 99843.20817565918,
+      "duration_min": 1,
+      "pnl": 2.3673095703125,
+      "pnl_pct": 0.0023710271470319473,
+      "reason": "SIGNAL_DECAY"
     }
   ]
 }
