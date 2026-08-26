@@ -17,7 +17,20 @@ if repo_root not in sys.path:
 
 from backend.app.ml.max_profit_quant_optimizer import MaxProfitQuantOptimizer
 
-def run_closing_2h_simulation(capital: float = 54004.12, target_loss_recovery: float = 2000.0):
+def get_live_alpaca_equity() -> float:
+    """Fetch real-time account equity dynamically from Alpaca API."""
+    try:
+        from backend.app.config import ALPACA_API_KEY, ALPACA_SECRET_KEY
+        from alpaca.trading.client import TradingClient
+        client = TradingClient(ALPACA_API_KEY, ALPACA_SECRET_KEY, paper=True)
+        acc = client.get_account()
+        return float(acc.equity)
+    except Exception:
+        return 50000.0
+
+def run_closing_2h_simulation(capital: float = None, target_loss_recovery: float = 2000.0):
+    if capital is None or capital <= 0:
+        capital = get_live_alpaca_equity()
     fpath = os.path.join(os.path.dirname(os.path.abspath(__file__)), "datasets", "intraday_5m_watchlist_dataset.parquet")
     if not os.path.exists(fpath):
         print(f"Dataset {fpath} not found.")
