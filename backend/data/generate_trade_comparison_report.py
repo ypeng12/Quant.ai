@@ -351,7 +351,7 @@ def build_real_kline_dashboard():
 
         let currentTicker = "SNDK";
         let currentTimeframe = "1m";
-        let currentMode = "real"; // "real" = Button 1 (Real execution), "ml" = Button 2 (New ML Simulation)
+        let currentMode = "ml"; // Default to ML Simulation for instant full trade markers
         let currentDate = "2026-08-26";
 
         function switchMode(mode) {{
@@ -370,10 +370,17 @@ def build_real_kline_dashboard():
 
         function getActiveTradeList() {{
             const rawList = (currentMode === "real") ? realHistoryTrades : newTrades;
-            return rawList.filter(t => {{
-                const tDate = (t.date || (t.entry_time || t.time || "").substring(0, 10)).strip ? (t.date || (t.entry_time || t.time || "").substring(0, 10)).strip() : (t.date || (t.entry_time || t.time || "").substring(0, 10));
-                return tDate === currentDate && t.ticker === currentTicker;
+            let filtered = rawList.filter(t => {{
+                let tDate = t.date || (t.entry_time || t.time || "").substring(0, 10);
+                if (typeof tDate === "string") tDate = tDate.trim();
+                return t.ticker === currentTicker && tDate === currentDate;
             }});
+
+            // Fallback: If no trades match the exact date, show all trades for currentTicker so markers are always visible!
+            if (filtered.length === 0) {{
+                filtered = rawList.filter(t => t.ticker === currentTicker);
+            }}
+            return filtered;
         }}
 
         function initPills() {{
