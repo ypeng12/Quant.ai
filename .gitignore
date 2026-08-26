@@ -30,6 +30,7 @@ backend/data/charts/
 backend/app/experiments.db
 *.db
 *.joblib
+*.so
 low_latency_network_test
 scratch/
 
