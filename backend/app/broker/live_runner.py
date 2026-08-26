@@ -240,7 +240,10 @@ class LiveTradingRunner:
                 with open(self.history_file, 'r', encoding='utf-8') as f:
                     data = json.load(f)
                     self.trade_history = data.get("trade_history", [])
-                    self.action_logs = data.get("action_logs", [])
+                    raw_action_logs = data.get("action_logs", [])
+                    self.action_logs = [l for l in raw_action_logs if "Waiting for bar data" not in str(l) and "MU" not in str(l)]
+                    raw_logs = data.get("logs", [])
+                    self.logs = [l for l in raw_logs if "Waiting for bar data" not in str(l) and "MU" not in str(l)]
         except Exception as e:
             print(f"Error loading trade_history.json: {e}")
 
