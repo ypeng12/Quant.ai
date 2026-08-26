@@ -70,10 +70,26 @@ class LOBMicrostructureMLEngine:
         drift_pct = (micro_price - mid_price) / (mid_price + 1e-6) * 100.0
         return drift_pct
 
+    @staticmethod
+    def calculate_sweep_velocity(df: pd.DataFrame) -> pd.Series:
+        """
+        HRT Market Order Sweep Velocity:
+        Measures rapid consumption rate of book depth by institutional market sweep orders.
+        """
+        vol_col = "volume" if "volume" in df.columns else ("Volume" if "Volume" in df.columns else None)
+        vol_series = df[vol_col] if vol_col else pd.Series(np.ones(len(df)))
+        price_diff = df["Close"].diff().fillna(0.0)
+
+        # Volume acceleration scaled by price direction
+        vol_change = vol_series.pct_change().fillna(0.0)
+        sweep_vel = np.sign(price_diff) * np.abs(vol_change)
+        return pd.Series(sweep_vel, index=df.index).fillna(0.0)
+
     def build_microstructure_features(self, df: pd.DataFrame) -> pd.DataFrame:
         df_feat = df.copy()
         df_feat["feature_ofi"] = self.calculate_order_flow_imbalance(df)
         df_feat["feature_micro_drift"] = self.calculate_microprice_drift(df)
+        df_feat["feature_sweep_vel"] = self.calculate_sweep_velocity(df)
 
         vol_col = "volume" if "volume" in df.columns else ("Volume" if "Volume" in df.columns else None)
         vol_series = df[vol_col] if vol_col else pd.Series(np.ones(len(df)))
@@ -82,11 +98,18 @@ class LOBMicrostructureMLEngine:
         ask_v = df["ask_size"] if "ask_size" in df.columns else vol_series * 0.5
         df_feat["feature_queue_imbalance"] = (bid_v - ask_v) / (bid_v + ask_v + 1e-6)
 
+        # HRT Toxic Flow Flag (|OFI| > 0.40 & Sweep Velocity > 0.3)
+        ofi_norm = df_feat["feature_ofi"] / (df_feat["feature_ofi"].abs().max() + 1e-6)
+        df_feat["feature_hrt_toxic_flow"] = np.where(
+            (ofi_norm > 0.40) & (df_feat["feature_sweep_vel"] > 0.1), 1.0,
+            np.where((ofi_norm < -0.40) & (df_feat["feature_sweep_vel"] < -0.1), -1.0, 0.0)
+        )
+
         return df_feat
 
     def fit(self, df: pd.DataFrame, target_col: str = "label_win_long"):
         df_feat = self.build_microstructure_features(df)
-        feature_cols = ["feature_ofi", "feature_micro_drift", "feature_queue_imbalance"]
+        feature_cols = ["feature_ofi", "feature_micro_drift", "feature_queue_imbalance", "feature_sweep_vel", "feature_hrt_toxic_flow"]
         
         X = df_feat[feature_cols].fillna(0.0)
         y = df_feat[target_col].astype(int) if target_col in df_feat.columns else (df_feat["Close"].pct_change().shift(-1) > 0).astype(int)
@@ -106,7 +129,7 @@ class LOBMicrostructureMLEngine:
             return np.full(len(df), 0.50)
 
         df_feat = self.build_microstructure_features(df)
-        feature_cols = ["feature_ofi", "feature_micro_drift", "feature_queue_imbalance"]
+        feature_cols = ["feature_ofi", "feature_micro_drift", "feature_queue_imbalance", "feature_sweep_vel", "feature_hrt_toxic_flow"]
         X = df_feat[feature_cols].fillna(0.0)
         probs = self.model.predict_proba(X)[:, 1]
         return probs
