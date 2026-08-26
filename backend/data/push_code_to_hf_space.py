@@ -16,9 +16,16 @@ def push_code_to_hf_space():
     try:
         from huggingface_hub import HfApi
         token = os.getenv("HF_TOKEN") or os.getenv("HUGGINGFACE_TOKEN") or os.getenv("HF_HUB_TOKEN")
+        if not token:
+            token_path = os.path.expanduser("~/.cache/huggingface/token")
+            if os.path.exists(token_path):
+                with open(token_path, "r") as f:
+                    token = f.read().strip()
+
         api = HfApi(token=token) if token else HfApi()
 
-        api.upload_folder(
+        print(f"[*] Uploading source code to HF Space ({space_id})...")
+        res = api.upload_folder(
             folder_path=repo_root,
             repo_id=space_id,
             repo_type="space",
@@ -30,11 +37,13 @@ def push_code_to_hf_space():
                 "venv/*",
                 ".venv/*",
                 "dist/*",
-                "build/*"
+                "build/*",
+                "backend/data/datasets/*",
+                "cpp_engine/*.so"
             ],
-            commit_message="feat(ai): sync complete codebase and DP max profit models to HF Space"
+            commit_message="feat(ai): fix grouping method and enhance prompt"
         )
-        print(f"✅ 成功将最新全量代码与配置文件同步上传至 Hugging Face Space ({space_id})！")
+        print(f"✅ 成功将最新代码与配置同步上传至 Hugging Face Space ({space_id})！\nCommit: {res}")
     except Exception as e:
         print(f"❌ 上传至 Hugging Face Space 提示/失败: {e}")
 

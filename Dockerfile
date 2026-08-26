@@ -26,9 +26,13 @@ COPY cpp_engine/ ./cpp_engine/
 COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
 
 ENV PYTHONPATH=/app/backend:/app
+ENV OMP_NUM_THREADS=8
+ENV MKL_NUM_THREADS=8
+ENV OPENBLAS_NUM_THREADS=8
+ENV NUMEXPR_NUM_THREADS=8
 
 RUN python3 generate_interactive_quant_dashboard.py || true
 
 EXPOSE 7860
 
-CMD ["uvicorn", "backend.main_api:app", "--host", "0.0.0.0", "--port", "7860"]
+CMD ["uvicorn", "backend.main_api:app", "--host", "0.0.0.0", "--port", "7860", "--workers", "4"]
