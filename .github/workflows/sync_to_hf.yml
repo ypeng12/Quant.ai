@@ -24,4 +24,8 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          git push --force https://Ypeng12:${HF_TOKEN}@huggingface.co/spaces/Ypeng12/quant-ai main:main
+          if [ -n "$HF_TOKEN" ]; then
+            git push --force https://Ypeng12:${HF_TOKEN}@huggingface.co/spaces/Ypeng12/quant-ai main:main || echo "HF push warning, skipping"
+          else
+            echo "HF_TOKEN secret not configured on GitHub, skipping HF git push action"
+          fi
