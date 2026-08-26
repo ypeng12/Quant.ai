@@ -1447,14 +1447,12 @@ def get_broker_account():
         "account_number": "PA39102938 (Paper)",
         "status": "ACTIVE",
         "currency": "USD",
-        "cash": 30000.0,
-        "portfolio_value": 34250.0,
-        "buying_power": 120000.0,
+        "cash": live_runner.get_cached_account_summary().get("cash", 54020.9),
+        "portfolio_value": live_runner.get_cached_account_summary().get("portfolio_value", 54020.9),
+        "buying_power": live_runner.get_cached_account_summary().get("buying_power", 169171.12),
         "multiplier": 4.0,
         "shorting_enabled": True,
-        "equity": 34250.0,
-        "initial_margin": 4250.0,
-        "maintenance_margin": 2125.0,
+        "equity": live_runner.get_cached_account_summary().get("equity", 54020.9),
         "is_simulated": True
     }
 

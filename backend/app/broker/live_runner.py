@@ -140,31 +140,40 @@ class LiveTradingRunner:
     def _can_open_short(self, ticker: str) -> bool:
         return self.risk_sizer.can_open_short(ticker, self.adapter)
 
-    def get_cached_account_summary(self) -> Dict:
-        now = time.time()
-        if self._account_cache is not None and (now - self._account_cache_time) < 3.0:
-            return self._account_cache
+    def _bg_refresh_account(self):
         try:
             res = self.adapter.get_account_summary()
             if res and res.get("success") is not False:
                 self._account_cache = res
-                self._account_cache_time = now
-                return res
+                self._account_cache_time = time.time()
         except Exception:
             pass
+
+    def get_cached_account_summary(self) -> Dict:
+        now = time.time()
+        if self._account_cache is not None:
+            if (now - self._account_cache_time) >= 3.0:
+                threading.Thread(target=self._bg_refresh_account, daemon=True).start()
+            return self._account_cache
+        # Initial synchronous fetch on cold startup
+        self._bg_refresh_account()
         return self._account_cache or self.adapter.get_account_summary()
 
-    def get_cached_open_positions(self) -> List[Dict]:
-        now = time.time()
-        if self._positions_cache is not None and (now - self._positions_cache_time) < 3.0:
-            return self._positions_cache
+    def _bg_refresh_positions(self):
         try:
             res = self.adapter.get_open_positions()
             self._positions_cache = res
-            self._positions_cache_time = now
-            return res
+            self._positions_cache_time = time.time()
         except Exception:
             pass
+
+    def get_cached_open_positions(self) -> List[Dict]:
+        now = time.time()
+        if self._positions_cache is not None:
+            if (now - self._positions_cache_time) >= 3.0:
+                threading.Thread(target=self._bg_refresh_positions, daemon=True).start()
+            return self._positions_cache
+        self._bg_refresh_positions()
         return self._positions_cache or []
 
     def load_runner_config(self):
