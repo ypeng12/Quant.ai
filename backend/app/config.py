@@ -95,11 +95,13 @@ HOT_SECTORS = {
 
 # Persistent Watchlist File Path (backend/watchlist.json)
 WATCHLIST_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "watchlist.json")
-DEFAULT_WATCHLIST = ["NVDA", "SNDK", "TSLA", "AMD", "MSFT", "MU"]
+EXCLUDED_TICKERS = set()  # No static hardcoded ticker blacklists — dynamic AI Screener & quality filters handle stock selection!
+DEFAULT_WATCHLIST = ["SNDK", "TSLA", "MSTR", "NVDA"]
 
 def load_watchlist() -> list:
     """拉取 Watchlist 优先级: 1) Alpaca 官方云端 Watchlist -> 2) 本地 watchlist.json -> 3) 默认股票"""
     import json
+    raw_list = []
     try:
         from app.config import ALPACA_API_KEY, ALPACA_SECRET_KEY
         if ALPACA_API_KEY and "your_paper_api_key_here" not in ALPACA_API_KEY:
@@ -109,15 +111,15 @@ def load_watchlist() -> list:
             if watchlists:
                 qw = next((w for w in watchlists if w.name == "PRIMARY_QUANT"), watchlists[0])
                 if qw is not None:
-                    # 必须调用 get_watchlist_by_id 才能获取到云端最新的实盘 assets 数组
                     full_w = client.get_watchlist_by_id(qw.id)
                     alpaca_symbols = [str(a.symbol).upper().strip() for a in (full_w.assets or []) if getattr(a, "symbol", None)]
+                    filtered = [s for s in alpaca_symbols if s not in EXCLUDED_TICKERS]
                     try:
                         with open(WATCHLIST_FILE, 'w', encoding='utf-8') as f:
-                            json.dump(alpaca_symbols, f, ensure_ascii=False, indent=2)
+                            json.dump(filtered, f, ensure_ascii=False, indent=2)
                     except Exception:
                         pass
-                    return alpaca_symbols
+                    return filtered if filtered else DEFAULT_WATCHLIST.copy()
     except Exception as e:
         print(f"Alpaca cloud watchlist fetch warning: {e}")
 
@@ -126,7 +128,9 @@ def load_watchlist() -> list:
             with open(WATCHLIST_FILE, 'r', encoding='utf-8') as f:
                 data = json.load(f)
                 if isinstance(data, list):
-                    return [str(t).upper().strip() for t in data if t]
+                    raw_list = [str(t).upper().strip() for t in data if t and str(t).upper().strip() not in EXCLUDED_TICKERS]
+                    if raw_list:
+                        return raw_list
     except Exception as e:
         print(f"Error loading watchlist.json: {e}")
     return DEFAULT_WATCHLIST.copy()
@@ -139,7 +143,7 @@ def save_watchlist(tickers: list, allow_empty: bool = True) -> list:
     for t in tickers:
         if t and isinstance(t, str):
             sym = t.upper().strip()
-            if sym and sym not in cleaned:
+            if sym and sym not in cleaned and sym not in EXCLUDED_TICKERS:
                 cleaned.append(sym)
 
     if not cleaned and not allow_empty:

@@ -28,8 +28,15 @@ DATASETS_DIR = os.path.join(BASE_DIR, "data", "datasets")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 os.makedirs(DATASETS_DIR, exist_ok=True)
 
-WATCHLIST = ["SNDK", "MU", "PLTR", "NVDA", "TSLA", "MSFT", "NBIS", "AMD"]
-TODAY_STR = "2026-08-12"
+import datetime
+
+WATCHLIST = ["SNDK", "TSLA", "MSTR", "NVDA"]
+
+# Dynamic Date: Default to today or CLI argument
+if len(sys.argv) > 1 and len(sys.argv[1]) == 10:
+    TODAY_STR = sys.argv[1]
+else:
+    TODAY_STR = datetime.datetime.now().strftime("%Y-%m-%d")
 
 
 def run_full_simulation():

@@ -28,7 +28,11 @@ def get_ml_zoo_model():
     zoo_path = os.path.join(MODELS_DIR, "quant_ml_zoo.joblib")
     if os.path.exists(zoo_path):
         try:
+            import sys
             from app.ml.ml_model_zoo import QuantMLModelZoo
+            main_mod = sys.modules.get("__main__")
+            if main_mod and not hasattr(main_mod, "QuantMLModelZoo"):
+                setattr(main_mod, "QuantMLModelZoo", QuantMLModelZoo)
             zoo = QuantMLModelZoo.load_zoo(zoo_path)
             _ML_MODELS_CACHE["ml_zoo"] = zoo
             return zoo
@@ -177,9 +181,9 @@ def evaluate_mathematical_expectation(opportunity: Dict, strategy_params: Dict) 
     b = rr_est
     kelly_f = (max(0.0, (p_win * b - q) / b) if b > 0 else 0.0) * vol_penalty
 
-    # Entry is approved mathematically if Expected Value E[PnL] >= min_expected_value_r (default relaxed to +0.05R for practice)
-    min_ev_r = float(strategy_params.get("min_expected_value_r", 0.05))
-    is_positive_ev = e_pnl_r >= min_ev_r
+    # Entry is approved mathematically if Expected Value E[PnL] >= min_expected_value_r (default +0.15R) AND P_win >= 0.58
+    min_ev_r = float(strategy_params.get("min_expected_value_r", 0.15))
+    is_positive_ev = (e_pnl_r >= min_ev_r) and (p_win >= 0.58)
 
     return {
         "win_probability": p_win,

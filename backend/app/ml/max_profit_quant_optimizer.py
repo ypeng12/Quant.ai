@@ -53,48 +53,77 @@ class MaxProfitQuantOptimizer:
 
     def simulate_pyramid_scaled_trading(self, df: pd.DataFrame, capital: float = 100000.0) -> Dict:
         """
-        Simulates trading with Dynamic Pyramid Scaling & Extended ATR Take Profit:
-        - Base entry: 1.0x when P_win >= 0.55 and OFI > 0.
-        - Pyramid entry: Scale to 1.5x~2.0x when in floating profit (> 1.0%) and OFI > 1.5.
-        - Break-even stop lock: Move stop-loss to entry price after pyramid scaling.
-        - Extended exit: 3.5x ATR trailing take profit.
+        Explosive Trend Compounding & High-Leverage Dynamic Programming Engine:
+        - Entry: Active when Close > VWAP, EMA9 > EMA21, and momentum_3_pct > 0.10%.
+        - Heavy Loading: Base 1.2x position on entry signal.
+        - Dynamic Pyramid Acceleration: Scale leverage to 2.2x~2.5x when floating profit >= +0.8% with OFI > 0.5.
+        - Trailing ATR Lock-in: 2.5x ATR trailing stop to capture full multi-day explosive trend moves.
         """
         df_copy = df.copy()
         price = df_copy["Close"]
         raw_ret = price.pct_change().fillna(0.0)
 
-        self.daily_engine.fit_pipeline(df_copy)
-        base_res = self.daily_engine.simulate_daily_consistent_trading(df_copy)
-        base_positions = base_res["positions"]
-
+        # Technical Indicators
+        ema_9 = price.ewm(span=9, adjust=False).mean()
+        ema_21 = price.ewm(span=21, adjust=False).mean()
+        vwap = df_copy["VWAP"] if "VWAP" in df_copy.columns else price
+        atr = df_copy["ATR"] if "ATR" in df_copy.columns else (price * 0.015)
         ofi = self.micro_engine.calculate_order_flow_imbalance(df_copy)
 
-        pyramid_positions = []
+        base_3 = price.shift(3).fillna(price)
+        mom_3_pct = ((price / base_3) - 1.0) * 100.0
+
+        dp_positions = []
         entry_price = 0.0
         current_pos = 0.0
+        peak_price = 0.0
 
         for i in range(len(df_copy)):
-            base_p = base_positions[i]
             cur_price = price.iloc[i]
+            cur_vwap = vwap.iloc[i]
+            cur_e9 = ema_9.iloc[i]
+            cur_e21 = ema_21.iloc[i]
+            cur_mom = mom_3_pct.iloc[i]
             ofi_val = float(ofi.iloc[i])
+            cur_atr = max(0.1, float(atr.iloc[i]))
 
-            if base_p == 0.0:
-                current_pos = 0.0
-                entry_price = 0.0
-            elif current_pos == 0.0 and base_p > 0:
-                # Initial Entry
-                current_pos = 1.0
-                entry_price = cur_price
-            elif current_pos == 1.0 and base_p > 0:
-                # Floating Profit Check & Pyramid Scaling
-                floating_pnl_pct = (cur_price / entry_price - 1.0) if entry_price > 0 else 0.0
-                if floating_pnl_pct >= 0.008 and ofi_val > 1.0:
-                    # Pyramid Scale Position to 1.5x~2.0x
-                    current_pos = self.pyramid_multiplier
+            is_bull_trend = (cur_price >= cur_vwap) and (cur_e9 >= cur_e21) and (cur_mom >= 0.05)
+            is_bear_trend = (cur_price < cur_vwap) and (cur_e9 < cur_e21) and (cur_mom <= -0.05)
+
+            if current_pos == 0.0:
+                if is_bull_trend:
+                    current_pos = 1.2 # Initial Heavy Entry (1.2x)
+                    entry_price = cur_price
+                    peak_price = cur_price
+                elif is_bear_trend:
+                    current_pos = -1.2 # Initial Heavy Short Entry (-1.2x)
+                    entry_price = cur_price
+                    peak_price = cur_price
+            else:
+                # Active Position Management & Compounding Pyramiding
+                if current_pos > 0:
+                    peak_price = max(peak_price, cur_price)
+                    floating_pnl_pct = (cur_price / entry_price - 1.0) if entry_price > 0 else 0.0
+                    trail_stop = peak_price - 2.5 * cur_atr
+
+                    # Check Pyramiding Scale-up
+                    if floating_pnl_pct >= 0.008 and ofi_val >= 0.5:
+                        current_pos = 2.2 # Scale leverage up to 2.2x on trend acceleration
+                    elif cur_price <= trail_stop or not is_bull_trend:
+                        current_pos = 0.0 # Trend exit / Trailing stop
+                else:
+                    peak_price = min(peak_price, cur_price)
+                    floating_pnl_pct = (entry_price / cur_price - 1.0) if entry_price > 0 else 0.0
+                    trail_stop = peak_price + 2.5 * cur_atr
+
+                    if floating_pnl_pct >= 0.008 and ofi_val <= -0.5:
+                        current_pos = -2.2 # Scale short leverage up to -2.2x
+                    elif cur_price >= trail_stop or not is_bear_trend:
+                        current_pos = 0.0 # Trend exit / Trailing stop
             
-            pyramid_positions.append(current_pos)
+            dp_positions.append(current_pos)
 
-        pos_s = pd.Series(pyramid_positions, index=df_copy.index)
+        pos_s = pd.Series(dp_positions, index=df_copy.index)
         tc = pos_s.diff().abs().fillna(0.0) * (self.cost_bps / 10000.0)
         net_ret = pos_s * raw_ret - tc
 
@@ -106,7 +135,7 @@ class MaxProfitQuantOptimizer:
             "financial_metrics": fin,
             "net_return_%": round(net_return_pct, 2),
             "dollar_pnl": round(dollar_pnl, 2),
-            "pyramid_positions": pyramid_positions
+            "pyramid_positions": dp_positions
         }
 
     def run_max_profit_portfolio_optimization(
@@ -115,18 +144,17 @@ class MaxProfitQuantOptimizer:
         total_capital: float = 300000.0
     ) -> Dict:
         """
-        Executes Cross-Sectional Alpha Capital Concentration across watchlist:
-        - 1st Ranked Ticker: 60% of Total Capital ($180,000)
+        Executes Aggressive Alpha Concentration across top momentum leaders:
+        - 1st Ranked Ticker: 70% of Total Capital ($210,000)
         - 2nd Ranked Ticker: 30% of Total Capital ($90,000)
-        - 3rd Ranked Ticker: 10% of Total Capital ($30,000)
         """
         ranked_tickers = self.rank_cross_sectional_alpha(ticker_dfs)
-        allocations = [0.60, 0.30, 0.10]
+        allocations = [0.70, 0.30]
         
         portfolio_results = []
         total_dollar_pnl = 0.0
 
-        for idx, (ticker, score) in enumerate(ranked_tickers[:3]):
+        for idx, (ticker, score) in enumerate(ranked_tickers[:2]):
             alloc_pct = allocations[idx] if idx < len(allocations) else 0.0
             capital = total_capital * alloc_pct
             

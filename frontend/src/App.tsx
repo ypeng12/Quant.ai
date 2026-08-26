@@ -579,7 +579,7 @@ function App() {
     } catch (err) {}
   };
 
-  const DEFAULT_WATCHLIST_STOCKS = ["NVDA", "SNDK", "TSLA", "AMD", "MSFT", "MU"];
+  const DEFAULT_WATCHLIST_STOCKS = ["SNDK", "TSLA", "MSTR", "NVDA"];
 
   const handleResetDefaultWatchlist = () => {
     setWatchlist(DEFAULT_WATCHLIST_STOCKS);

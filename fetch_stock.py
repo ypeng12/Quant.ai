@@ -101,6 +101,6 @@ def scan_stocks(tickers):
     print("=" * 60)
 
 if __name__ == "__main__":
-    # 我们扫描 TSLA(特斯拉), NVDA(英伟达), AAPL(苹果), MSFT(微软), AMD(超威半导体) 等大盘股
-    popular_stocks = ["TSLA", "NVDA", "AAPL", "MSFT", "AMD"]
+    # 我们扫描 NVDA(英伟达), TSLA(特斯拉), SNDK(闪迪/概念), MSTR(MicroStrategy) 等核心精选动量股
+    popular_stocks = ["NVDA", "TSLA", "SNDK", "MSTR"]
     scan_stocks(popular_stocks)

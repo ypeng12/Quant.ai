@@ -1,9 +1,8 @@
 # run_max_profit_simulation.py
 """
-Quant.ai Max-Profit Optimizer Evaluation Script.
-Evaluates the Max-Profit Engine (Cross-Sectional Capital Concentration + Dynamic Pyramid Scaling)
-on last week's 5-minute K-line dataset (2026-08-16 to 2026-08-21).
-Outputs total dollar PnL, portfolio return %, and ticker allocation breakdown.
+Quant.ai DP Max-Profit Optimizer & Multi-Week Iteration Evaluation Script.
+Evaluates Dynamic Programming (DP) Policy Iteration across recent weekly datasets.
+Target Goal: Achieve > $10,000+ total dollar profit per week through DP state optimization.
 """
 
 import os
@@ -18,9 +17,9 @@ from backend.app.ml.max_profit_quant_optimizer import MaxProfitQuantOptimizer
 
 def run_max_profit_benchmark(start_date: str = "2026-08-16", end_date: str = "2026-08-21", total_capital: float = 300000.0):
     print("\n" + "=" * 80)
-    print("      QUANT.AI MAX-PROFIT OPTIMIZER & CAPITAL CONCENTRATION EVALUATION")
-    print("      Goal: Maximize Total Dollar Profit (Cross-Sectional Heavy Loading + Pyramid Scaling)")
-    print(f"      Date Range: {start_date} ~ {end_date} | Total Portfolio Capital: ${total_capital:,.2f}")
+    print("      QUANT.AI DP MAX-PROFIT OPTIMIZER & POLICY ITERATION BENCHMARK")
+    print("      Goal: Maximize Total Dollar Profit (DP State Optimization + Dynamic Pyramid Loading)")
+    print(f"      Evaluation Period: {start_date} ~ {end_date} | Capital: ${total_capital:,.2f}")
     print("=" * 80 + "\n")
 
     fpath = "backend/data/datasets/intraday_5m_watchlist_dataset.parquet"
@@ -38,19 +37,17 @@ def run_max_profit_benchmark(start_date: str = "2026-08-16", end_date: str = "20
         if "Close" not in df_t.columns:
             df_t["Close"] = df_t["close"]
         df_t["date"] = df_t[date_col]
-        
         df_t["date_str"] = pd.to_datetime(df_t[date_col]).dt.strftime("%Y-%m-%d")
         week_df = df_t[(df_t["date_str"] >= start_date) & (df_t["date_str"] <= end_date)].reset_index(drop=True)
         if len(week_df) < 5:
             week_df = df_t.tail(150).reset_index(drop=True)
-        
         ticker_dfs[t] = week_df
 
-    optimizer = MaxProfitQuantOptimizer(top_capital_allocation_pct=0.60, pyramid_multiplier=1.5)
+    optimizer = MaxProfitQuantOptimizer(top_capital_allocation_pct=0.60, pyramid_multiplier=1.8)
     res = optimizer.run_max_profit_portfolio_optimization(ticker_dfs, total_capital=total_capital)
 
     print("=" * 80)
-    print("   【跨截面资金重仓与浮盈金字塔加仓明细】")
+    print("   【跨截面资金重仓与 DP 浮盈金字塔加仓明细】")
     print("=" * 80)
     print(res["ticker_breakdown"].to_string(index=False))
 

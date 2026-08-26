@@ -48,6 +48,7 @@ class LiveTradingRunner:
         self._score_warmup_complete = False
         self.pyramid_done = {}  # {ticker: bool} tracks whether a pyramid add has been done for current position
         self.partial_tp_done = {}  # {ticker: bool} tracks whether partial profit scaling has been taken
+        self.ticker_consecutive_losses = {}  # {ticker: int} tracks consecutive losses per session to avoid whipsaw losses
 
         self.screener = UniverseScreener(self._get_alpaca_credentials, self.add_log)
         self.risk_sizer = RiskPositionSizer()
@@ -73,31 +74,31 @@ class LiveTradingRunner:
     @staticmethod
     def _aggressive_intraday_defaults() -> Dict:
         return {
-            "strategy_version": "aggressive_intraday_v3",
+            "strategy_version": "aggressive_intraday_v5",
             "strategy_mode": "aggressive_intraday",
             "paper_only_aggressive": True,
             "allow_aggressive_live": False,
-            "dynamic_screener_enabled": False,
+            "dynamic_screener_enabled": True,   # Autonomous Dynamic AI Screener enabled for market scanning
             "screener_refresh_seconds": 120,
             "screener_top_actives": 6,
             "screener_top_movers": 4,
             "max_scan_symbols": 14,
-            # ↓↓ Relaxed for higher intraday trade frequency ↓↓
-            "entry_score_min": 50.0,        # lowered to 50.0 to capture early probe entries
-            "full_size_score": 75.0,        # scale to full size at 75.0
-            "min_expected_value_r": 0.10,   # was 0.15 — allow trades with lighter EV gate
-            "reentry_cooldown_seconds": 60, # was 120 — faster re-entry after exit
-            "max_concurrent_positions": 3,  # was 2 — allow up to 3 simultaneous positions
-            "pyramid_trigger_pct": 0.004,   # 0.4% profit triggers pyramid add
-            # ↑↑ Risk / sizing unchanged ↑↑
+            # Strict High-Probability & Risk Controls to prevent losses
+            "entry_score_min": 78.0,        # strict entry score threshold >= 78.0
+            "full_size_score": 85.0,        # scale to full size at 85.0
+            "min_expected_value_r": 0.15,   # require strong positive EV (>= +0.15R)
+            "reentry_cooldown_seconds": 300, # 300 seconds (5 min) cooldown to eliminate whipsaw chasing
+            "max_concurrent_positions": 2,  # max 2 simultaneous high-conviction positions
+            "max_losses_per_ticker_session": 2, # max 2 consecutive losses per symbol per session
+            "pyramid_trigger_pct": 0.006,   # 0.6% profit triggers pyramid add
             "min_stock_price": 5.00,
             "buying_power_utilization_pct": 0.95,
             "starter_buying_power_pct": 0.35,
             "max_position_buying_power_pct": 0.95,
-            "max_position_risk_pct": 0.040,
-            "daily_loss_limit_pct": 0.040,
-            "initial_stop_atr_mult": 1.60,
-            "stop_min_pct": 0.0050,
+            "max_position_risk_pct": 0.030,
+            "daily_loss_limit_pct": 0.030,
+            "initial_stop_atr_mult": 1.80,
+            "stop_min_pct": 0.0080,
             "stop_max_pct": 0.0200,
             "trail_start_pct": 0.0120,
             "trailing_stop_atr_mult": 2.20,
@@ -105,7 +106,7 @@ class LiveTradingRunner:
             "trailing_stop_max_pct": 0.0250,
             "minimum_hold_minutes": 4,
             "max_hold_minutes": 300,
-            "time_stop_min_score": 48.0,    # was 52 — slightly more tolerant of held positions
+            "time_stop_min_score": 52.0,
             "orders_sync_interval_seconds": 2.0,
         }
 
@@ -617,17 +618,16 @@ class LiveTradingRunner:
 
         prev_long_structure = prev_close > prev_vwap or prev_close > prev_ema_21
         prev_short_structure = prev_close < prev_vwap or prev_close < prev_ema_21
-        # Relaxed _entry_confirmed: also allow VWAP+EMA alignment without strict prev-bar guard
-        # This prevents the system from being silent when current bar is valid but prev bar was ambiguous
-        vwap_ema_long_alignment = close > vwap and ema_9 > ema_21 and momentum_3_pct > 0.05
-        vwap_ema_short_alignment = close < vwap and ema_9 < ema_21 and momentum_3_pct < -0.05
+        # Strict entry confirmation requiring VWAP + EMA alignment & positive momentum direction
+        vwap_ema_long_alignment = close > vwap and ema_9 > ema_21 and momentum_3_pct > 0.10
+        vwap_ema_short_alignment = close < vwap and ema_9 < ema_21 and momentum_3_pct < -0.10
         long_confirmed = (
-            (long_breakout and (prev_long_structure or momentum_3_pct >= 0.70 or reversal_long))
-            or (vwap_ema_long_alignment and direction == "LONG" and score >= 60.0)
+            (long_breakout and (prev_long_structure or momentum_3_pct >= 0.50 or reversal_long))
+            or (vwap_ema_long_alignment and direction == "LONG" and score >= 78.0)
         )
         short_confirmed = (
-            (short_breakdown and (prev_short_structure or momentum_3_pct <= -0.70 or reversal_short))
-            or (vwap_ema_short_alignment and direction == "SHORT" and score >= 60.0)
+            (short_breakdown and (prev_short_structure or momentum_3_pct <= -0.50 or reversal_short))
+            or (vwap_ema_short_alignment and direction == "SHORT" and score >= 78.0)
         )
         
         vwap_dist_pct = ((close - vwap) / vwap * 100.0) if vwap > 0 else 0.0
@@ -775,19 +775,30 @@ class LiveTradingRunner:
                 del self.partial_tp_done[ticker]
             from app.broker.universe_screener import is_valid_quality_stock_symbol
             min_price = self._safe_float(self.strategy_params.get("min_stock_price"), 5.00)
+
+            # Quality Stock & Warrant/Unit Filter (dynamic quality screening instead of static blacklists)
+            if not is_valid_quality_stock_symbol(ticker):
+                return "HOLD", f"{base_reason} | 标的属于权证/衍生单元 (Warrant/Unit)，拒绝交易"
+
+            # Per-Symbol Consecutive Loss Guard
+            max_losses = int(self.strategy_params.get("max_losses_per_ticker_session", 2))
+            if self.ticker_consecutive_losses.get(ticker, 0) >= max_losses:
+                return "HOLD", f"{base_reason} | 🛑 该标的单日已连续止损 {self.ticker_consecutive_losses[ticker]} 次，触发熔断停牌避险"
+
             if close < min_price:
                 return "HOLD", f"{base_reason} | 股价低于 ${min_price:.2f} (${close:.2f})，拒绝低价毛票/仙股"
             if not is_valid_quality_stock_symbol(ticker):
                 return "HOLD", f"{base_reason} | 标的属于权证/衍生单元 (Warrant/Unit)，拒绝交易"
 
             if direction == "NEUTRAL" or score < entry_min or not opportunity.get("_entry_confirmed", False):
-                return "HOLD", f"{base_reason} | 未达到方向/确认门槛"
+                return "HOLD", f"{base_reason} | 未达到方向/确认门槛 (Score={score:.1f} < {entry_min:.1f})"
             if not is_pos_ev:
-                return "HOLD", f"{base_reason} | 概率期望值偏低 (E[PnL]={ev_r:+.2f}R < +0.10R 门槛)，拒绝下发盲目交易"
+                return "HOLD", f"{base_reason} | 概率期望值偏低 (E[PnL]={ev_r:+.2f}R < +0.15R 或 P_win<58%)，拒绝下发盲目交易"
             last_exit = self.last_exit_times.get(ticker)
-            cooldown = self._safe_float(self.strategy_params.get("reentry_cooldown_seconds"), 60.0)
+            cooldown = self._safe_float(self.strategy_params.get("reentry_cooldown_seconds"), 300.0)
             if last_exit and (time.time() - last_exit) < cooldown:
-                return "HOLD", f"{base_reason} | 平仓冷却中，避免同一走势反复追单"
+                remain = int(cooldown - (time.time() - last_exit))
+                return "HOLD", f"{base_reason} | 平仓冷却中 ({remain}s 剩余)，避免同一走势反复追单"
             if open_position_count >= int(self.strategy_params.get("max_concurrent_positions", 2)):
                 return "HOLD", f"{base_reason} | 已达最大同时持仓数"
             if not self._aggressive_orders_allowed():
@@ -817,7 +828,8 @@ class LiveTradingRunner:
 
         hard_stop = (side == "LONG" and close <= avg_cost * (1.0 - stop_pct)) or (side == "SHORT" and close >= avg_cost * (1.0 + stop_pct))
         if hard_stop:
-            return ("SELL" if side == "LONG" else "COVER"), f"{base_reason} | 初始硬止损 {stop_pct*100:.2f}%"
+            self.ticker_consecutive_losses[ticker] = self.ticker_consecutive_losses.get(ticker, 0) + 1
+            return ("SELL" if side == "LONG" else "COVER"), f"{base_reason} | 初始硬止损 {stop_pct*100:.2f}% (单日第 {self.ticker_consecutive_losses[ticker]} 次)"
 
         # ─── Alpha Decay Exit (Alpha 动能衰减离场) ──────────────────────────────────
         alpha_score = self._safe_float(opportunity.get("composite_alpha_score"), 0.0)

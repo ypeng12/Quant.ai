@@ -22,9 +22,9 @@ from app.config import INITIAL_CASH
 from app.factor_model import CrossSectionalFactorModel
 
 class MultiAssetPortfolioSimulator:
-    def __init__(self, initial_cash: float = INITIAL_CASH, top_n_select: int = 5, max_pos_pct: float = 0.15):
+    def __init__(self, initial_cash: float = INITIAL_CASH, top_n_select: int = 5, max_pos_pct: float = 0.15, top_n: int = None):
         self.initial_cash = initial_cash
-        self.top_n = top_n_select
+        self.top_n = top_n if top_n is not None else top_n_select
         self.max_pos_pct = max_pos_pct
 
     def run_portfolio_backtest(self, universe_prices_dict: Dict[str, pd.DataFrame], rebalance_days: int = 5) -> Dict:
@@ -138,7 +138,7 @@ if __name__ == "__main__":
     print("Testing MultiAssetPortfolioSimulator...")
     np.random.seed(42)
     n_days = 100
-    tickers = ["AAPL", "MSFT", "TSLA", "NVDA", "AMZN", "GOOGL", "META"]
+    tickers = ["AAPL", "TSLA", "NVDA", "AMZN", "GOOGL", "META", "PLTR"]
     
     dates = pd.date_range('2024-01-01', periods=n_days)
     universe_dict = {}
