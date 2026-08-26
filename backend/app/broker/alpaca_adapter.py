@@ -56,8 +56,24 @@ class AlpacaAdapter:
         status_str = account.status.value if hasattr(account.status, 'value') else str(account.status)
         equity = float(account.equity)
         last_equity = float(getattr(account, 'last_equity', equity) or equity)
+        
         today_pnl = round(equity - last_equity, 2)
         today_pnl_pct = round((today_pnl / last_equity * 100), 2) if last_equity > 0 else 0.0
+
+        # Try live Alpaca Portfolio History for exact day PnL
+        try:
+            from alpaca.trading.requests import GetPortfolioHistoryRequest
+            req_ph = GetPortfolioHistoryRequest(period="1D", timeframe="5Min")
+            ph = self.client.get_portfolio_history(req_ph)
+            if ph and getattr(ph, "base_value", None) and getattr(ph, "equity", None) and len(ph.equity) > 0:
+                base_v = float(ph.base_value)
+                cur_v = float(ph.equity[-1])
+                if base_v > 0:
+                    today_pnl = round(cur_v - base_v, 2)
+                    today_pnl_pct = round((today_pnl / base_v * 100), 2)
+                    last_equity = base_v
+        except Exception:
+            pass
 
         return {
             "success": True,
