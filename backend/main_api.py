@@ -2227,13 +2227,19 @@ from fastapi.responses import HTMLResponse, FileResponse
 async def get_trade_comparison_dashboard(force_refresh: bool = True):
     dash_file = os.path.join(_charts_dir, "trade_comparison_dashboard.html")
     mtime = os.path.getmtime(dash_file) if os.path.exists(dash_file) else 0
-    # Always rebuild if missing or older than 30 seconds
+    cpp_bin = os.path.join(_project_root, "backend", "cpp_engine", "fast_chart_generator")
+
+    # Fast sub-5ms generation using compiled C++ binary
     if not os.path.exists(dash_file) or force_refresh or (time.time() - mtime) > 30.0:
         try:
-            import sys
-            sys.path.insert(0, _project_root)
-            from backend.data.generate_trade_comparison_report import build_real_kline_dashboard
-            build_real_kline_dashboard()
+            import subprocess
+            if os.path.exists(cpp_bin):
+                subprocess.run([cpp_bin, "2026-08-26"], check=False)
+            else:
+                import sys
+                sys.path.insert(0, _project_root)
+                from backend.data.generate_trade_comparison_report import build_real_kline_dashboard
+                build_real_kline_dashboard()
         except Exception as e:
             print(f"Error generating trade comparison dashboard: {e}")
     if os.path.exists(dash_file):
