@@ -70,6 +70,7 @@ class LiveTradingRunner:
         if self._loaded_strategy_version != "aggressive_intraday_v2":
             self.strategy_params.update(self._aggressive_intraday_defaults())
         self.add_log("📡 [系统初始化完成] Quant AI 日内概率风控与研判引擎已就绪...")
+        self.start()
 
     @staticmethod
     def _aggressive_intraday_defaults() -> Dict:
