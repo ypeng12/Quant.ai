@@ -229,45 +229,6 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
     }
   }, [watchlist]);
 
-  // ⚡ 60 FPS Client-Side Instant Real-Time PnL & Position Engine
-  const computedPositions = useMemo(() => {
-    return positions.map(pos => {
-      const rawScoreData: any = tickerScores[pos.ticker];
-      const livePrice = typeof rawScoreData === 'object' && rawScoreData !== null ? rawScoreData.price : (typeof rawScoreData === 'number' ? rawScoreData : pos.current_price);
-      const isShort = pos.shares < 0;
-      const qty = Math.abs(pos.shares);
-      
-      let liveUnrealizedPnl = pos.unrealized_pnl;
-      let liveUnrealizedPnlPct = pos.unrealized_pnl_pct;
-      
-      if (livePrice && livePrice > 0 && pos.avg_entry_price > 0) {
-        if (isShort) {
-          liveUnrealizedPnl = qty * (pos.avg_entry_price - livePrice);
-        } else {
-          liveUnrealizedPnl = qty * (livePrice - pos.avg_entry_price);
-        }
-        const costBasis = qty * pos.avg_entry_price;
-        liveUnrealizedPnlPct = costBasis > 0 ? (liveUnrealizedPnl / costBasis) * 100 : 0;
-      }
-      
-      return {
-        ...pos,
-        current_price: livePrice || pos.current_price,
-        unrealized_pnl: liveUnrealizedPnl,
-        unrealized_pnl_pct: liveUnrealizedPnlPct
-      };
-    });
-  }, [positions, tickerScores]);
-
-  const liveTotalUnrealized = useMemo(() => {
-    return computedPositions.reduce((sum, p) => sum + p.unrealized_pnl, 0);
-  }, [computedPositions]);
-
-  const liveNetTodayPnl = useMemo(() => {
-    const realized = todaySummary?.realized_pnl || 0;
-    return realized + liveTotalUnrealized;
-  }, [todaySummary?.realized_pnl, liveTotalUnrealized]);
-
   const handleStartBot = async () => {
     setActionLoading('start');
     try {
@@ -653,7 +614,7 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
                 </tr>
               </thead>
               <tbody>
-                {computedPositions.map((pos) => {
+                {positions.map((pos) => {
                   const isUp = pos.unrealized_pnl >= 0;
                   const isShort = pos.shares < 0;
                   return (
