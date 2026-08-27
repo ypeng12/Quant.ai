@@ -148,14 +148,14 @@ class LiveTradingRunner:
                 proc = subprocess.run([cpp_bin, ALPACA_API_KEY, ALPACA_SECRET_KEY, ALPACA_BASE_URL], capture_output=True, text=True, timeout=5)
                 if proc.returncode == 0 and proc.stdout.strip():
                     data = json.loads(proc.stdout)
-                    if data.get("success"):
+                    if data.get("success") and "equity" in data and "today_pnl" in data:
                         self._account_cache = {
                             "success": True,
-                            "equity": data.get("equity", 54050.33),
-                            "cash": data.get("cash", 54050.33),
-                            "buying_power": data.get("buying_power", 216201.32),
-                            "today_pnl": data.get("today_pnl", -2262.57),
-                            "today_pnl_pct": data.get("today_pnl_pct", -4.02),
+                            "equity": float(data["equity"]),
+                            "cash": float(data["cash"]),
+                            "buying_power": float(data["buying_power"]),
+                            "today_pnl": float(data["today_pnl"]),
+                            "today_pnl_pct": float(data.get("today_pnl_pct", 0.0)),
                             "engine": "C++ Native Acceleration Engine",
                             "status": "ACTIVE"
                         }
@@ -1526,7 +1526,18 @@ class LiveTradingRunner:
                     self._premarket_preloaded = False
                 
                 try:
-                    positions_list = self.adapter.get_open_positions()
+                    raw_positions_list = self.adapter.get_open_positions()
+                    # Auto-liquidate any blacklisted open position (e.g. MU) held in Alpaca account
+                    for pos in raw_positions_list:
+                        p_sym = pos.get('ticker')
+                        if p_sym in EXCLUDED_TICKERS:
+                            self.add_log(f"🚨 [黑名单持仓清扫] 检测到 Alpaca 账户持仓中包含黑名单标的 [{p_sym}]，自动提交市价平仓全卖出指令！")
+                            try:
+                                self.adapter.close_position(p_sym)
+                            except Exception as ex_p:
+                                print(f"Error liquidating blacklisted ticker {p_sym}: {ex_p}")
+                    
+                    positions_list = [p for p in raw_positions_list if p.get('ticker') not in EXCLUDED_TICKERS]
                     positions_by_ticker = {pos['ticker']: pos for pos in positions_list if pos.get('ticker')}
                     active_pos_tickers = set(positions_by_ticker.keys())
                     
