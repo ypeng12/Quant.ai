@@ -33,7 +33,7 @@ class LiveTradingRunner:
         self.history_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "trade_history.json")
         self.load_trade_history()
         self.config_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "runner_config.json")
-        self.adapter = MockAlpacaAdapter()
+        self.init_alpaca_adapter()
         self.active_tickers = WATCHLIST.copy()
         self._account_cache = None
         self._account_cache_time = 0.0
@@ -467,7 +467,20 @@ class LiveTradingRunner:
             else:
                 return {"success": False, "error": "Broker adapter does not support closing individual positions."}
         except Exception as e:
-            return {"success": False, "error": str(e)}
+    def init_alpaca_adapter(self):
+        try:
+            api_key, api_secret, base_url = self._get_alpaca_credentials()
+            if self._credential_is_configured(api_key) and self._credential_is_configured(api_secret):
+                self.adapter = AlpacaAdapter(
+                    api_key=api_key,
+                    api_secret=api_secret,
+                    base_url=base_url
+                )
+                self.adapter.get_account_summary()
+            else:
+                self.adapter = MockAlpacaAdapter()
+        except Exception:
+            self.adapter = MockAlpacaAdapter()
 
     @staticmethod
     def _get_alpaca_credentials():
