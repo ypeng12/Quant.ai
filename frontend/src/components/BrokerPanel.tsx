@@ -211,6 +211,15 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
     }
   };
 
+  // Auto refresh broker data every 1.5s so numbers continuously update without needing to click Pause/Start
+  useEffect(() => {
+    fetchBrokerData();
+    const timer = setInterval(() => {
+      fetchBrokerData();
+    }, 1500);
+    return () => clearInterval(timer);
+  }, []);
+
   // Sync watchlist to AI Live Scanner automatically when changed
   useEffect(() => {
     if (watchlist.length > 0) {
