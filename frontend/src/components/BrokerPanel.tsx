@@ -101,8 +101,19 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
     };
   };
 
+  const getInitialPositions = () => {
+    try {
+      const saved = localStorage.getItem('cached_positions');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch (e) {}
+    return [];
+  };
+
   const [account, setAccount] = useState<any | null>(getInitialAccount);
-  const [positions, setPositions] = useState<BrokerPosition[]>([]);
+  const [positions, setPositions] = useState<BrokerPosition[]>(getInitialPositions);
   const [isBotRunning, setIsBotRunning] = useState<boolean>(false);
   const [activeTickers, setActiveTickers] = useState<string[]>([]);
   const [actionFeed, setActionFeed] = useState<string[]>([]);
@@ -165,7 +176,14 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
       }).catch(e => console.error(e));
 
       fetch(`${API_BASE}/api/broker/positions`).then(r => r.json()).then(posJson => {
-        if (posJson && posJson.success) setPositions(posJson.positions || []);
+        if (posJson && posJson.success) {
+          const newPos = posJson.positions || [];
+          setPositions((prevPos: BrokerPosition[]) => {
+            const updated = (newPos.length === 0 && prevPos.length > 0) ? prevPos : newPos;
+            try { localStorage.setItem('cached_positions', JSON.stringify(updated)); } catch (e) {}
+            return updated;
+          });
+        }
       }).catch(e => console.error(e));
 
       fetch(`${API_BASE}/api/live/status`).then(r => r.json()).then(statusJson => {
