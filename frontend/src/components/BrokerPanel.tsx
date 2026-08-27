@@ -527,11 +527,14 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
             <div className="stat-card" style={{ background: '#09090b', border: `1px solid ${netPnlVal >= 0 ? 'rgba(0,200,5,0.3)' : 'rgba(255,59,48,0.3)'}`, padding: '1.25rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
                 <span className="stat-label">Today Net PnL</span>
-                <span style={{ fontSize: '0.68rem', padding: '1px 5px', borderRadius: '3px', background: 'rgba(0,200,5,0.15)', color: '#00c805', fontWeight: 700 }}>Alpaca Live</span>
+                <span style={{ fontSize: '0.68rem', padding: '1px 5px', borderRadius: '3px', background: 'rgba(0,200,5,0.15)', color: '#00c805', fontWeight: 700 }}>Realized + Float</span>
               </div>
               <span className="stat-value" style={{ fontSize: '1.4rem', fontWeight: 900, color: netPnlVal >= 0 ? 'var(--color-green)' : 'var(--color-red)' }}>
                 {netPnlVal >= 0 ? '+' : ''}${netPnlVal.toFixed(2)}
               </span>
+              <div style={{ fontSize: '0.72rem', color: '#888', marginTop: '4px' }}>
+                已平仓: <span style={{ color: (todaySummary?.realized_pnl || 0) >= 0 ? '#00c805' : '#ff3b30', fontWeight: 700 }}>{(todaySummary?.realized_pnl || 0) >= 0 ? '+' : ''}${(todaySummary?.realized_pnl || 0).toFixed(2)}</span> | 持仓浮动: <span style={{ color: (todaySummary?.unrealized_pnl || 0) >= 0 ? '#00c805' : '#ff3b30', fontWeight: 700 }}>{(todaySummary?.unrealized_pnl || 0) >= 0 ? '+' : ''}${(todaySummary?.unrealized_pnl || 0).toFixed(2)}</span>
+              </div>
             </div>
             <div className="stat-card" style={{ background: '#09090b', border: '1px solid var(--color-border)', padding: '1.25rem' }}>
               <span className="stat-label">Win Rate</span>
