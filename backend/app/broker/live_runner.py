@@ -978,7 +978,7 @@ class LiveTradingRunner:
         )
 
     def start(self, strategy_params: Optional[Dict] = None, tickers: Optional[List[str]] = None, **kwargs):
-        if self.is_running:
+        if getattr(self, '_loop_thread', None) is not None and self._loop_thread.is_alive():
             self.add_log("[Warning] 交易机器人已在运行中，无需重复启动。")
             return False
 
