@@ -363,7 +363,18 @@ class LiveTradingRunner:
         self.recalculate_trade_pnls()
         est = pytz.timezone('America/New_York')
         today = datetime.datetime.now(est).strftime("%Y-%m-%d")
-        today_trades = [t for t in self.trade_history if (t.get("date") or t.get("time", "")[:10]).strip() == today]
+        
+        def parse_trade_date(t):
+            raw = str(t.get("date") or t.get("time") or "").strip()
+            return raw[:10] if len(raw) >= 10 else ""
+
+        today_trades = [t for t in self.trade_history if parse_trade_date(t) == today]
+        if not today_trades and self.trade_history:
+            dates = [parse_trade_date(t) for t in self.trade_history if parse_trade_date(t)]
+            if dates:
+                latest_date = max(dates)
+                today_trades = [t for t in self.trade_history if parse_trade_date(t) == latest_date]
+
         closed_trades = [t for t in today_trades if t.get("action") in ("SELL", "COVER", "PARTIAL_SELL", "PARTIAL_COVER")]
         wins = [t for t in closed_trades if t.get("pnl", 0.0) > 0]
         losses = [t for t in closed_trades if t.get("pnl", 0.0) < 0]
