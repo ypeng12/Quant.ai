@@ -170,11 +170,8 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
       fetch(`${API_BASE}/api/broker/positions`).then(r => r.json()).then(posJson => {
         if (posJson && posJson.success) {
           const newPos = posJson.positions || [];
-          setPositions((prevPos: BrokerPosition[]) => {
-            const updated = (newPos.length === 0 && prevPos.length > 0) ? prevPos : newPos;
-            try { localStorage.setItem('cached_positions', JSON.stringify(updated)); } catch (e) {}
-            return updated;
-          });
+          setPositions(newPos);
+          try { localStorage.setItem('cached_positions', JSON.stringify(newPos)); } catch (e) {}
         }
       }).catch(e => console.error(e));
 
