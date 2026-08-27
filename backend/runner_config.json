@@ -1,5 +1,5 @@
 {
-  "is_running": false,
+  "is_running": true,
   "strategy_params": {
     "strategy_version": "ml_peak_finder_5m_v1",
     "strategy_mode": "aggressive_intraday",

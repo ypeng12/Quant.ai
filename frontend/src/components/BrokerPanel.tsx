@@ -114,7 +114,7 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
 
   const [account, setAccount] = useState<any | null>(getInitialAccount);
   const [positions, setPositions] = useState<BrokerPosition[]>(getInitialPositions);
-  const [isBotRunning, setIsBotRunning] = useState<boolean>(false);
+  const [isBotRunning, setIsBotRunning] = useState<boolean>(true);
   const [activeTickers, setActiveTickers] = useState<string[]>([]);
   const [actionFeed, setActionFeed] = useState<string[]>([]);
   const [analysisFeed, setAnalysisFeed] = useState<string[]>([]);
