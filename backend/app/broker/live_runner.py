@@ -142,31 +142,13 @@ class LiveTradingRunner:
 
     def _bg_refresh_account(self):
         try:
-            cpp_bin = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "cpp_engine", "fast_pnl_fetcher")
-            if os.path.exists(cpp_bin):
-                import subprocess, json
-                proc = subprocess.run([cpp_bin, ALPACA_API_KEY, ALPACA_SECRET_KEY, ALPACA_BASE_URL], capture_output=True, text=True, timeout=5)
-                if proc.returncode == 0 and proc.stdout.strip():
-                    data = json.loads(proc.stdout)
-                    if data.get("success") and "equity" in data and "today_pnl" in data:
-                        self._account_cache = {
-                            "success": True,
-                            "equity": float(data["equity"]),
-                            "cash": float(data["cash"]),
-                            "buying_power": float(data["buying_power"]),
-                            "today_pnl": float(data["today_pnl"]),
-                            "today_pnl_pct": float(data.get("today_pnl_pct", 0.0)),
-                            "engine": "C++ Native Acceleration Engine",
-                            "status": "ACTIVE"
-                        }
-                        self._account_cache_time = time.time()
-                        return
             res = self.adapter.get_account_summary()
             if res and res.get("success") is not False:
+                res["engine"] = "Python High-Speed Keep-Alive Engine"
                 self._account_cache = res
                 self._account_cache_time = time.time()
         except Exception as e:
-            print(f"[Warning] C++ account refresh error: {e}")
+            print(f"[Warning] Account refresh error: {e}")
 
     def get_cached_account_summary(self) -> Dict:
         now = time.time()
@@ -1526,18 +1508,7 @@ class LiveTradingRunner:
                     self._premarket_preloaded = False
                 
                 try:
-                    raw_positions_list = self.adapter.get_open_positions()
-                    # Auto-liquidate any blacklisted open position (e.g. MU) held in Alpaca account
-                    for pos in raw_positions_list:
-                        p_sym = pos.get('ticker')
-                        if p_sym in EXCLUDED_TICKERS:
-                            self.add_log(f"🚨 [黑名单持仓清扫] 检测到 Alpaca 账户持仓中包含黑名单标的 [{p_sym}]，自动提交市价平仓全卖出指令！")
-                            try:
-                                self.adapter.close_position(p_sym)
-                            except Exception as ex_p:
-                                print(f"Error liquidating blacklisted ticker {p_sym}: {ex_p}")
-                    
-                    positions_list = [p for p in raw_positions_list if p.get('ticker') not in EXCLUDED_TICKERS]
+                    positions_list = self.adapter.get_open_positions()
                     positions_by_ticker = {pos['ticker']: pos for pos in positions_list if pos.get('ticker')}
                     active_pos_tickers = set(positions_by_ticker.keys())
                     
