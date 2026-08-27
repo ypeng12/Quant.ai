@@ -276,7 +276,7 @@ def build_real_kline_dashboard():
 
     <div class="header">
         <div>
-            <div class="brand">Quant.ai | 双模式对比与历史 K 线复盘</div>
+            <div class="brand">Quant.ai | 双模式对比与历史 K 线复盘 <span style="background:linear-gradient(135deg,#00c805 0%,#059669 100%); color:#fff; font-size:11px; padding:2px 8px; border-radius:10px; margin-left:8px;">⚡ Pure Python Native 极速引擎</span></div>
             <div class="sub">对比模式：实盘成交流水 vs 新升级 ML 策略仿真回测</div>
         </div>
         <div style="display:flex; align-items:center; gap:8px;">
