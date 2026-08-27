@@ -22,7 +22,7 @@ class MockAlpacaAdapter:
         """动态尝试读取 Alpaca 账户真实的实时剩余资金与资产，绝不用硬编码数额。"""
         try:
             from app.config import ALPACA_API_KEY, ALPACA_SECRET_KEY, ALPACA_BASE_URL
-            adapter = AlpacaAdapter(ALPACA_API_KEY, ALPACA_SECRET_KEY, ALPACA_BASE_URL)
+            adapter = AlpacaAdapter(api_key=ALPACA_API_KEY, api_secret=ALPACA_SECRET_KEY, base_url=ALPACA_BASE_URL)
             acc = adapter.get_account_summary()
             if acc and acc.get("success"):
                 self.cash = float(acc.get("cash", 0.0))

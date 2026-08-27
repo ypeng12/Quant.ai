@@ -464,9 +464,9 @@ class LiveTradingRunner:
                     return {"success": True, "message": f"Successfully submitted close order for {sym}."}
                 else:
                     return {"success": False, "error": res.get("error", f"Failed to close position for {sym}")}
-            else:
-                return {"success": False, "error": "Broker adapter does not support closing individual positions."}
         except Exception as e:
+            return {"success": False, "error": str(e)}
+
     def init_alpaca_adapter(self):
         try:
             api_key, api_secret, base_url = self._get_alpaca_credentials()
