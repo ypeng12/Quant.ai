@@ -145,7 +145,7 @@ class LiveTradingRunner:
             cpp_bin = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "cpp_engine", "fast_pnl_fetcher")
             if os.path.exists(cpp_bin):
                 import subprocess, json
-                proc = subprocess.run([cpp_bin], capture_output=True, text=True, timeout=5)
+                proc = subprocess.run([cpp_bin, ALPACA_API_KEY, ALPACA_SECRET_KEY, ALPACA_BASE_URL], capture_output=True, text=True, timeout=5)
                 if proc.returncode == 0 and proc.stdout.strip():
                     data = json.loads(proc.stdout)
                     if data.get("success"):

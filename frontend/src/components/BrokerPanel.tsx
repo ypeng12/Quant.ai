@@ -162,16 +162,8 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
     try {
       fetch(`${API_BASE}/api/broker/account`).then(r => r.json()).then(accJson => {
         if (accJson && accJson.success !== false) {
-          // Guard: If API returns 0 or empty today_pnl while we have a cached non-zero value, retain last known non-zero value
-          setAccount((prevAcc: any) => {
-            const updated = { ...accJson };
-            if ((!updated.today_pnl || updated.today_pnl === 0) && prevAcc?.today_pnl && prevAcc.today_pnl !== 0) {
-              updated.today_pnl = prevAcc.today_pnl;
-              updated.today_pnl_pct = prevAcc.today_pnl_pct;
-            }
-            try { localStorage.setItem('cached_account', JSON.stringify(updated)); } catch (e) {}
-            return updated;
-          });
+          setAccount(accJson);
+          try { localStorage.setItem('cached_account', JSON.stringify(accJson)); } catch (e) {}
         }
       }).catch(e => console.error(e));
 
@@ -210,16 +202,8 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
 
       fetch(`${API_BASE}/api/live/today_summary`).then(r => r.json()).then(todayJson => {
         if (todayJson && todayJson.success && todayJson.summary) {
-          setTodaySummary((prevSummary: any) => {
-            const updated = { ...todayJson.summary };
-            if ((!updated.total_pnl || updated.total_pnl === 0) && prevSummary?.total_pnl && prevSummary.total_pnl !== 0) {
-              updated.total_pnl = prevSummary.total_pnl;
-              updated.alpaca_official_pnl = prevSummary.alpaca_official_pnl;
-              updated.realized_pnl = prevSummary.realized_pnl;
-            }
-            try { localStorage.setItem('cached_today_summary', JSON.stringify(updated)); } catch (e) {}
-            return updated;
-          });
+          setTodaySummary(todayJson.summary);
+          try { localStorage.setItem('cached_today_summary', JSON.stringify(todayJson.summary)); } catch (e) {}
         }
       }).catch(e => console.error(e));
 
@@ -247,7 +231,7 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
 
   useEffect(() => {
     fetchBrokerData();
-    const interval = setInterval(fetchBrokerData, 5000);
+    const interval = setInterval(fetchBrokerData, 2000);
     return () => clearInterval(interval);
   }, []);
 
