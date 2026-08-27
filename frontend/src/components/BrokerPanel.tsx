@@ -359,23 +359,35 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
       {/* Top AI Automated Management Control Card */}
       <div className="card" style={{
         marginBottom: '1.5rem', padding: '1.5rem 2rem',
-        background: 'linear-gradient(135deg, rgba(0,200,5,0.08) 0%, rgba(9,9,11,0.95) 100%)',
-        border: '1px solid rgba(0,200,5,0.4)',
+        background: isBotRunning
+          ? 'linear-gradient(135deg, rgba(0,200,5,0.08) 0%, rgba(9,9,11,0.95) 100%)'
+          : 'linear-gradient(135deg, #18181b 0%, #09090b 100%)',
+        border: isBotRunning ? '1px solid rgba(0,200,5,0.4)' : '1px solid var(--color-border)',
         display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem'
       }}>
         <div>
-          <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '50%', background: '#00c805', boxShadow: '0 0 10px #00c805' }}></span>
-            ⚡ AI Quant Bot Running (24/7 Managed)
-          </h2>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+            <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: isBotRunning ? 'var(--color-green)' : '#8e8e93', boxShadow: isBotRunning ? '0 0 12px var(--color-green)' : 'none' }} />
+            <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 900, color: '#ffffff' }}>
+              {isBotRunning ? '⚡ AI Quant Bot Running' : '⏸️ AI Automated Trading Paused'}
+            </h2>
+          </div>
           <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
-            Evaluating long/short signals and submitting orders directly to Alpaca continuously in real time.
+            {isBotRunning
+              ? 'Evaluating long/short signals every 30s and submitting orders directly to Alpaca.'
+              : 'Click Start to enable AI execution. Automatically manages trades and risk controls.'}
           </p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-          <span style={{ fontSize: '0.85rem', padding: '6px 14px', borderRadius: '6px', background: 'rgba(0,200,5,0.15)', color: '#00c805', border: '1px solid rgba(0,200,5,0.3)', fontWeight: 800 }}>
-            🟢 24/7 Active
-          </span>
+          {!isBotRunning ? (
+            <button onClick={handleStartBot} disabled={actionLoading !== null} style={{ background: 'var(--color-green)', color: '#000', fontWeight: 900, fontSize: '1.05rem', padding: '12px 28px', borderRadius: '8px', border: 'none', cursor: 'pointer', boxShadow: '0 4px 20px rgba(0,200,5,0.3)' }}>
+              {actionLoading === 'start' ? '⏳ Starting...' : '▶️ Start AI Bot'}
+            </button>
+          ) : (
+            <button onClick={handleStopBot} disabled={actionLoading !== null} style={{ background: '#3a3a3c', color: '#fff', fontWeight: 800, fontSize: '1rem', padding: '12px 24px', borderRadius: '8px', border: '1px solid #48484a', cursor: 'pointer' }}>
+              {actionLoading === 'stop' ? '⏳ Stopping...' : '⏸️ Pause AI Bot'}
+            </button>
+          )}
           <button onClick={() => setShowExtModal(true)} disabled={actionLoading !== null} style={{ background: 'linear-gradient(135deg, #2e1065 0%, #3b0764 100%)', color: '#c084fc', fontWeight: 800, fontSize: '0.95rem', padding: '12px 20px', borderRadius: '8px', border: '1px solid rgba(192,132,252,0.4)', cursor: 'pointer', boxShadow: '0 4px 15px rgba(147,51,234,0.25)' }}>
             🌙 Extended-Hours Limit Order
           </button>
