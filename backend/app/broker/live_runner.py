@@ -1020,16 +1020,13 @@ class LiveTradingRunner:
         self._start_order_sync_worker()
         self.add_log(f"🤖 【AI 24/7 全自动托管开启】系统已进入无人值守全自动轮询模式！监控标的({len(self.active_tickers)}): {self.active_tickers}")
         
-        try:
-            loop = asyncio.get_running_loop()
-            self.loop_task = loop.create_task(self._run_loop())
-        except RuntimeError:
-            def start_background_loop():
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
-                loop.run_until_complete(self._run_loop())
-            t = threading.Thread(target=start_background_loop, daemon=True)
-            t.start()
+        def start_background_loop():
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            loop.run_until_complete(self._run_loop())
+        t = threading.Thread(target=start_background_loop, name="quant-ai-engine-loop", daemon=True)
+        self._loop_thread = t
+        t.start()
         return True
 
     @staticmethod
