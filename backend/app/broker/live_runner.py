@@ -397,6 +397,7 @@ class LiveTradingRunner:
             pass
 
         final_today_pnl = round(alpaca_official_today_pnl, 2) if alpaca_official_today_pnl is not None else round(realized_pnl, 2)
+        true_net_pnl = round(realized_pnl + unrealized_pnl, 2)
         return {
             "date": today,
             "total_trades": len(today_trades),
@@ -407,7 +408,7 @@ class LiveTradingRunner:
             "realized_pnl": round(realized_pnl, 2),
             "alpaca_official_pnl": final_today_pnl,
             "unrealized_pnl": round(unrealized_pnl, 2),
-            "total_pnl": final_today_pnl,
+            "total_pnl": true_net_pnl,
             "best_trade": round(max((t.get("pnl", 0.0) for t in closed_trades), default=0.0), 2),
             "worst_trade": round(min((t.get("pnl", 0.0) for t in closed_trades), default=0.0), 2)
         }
