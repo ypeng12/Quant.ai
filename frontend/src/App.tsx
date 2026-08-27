@@ -151,7 +151,7 @@ const INTERVAL_LABELS: Record<string, string> = {
 type ActiveTab = 'dashboard' | 'research' | 'report' | 'walkforward' | 'experiments' | 'replay' | 'broker' | 'institutional' | 'portfolio' | 'ml_assistant' | 'trade_comparison' | 'live_dashboard';
 
 function App() {
-  const [watchlist, setWatchlist] = useState<string[]>(["NVDA", "SNDK", "TSLA", "AMD", "MSFT", "MU"]);
+  const [watchlist, setWatchlist] = useState<string[]>(["SNDK", "TSLA", "MSTR", "NVDA"]);
   const [newTickerInput, setNewTickerInput] = useState<string>('');
   
   const [activeTicker, setActiveTicker] = useState<string>('TSLA');

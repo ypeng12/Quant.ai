@@ -171,26 +171,29 @@ def run_full_simulation():
 
 
 def prepare_real_kline_data():
-    """Fetches REAL 1m, 5m, 15m, 30m intraday candle bars for today for all tickers."""
+    """Fetches REAL 1m, 5m, 15m, 30m intraday candle bars organized by Date for all tickers."""
     chart_data = {}
     intervals = ["1m", "5m", "15m", "30m"]
+    target_dates = ["2026-08-26", "2026-08-12", "2026-08-11", "2026-08-10", "2026-08-07", "2026-08-06", "2026-08-05", "2026-08-04", "2026-07-31", "2026-07-30"]
 
-    for ticker in WATCHLIST:
-        chart_data[ticker] = {}
-        for tf in intervals:
-            df = fetch_and_prepare_data(ticker, interval=tf)
-            if df is not None and not df.empty:
-                today_df = df[df.index.astype(str).str.contains(TODAY_STR)]
-                if not today_df.empty:
-                    chart_data[ticker][tf] = {
-                        "time": [str(t).split()[-1][:5] for t in today_df.index],
-                        "full_time": [str(t) for t in today_df.index],
-                        "open": [round(float(x), 2) for x in today_df["Open"]],
-                        "high": [round(float(x), 2) for x in today_df["High"]],
-                        "low": [round(float(x), 2) for x in today_df["Low"]],
-                        "close": [round(float(x), 2) for x in today_df["Close"]],
-                        "volume": [int(x) for x in today_df["Volume"]],
-                    }
+    for d_str in target_dates:
+        chart_data[d_str] = {}
+        for ticker in WATCHLIST:
+            chart_data[d_str][ticker] = {}
+            for tf in intervals:
+                df = fetch_and_prepare_data(ticker, interval=tf)
+                if df is not None and not df.empty:
+                    date_df = df[df.index.astype(str).str.contains(d_str)]
+                    if not date_df.empty:
+                        chart_data[d_str][ticker][tf] = {
+                            "time": [str(t).split()[-1][:5] for t in date_df.index],
+                            "full_time": [str(t) for t in date_df.index],
+                            "open": [round(float(x), 2) for x in date_df["Open"]],
+                            "high": [round(float(x), 2) for x in date_df["High"]],
+                            "low": [round(float(x), 2) for x in date_df["Low"]],
+                            "close": [round(float(x), 2) for x in date_df["Close"]],
+                            "volume": [int(x) for x in date_df["Volume"]],
+                        }
     return chart_data
 
 
@@ -370,17 +373,11 @@ def build_real_kline_dashboard():
 
         function getActiveTradeList() {{
             const rawList = (currentMode === "real") ? realHistoryTrades : newTrades;
-            let filtered = rawList.filter(t => {{
+            return rawList.filter(t => {{
                 let tDate = t.date || (t.entry_time || t.time || "").substring(0, 10);
                 if (typeof tDate === "string") tDate = tDate.trim();
                 return t.ticker === currentTicker && tDate === currentDate;
             }});
-
-            // Fallback: If no trades match the exact date, show all trades for currentTicker so markers are always visible!
-            if (filtered.length === 0) {{
-                filtered = rawList.filter(t => t.ticker === currentTicker);
-            }}
-            return filtered;
         }}
 
         function initPills() {{
@@ -411,7 +408,17 @@ def build_real_kline_dashboard():
         }}
 
         function renderChart() {{
-            const tkData = chartData[currentTicker] && chartData[currentTicker][currentTimeframe];
+            let tkData = (chartData[currentDate] && chartData[currentDate][currentTicker] && chartData[currentDate][currentTicker][currentTimeframe]) || (chartData[currentTicker] && chartData[currentTicker][currentTimeframe]);
+            if (!tkData || !tkData.time || tkData.time.length === 0) {{
+                // Fallback: search across dates if date not exact match
+                for (const dKey in chartData) {{
+                    if (chartData[dKey] && chartData[dKey][currentTicker] && chartData[dKey][currentTicker][currentTimeframe]) {{
+                        tkData = chartData[dKey][currentTicker][currentTimeframe];
+                        break;
+                    }}
+                }}
+            }}
+
             if (!tkData || !tkData.time || tkData.time.length === 0) {{
                 Plotly.purge("plotlyChart");
                 return;
