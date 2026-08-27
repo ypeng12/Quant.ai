@@ -26,7 +26,7 @@ from app.data_cache import invalidate_cache
 
 class LiveTradingRunner:
     def __init__(self):
-        self.is_running = False
+        self.is_running = True
         self.logs = []
         self.action_logs = []
         self.trade_history = []

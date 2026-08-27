@@ -245,6 +245,7 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
   };
 
   const handleStopBot = async () => {
+    if (!window.confirm('⚠️ 确定要暂停 AI 量化交易托管机器人吗？\n(按“确定”才会暂停，默认一直保持开启托管状态)')) return;
     setActionLoading('stop');
     try {
       const res = await fetch(`${API_BASE}/api/live/stop`, { method: 'POST' });
