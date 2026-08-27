@@ -232,7 +232,35 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
   useEffect(() => {
     fetchBrokerData();
     const interval = setInterval(fetchBrokerData, 2000);
-    return () => clearInterval(interval);
+
+    // ⚡ Sub-Second Real-Time WebSocket Streaming Push (100ms / 0.1s Latency)
+    let ws: WebSocket | null = null;
+    try {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${protocol}//${window.location.host}/ws/live_feed`;
+      ws = new WebSocket(wsUrl);
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.account && data.account.success !== false) setAccount(data.account);
+          if (data.today_summary) setTodaySummary(data.today_summary);
+          if (data.positions) setPositions(data.positions);
+          if (data.status) {
+            setIsBotRunning(data.status.is_running);
+            if (data.status.is_market_open !== undefined) setIsMarketOpen(data.status.is_market_open);
+            if (data.status.active_tickers) setActiveTickers(data.status.active_tickers);
+            if (data.status.ticker_scores) setTickerScores(data.status.ticker_scores);
+          }
+          if (data.action_logs) setActionFeed(data.action_logs);
+          if (data.analysis_logs) setAnalysisFeed(data.analysis_logs);
+        } catch (err) {}
+      };
+    } catch (e) {}
+
+    return () => {
+      clearInterval(interval);
+      if (ws) ws.close();
+    };
   }, []);
 
   const handleStartBot = async () => {

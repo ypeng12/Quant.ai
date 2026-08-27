@@ -1,6 +1,7 @@
 import os
 import json
-from fastapi import FastAPI, Query
+import asyncio
+from fastapi import FastAPI, Query, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -1665,6 +1666,45 @@ def get_analysis_feed(limit: int = 80):
         "logs": list(reversed(filtered_logs[-limit:])),
         "count": len(filtered_logs)
     }
+
+
+@app.websocket("/ws/live_feed")
+async def websocket_live_feed(websocket: WebSocket):
+    """
+    Sub-Second Real-Time WebSocket Streaming Push (100ms / 0.1s Latency).
+    Pushes Account Equity, Today Net PnL, Positions, and Action Logs frame-by-frame.
+    """
+    await websocket.accept()
+    try:
+        while True:
+            try:
+                acc_info = live_runner.get_cached_account_summary()
+                summary = live_runner.get_today_summary()
+                positions = live_runner.get_cached_open_positions()
+                status_data = {
+                    "is_running": live_runner.is_running,
+                    "is_market_open": live_runner.is_market_open(),
+                    "active_tickers": live_runner.active_tickers,
+                    "ticker_scores": getattr(live_runner, "last_ticker_scores", {})
+                }
+                
+                payload = {
+                    "timestamp": datetime.datetime.now().strftime("%H:%M:%S.%f")[:-3],
+                    "account": acc_info,
+                    "today_summary": summary,
+                    "positions": positions,
+                    "status": status_data,
+                    "action_logs": list(reversed(live_runner.action_logs[-30:])),
+                    "analysis_logs": list(reversed([l for l in live_runner.logs if not l.startswith("Background")][-50:]))
+                }
+                await websocket.send_json(payload)
+            except Exception as e:
+                pass
+            await asyncio.sleep(0.1)  # 100ms sub-second streaming frequency!
+    except WebSocketDisconnect:
+        pass
+    except Exception:
+        pass
 
 
 # =========================================================================
