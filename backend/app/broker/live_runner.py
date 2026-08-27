@@ -153,7 +153,7 @@ class LiveTradingRunner:
     def get_cached_account_summary(self) -> Dict:
         now = time.time()
         if self._account_cache is not None:
-            if (now - self._account_cache_time) >= 3.0:
+            if (now - self._account_cache_time) >= 0.3:
                 threading.Thread(target=self._bg_refresh_account, daemon=True).start()
             return self._account_cache
         # Initial synchronous fetch on cold startup
@@ -171,7 +171,7 @@ class LiveTradingRunner:
     def get_cached_open_positions(self) -> List[Dict]:
         now = time.time()
         if self._positions_cache is not None:
-            if (now - self._positions_cache_time) >= 3.0:
+            if (now - self._positions_cache_time) >= 0.3:
                 threading.Thread(target=self._bg_refresh_positions, daemon=True).start()
             return self._positions_cache
         self._bg_refresh_positions()
