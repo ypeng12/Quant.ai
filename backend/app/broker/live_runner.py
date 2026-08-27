@@ -360,7 +360,6 @@ class LiveTradingRunner:
                 self.save_trade_history()
 
     def get_today_summary(self) -> dict:
-        self.recalculate_trade_pnls()
         est = pytz.timezone('America/New_York')
         today = datetime.datetime.now(est).strftime("%Y-%m-%d")
         
@@ -369,16 +368,11 @@ class LiveTradingRunner:
             return raw[:10] if len(raw) >= 10 else ""
 
         today_trades = [t for t in self.trade_history if parse_trade_date(t) == today]
-        if not today_trades and self.trade_history:
-            dates = [parse_trade_date(t) for t in self.trade_history if parse_trade_date(t)]
-            if dates:
-                latest_date = max(dates)
-                today_trades = [t for t in self.trade_history if parse_trade_date(t) == latest_date]
 
         closed_trades = [t for t in today_trades if t.get("action") in ("SELL", "COVER", "PARTIAL_SELL", "PARTIAL_COVER")]
-        wins = [t for t in closed_trades if t.get("pnl", 0.0) > 0]
-        losses = [t for t in closed_trades if t.get("pnl", 0.0) < 0]
-        realized_pnl = sum(t.get("pnl", 0.0) for t in closed_trades)
+        wins = [t for t in closed_trades if (t.get("pnl") or 0.0) > 0]
+        losses = [t for t in closed_trades if (t.get("pnl") or 0.0) < 0]
+        realized_pnl = sum((t.get("pnl") or 0.0) for t in closed_trades)
 
         unrealized_pnl = 0.0
         try:
@@ -396,8 +390,7 @@ class LiveTradingRunner:
         except Exception:
             pass
 
-        final_today_pnl = round(alpaca_official_today_pnl, 2) if alpaca_official_today_pnl is not None else round(realized_pnl, 2)
-        true_net_pnl = round(realized_pnl + unrealized_pnl, 2)
+        official_pnl = round(alpaca_official_today_pnl, 2) if alpaca_official_today_pnl is not None else round(realized_pnl + unrealized_pnl, 2)
         return {
             "date": today,
             "total_trades": len(today_trades),
@@ -406,9 +399,9 @@ class LiveTradingRunner:
             "losses": len(losses),
             "win_rate": round(len(wins) / len(closed_trades) * 100, 1) if closed_trades else 0.0,
             "realized_pnl": round(realized_pnl, 2),
-            "alpaca_official_pnl": final_today_pnl,
+            "alpaca_official_pnl": official_pnl,
             "unrealized_pnl": round(unrealized_pnl, 2),
-            "total_pnl": true_net_pnl,
+            "total_pnl": official_pnl,
             "best_trade": round(max((t.get("pnl", 0.0) for t in closed_trades), default=0.0), 2),
             "worst_trade": round(min((t.get("pnl", 0.0) for t in closed_trades), default=0.0), 2)
         }
