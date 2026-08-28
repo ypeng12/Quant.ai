@@ -1,8 +1,8 @@
 {
   "is_running": true,
   "strategy_params": {
-    "strategy_version": "ml_peak_finder_5m_v1",
-    "strategy_mode": "aggressive_intraday",
+    "strategy_version": "hrt_ml_alpha_v2",
+    "strategy_mode": "hrt_ml_alpha_execution",
     "paper_only_aggressive": true,
     "allow_aggressive_live": false,
     "dynamic_screener_enabled": false,
@@ -10,9 +10,8 @@
     "screener_top_actives": 6,
     "screener_top_movers": 4,
     "max_scan_symbols": 14,
-    "entry_score_min": 65.0,
-    "full_size_score": 75.0,
     "min_expected_value_r": 0.15,
+    "min_win_probability": 0.55,
     "reentry_cooldown_seconds": 60,
     "max_concurrent_positions": 3,
     "pyramid_trigger_pct": 0.004,

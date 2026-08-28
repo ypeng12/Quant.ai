@@ -786,14 +786,12 @@ class LiveTradingRunner:
     ):
         close = self._safe_float(opportunity.get("price"), 0.0)
         direction = opportunity.get("direction", "NEUTRAL")
-        score = self._safe_float(opportunity.get("score"), 0.0)
-        entry_min = self._safe_float(self.strategy_params.get("entry_score_min"), 78.0)
         p_win_pct = opportunity.get("win_rate_pct", 50.0)
         ev_r = opportunity.get("expected_value_r", 0.0)
-        is_pos_ev = opportunity.get("is_positive_ev", True)
+        is_pos_ev = opportunity.get("is_positive_ev", False)
 
         base_reason = (
-            f"[{opportunity.get('regime')}] {direction}={score:.1f} | P_win={p_win_pct:.1f}% | "
+            f"[{opportunity.get('regime')}] {direction} | P_win={p_win_pct:.1f}% | "
             f"E[PnL]={ev_r:+.2f}R | 日内={opportunity.get('session_move_pct', 0):+.2f}% | "
             f"M3={opportunity.get('momentum_3_pct', 0):+.2f}% | RVOL={opportunity.get('rvol', 1):.2f}x"
         )
@@ -819,13 +817,13 @@ class LiveTradingRunner:
 
             if close < min_price:
                 return "HOLD", f"{base_reason} | 股价低于 ${min_price:.2f} (${close:.2f})，拒绝低价毛票/仙股"
-            if not is_valid_quality_stock_symbol(ticker):
-                return "HOLD", f"{base_reason} | 标的属于权证/衍生单元 (Warrant/Unit)，拒绝交易"
 
-            if direction == "NEUTRAL" or score < entry_min or not opportunity.get("_entry_confirmed", False):
-                return "HOLD", f"{base_reason} | 未达到方向/确认门槛 (Score={score:.1f} < {entry_min:.1f})"
+            # HRT-Grade ML Quantitative Alpha Model Entry Evaluation:
+            # Driven directly by ML Probabilistic Mathematical Expectation E[PnL] >= +0.15R and P_win
+            if direction == "NEUTRAL" or not opportunity.get("_entry_confirmed", False):
+                return "HOLD", f"{base_reason} | 未达到 HRT 信号确认门槛"
             if not is_pos_ev:
-                return "HOLD", f"{base_reason} | 概率期望值偏低 (E[PnL]={ev_r:+.2f}R < +0.15R 或 P_win<58%)，拒绝下发盲目交易"
+                return "HOLD", f"{base_reason} | HRT 期望值未达标 (E[PnL]={ev_r:+.2f}R < +0.15R 或 P_win未达标)，拒绝盲目交易"
             last_exit = self.last_exit_times.get(ticker)
             cooldown = self._safe_float(self.strategy_params.get("reentry_cooldown_seconds"), 300.0)
             if last_exit and (time.time() - last_exit) < cooldown:
