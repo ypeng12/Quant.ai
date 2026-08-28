@@ -30,7 +30,7 @@ os.makedirs(DATASETS_DIR, exist_ok=True)
 
 import datetime
 
-WATCHLIST = ["SNDK", "TSLA", "MSTR", "NVDA"]
+WATCHLIST = ["SNDK", "TSLA", "MSTR", "NVDA", "AMD", "MU", "MSFT"]
 
 # Dynamic Date: Default to today or CLI argument
 if len(sys.argv) > 1 and len(sys.argv[1]) == 10:
@@ -174,7 +174,9 @@ def prepare_real_kline_data():
     """Fetches REAL 1m, 5m, 15m, 30m intraday candle bars organized by Date for all tickers."""
     chart_data = {}
     intervals = ["1m", "5m", "15m", "30m"]
-    target_dates = ["2026-08-26", "2026-08-12", "2026-08-11", "2026-08-10", "2026-08-07", "2026-08-06", "2026-08-05", "2026-08-04", "2026-07-31", "2026-07-30"]
+    today_dt = datetime.datetime.now()
+    dates_list = [(today_dt - datetime.timedelta(days=i)).strftime("%Y-%m-%d") for i in range(7)]
+    target_dates = list(dict.fromkeys([TODAY_STR] + dates_list + ["2026-08-26", "2026-08-12", "2026-08-11", "2026-08-10", "2026-08-07", "2026-07-30"]))
 
     for d_str in target_dates:
         chart_data[d_str] = {}
@@ -199,6 +201,46 @@ def prepare_real_kline_data():
 
 def build_real_kline_dashboard():
     """Builds interactive HTML dashboard with REAL intraday K-lines and exact buy/sell markers."""
+    print("[*] Syncing latest Alpaca live trades into history...")
+    trade_hist_file = os.path.join(BASE_DIR, "trade_history.json")
+    try:
+        from app.broker.alpaca_adapter import AlpacaAdapter
+        from app.config import ALPACA_API_KEY, ALPACA_SECRET_KEY, ALPACA_BASE_URL
+        from alpaca.trading.requests import GetOrdersRequest
+        from alpaca.trading.enums import QueryOrderStatus
+        adapter = AlpacaAdapter(api_key=ALPACA_API_KEY, api_secret=ALPACA_SECRET_KEY, base_url=ALPACA_BASE_URL)
+        orders = adapter.client.get_orders(GetOrdersRequest(status=QueryOrderStatus.ALL, limit=200))
+        existing_history = []
+        if os.path.exists(trade_hist_file):
+            with open(trade_hist_file, 'r', encoding='utf-8') as f:
+                raw = json.load(f)
+                existing_history = raw.get('trade_history', []) if isinstance(raw, dict) else raw
+        existing_ids = {t.get('order_id') for t in existing_history if t.get('order_id')}
+        for o in reversed(orders):
+            oid = str(o.id)
+            if oid not in existing_ids and str(o.status) == 'OrderStatus.FILLED':
+                sub_at = str(o.submitted_at)
+                side_str = str(o.side).replace('OrderSide.', '').upper()
+                cid = str(o.client_order_id or '').upper()
+                action = "SHORT" if "ENTRY" in cid and side_str == "SELL" else ("BUY" if side_str == "BUY" else ("COVER" if "EXIT" in cid else "SELL"))
+                existing_history.append({
+                    "order_id": oid,
+                    "date": sub_at[:10],
+                    "time": sub_at[:19].replace('T', ' '),
+                    "action": action,
+                    "action_cn": "做空" if action == "SHORT" else ("平空" if action == "COVER" else ("买入" if action == "BUY" else "卖出")),
+                    "ticker": o.symbol,
+                    "shares": int(o.filled_qty or 0),
+                    "price": float(o.filled_avg_price or 0.0),
+                    "pnl": 0.0,
+                    "reason": f"Alpaca Broker Sync ({action})"
+                })
+                existing_ids.add(oid)
+        with open(trade_hist_file, 'w', encoding='utf-8') as f:
+            json.dump({"trade_history": existing_history}, f, indent=2, ensure_ascii=False)
+    except Exception as e:
+        print(f"[Warning] Failed to sync Alpaca orders in report: {e}")
+
     print("[*] Running strategy simulation for today...")
     new_trades = run_full_simulation()
 
@@ -207,7 +249,6 @@ def build_real_kline_dashboard():
 
     # Load Real Execution History from trade_history.json
     real_history_trades = []
-    trade_hist_file = os.path.join(BASE_DIR, "trade_history.json")
     if os.path.exists(trade_hist_file):
         try:
             with open(trade_hist_file, "r", encoding="utf-8") as f:
