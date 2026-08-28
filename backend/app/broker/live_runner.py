@@ -12,6 +12,7 @@ import os
 import pytz
 import threading
 import time
+import uuid
 from typing import Dict, List, Optional
 
 from app.broker.alpaca_adapter import AlpacaAdapter
@@ -1712,7 +1713,7 @@ class LiveTradingRunner:
                                         self.add_log(f"⚠️ [{ticker}] buying power 不足以购买 1 股，跳过本次信号。")
                                         continue
 
-                                    client_order_id = f"{ticker}-{int(datetime.datetime.now().timestamp())}-ENTRY"
+                                    client_order_id = f"{ticker}-{int(datetime.datetime.now().timestamp())}-{uuid.uuid4().hex[:8]}-ENTRY"
                                     self.lock_entry(ticker)
                                     self.entry_times[ticker] = datetime.datetime.now()
 
@@ -1751,7 +1752,7 @@ class LiveTradingRunner:
                                         self.add_log(f"⚠️ [{ticker}] buying power 不足以卖空 1 股，跳过本次信号。")
                                         continue
 
-                                    client_order_id = f"{ticker}-{int(datetime.datetime.now().timestamp())}-ENTRY"
+                                    client_order_id = f"{ticker}-{int(datetime.datetime.now().timestamp())}-{uuid.uuid4().hex[:8]}-ENTRY"
                                     self.lock_entry(ticker)
                                     self.entry_times[ticker] = datetime.datetime.now()
 
@@ -1778,7 +1779,7 @@ class LiveTradingRunner:
 
                             elif action == "SELL" and current_shares > 0:
                                 pnl = (close_price - avg_cost) * current_shares
-                                client_order_id = f"{ticker}-{int(datetime.datetime.now().timestamp())}-EXIT"
+                                client_order_id = f"{ticker}-{int(datetime.datetime.now().timestamp())}-{uuid.uuid4().hex[:8]}-EXIT"
                                 self.lock_exit(ticker)
                                 self.add_log(f"🔔 [{ticker}] SELL signal triggered! Market selling {current_shares} shares (Est. PnL ${pnl:.2f})...")
                                 order_res = self.adapter.submit_market_order(ticker, current_shares, "sell", client_order_id=client_order_id)
@@ -1802,7 +1803,7 @@ class LiveTradingRunner:
                             elif action == "COVER" and current_shares < 0:
                                 cover_qty = abs(current_shares)
                                 pnl = (avg_cost - close_price) * cover_qty
-                                client_order_id = f"{ticker}-{int(datetime.datetime.now().timestamp())}-EXIT"
+                                client_order_id = f"{ticker}-{int(datetime.datetime.now().timestamp())}-{uuid.uuid4().hex[:8]}-EXIT"
                                 self.lock_exit(ticker)
                                 self.add_log(f"🔔 [{ticker}] COVER signal triggered! Market buying {cover_qty} shares (Est. PnL ${pnl:.2f})...")
                                 order_res = self.adapter.submit_market_order(ticker, cover_qty, "buy", client_order_id=client_order_id)
@@ -1824,7 +1825,7 @@ class LiveTradingRunner:
                             elif action == "PARTIAL_SELL" and current_shares > 0:
                                 sell_qty = max(1, current_shares // 2)
                                 pnl = (close_price - avg_cost) * sell_qty
-                                client_order_id = f"{ticker}-{int(datetime.datetime.now().timestamp())}-PARTIAL"
+                                client_order_id = f"{ticker}-{int(datetime.datetime.now().timestamp())}-{uuid.uuid4().hex[:8]}-PARTIAL"
                                 self.lock_exit(ticker)
                                 self.add_log(f"🟢 [{ticker}] PARTIAL_SELL 触发分批止盈！市价平半仓 {sell_qty} 股 (预估锁利 ${pnl:.2f})...")
                                 order_res = self.adapter.submit_market_order(ticker, sell_qty, "sell", client_order_id=client_order_id)
@@ -1844,7 +1845,7 @@ class LiveTradingRunner:
                             elif action == "PARTIAL_COVER" and current_shares < 0:
                                 cover_qty = max(1, abs(current_shares) // 2)
                                 pnl = (avg_cost - close_price) * cover_qty
-                                client_order_id = f"{ticker}-{int(datetime.datetime.now().timestamp())}-PARTIAL"
+                                client_order_id = f"{ticker}-{int(datetime.datetime.now().timestamp())}-{uuid.uuid4().hex[:8]}-PARTIAL"
                                 self.lock_exit(ticker)
                                 self.add_log(f"🟢 [{ticker}] PARTIAL_COVER 触发分批止盈！市价买回半仓 {cover_qty} 股 (预估锁利 ${pnl:.2f})...")
                                 order_res = self.adapter.submit_market_order(ticker, cover_qty, "buy", client_order_id=client_order_id)
@@ -1875,7 +1876,7 @@ class LiveTradingRunner:
                                         self.add_log(f"⚠️ [{ticker}] Buying power 不足以执行浮盈加仓，跳过。")
                                     else:
                                         pnl_float = (close_price - avg_cost) / avg_cost * 100.0 if avg_cost > 0 else 0.0
-                                        client_order_id = f"{ticker}-{int(datetime.datetime.now().timestamp())}-PYRAMID"
+                                        client_order_id = f"{ticker}-{int(datetime.datetime.now().timestamp())}-{uuid.uuid4().hex[:8]}-PYRAMID"
                                         self.lock_entry(ticker)
                                         self.add_log(
                                             f"📈 [{ticker}] 浮盈加仓 PYRAMID_BUY! 当前浮盈 +{pnl_float:.2f}% — 追加 {pyr_shares} 股 @ ${close_price:.2f}，"
@@ -1909,7 +1910,7 @@ class LiveTradingRunner:
                                         self.add_log(f"⚠️ [{ticker}] Buying power 不足以执行浮盈加空，跳过。")
                                     else:
                                         pnl_float = (avg_cost - close_price) / avg_cost * 100.0 if avg_cost > 0 else 0.0
-                                        client_order_id = f"{ticker}-{int(datetime.datetime.now().timestamp())}-PYRAMID"
+                                        client_order_id = f"{ticker}-{int(datetime.datetime.now().timestamp())}-{uuid.uuid4().hex[:8]}-PYRAMID"
                                         self.lock_entry(ticker)
                                         self.add_log(
                                             f"📉 [{ticker}] 浮盈加空 PYRAMID_SHORT! 当前浮盈 +{pnl_float:.2f}% — 追加卖空 {pyr_shares} 股 @ ${close_price:.2f}，"

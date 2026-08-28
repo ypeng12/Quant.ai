@@ -557,9 +557,9 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
       )}
 
       {/* Positions + Trading Feed Panel */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.15fr) minmax(0, 1fr)', gap: '1.5rem' }}>
         {/* Positions Table */}
-        <div className="card" style={{ padding: '1.25rem' }}>
+        <div className="card" style={{ padding: '1.25rem', minWidth: 0 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
             <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 800, color: '#fff' }}>📋 Live Positions</h3>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -676,7 +676,7 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
         </div>
 
         {/* Live Feed / History Panel */}
-        <div className="card" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column' }}>
+        <div className="card" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', minWidth: 0 }}>
           {/* Tabs */}
           <div style={{ display: 'flex', gap: '8px', marginBottom: '1rem', borderBottom: '1px solid var(--color-border)', paddingBottom: '10px' }}>
             {([
