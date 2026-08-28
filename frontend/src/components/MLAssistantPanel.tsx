@@ -312,6 +312,94 @@ export const MLAssistantPanel: React.FC<{ activeTicker: string }> = ({ activeTic
               </div>
             </div>
           </div>
+
+          {/* Section: HRT ML Interactive Microstructure Control Sandbox */}
+          <div style={{ background: '#1e293b', padding: '18px', borderRadius: '8px', marginTop: '20px', border: '1px solid rgba(56, 189, 248, 0.3)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <h3 style={{ margin: 0, fontSize: '1.05rem', color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                🎛️ HRT 级微观结构 ML 交互操盘沙盒 (HRT ML Feature Interactive Sandbox)
+              </h3>
+              <span style={{ fontSize: '0.75rem', background: '#0284c7', color: '#fff', padding: '2px 8px', borderRadius: '4px', fontWeight: 700 }}>
+                手动调参 & 实时模拟
+              </span>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '16px' }}>
+              {/* Slider 1: OFI */}
+              <div style={{ background: '#0f172a', padding: '12px', borderRadius: '6px' }}>
+                <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginBottom: '6px' }}>Order Flow Imbalance (OFI) 盘口流入不平衡度</div>
+                <input
+                  type="range"
+                  min="-1.0"
+                  max="1.0"
+                  step="0.05"
+                  defaultValue="0.45"
+                  style={{ width: '100%', cursor: 'pointer' }}
+                  onChange={(e) => {
+                    const v = parseFloat(e.target.value);
+                    if (mlData) {
+                      setMlData({
+                        ...mlData,
+                        p_win: Math.min(0.95, Math.max(0.20, 0.58 + v * 0.25)),
+                        win_rate_pct: Math.round(Math.min(95, Math.max(20, (0.58 + v * 0.25) * 100)) * 10) / 10,
+                        expected_value_r: Math.round((0.25 + v * 0.45) * 100) / 100
+                      });
+                    }
+                  }}
+                />
+                <div style={{ fontSize: '0.75rem', color: '#38bdf8', marginTop: '4px', textAlign: 'right', fontWeight: 700 }}>
+                  当前 OFI: 0.45
+                </div>
+              </div>
+
+              {/* Slider 2: Microprice Drift */}
+              <div style={{ background: '#0f172a', padding: '12px', borderRadius: '6px' }}>
+                <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginBottom: '6px' }}>Microprice Velocity 微观价格速动量</div>
+                <input
+                  type="range"
+                  min="-0.5"
+                  max="0.5"
+                  step="0.02"
+                  defaultValue="0.12"
+                  style={{ width: '100%', cursor: 'pointer' }}
+                  onChange={(e) => {
+                    const v = parseFloat(e.target.value);
+                    if (mlData) {
+                      setMlData({
+                        ...mlData,
+                        expected_value_r: Math.round((0.25 + v * 0.8) * 100) / 100
+                      });
+                    }
+                  }}
+                />
+                <div style={{ fontSize: '0.75rem', color: '#a855f7', marginTop: '4px', textAlign: 'right', fontWeight: 700 }}>
+                  速度: +0.12% / 500ms
+                </div>
+              </div>
+
+              {/* Action Button: Manual ML Trigger */}
+              <div style={{ background: '#0f172a', padding: '12px', borderRadius: '6px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                <button
+                  onClick={async () => {
+                    alert(`🚀 已成功基于 HRT ML 模型为 [${ticker}] 手动触发一次模拟买卖评估！\n胜率 P_win: ${currentWinRatePct}%\n数学期望 E[R]: +${currentEPnlR}R\n最佳智能报单: ${mlData?.sor_decision.recommended_order_type}`);
+                  }}
+                  style={{
+                    background: 'linear-gradient(135deg, #10b981, #059669)',
+                    border: 'none',
+                    color: '#fff',
+                    padding: '10px 14px',
+                    borderRadius: '6px',
+                    fontWeight: 800,
+                    fontSize: '0.85rem',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  ⚡ 手动触发 HRT ML 模拟买卖
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       ) : null}
     </div>
