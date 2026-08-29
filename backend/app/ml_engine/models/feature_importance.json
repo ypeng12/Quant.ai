@@ -1,0 +1,19 @@
+{
+  "feature_names": [
+    "ofi",
+    "microprice_velocity",
+    "vpin",
+    "rvol",
+    "spread_ratio"
+  ],
+  "importance_gain_pct": {
+    "ofi": 28.41,
+    "microprice_velocity": 33.67,
+    "vpin": 1.19,
+    "rvol": 30.97,
+    "spread_ratio": 5.75
+  },
+  "auc_score": 0.9923,
+  "optimal_probability_threshold": 0.5239,
+  "out_of_sample_precision": 0.9545
+}

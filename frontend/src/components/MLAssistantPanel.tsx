@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { API_BASE } from '../config';
+import { InstitutionalQuantDashboard } from './InstitutionalQuantDashboard';
 
 interface MLPredictionResult {
   ticker: string;
@@ -404,6 +405,11 @@ export const MLAssistantPanel: React.FC<{ activeTicker: string }> = ({ activeTic
                 </button>
               </div>
             </div>
+          </div>
+
+          {/* Section: Jane Street / HRT L2 DOM Order Book & Low-Latency Profiler */}
+          <div style={{ marginTop: '24px' }}>
+            <InstitutionalQuantDashboard />
           </div>
         </div>
       ) : null}
