@@ -638,8 +638,8 @@ def build_real_kline_dashboard():
                     <td><b>${{t.duration_min || 15}} 分钟</b></td>
                     <td>${{shares}} 股</td>
                     <td>$${{(entryP * shares).toLocaleString('en-US', {{maximumFractionDigits: 0}})}}</td>
-                    <td class="${{pnlCls}}"><b>$${{pnlVal >= 0 ? '+' : ''}}${round2(pnlVal).toFixed(2)}</b></td>
-                    <td class="${{pnlCls}}"><b>${{pnlPct >= 0 ? '+' : ''}}${round2(pnlPct).toFixed(2)}%</b></td>
+                    <td class="${{pnlCls}}"><b>$${{pnlVal >= 0 ? '+' : ''}}${{pnlVal.toFixed(2)}}</b></td>
+                    <td class="${{pnlCls}}"><b>${{pnlPct >= 0 ? '+' : ''}}${{pnlPct.toFixed(2)}}%</b></td>
                     <td><span style="color:#94a3b8;">${{t.reason || 'Signal Exit'}}</span></td>
                 `;
                 container.appendChild(tr);
