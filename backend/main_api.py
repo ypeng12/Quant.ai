@@ -2200,18 +2200,35 @@ from fastapi import HTTPException
 from fastapi.responses import HTMLResponse, FileResponse
 
 @app.get("/charts/trade_comparison_dashboard.html")
-async def get_trade_comparison_dashboard(force_refresh: bool = True):
+async def get_trade_comparison_dashboard(force_refresh: bool = False):
     dash_file = os.path.join(_charts_dir, "trade_comparison_dashboard.html")
     mtime = os.path.getmtime(dash_file) if os.path.exists(dash_file) else 0
 
-    if not os.path.exists(dash_file) or force_refresh or (time.time() - mtime) > 30.0:
-        try:
-            import sys
-            sys.path.insert(0, _project_root)
-            from backend.data.generate_trade_comparison_report import build_real_kline_dashboard
-            build_real_kline_dashboard()
-        except Exception as e:
-            print(f"Error generating trade comparison dashboard: {e}")
+    # If file exists, return immediately (< 3ms response time)
+    if os.path.exists(dash_file) and os.path.getsize(dash_file) > 0:
+        # Trigger async background refresh if requested or stale > 120s
+        if force_refresh or (time.time() - mtime) > 120.0:
+            import asyncio
+            def _async_rebuild():
+                try:
+                    import sys
+                    sys.path.insert(0, _project_root)
+                    from backend.data.generate_trade_comparison_report import build_real_kline_dashboard
+                    build_real_kline_dashboard()
+                except Exception as e:
+                    print(f"[Async Refresh Error]: {e}")
+            asyncio.get_event_loop().run_in_executor(None, _async_rebuild)
+        return FileResponse(dash_file, headers={"Cache-Control": "no-cache, no-store, must-revalidate", "Pragma": "no-cache", "Expires": "0"})
+
+    # Fallback initial synchronous build if file missing
+    try:
+        import sys
+        sys.path.insert(0, _project_root)
+        from backend.data.generate_trade_comparison_report import build_real_kline_dashboard
+        build_real_kline_dashboard()
+    except Exception as e:
+        print(f"Error generating trade comparison dashboard: {e}")
+        
     if os.path.exists(dash_file):
         return FileResponse(dash_file, headers={"Cache-Control": "no-cache, no-store, must-revalidate", "Pragma": "no-cache", "Expires": "0"})
     raise HTTPException(status_code=404, detail="Dashboard not found")
