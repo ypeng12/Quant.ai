@@ -674,39 +674,21 @@ function App() {
           </button>
 
           <button
-            className={`nav-tab ${activeTab === 'replay' ? 'active' : ''}`}
+            className={`nav-tab ${activeTab === 'replay' || activeTab === 'trade_comparison' ? 'active' : ''}`}
             onClick={() => setActiveTab('replay')}
             style={{
               padding: '8px 18px',
               fontSize: '0.9rem',
               fontWeight: 800,
-              background: activeTab === 'replay' ? 'linear-gradient(135deg, #10b981, #059669)' : 'transparent',
+              background: (activeTab === 'replay' || activeTab === 'trade_comparison') ? 'linear-gradient(135deg, #10b981, #059669)' : 'transparent',
               color: '#ffffff',
               borderRadius: '6px',
-              border: activeTab === 'replay' ? 'none' : '1px solid rgba(16, 185, 129, 0.4)',
+              border: (activeTab === 'replay' || activeTab === 'trade_comparison') ? 'none' : '1px solid rgba(16, 185, 129, 0.4)',
               cursor: 'pointer',
               transition: 'all 0.2s ease'
             }}
           >
-            🎬 动态 ML 实时仿真引擎
-          </button>
-
-          <button
-            className={`nav-tab ${activeTab === 'trade_comparison' ? 'active' : ''}`}
-            onClick={() => setActiveTab('trade_comparison')}
-            style={{
-              padding: '8px 18px',
-              fontSize: '0.9rem',
-              fontWeight: 800,
-              background: activeTab === 'trade_comparison' ? 'linear-gradient(135deg, #3b82f6, #1d4ed8)' : 'transparent',
-              color: '#ffffff',
-              borderRadius: '6px',
-              border: activeTab === 'trade_comparison' ? 'none' : '1px solid rgba(59, 130, 246, 0.4)',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease'
-            }}
-          >
-            📈 ML 复盘打点图表
+            🎬 HRT 级 ML 动态仿真与复盘大屏
           </button>
 
           <button
@@ -831,15 +813,13 @@ function App() {
             <InstitutionalPanel />
           )}
 
-          {/* Dynamic ML Simulation Replay Engine Tab */}
-          {activeTab === 'replay' && (
-            <div style={{ width: '100%', height: 'calc(100vh - 120px)', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--color-border)' }}>
-              <iframe
-                src="/charts/dynamic_ml_simulation_replay.html"
-                title="Quant.ai Dynamic ML Simulation Engine"
-                style={{ width: '100%', height: '100%', border: 'none' }}
-              />
-            </div>
+          {/* Consolidated Master Dashboard Tab */}
+          {(activeTab === 'replay' || activeTab === 'trade_comparison') && (
+            <TradeComparisonPanel
+              watchlist={watchlist}
+              activeTicker={activeTicker}
+              onSelectTicker={setActiveTicker}
+            />
           )}
 
           {(activeTab === 'dashboard' || activeTab === 'research') && (
