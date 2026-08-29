@@ -577,11 +577,20 @@ def build_real_kline_dashboard():
         }}
 
         function getTickerCandleSeries() {{
-            let tkData = (chartData[currentDate] && chartData[currentDate][currentTicker] && chartData[currentDate][currentTicker][currentTimeframe]) || (chartData[currentTicker] && chartData[currentTicker][currentTimeframe]);
-            if (!tkData || !tkData.time || tkData.time.length === 0) {{
+            let tkData = null;
+            if (chartData[currentDate] && chartData[currentDate][currentTicker] && chartData[currentDate][currentTicker][currentTimeframe]) {{
+                tkData = chartData[currentDate][currentTicker][currentTimeframe];
+            }} else if (chartData[currentTicker] && chartData[currentTicker][currentTimeframe]) {{
+                tkData = chartData[currentTicker][currentTimeframe];
+            }} else {{
                 for (const dKey in chartData) {{
-                    if (chartData[dKey] && chartData[dKey][currentTicker] && chartData[dKey][currentTicker][currentTimeframe]) {{
-                        tkData = chartData[dKey][currentTicker][currentTimeframe];
+                    const node = chartData[dKey];
+                    if (node && node[currentTicker] && node[currentTicker][currentTimeframe]) {{
+                        tkData = node[currentTicker][currentTimeframe];
+                        break;
+                    }}
+                    if (node && node[currentTimeframe]) {{
+                        tkData = node[currentTimeframe];
                         break;
                     }}
                 }}
@@ -635,16 +644,16 @@ def build_real_kline_dashboard():
                 if (times.includes(enTime)) {{
                     if (t.side === "LONG" || t.action === "BUY") {{
                         buyX.push(enTime); buyY.push(entryP);
-                        buyText.push(`🟢 BUY LONG @ $${{entryP.toFixed(2)}} (${{enTime}}) | ML 胜率 P_win: 73.9%`);
+                        buyText.push("🟢 BUY LONG @ $" + entryP.toFixed(2) + " (" + enTime + ") | ML 胜率 P_win: 73.9%");
                     }} else {{
                         shortX.push(enTime); shortY.push(entryP);
-                        shortText.push(`🔴 SHORT @ $${{entryP.toFixed(2)}} (${{enTime}}) | ML 胜率 P_win: 71.5%`);
+                        shortText.push("🔴 SHORT @ $" + entryP.toFixed(2) + " (" + enTime + ") | ML 胜率 P_win: 71.5%");
                     }}
                 }}
 
                 if (exitP > 0 && times.includes(exTime)) {{
                     exitX.push(exTime); exitY.push(exitP);
-                    exitText.push(`⚡ EXIT @ $${{exitP.toFixed(2)}} (${{exTime}}) | 盈亏: $${{pnlVal >= 0 ? '+' : ''}}${{pnlVal.toFixed(2)}}`);
+                    exitText.push("⚡ EXIT @ $" + exitP.toFixed(2) + " (" + exTime + ") | 盈亏: $" + pnlVal.toFixed(2));
                 }}
             }});
 
