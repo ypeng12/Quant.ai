@@ -843,11 +843,14 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
         const todayStr = todaySummary?.date || new Date().toLocaleDateString('sv-SE');
         const rawDates = tradeHistory.map(t => (t.date || t.time?.slice(0, 10))?.trim()).filter(Boolean) as string[];
         const availableDates = Array.from(new Set(rawDates)).sort().reverse();
+        
+        // Default to latest trade date that actually has trades in history
+        const latestTradeDate = (availableDates.length > 0) ? availableDates[0] : todayStr;
+        const effectiveDate = selectedDate || latestTradeDate;
+        
         if (todayStr && !availableDates.includes(todayStr)) {
           availableDates.unshift(todayStr);
         }
-
-        const effectiveDate = selectedDate || (availableDates.length > 0 ? availableDates[0] : todayStr);
         const displayTrades = [...tradeHistory].filter((t, _idx, arr) => {
           const d = (t.date || t.time?.slice(0, 10))?.trim();
           if (d !== effectiveDate) return false;
