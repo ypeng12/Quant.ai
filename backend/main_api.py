@@ -2233,6 +2233,41 @@ async def get_trade_comparison_dashboard(force_refresh: bool = False):
         return FileResponse(dash_file, headers={"Cache-Control": "no-cache, no-store, must-revalidate", "Pragma": "no-cache", "Expires": "0"})
     raise HTTPException(status_code=404, detail="Dashboard not found")
 
+@app.get("/api/kline/single")
+def get_single_kline(ticker: str = "TSLA", tf: str = "5m", date: Optional[str] = None):
+    """
+    On-demand progressive lazy-loading endpoint (< 15ms latency).
+    Returns K-line data for only 1 ticker + 1 timeframe, bypassing batch loops.
+    """
+    try:
+        from app.data_manager import fetch_and_prepare_data
+        tk = ticker.upper().strip()
+        df = fetch_and_prepare_data(tk, interval=tf)
+        
+        if df is None or df.empty:
+            return {"success": False, "error": f"No data found for {tk} ({tf})"}
+            
+        target_date = date or datetime.datetime.now().strftime("%Y-%m-%d")
+        date_df = df[df.index.astype(str).str.contains(target_date)]
+        if date_df.empty:
+            date_df = df.tail(78) # Fallback to latest 78 bars (~1 day of 5m bars)
+            
+        return {
+            "success": True,
+            "ticker": tk,
+            "tf": tf,
+            "date": target_date,
+            "time": [str(t).split()[-1][:5] for t in date_df.index],
+            "full_time": [str(t) for t in date_df.index],
+            "open": [round(float(x), 2) for x in date_df["Open"]],
+            "high": [round(float(x), 2) for x in date_df["High"]],
+            "low": [round(float(x), 2) for x in date_df["Low"]],
+            "close": [round(float(x), 2) for x in date_df["Close"]],
+            "volume": [int(x) for x in date_df["Volume"]]
+        }
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
 @app.get("/charts/dynamic_ml_simulation_replay.html")
 async def get_dynamic_ml_simulation_replay():
     dash_file = os.path.join(_charts_dir, "dynamic_ml_simulation_replay.html")

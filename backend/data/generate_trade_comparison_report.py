@@ -30,7 +30,7 @@ os.makedirs(DATASETS_DIR, exist_ok=True)
 
 import datetime
 
-WATCHLIST = ["SNDK", "TSLA", "MSTR", "NVDA", "AMD", "MU", "MSFT"]
+WATCHLIST = ["TSLA", "NVDA", "MSTR", "SNDK"]
 
 # Dynamic Date: Default to today or CLI argument
 if len(sys.argv) > 1 and len(sys.argv[1]) == 10:
