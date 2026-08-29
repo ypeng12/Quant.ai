@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { API_BASE } from '../config';
 import { InstitutionalQuantDashboard } from './InstitutionalQuantDashboard';
+import { MLDynamicVisualizationDashboard } from './MLDynamicVisualizationDashboard';
 
 interface MLPredictionResult {
   ticker: string;
@@ -180,6 +181,11 @@ export const MLAssistantPanel: React.FC<{ activeTicker: string }> = ({ activeTic
         </div>
       ) : mlData ? (
         <div>
+          {/* Dynamic Animated ML Models Visualization Dashboard */}
+          <div style={{ marginBottom: '24px' }}>
+            <MLDynamicVisualizationDashboard />
+          </div>
+
           {/* Main 4 ML Models Grid */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '20px' }}>
             {/* Card 1: Probability Calibration */}
