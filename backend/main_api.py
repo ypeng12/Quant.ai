@@ -2216,6 +2216,21 @@ async def get_trade_comparison_dashboard(force_refresh: bool = True):
         return FileResponse(dash_file, headers={"Cache-Control": "no-cache, no-store, must-revalidate", "Pragma": "no-cache", "Expires": "0"})
     raise HTTPException(status_code=404, detail="Dashboard not found")
 
+@app.get("/charts/dynamic_ml_simulation_replay.html")
+async def get_dynamic_ml_simulation_replay():
+    dash_file = os.path.join(_charts_dir, "dynamic_ml_simulation_replay.html")
+    if not os.path.exists(dash_file) or os.path.getsize(dash_file) == 0:
+        try:
+            import sys
+            sys.path.insert(0, _project_root)
+            from backend.data.generate_dynamic_ml_simulation_html import generate_dynamic_simulation_html
+            generate_dynamic_simulation_html()
+        except Exception as e:
+            print(f"Error generating dynamic simulation dashboard: {e}")
+    if os.path.exists(dash_file):
+        return FileResponse(dash_file, headers={"Cache-Control": "no-cache, no-store, must-revalidate", "Pragma": "no-cache", "Expires": "0"})
+    raise HTTPException(status_code=404, detail="Dashboard not found")
+
 @app.get("/charts/quant_live_dashboard.html")
 async def get_quant_live_dashboard():
     dashboard_file = os.path.join(_charts_dir, "quant_live_dashboard.html")

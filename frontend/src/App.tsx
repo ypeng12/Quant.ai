@@ -674,6 +674,24 @@ function App() {
           </button>
 
           <button
+            className={`nav-tab ${activeTab === 'replay' ? 'active' : ''}`}
+            onClick={() => setActiveTab('replay')}
+            style={{
+              padding: '8px 18px',
+              fontSize: '0.9rem',
+              fontWeight: 800,
+              background: activeTab === 'replay' ? 'linear-gradient(135deg, #10b981, #059669)' : 'transparent',
+              color: '#ffffff',
+              borderRadius: '6px',
+              border: activeTab === 'replay' ? 'none' : '1px solid rgba(16, 185, 129, 0.4)',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            🎬 动态 ML 实时仿真引擎
+          </button>
+
+          <button
             className={`nav-tab ${activeTab === 'trade_comparison' ? 'active' : ''}`}
             onClick={() => setActiveTab('trade_comparison')}
             style={{
@@ -688,7 +706,7 @@ function App() {
               transition: 'all 0.2s ease'
             }}
           >
-            🎬 策略对比、评估与历史复盘
+            📈 ML 复盘打点图表
           </button>
 
           <button
@@ -813,13 +831,15 @@ function App() {
             <InstitutionalPanel />
           )}
 
-          {/* Combined Replay Simulator & Experiments Tab */}
+          {/* Dynamic ML Simulation Replay Engine Tab */}
           {activeTab === 'replay' && (
-            <ReplayAndExperimentsPanel 
-              watchlist={watchlist} 
-              activeTicker={activeTicker} 
-              onSelectTicker={setActiveTicker} 
-            />
+            <div style={{ width: '100%', height: 'calc(100vh - 120px)', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--color-border)' }}>
+              <iframe
+                src="/charts/dynamic_ml_simulation_replay.html"
+                title="Quant.ai Dynamic ML Simulation Engine"
+                style={{ width: '100%', height: '100%', border: 'none' }}
+              />
+            </div>
           )}
 
           {(activeTab === 'dashboard' || activeTab === 'research') && (
