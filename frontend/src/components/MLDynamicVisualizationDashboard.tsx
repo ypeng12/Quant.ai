@@ -51,10 +51,12 @@ export const MLDynamicVisualizationDashboard: React.FC = () => {
         <div>
           <h2 style={{ margin: 0, fontSize: '1.4rem', color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '10px' }}>
             <span>🎬 Quant.ai 全量 ML 模型动态实时诊断大屏</span>
-            <span style={{ fontSize: '0.75rem', background: '#0284c7', color: '#fff', padding: '2px 8px', borderRadius: '4px', fontWeight: 800 }}>LIVE SIMULATION</span>
+            <span style={{ fontSize: '0.75rem', background: '#7c3aed', color: '#fff', padding: '3px 10px', borderRadius: '4px', fontWeight: 800 }}>
+              🌙 盘后复盘模式 (基于 2026-08-28 美股真实 K 线推演)
+            </span>
           </h2>
           <p style={{ margin: '4px 0 0 0', color: '#94a3b8', fontSize: '0.85rem' }}>
-            LightGBM 概率引擎 + HMM 隐马尔可夫体制识别 + 跨标的 Lead-Lag 动态热力图
+            LightGBM 概率预测 + HMM 隐马尔可夫体制识别 + 跨标的 Lead-Lag 动态热力图 (盘中自动无缝切换 Alpaca 实盘推送)
           </p>
         </div>
 
@@ -84,7 +86,7 @@ export const MLDynamicVisualizationDashboard: React.FC = () => {
         {/* Module 1: LightGBM Predicted Probability Radial Gauge */}
         <div style={{ background: '#131b2e', padding: '18px', borderRadius: '10px', border: '1px solid rgba(56, 189, 248, 0.2)', textAlign: 'center' }}>
           <h3 style={{ margin: '0 0 12px 0', fontSize: '1.05rem', color: '#38bdf8' }}>
-            🤖 LightGBM 条件胜率预测 ($P_{'{win}'}$)
+            🤖 LightGBM 条件胜率预测 (P_win)
           </h3>
           
           {/* Animated Radial Gauge SVG */}
