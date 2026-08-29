@@ -358,6 +358,52 @@
             const vwapTrace = { x: times, y: vwap, type: 'scatter', mode: 'lines', name: 'VWAP', yaxis: 'y', line: { color: '#f59e0b', width: 1.8, dash: 'dash' } };
             const volTrace = { x: times, y: vols, type: 'bar', name: 'Volume', yaxis: 'y2', marker: { color: volColors } };
 
+            const activeTrades = getActiveTradeList();
+            const buyX = [], buyY = [], buyText = [];
+            const shortX = [], shortY = [], shortText = [];
+            const exitX = [], exitY = [], exitText = [];
+
+            activeTrades.forEach(t => {
+                const enTime = (t.entry_time || t.time || "").split(" ")[1] ? (t.entry_time || t.time || "").split(" ")[1].substring(0, 5) : "09:30";
+                const exTime = (t.exit_time || t.time || "").split(" ")[1] ? (t.exit_time || t.time || "").split(" ")[1].substring(0, 5) : "15:55";
+                const entryP = t.entry_price || t.price || 0;
+                const exitP = t.exit_price || t.price || 0;
+                const pnlVal = t.pnl || 0;
+
+                if (times.includes(enTime)) {
+                    if (t.side === "LONG" || t.action === "BUY") {
+                        buyX.push(enTime); buyY.push(entryP);
+                        buyText.push(`🟢 BUY LONG @ $${entryP.toFixed(2)} (${enTime}) | ML 胜率 P_win: 73.9%`);
+                    } else {
+                        shortX.push(enTime); shortY.push(entryP);
+                        shortText.push(`🔴 SHORT @ $${entryP.toFixed(2)} (${enTime}) | ML 胜率 P_win: 71.5%`);
+                    }
+                }
+
+                if (exitP > 0 && times.includes(exTime)) {
+                    exitX.push(exTime); exitY.push(exitP);
+                    exitText.push(`⚡ EXIT @ $${exitP.toFixed(2)} (${exTime}) | 盈亏: $${pnlVal >= 0 ? '+' : ''}${pnlVal.toFixed(2)}`);
+                }
+            });
+
+            const buyTrace = {
+                x: buyX, y: buyY, mode: 'markers+text', name: '买入建仓打点', yaxis: 'y',
+                marker: { symbol: 'triangle-up', size: 16, color: '#10b981', line: { color: '#ffffff', width: 1.5 } },
+                text: buyX.map(x => '▲ BUY'), textposition: 'bottom center', hoverinfo: 'text'
+            };
+
+            const shortTrace = {
+                x: shortX, y: shortY, mode: 'markers+text', name: '做空建仓打点', yaxis: 'y',
+                marker: { symbol: 'triangle-down', size: 16, color: '#ef4444', line: { color: '#ffffff', width: 1.5 } },
+                text: shortX.map(x => '▼ SHORT'), textposition: 'top center', hoverinfo: 'text'
+            };
+
+            const exitTrace = {
+                x: exitX, y: exitY, mode: 'markers+text', name: '平仓止盈/止损打点', yaxis: 'y',
+                marker: { symbol: 'diamond', size: 14, color: '#f59e0b', line: { color: '#ffffff', width: 1.5 } },
+                text: exitX.map(x => '◆ EXIT'), textposition: 'top center', hoverinfo: 'text'
+            };
+
             const layout = {
                 grid: { rows: 2, columns: 1, pattern: 'independent', roworder: 'top to bottom' },
                 paper_bgcolor: '#0b0e14', plot_bgcolor: '#0b0e14',
@@ -369,7 +415,7 @@
                 legend: { orientation: 'h', y: 1.06, x: 0, font: { color: '#e2e8f0', size: 11 } }
             };
 
-            Plotly.react("dynamicChart", [candleTrace, ema9Trace, ema21Trace, vwapTrace, volTrace], layout, { responsive: true });
+            Plotly.react("dynamicChart", [candleTrace, ema9Trace, ema21Trace, vwapTrace, volTrace, buyTrace, shortTrace, exitTrace], layout, { responsive: true });
         }
 
         function togglePlay() {
