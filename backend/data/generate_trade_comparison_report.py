@@ -261,6 +261,17 @@ def build_real_kline_dashboard():
     new_trades_json = json.dumps(new_trades)
     real_trades_json = json.dumps(real_history_trades)
 
+    # Dynamic date select options
+    all_dates = list(chart_data.keys())
+    if TODAY_STR not in all_dates:
+        all_dates.insert(0, TODAY_STR)
+    
+    date_options_html = ""
+    for d in all_dates:
+        sel_attr = "selected" if d == TODAY_STR else ""
+        label = f"{d} (今日美东)" if d == TODAY_STR else d
+        date_options_html += f'<option value="{d}" {sel_attr}>{label}</option>\n'
+
     html_content = f"""<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -269,70 +280,61 @@ def build_real_kline_dashboard():
     <title>Quant.ai - 双模式对比与历史 K 线复盘看板</title>
     <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         
         * {{ box-sizing: border-box; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }}
-        body {{ background-color: #ffffff; color: #0f1419; margin: 0; padding: 24px; }}
+        body {{ background-color: #0b0e14; color: #e2e8f0; margin: 0; padding: 20px; }}
         
-        .header {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; border-bottom: 1px solid #e1e8ed; padding-bottom: 16px; flex-wrap: wrap; gap: 12px; }}
-        .header .brand {{ font-size: 22px; font-weight: 700; color: #0f1419; letter-spacing: -0.5px; }}
-        .header .sub {{ color: #536471; font-size: 13px; margin-top: 4px; }}
+        .header {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 16px; flex-wrap: wrap; gap: 12px; }}
+        .header .brand {{ font-size: 20px; font-weight: 800; color: #38bdf8; letter-spacing: -0.5px; }}
+        .header .sub {{ color: #94a3b8; font-size: 13px; margin-top: 4px; }}
         
-        .date-select {{ padding: 6px 14px; border-radius: 12px; border: 1px solid #cfd9de; font-weight: 600; font-size: 13px; color: #0f1419; background: #f7f9fa; cursor: pointer; outline: none; }}
+        .date-select {{ padding: 8px 16px; border-radius: 8px; border: 1px solid rgba(56,189,248,0.3); font-weight: 700; font-size: 13px; color: #38bdf8; background: #131722; cursor: pointer; outline: none; }}
 
-        .mode-switch-bar {{ display: flex; gap: 12px; margin-bottom: 20px; background: #f0f3f5; padding: 6px; border-radius: 16px; border: 1px solid #e1e8ed; width: fit-content; }}
-        .mode-btn {{ padding: 10px 20px; border-radius: 12px; border: none; font-weight: 700; font-size: 13px; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 6px; }}
-        .mode-btn.btn-real {{ background: transparent; color: #536471; }}
-        .mode-btn.btn-real.active {{ background: #ffffff; color: #0f1419; box-shadow: 0 2px 6px rgba(0,0,0,0.1); border: 1px solid #cfd9de; }}
-        .mode-btn.btn-ml {{ background: transparent; color: #536471; }}
-        .mode-btn.btn-ml.active {{ background: #1d9bf0; color: #ffffff; box-shadow: 0 2px 6px rgba(29,155,240,0.3); }}
+        .mode-switch-bar {{ display: flex; gap: 10px; margin-bottom: 16px; background: #131722; padding: 4px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); width: fit-content; }}
+        .mode-btn {{ padding: 8px 18px; border-radius: 8px; border: none; font-weight: 700; font-size: 13px; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 6px; }}
+        .mode-btn.btn-real {{ background: transparent; color: #94a3b8; }}
+        .mode-btn.btn-real.active {{ background: #1e293b; color: #ffffff; border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 2px 8px rgba(0,0,0,0.4); }}
+        .mode-btn.btn-ml {{ background: transparent; color: #94a3b8; }}
+        .mode-btn.btn-ml.active {{ background: linear-gradient(135deg, #0284c7, #0369a1); color: #ffffff; box-shadow: 0 2px 8px rgba(2,132,199,0.4); }}
 
-        .controls-row {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }}
+        .controls-row {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; }}
         .ticker-pills {{ display: flex; gap: 8px; flex-wrap: wrap; }}
-        .ticker-pill {{ padding: 8px 16px; border-radius: 20px; border: 1px solid #e1e8ed; background: #ffffff; color: #0f1419; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s ease; }}
-        .ticker-pill:hover {{ background: #f7f9fa; border-color: #cfd9de; }}
-        .ticker-pill.active {{ background: #0f1419; color: #ffffff; border-color: #0f1419; }}
+        .ticker-pill {{ padding: 6px 14px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: #131722; color: #94a3b8; font-weight: 700; font-size: 13px; cursor: pointer; transition: all 0.2s ease; }}
+        .ticker-pill:hover {{ background: #1e293b; color: #ffffff; }}
+        .ticker-pill.active {{ background: #0284c7; color: #ffffff; border-color: #38bdf8; }}
         
-        .timeframe-pills {{ display: flex; background: #f7f9fa; border-radius: 20px; padding: 4px; border: 1px solid #e1e8ed; }}
-        .tf-pill {{ padding: 6px 14px; border-radius: 16px; border: none; background: transparent; color: #536471; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s ease; }}
-        .tf-pill.active {{ background: #ffffff; color: #00c805; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }}
+        .timeframe-pills {{ display: flex; background: #131722; border-radius: 6px; padding: 3px; border: 1px solid rgba(255,255,255,0.1); }}
+        .tf-pill {{ padding: 5px 12px; border-radius: 4px; border: none; background: transparent; color: #94a3b8; font-weight: 700; font-size: 12px; cursor: pointer; transition: all 0.2s ease; }}
+        .tf-pill.active {{ background: #10b981; color: #ffffff; }}
         
-        .rh-green {{ color: #00c805; }}
-        .rh-red {{ color: #ff5000; }}
+        .rh-green {{ color: #10b981; }}
+        .rh-red {{ color: #ef4444; }}
         
-        .section-box {{ background: #ffffff; border: 1px solid #e1e8ed; border-radius: 12px; padding: 20px; margin-bottom: 24px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); }}
-        .section-box h3 {{ font-size: 16px; font-weight: 700; margin: 0 0 16px 0; color: #0f1419; }}
+        .section-box {{ background: #131722; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 16px; margin-bottom: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.2); }}
+        .section-box h3 {{ font-size: 15px; font-weight: 700; margin: 0 0 14px 0; color: #38bdf8; }}
         
         table {{ width: 100%; border-collapse: collapse; font-size: 13px; }}
-        th {{ text-align: left; padding: 12px; color: #536471; font-weight: 600; border-bottom: 1px solid #e1e8ed; background: #f7f9fa; }}
-        td {{ padding: 12px; border-bottom: 1px solid #f0f3f5; color: #0f1419; }}
-        tr:hover {{ background-color: #f7f9fa; }}
+        th {{ text-align: left; padding: 10px; color: #94a3b8; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.08); background: #0f172a; }}
+        td {{ padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.04); color: #e2e8f0; }}
+        tr:hover {{ background-color: rgba(255,255,255,0.03); }}
         
-        .badge {{ display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; }}
-        .badge-buy {{ background: rgba(0, 200, 5, 0.12); color: #00c805; }}
-        .badge-short {{ background: rgba(255, 80, 0, 0.12); color: #ff5000; }}
+        .badge {{ display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 800; }}
+        .badge-buy {{ background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }}
+        .badge-short {{ background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }}
     </style>
 </head>
 <body>
 
     <div class="header">
         <div>
-            <div class="brand">Quant.ai | 双模式对比与历史 K 线复盘 <span style="background:linear-gradient(135deg,#00c805 0%,#059669 100%); color:#fff; font-size:11px; padding:2px 8px; border-radius:10px; margin-left:8px;">⚡ Pure Python Native 极速引擎</span></div>
+            <div class="brand">Quant.ai | 双模式对比与历史 K 线复盘 <span style="background:linear-gradient(135deg,#10b981 0%,#059669 100%); color:#fff; font-size:11px; padding:2px 8px; border-radius:10px; margin-left:8px;">⚡ TradingView Pro 级研判引擎</span></div>
             <div class="sub">对比模式：实盘成交流水 vs 新升级 ML 策略仿真回测</div>
         </div>
         <div style="display:flex; align-items:center; gap:8px;">
-            <span style="font-size:13px; font-weight:600; color:#536471;">📅 切换历史交易日：</span>
+            <span style="font-size:13px; font-weight:700; color:#94a3b8;">📅 切换历史交易日：</span>
             <select class="date-select" id="datePicker" onchange="onDateChange(this.value)">
-                <option value="2026-08-26" selected>2026-08-26 (今日美东)</option>
-                <option value="2026-08-12">2026-08-12</option>
-                <option value="2026-08-11">2026-08-11</option>
-                <option value="2026-08-10">2026-08-10</option>
-                <option value="2026-08-07">2026-08-07</option>
-                <option value="2026-08-06">2026-08-06</option>
-                <option value="2026-08-05">2026-08-05</option>
-                <option value="2026-08-04">2026-08-04</option>
-                <option value="2026-07-31">2026-07-31</option>
-                <option value="2026-07-30">2026-07-30</option>
+                {date_options_html}
             </select>
         </div>
     </div>
@@ -351,8 +353,8 @@ def build_real_kline_dashboard():
     <div class="controls-row">
         <div class="ticker-pills" id="tickerPills"></div>
         <div class="timeframe-pills" id="tfPills">
-            <button class="tf-pill active" onclick="setTimeframe('1m')">1M</button>
-            <button class="tf-pill" onclick="setTimeframe('5m')">5M</button>
+            <button class="tf-pill" onclick="setTimeframe('1m')">1M</button>
+            <button class="tf-pill active" onclick="setTimeframe('5m')">5M</button>
             <button class="tf-pill" onclick="setTimeframe('15m')">15M</button>
             <button class="tf-pill" onclick="setTimeframe('30m')">30M</button>
         </div>
@@ -360,7 +362,7 @@ def build_real_kline_dashboard():
 
     <!-- Real Plotly Candlestick Chart -->
     <div class="section-box">
-        <div id="plotlyChart" style="width: 100%; height: 560px;"></div>
+        <div id="plotlyChart" style="width: 100%; height: 600px;"></div>
     </div>
 
     <!-- Matched Trades Table -->
@@ -393,10 +395,10 @@ def build_real_kline_dashboard():
         const realHistoryTrades = {real_trades_json};
         const tickers = {json.dumps(WATCHLIST)};
 
-        let currentTicker = "SNDK";
-        let currentTimeframe = "1m";
-        let currentMode = "ml"; // Default to ML Simulation for instant full trade markers
-        let currentDate = "2026-08-26";
+        let currentTicker = "TSLA";
+        let currentTimeframe = "5m";
+        let currentMode = "real";
+        let currentDate = "{TODAY_STR}";
 
         function switchMode(mode) {{
             currentMode = mode;
@@ -448,10 +450,38 @@ def build_real_kline_dashboard():
             renderChart();
         }}
 
+        function calcEMA(data, period) {{
+            const k = 2 / (period + 1);
+            const ema = [];
+            let prev = data[0];
+            for (let i = 0; i < data.length; i++) {{
+                prev = (i === 0) ? data[0] : (data[i] * k + prev * (1 - k));
+                ema.push(round2(prev));
+            }}
+            return ema;
+        }}
+
+        function calcVWAP(high, low, close, volume) {{
+            let cumVol = 0;
+            let cumPV = 0;
+            const vwap = [];
+            for (let i = 0; i < close.length; i++) {{
+                const tp = (high[i] + low[i] + close[i]) / 3;
+                const vol = volume[i] || 1;
+                cumPV += tp * vol;
+                cumVol += vol;
+                vwap.push(round2(cumPV / cumVol));
+            }}
+            return vwap;
+        }}
+
+        function round2(val) {{
+            return Math.round(val * 100) / 100;
+        }}
+
         function renderChart() {{
             let tkData = (chartData[currentDate] && chartData[currentDate][currentTicker] && chartData[currentDate][currentTicker][currentTimeframe]) || (chartData[currentTicker] && chartData[currentTicker][currentTimeframe]);
             if (!tkData || !tkData.time || tkData.time.length === 0) {{
-                // Fallback: search across dates if date not exact match
                 for (const dKey in chartData) {{
                     if (chartData[dKey] && chartData[dKey][currentTicker] && chartData[dKey][currentTicker][currentTimeframe]) {{
                         tkData = chartData[dKey][currentTicker][currentTimeframe];
@@ -465,6 +495,12 @@ def build_real_kline_dashboard():
                 return;
             }}
 
+            const ema9 = calcEMA(tkData.close, 9);
+            const ema21 = calcEMA(tkData.close, 21);
+            const vwap = calcVWAP(tkData.high, tkData.low, tkData.close, tkData.volume);
+
+            const volColors = tkData.close.map((c, i) => c >= tkData.open[i] ? 'rgba(8, 153, 129, 0.6)' : 'rgba(242, 54, 69, 0.6)');
+
             const candleTrace = {{
                 x: tkData.time,
                 open: tkData.open,
@@ -473,8 +509,29 @@ def build_real_kline_dashboard():
                 close: tkData.close,
                 type: 'candlestick',
                 name: currentTicker,
-                increasing: {{ line: {{ color: '#00c805', width: 1.5 }}, fillcolor: '#00c805' }},
-                decreasing: {{ line: {{ color: '#ff5000', width: 1.5 }}, fillcolor: '#ff5000' }}
+                yaxis: 'y',
+                increasing: {{ line: {{ color: '#089981', width: 1.5 }}, fillcolor: '#089981' }},
+                decreasing: {{ line: {{ color: '#f23645', width: 1.5 }}, fillcolor: '#f23645' }}
+            }};
+
+            const ema9Trace = {{
+                x: tkData.time, y: ema9, type: 'scatter', mode: 'lines', name: 'EMA 9',
+                yaxis: 'y', line: {{ color: '#38bdf8', width: 1.5 }}
+            }};
+
+            const ema21Trace = {{
+                x: tkData.time, y: ema21, type: 'scatter', mode: 'lines', name: 'EMA 21',
+                yaxis: 'y', line: {{ color: '#a855f7', width: 1.5 }}
+            }};
+
+            const vwapTrace = {{
+                x: tkData.time, y: vwap, type: 'scatter', mode: 'lines', name: 'VWAP',
+                yaxis: 'y', line: {{ color: '#f59e0b', width: 1.8, dash: 'dash' }}
+            }};
+
+            const volTrace = {{
+                x: tkData.time, y: tkData.volume, type: 'bar', name: 'Volume',
+                yaxis: 'y2', marker: {{ color: volColors }}
             }};
 
             const activeTrades = getActiveTradeList();
@@ -494,57 +551,54 @@ def build_real_kline_dashboard():
                 if (t.side === "LONG" || t.action === "BUY") {{
                     buyX.push(enTime);
                     buyY.push(entryP);
-                    buyText.push(`🛒 BUY LONG @ $${{entryP.toFixed(2)}} (${{enTime}})`);
+                    buyText.push(`🟢 BUY LONG @ $${{entryP.toFixed(2)}} (${{enTime}})`);
                 }} else {{
                     shortX.push(enTime);
                     shortY.push(entryP);
-                    shortText.push(`📉 SHORT @ $${{entryP.toFixed(2)}} (${{enTime}})`);
+                    shortText.push(`🔴 SHORT @ $${{entryP.toFixed(2)}} (${{enTime}})`);
                 }}
 
                 if (exitP > 0) {{
                     exitX.push(exTime);
                     exitY.push(exitP);
-                    exitText.push(`🔴 EXIT @ $${{exitP.toFixed(2)}} (${{exTime}}) | 盈亏: $${{pnlVal.toFixed(2)}}`);
+                    exitText.push(`⚡ EXIT @ $${{exitP.toFixed(2)}} (${{exTime}}) | 盈亏: $${{pnlVal.toFixed(2)}}`);
                 }}
             }});
 
             const buyTrace = {{
-                x: buyX, y: buyY, mode: 'markers', name: '买入/建仓',
-                marker: {{ symbol: 'triangle-up', size: 14, color: '#00c805' }},
-                text: buyText, hoverinfo: 'text'
+                x: buyX, y: buyY, mode: 'markers+text', name: '买入建仓', yaxis: 'y',
+                marker: {{ symbol: 'triangle-up', size: 16, color: '#10b981', line: {{ color: '#ffffff', width: 1.5 }} }},
+                text: buyX.map(x => '▲ BUY'), textposition: 'bottom center',
+                hoverinfo: 'text'
             }};
 
             const shortTrace = {{
-                x: shortX, y: shortY, mode: 'markers', name: '做空',
-                marker: {{ symbol: 'triangle-down', size: 14, color: '#9333ea' }},
-                text: shortText, hoverinfo: 'text'
+                x: shortX, y: shortY, mode: 'markers+text', name: '做空建仓', yaxis: 'y',
+                marker: {{ symbol: 'triangle-down', size: 16, color: '#ef4444', line: {{ color: '#ffffff', width: 1.5 }} }},
+                text: shortX.map(x => '▼ SHORT'), textposition: 'top center',
+                hoverinfo: 'text'
             }};
 
             const exitTrace = {{
-                x: exitX, y: exitY, mode: 'markers', name: '平仓出局',
-                marker: {{ symbol: 'x', size: 12, color: '#ff5000' }},
-                text: exitText, hoverinfo: 'text'
+                x: exitX, y: exitY, mode: 'markers+text', name: '平仓离场', yaxis: 'y',
+                marker: {{ symbol: 'x', size: 14, color: '#f59e0b', line: {{ color: '#ffffff', width: 1.5 }} }},
+                text: exitX.map(x => '✕ EXIT'), textposition: 'top center',
+                hoverinfo: 'text'
             }};
 
             const layout = {{
-                paper_bgcolor: '#ffffff',
-                plot_bgcolor: '#ffffff',
+                grid: {{ rows: 2, columns: 1, pattern: 'independent', roworder: 'top to bottom' }},
+                paper_bgcolor: '#0b0e14',
+                plot_bgcolor: '#0b0e14',
                 margin: {{ l: 50, r: 30, t: 20, b: 40 }},
-                xaxis: {{
-                    rangeslider: {{ visible: false }},
-                    gridcolor: '#f0f3f5',
-                    linecolor: '#e1e8ed',
-                    tickfont: {{ color: '#536471' }}
-                }},
-                yaxis: {{
-                    gridcolor: '#f0f3f5',
-                    linecolor: '#e1e8ed',
-                    tickfont: {{ color: '#536471' }}
-                }},
-                legend: {{ orientation: 'h', y: 1.15, x: 0.3, font: {{ color: '#0f1419' }} }}
+                xaxis: {{ domain: [0, 1], rangeslider: {{ visible: false }}, gridcolor: 'rgba(255,255,255,0.05)', tickfont: {{ color: '#94a3b8' }} }},
+                yaxis: {{ domain: [0.28, 1], gridcolor: 'rgba(255,255,255,0.05)', tickfont: {{ color: '#94a3b8' }}, title: {{ text: 'Price ($)', font: {{ color: '#94a3b8' }} }} }},
+                xaxis2: {{ domain: [0, 1], anchor: 'y2', gridcolor: 'rgba(255,255,255,0.05)', tickfont: {{ color: '#94a3b8' }} }},
+                yaxis2: {{ domain: [0, 0.22], anchor: 'x2', gridcolor: 'rgba(255,255,255,0.05)', tickfont: {{ color: '#94a3b8' }}, title: {{ text: 'Vol', font: {{ color: '#94a3b8' }} }} }},
+                legend: {{ orientation: 'h', y: 1.08, x: 0.1, font: {{ color: '#e2e8f0', size: 12 }} }}
             }};
 
-            Plotly.newPlot("plotlyChart", [candleTrace, buyTrace, shortTrace, exitTrace], layout, {{ responsive: true }});
+            Plotly.newPlot("plotlyChart", [candleTrace, ema9Trace, ema21Trace, vwapTrace, volTrace, buyTrace, shortTrace, exitTrace], layout, {{ responsive: true }});
         }}
 
         function renderLedger() {{
@@ -557,7 +611,7 @@ def build_real_kline_dashboard():
             container.innerHTML = "";
 
             if (activeTrades.length === 0) {{
-                container.innerHTML = `<tr><td colspan="12" style="text-align:center; color:#536471; padding:20px;">${{currentDate}} 该股票在该模式下暂无离场/成交记录</td></tr>`;
+                container.innerHTML = `<tr><td colspan="12" style="text-align:center; color:#94a3b8; padding:20px;">${{currentDate}} 该股票在该模式下暂无离场/成交记录</td></tr>`;
                 return;
             }}
 
@@ -584,9 +638,9 @@ def build_real_kline_dashboard():
                     <td><b>${{t.duration_min || 15}} 分钟</b></td>
                     <td>${{shares}} 股</td>
                     <td>$${{(entryP * shares).toLocaleString('en-US', {{maximumFractionDigits: 0}})}}</td>
-                    <td class="${{pnlCls}}"><b>$${{pnlVal >= 0 ? '+' : ''}}${{pnlVal.toFixed(2)}}</b></td>
-                    <td class="${{pnlCls}}"><b>${{pnlPct >= 0 ? '+' : ''}}${{pnlPct.toFixed(2)}}%</b></td>
-                    <td><span style="color:#536471;">${{t.reason || 'Signal Exit'}}</span></td>
+                    <td class="${{pnlCls}}"><b>$${{pnlVal >= 0 ? '+' : ''}}${round2(pnlVal).toFixed(2)}</b></td>
+                    <td class="${{pnlCls}}"><b>${{pnlPct >= 0 ? '+' : ''}}${round2(pnlPct).toFixed(2)}%</b></td>
+                    <td><span style="color:#94a3b8;">${{t.reason || 'Signal Exit'}}</span></td>
                 `;
                 container.appendChild(tr);
             }});

@@ -2170,67 +2170,6 @@ def get_market_regime_hmm():
     except Exception as e:
         return {"status": "ERROR", "message": str(e)}
 
-@app.get("/api/ml/almgren_chriss")
-def get_almgren_chriss_schedule(
-    total_shares: float = Query(100000.0),
-    time_hours: float = Query(1.0),
-    risk_aversion: float = Query(1e-4)
-):
-    try:
-        from app.ml.almgren_chriss_execution import AlmgrenChrissExecutionEngine
-        engine = AlmgrenChrissExecutionEngine(total_shares=total_shares, total_time_hours=time_hours, num_steps=10)
-        sched = engine.compute_optimal_schedule(risk_aversion=risk_aversion)
-        sim = engine.simulate_execution_path(sched)
-        return {
-            "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
-            "status": "LIVE_ACTIVE",
-            "optimal_trajectory_x": sched.trajectory_x.tolist(),
-            "trade_sizes_v": sched.trade_sizes_v.tolist(),
-            "expected_cost_ex": round(sched.expected_cost_ex, 2),
-            "variance_vx": round(sched.variance_vx, 2),
-            "half_life_hours": round(sched.half_life_hours, 3),
-            "simulated_vwap": sim["executed_vwap"],
-            "implementation_shortfall_bps": sim["implementation_shortfall_bps"]
-        }
-    except Exception as e:
-        return {"status": "ERROR", "message": str(e)}
-
-@app.get("/api/ml/hrp_portfolio")
-def get_hrp_portfolio_weights():
-    try:
-        from app.ml.hierarchical_risk_parity import HierarchicalRiskParityOptimizer
-        np.random.seed(42)
-        df_dummy = pd.DataFrame({
-            "AAPL": np.random.normal(0.001, 0.02, 100),
-            "MSFT": np.random.normal(0.001, 0.019, 100),
-            "TLT": np.random.normal(0.0002, 0.005, 100),
-            "GLD": np.random.normal(0.0005, 0.012, 100)
-        })
-        hrp = HierarchicalRiskParityOptimizer(use_ledoit_wolf=True)
-        weights = hrp.fit_predict(df_dummy)
-        return {
-            "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
-            "status": "LIVE_ACTIVE",
-            "hrp_weights": weights
-        }
-    except Exception as e:
-        return {"status": "ERROR", "message": str(e)}
-
-@app.get("/api/ml/symbolic_alpha")
-def get_symbolic_alpha_candidate():
-    try:
-        from app.ml.symbolic_alpha_miner import SymbolicAlphaMiner
-        return {
-            "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
-            "status": "LIVE_ACTIVE",
-            "mined_formula": "sqrt(feature_mom_3_pct)",
-            "rank_ic": 0.1919,
-            "ic_ir": 14.3476,
-            "generations_searched": 15
-        }
-    except Exception as e:
-        return {"status": "ERROR", "message": str(e)}
-
 @app.get("/api/ml/deflated_sharpe")
 def audit_deflated_sharpe(num_trials: int = Query(50)):
     try:
@@ -2257,10 +2196,7 @@ os.makedirs(_charts_dir, exist_ok=True)
 if os.path.exists(_root_assets_dir):
     app.mount("/assets", StaticFiles(directory=_root_assets_dir), name="root_assets")
 
-app.mount("/charts", StaticFiles(directory=_charts_dir), name="charts")
-
 from fastapi import HTTPException
-
 from fastapi.responses import HTMLResponse, FileResponse
 
 @app.get("/charts/trade_comparison_dashboard.html")
@@ -2292,8 +2228,8 @@ async def get_quant_live_dashboard():
         except Exception as e:
             print(f"Error generating dashboard on-the-fly: {e}")
             
-    if os.path.exists(dashboard_file):
-        return FileResponse(dashboard_file)
+    if os.path.exists(dashboard_file) and os.path.getsize(dashboard_file) > 0:
+        return FileResponse(dashboard_file, headers={"Cache-Control": "no-cache, no-store, must-revalidate", "Pragma": "no-cache", "Expires": "0"})
 
     # Bulletproof Inline Fallback HTML
     fallback_html = """<!DOCTYPE html>
@@ -2346,6 +2282,8 @@ async def get_quant_live_dashboard():
 </body>
 </html>"""
     return HTMLResponse(content=fallback_html)
+
+app.mount("/charts", StaticFiles(directory=_charts_dir), name="charts")
 
 @app.get("/{full_path:path}")
 async def serve_spa(full_path: str):
