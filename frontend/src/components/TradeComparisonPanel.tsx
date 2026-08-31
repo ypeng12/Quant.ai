@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { API_BASE } from '../config';
+import { IntradayKlineChart } from './IntradayKlineChart';
 
 interface TradeComparisonPanelProps {
   watchlist: string[];
@@ -64,6 +65,9 @@ export function TradeComparisonPanel({ watchlist, activeTicker, onSelectTicker }
         >
           {isRefreshing ? '🔄 正在算图...' : '🔄 重新算图刷新'}
         </button>
+      </div>
+      <div style={{ padding: '16px' }}>
+        <IntradayKlineChart ticker={activeTicker || 'TSLA'} />
       </div>
       <iframe
         key={iframeKey}

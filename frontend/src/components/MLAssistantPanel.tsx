@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { API_BASE } from '../config';
 import { InstitutionalQuantDashboard } from './InstitutionalQuantDashboard';
 import { MLDynamicVisualizationDashboard } from './MLDynamicVisualizationDashboard';
+import { IntradayKlineChart } from './IntradayKlineChart';
 
 interface MLPredictionResult {
   ticker: string;
@@ -184,6 +185,11 @@ export const MLAssistantPanel: React.FC<{ activeTicker: string }> = ({ activeTic
           {/* Dynamic Animated ML Models Visualization Dashboard */}
           <div style={{ marginBottom: '24px' }}>
             <MLDynamicVisualizationDashboard />
+          </div>
+
+          {/* Intraday K-Line Chart Component */}
+          <div style={{ marginBottom: '24px' }}>
+            <IntradayKlineChart ticker={ticker} />
           </div>
 
           {/* Main 4 ML Models Grid */}
