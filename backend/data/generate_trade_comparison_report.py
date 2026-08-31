@@ -66,6 +66,12 @@ def run_full_simulation():
 
         today_df = df[df.index.astype(str).str.contains(TODAY_STR)]
         if today_df.empty:
+            available_dates = df.index.astype(str).str[:10].unique()
+            if len(available_dates) > 0:
+                latest_date = available_dates[-1]
+                today_df = df[df.index.astype(str).str.contains(latest_date)]
+        
+        if today_df.empty:
             continue
 
         position = None
@@ -479,10 +485,13 @@ def build_real_kline_dashboard():
         const realHistoryTrades = {real_trades_json};
         const tickers = {json.dumps(WATCHLIST)};
 
+        const availableChartDates = Object.keys(chartData).filter(k => chartData[k] && typeof chartData[k] === 'object');
         let currentTicker = "TSLA";
         let currentTimeframe = "5m";
         let currentMode = "real";
-        let currentDate = "{TODAY_STR}";
+        let currentDate = (availableChartDates.length > 0 && availableChartDates.includes("{TODAY_STR}")) 
+            ? "{TODAY_STR}" 
+            : (availableChartDates.length > 0 ? availableChartDates[0] : "{TODAY_STR}");
 
         // Dynamic Simulation Engine State
         let simCurrentIndex = 5;
@@ -501,6 +510,8 @@ def build_real_kline_dashboard():
 
         function onDateChange(dateVal) {{
             currentDate = dateVal;
+            resetReplay();
+            renderDynamicChart();
             renderChart();
             renderLedger();
         }}
