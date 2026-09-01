@@ -813,11 +813,6 @@ class LiveTradingRunner:
             if not is_valid_quality_stock_symbol(ticker):
                 return "HOLD", f"{base_reason} | 标的属于权证/衍生单元 (Warrant/Unit)，拒绝交易"
 
-            # Per-Symbol Consecutive Loss Guard
-            max_losses = int(self.strategy_params.get("max_losses_per_ticker_session", 2))
-            if self.ticker_consecutive_losses.get(ticker, 0) >= max_losses:
-                return "HOLD", f"{base_reason} | 🛑 该标的单日已连续止损 {self.ticker_consecutive_losses[ticker]} 次，触发熔断停牌避险"
-
             if close < min_price:
                 return "HOLD", f"{base_reason} | 股价低于 ${min_price:.2f} (${close:.2f})，拒绝低价毛票/仙股"
 
