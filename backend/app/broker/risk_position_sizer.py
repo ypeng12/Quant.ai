@@ -111,6 +111,9 @@ class RiskPositionSizer:
         stop_pct = max(0.001, self._safe_float(opportunity.get("_stop_pct"), 0.0100))
         risk_budget = equity * self._safe_float(strategy_params.get("max_position_risk_pct"), 0.040)
         shares = int(notional / close_price) if close_price > 0 else 0
+        # High-price stock protection (e.g. SNDK > $500/sh): ensure at least 1 share if buying power permits
+        if shares == 0 and close_price > 500.0 and available_bp >= close_price * 0.9:
+            shares = 1
 
         return {
             "shares": shares,
@@ -143,6 +146,9 @@ class RiskPositionSizer:
         notional = available_bp * min(utilization, probe_bp_pct)
         stop_pct = max(0.001, self._safe_float(opportunity.get("_stop_pct"), 0.0100))
         shares = int(notional / close_price) if close_price > 0 else 0
+        # High-price stock protection (e.g. SNDK > $500/sh): ensure at least 1 share if buying power permits
+        if shares == 0 and close_price > 500.0 and available_bp >= close_price * 0.9:
+            shares = 1
 
         return {
             "shares": shares,
