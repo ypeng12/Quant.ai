@@ -650,17 +650,9 @@ class LiveTradingRunner:
 
         prev_long_structure = prev_close > prev_vwap or prev_close > prev_ema_21
         prev_short_structure = prev_close < prev_vwap or prev_close < prev_ema_21
-        # Strict entry confirmation requiring VWAP + EMA alignment & positive momentum direction
-        vwap_ema_long_alignment = close > vwap and ema_9 > ema_21 and momentum_3_pct > 0.10
-        vwap_ema_short_alignment = close < vwap and ema_9 < ema_21 and momentum_3_pct < -0.10
-        long_confirmed = (
-            (long_breakout and (prev_long_structure or momentum_3_pct >= 0.50 or reversal_long))
-            or (vwap_ema_long_alignment and direction == "LONG" and score >= 78.0)
-        )
-        short_confirmed = (
-            (short_breakdown and (prev_short_structure or momentum_3_pct <= -0.50 or reversal_short))
-            or (vwap_ema_short_alignment and direction == "SHORT" and score >= 78.0)
-        )
+        # Pure ML Model Entry Confirmation: Driven directly by LightGBM 8-Feature ML Probabilistic Inference
+        long_confirmed = (direction == "LONG")
+        short_confirmed = (direction == "SHORT")
         
         vwap_dist_pct = ((close - vwap) / vwap * 100.0) if vwap > 0 else 0.0
         rsi = self._safe_float(row.get("RSI"), 50.0)
@@ -824,7 +816,7 @@ class LiveTradingRunner:
                 return "HOLD", f"{base_reason} | HRT 期望值未达标 (E[PnL]={ev_r:+.2f}R < +0.15R 或 P_win未达标)，拒绝盲目交易"
             
             last_exit = self.last_exit_times.get(ticker)
-            cooldown = self._safe_float(self.strategy_params.get("reentry_cooldown_seconds"), 300.0)
+            cooldown = self._safe_float(self.strategy_params.get("reentry_cooldown_seconds"), 30.0)
             if last_exit and (time.time() - last_exit) < cooldown:
                 remain = int(cooldown - (time.time() - last_exit))
                 return "HOLD", f"{base_reason} | 平仓冷却中 ({remain}s 剩余)，避免同一走势反复追单"
