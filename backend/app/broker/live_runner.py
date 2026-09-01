@@ -941,22 +941,22 @@ class LiveTradingRunner:
 
         return "HOLD", f"{base_reason} | {side} 趋势仍有效，整仓持有，不做碎片止盈"
 
-    def _size_aggressive_entry(self, account: Dict, close_price: float, opportunity: Dict) -> Dict:
+    def _size_aggressive_entry(self, account: Dict, close_price: float, opportunity: Dict, prob_eval: Optional[Dict] = None) -> Dict:
         return self.risk_sizer.size_aggressive_entry(
             account=account,
             close_price=close_price,
             opportunity=opportunity,
             strategy_params=self.strategy_params,
-            prob_eval=opportunity
+            prob_eval=prob_eval or opportunity
         )
 
-    def _size_probe_entry(self, account: Dict, close_price: float, opportunity: Dict) -> Dict:
+    def _size_probe_entry(self, account: Dict, close_price: float, opportunity: Dict, prob_eval: Optional[Dict] = None) -> Dict:
         return self.risk_sizer.size_probe_entry(
             account=account,
             close_price=close_price,
             opportunity=opportunity,
             strategy_params=self.strategy_params,
-            prob_eval=opportunity
+            prob_eval=prob_eval or opportunity
         )
 
     def _size_pyramid_entry(self, account: Dict, close_price: float, opportunity: Dict) -> Dict:
