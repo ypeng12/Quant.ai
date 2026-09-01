@@ -442,7 +442,7 @@ class LiveTradingRunner:
             except Exception as e:
                 self.add_log(f"⚠️ 自选股移除自动清仓警告: {e}")
 
-        if cleaned != previous_watchlist:
+        if set(cleaned) != set(previous_watchlist):
             self.active_tickers = cleaned
             save_watchlist(cleaned, allow_empty=True)
             self.add_log(f"🔄 已更新手动种子池；Alpaca 日内涨跌幅/活跃榜仍会动态补充: {cleaned}")
@@ -1585,8 +1585,8 @@ class LiveTradingRunner:
                             if df is None or df.empty or len(df) < 2:
                                 continue
 
-                            # Rate-limit safety throttling (0.25s) to avoid HTTP 429
-                            await asyncio.sleep(0.25)
+                            # Rate-limit safety throttling (1.0s) for calm, comfortable reading pace
+                            await asyncio.sleep(1.0)
                                 
                             row = df.iloc[-1]
                             prev_row = df.iloc[-2]
