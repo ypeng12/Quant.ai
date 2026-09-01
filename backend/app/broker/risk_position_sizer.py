@@ -88,29 +88,34 @@ class RiskPositionSizer:
         strategy_params: Dict,
         prob_eval: Optional[Dict] = None
     ) -> Dict:
-        equity = max(0.0, self._safe_float(account.get("equity"), account.get("portfolio_value", 0.0)))
+        equity = max(0.0, self._safe_float(account.get("equity"), account.get("portfolio_value", 58000.0)))
         cash = max(0.0, self._safe_float(account.get("cash"), 0.0))
         multiplier = max(1.0, self._safe_float(account.get("multiplier"), 1.0))
-        # Live dynamic buying power returned from Alpaca API
         available_bp = max(0.0, self._safe_float(account.get("buying_power"), cash * multiplier))
-        score = self._safe_float(opportunity.get("score"), 0.0)
-        min_score = self._safe_float(strategy_params.get("entry_score_min"), 78.0)
-        full_score = max(min_score + 1.0, self._safe_float(strategy_params.get("full_size_score"), 90.0))
-        starter = self._safe_float(strategy_params.get("starter_buying_power_pct"), 0.35)
-        maximum = self._safe_float(strategy_params.get("max_position_buying_power_pct"), 0.95)
-        strength = min(1.0, max(0.0, (score - min_score) / (full_score - min_score)))
-        bp_fraction = min(maximum, starter + (maximum - starter) * strength)
-
-        # Kelly Criterion adjustment if probability evaluation is available
-        if prob_eval and prob_eval.get("kelly_fraction", 0.0) > 0:
-            kelly_f = prob_eval["kelly_fraction"]
-            bp_fraction = min(maximum, bp_fraction * min(1.3, max(0.8, kelly_f * 2.0)))
-
-        utilization = self._safe_float(strategy_params.get("buying_power_utilization_pct"), 0.95)
-        notional = available_bp * min(utilization, bp_fraction)
-        stop_pct = max(0.001, self._safe_float(opportunity.get("_stop_pct"), 0.0100))
-        risk_budget = equity * self._safe_float(strategy_params.get("max_position_risk_pct"), 0.040)
-        shares = int(notional / close_price) if close_price > 0 else 0
+        
+        # Risk Management Core Rule: Single position size MUST NOT exceed 25% of Portfolio Equity ($14.6k max)!
+        # Prevents over-leveraging 4x margin on single high-volatility trades (e.g. MSTR/SNDK).
+        max_position_notional = equity * self._safe_float(strategy_params.get("max_single_position_equity_pct"), 0.25)
+        
+        # Kelly Criterion & ML Conviction Sizing
+        score = self._safe_float(opportunity.get("score"), 50.0)
+        p_win = self._safe_float(opportunity.get("win_probability", prob_eval.get("win_probability", 0.50) if prob_eval else 0.50), 0.50)
+        
+        # Dynamic allocation fraction based on ML win rate (15% ~ 25% of equity)
+        eq_fraction = max(0.15, min(0.25, p_win * 0.35))
+        target_notional = equity * eq_fraction
+        
+        # Double Cap: Notional cannot exceed max_position_notional OR available_bp * 0.95
+        final_notional = min(target_notional, max_position_notional, available_bp * 0.95)
+        
+        # Risk Budget Cap (Max 1.5% portfolio risk per trade = $875 max loss)
+        stop_pct = max(0.005, self._safe_float(opportunity.get("_stop_pct"), 0.0100))
+        max_risk_dollars = equity * self._safe_float(strategy_params.get("max_trade_risk_pct"), 0.015)
+        risk_constrained_notional = (max_risk_dollars / stop_pct) if stop_pct > 0 else final_notional
+        
+        final_notional = min(final_notional, risk_constrained_notional)
+        shares = int(final_notional / close_price) if close_price > 0 else 0
+        
         # High-price stock protection (e.g. SNDK > $500/sh): ensure at least 1 share if buying power permits
         if shares == 0 and close_price > 500.0 and available_bp >= close_price * 0.9:
             shares = 1
@@ -119,8 +124,8 @@ class RiskPositionSizer:
             "shares": shares,
             "notional": shares * close_price,
             "available_buying_power": available_bp,
-            "buying_power_fraction": bp_fraction,
-            "risk_budget": risk_budget,
+            "buying_power_fraction": final_notional / equity if equity > 0 else 0.25,
+            "risk_budget": max_risk_dollars,
             "stop_pct": stop_pct,
         }
 
