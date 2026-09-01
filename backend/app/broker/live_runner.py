@@ -1923,7 +1923,12 @@ class LiveTradingRunner:
                                             self.add_log(f"❌ [{ticker}] PYRAMID_SHORT order failed. Reason: {order_res.get('error')}")
                                     
                         except Exception as ex:
-                            self.add_log(f"⚠️ Error scanning {ticker}: {str(ex)}")
+                            if "429" in str(ex) or "rate limit" in str(ex).lower():
+                                df_cached = self._ticker_df_cache.get(ticker)
+                                if df_cached is not None and not df_cached.empty:
+                                    pass # Smooth silent memory cache fallback
+                            else:
+                                self.add_log(f"⚠️ Error scanning {ticker}: {str(ex)}")
 
                     self._score_warmup_complete = True
 
