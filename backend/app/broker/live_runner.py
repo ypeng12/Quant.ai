@@ -1676,10 +1676,6 @@ class LiveTradingRunner:
                                 alerts.append("🔔 Near VWAP Line")
                             if ema_cross_dist < 0.08:
                                 alerts.append("⚡ EMA9/21 Near Cross")
-                            if rsi > 68:
-                                alerts.append(f"🌡️ RSI={rsi:.0f} Overbought")
-                            if rsi < 32:
-                                alerts.append(f"🌡️ RSI={rsi:.0f} Oversold")
                             if rvol > 1.8:
                                 alerts.append(f"🔥 RVOL={rvol:.1f}x High Vol")
                             alert_str = " | " + " · ".join(alerts) if alerts else ""
