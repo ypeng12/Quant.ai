@@ -1560,20 +1560,32 @@ class LiveTradingRunner:
                     if pass_idx > 0:
                         await asyncio.sleep(3)
 
+                    if not hasattr(self, "_ticker_df_cache"):
+                        self._ticker_df_cache = {}
+
                     self.active_tickers.sort(key=lambda sym: self.ticker_scores.get(sym, 0.0), reverse=True)
                     for ticker in self.active_tickers:
                         if not self.is_running:
                             break
                         try:
+                            df = None
                             try:
                                 df = fetch_and_prepare_data(ticker, period="3d", interval="1m")
-                            except Exception:
-                                df = None
+                                if df is not None and not df.empty and len(df) >= 2:
+                                    self._ticker_df_cache[ticker] = df
+                            except Exception as fetch_err:
+                                if "429" in str(fetch_err) or "rate limit" in str(fetch_err).lower():
+                                    df = self._ticker_df_cache.get(ticker)
+                                    if df is not None:
+                                        self.add_log(f"⚡ [{ticker}] Alpaca Rate-Limit 避让生效：已成功无缝使用缓存数据，持续监控！")
+
                             if ticker in EXCLUDED_TICKERS:
                                 continue
                             if df is None or df.empty or len(df) < 2:
-                                # Suppress repetitive log spam when waiting for bar data
                                 continue
+
+                            # Rate-limit safety throttling (0.25s) to avoid HTTP 429
+                            await asyncio.sleep(0.25)
                                 
                             row = df.iloc[-1]
                             prev_row = df.iloc[-2]
