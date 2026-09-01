@@ -748,10 +748,13 @@ class LiveTradingRunner:
         ny_time = now_ny.hour + now_ny.minute / 60.0 + now_ny.second / 3600.0
         is_opening_blitz = (now_ny.weekday() <= 4) and (9.50 <= ny_time < 9.75)
         if not opp.get("_entry_confirmed", False):
-            from app.broker.probability_engine import evaluate_zero_delay_opening_trigger
-            if evaluate_zero_delay_opening_trigger(opp, is_opening_blitz):
+            if prob_eval.get("is_positive_ev", False) or prob_eval.get("p_win", 0.0) >= 0.50:
                 opp["_entry_confirmed"] = True
-                opp["_zero_delay_triggered"] = True
+            else:
+                from app.broker.probability_engine import evaluate_zero_delay_opening_trigger
+                if evaluate_zero_delay_opening_trigger(opp, is_opening_blitz):
+                    opp["_entry_confirmed"] = True
+                    opp["_zero_delay_triggered"] = True
 
         return opp
 
@@ -825,11 +828,6 @@ class LiveTradingRunner:
             if not is_pos_ev:
                 return "HOLD", f"{base_reason} | HRT 期望值未达标 (E[PnL]={ev_r:+.2f}R < +0.15R 或 P_win未达标)，拒绝盲目交易"
             
-            # RVOL False Breakdown Guard (要求相对成交量放量确认 RVOL >= 1.25x)
-            rvol_val = self._safe_float(opportunity.get("rvol"), 1.0)
-            min_rvol = self._safe_float(self.strategy_params.get("min_entry_rvol"), 1.25)
-            if rvol_val < min_rvol:
-                return "HOLD", f"{base_reason} | ⚠️ 无量假突破拦截 (RVOL={rvol_val:.2f}x < {min_rvol:.2f}x)，缺乏机构资金放量确认"
             last_exit = self.last_exit_times.get(ticker)
             cooldown = self._safe_float(self.strategy_params.get("reentry_cooldown_seconds"), 300.0)
             if last_exit and (time.time() - last_exit) < cooldown:
