@@ -1720,9 +1720,7 @@ class LiveTradingRunner:
                                     self.add_log(f"🌙 [盘后研判/休市记录] [{ticker}] 触发 BUY 买点信号 (AI Score: {live_score}分, P_win: {opportunity.get('win_rate_pct')}%) | 非盘中时段，仅保留研判日志。")
                                 else:
                                     account = self.adapter.get_account_summary()
-                                    full_score_target = self._safe_float(self.strategy_params.get("full_size_score"), 75.0)
-                                    is_probe = live_score < full_score_target
-                                    sizing = self._size_probe_entry(account, close_price, opportunity) if is_probe else self._size_aggressive_entry(account, close_price, opportunity)
+                                    sizing = self._size_probe_entry(account, close_price, opportunity)
                                     shares = sizing["shares"]
                                     if shares <= 0:
                                         self.add_log(f"⚠️ [{ticker}] buying power 不足以购买 1 股，跳过本次信号。")
@@ -1759,9 +1757,7 @@ class LiveTradingRunner:
                                     self.add_log(f"🌙 [盘后研判/休市记录] [{ticker}] 触发 SHORT 做空信号 (AI Score: {live_score}分, P_win: {opportunity.get('win_rate_pct')}%) | 非盘中时段，仅保留研判日志。")
                                 else:
                                     account = self.adapter.get_account_summary()
-                                    full_score_target = self._safe_float(self.strategy_params.get("full_size_score"), 75.0)
-                                    is_probe = live_score < full_score_target
-                                    sizing = self._size_probe_entry(account, close_price, opportunity) if is_probe else self._size_aggressive_entry(account, close_price, opportunity)
+                                    sizing = self._size_probe_entry(account, close_price, opportunity)
                                     shares = sizing["shares"]
                                     if shares <= 0:
                                         self.add_log(f"⚠️ [{ticker}] buying power 不足以卖空 1 股，跳过本次信号。")
