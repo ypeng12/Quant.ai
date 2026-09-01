@@ -1698,6 +1698,7 @@ class LiveTradingRunner:
                             if action == "BUY" and current_shares == 0:
                                 if not is_open:
                                     self.add_log(f"🌙 [盘后研判/休市记录] [{ticker}] 触发 BUY 买点信号 (AI Score: {live_score}分, P_win: {opportunity.get('win_rate_pct')}%) | 非盘中时段，仅保留研判日志。")
+                                else:
                                     account = self.adapter.get_account_summary()
                                     sizing = self._size_aggressive_entry(account, close_price, opportunity, prob_eval=opportunity)
                                     shares = sizing["shares"]
