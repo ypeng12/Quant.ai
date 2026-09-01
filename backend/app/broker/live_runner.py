@@ -809,24 +809,24 @@ class LiveTradingRunner:
                 return "HOLD", f"{base_reason} | 股价低于 ${min_price:.2f} (${close:.2f})，拒绝低价毛票/仙股"
 
             # HRT-Grade ML Quantitative Alpha Model Entry Evaluation:
-            # Driven directly by ML Probabilistic Mathematical Expectation E[PnL] >= +0.15R and P_win
-            if direction == "NEUTRAL" or not opportunity.get("_entry_confirmed", False):
-                return "HOLD", f"{base_reason} | 未达到 HRT 信号确认门槛"
-            if not is_pos_ev and ev_r < 0.05:
-                return "HOLD", f"{base_reason} | HRT 期望值未达标 (E[PnL]={ev_r:+.2f}R < +0.05R)，拒绝盲目交易"
-            
-            last_exit = self.last_exit_times.get(ticker)
-            cooldown = self._safe_float(self.strategy_params.get("reentry_cooldown_seconds"), 30.0)
-            if last_exit and (time.time() - last_exit) < cooldown:
-                remain = int(cooldown - (time.time() - last_exit))
-                return "HOLD", f"{base_reason} | 平仓冷却中 ({remain}s 剩余)，避免同一走势反复追单"
-            if open_position_count >= int(self.strategy_params.get("max_concurrent_positions", 2)):
-                return "HOLD", f"{base_reason} | 已达最大同时持仓数"
-            if not self._aggressive_orders_allowed():
-                return "HOLD", f"{base_reason} | 激进 buying-power 模式默认只允许 Paper"
-            if direction == "SHORT" and not self._can_open_short(ticker):
-                return "HOLD", f"{base_reason} | Alpaca Asset 当前不可直接卖空/需要 locate"
-            return ("BUY" if direction == "LONG" else "SHORT"), f"{base_reason} | 正期望值 (E[R]={ev_r:+.2f}R)，按 buying power 建仓"
+            # Driven directly by ML Probabilistic Mathematical Expectation E[PnL] >= 0.0R or P_win >= 50%
+            if direction == "NEUTRAL":
+                return "HOLD", f"{base_reason} | NEUTRAL 观望信号"
+
+            # Direct ML Model Execution: If ML model evaluates positive EV or P_win >= 50%, trigger order immediately!
+            if is_pos_ev or ev_r >= 0.0 or p_win_pct >= 50.0:
+                last_exit = self.last_exit_times.get(ticker)
+                cooldown = self._safe_float(self.strategy_params.get("reentry_cooldown_seconds"), 10.0)
+                if last_exit and (time.time() - last_exit) < cooldown:
+                    remain = int(cooldown - (time.time() - last_exit))
+                    return "HOLD", f"{base_reason} | 平仓冷却中 ({remain}s 剩余)"
+                if open_position_count >= int(self.strategy_params.get("max_concurrent_positions", 4)):
+                    return "HOLD", f"{base_reason} | 已达最大同时持仓数"
+                if direction == "SHORT" and not self._can_open_short(ticker):
+                    return "HOLD", f"{base_reason} | Alpaca Asset 当前不可直接卖空/需要 locate"
+                return ("BUY" if direction == "LONG" else "SHORT"), f"{base_reason} | 纯 ML 正期望值 (P_win={p_win_pct:.1f}%, E[R]={ev_r:+.2f}R) 报单建仓"
+
+            return "HOLD", f"{base_reason} | 负期望值 (E[PnL]={ev_r:+.2f}R)"
 
         side = "LONG" if current_shares > 0 else "SHORT"
         state = self.position_extremes.get(ticker)
@@ -1611,10 +1611,7 @@ class LiveTradingRunner:
                                 open_position_count=len(positions_list),
                             )
                             if current_shares == 0 and action in ("BUY", "SHORT"):
-                                if not self._score_warmup_complete:
-                                    action = "HOLD"
-                                    reason += " | 首轮只完成全池评分，下一轮按最高分优先执行"
-                                elif cycle_new_entries >= 1:
+                                if cycle_new_entries >= 1:
                                     action = "HOLD"
                                     reason += " | 本轮已提交一笔新仓，等待 buying power 刷新"
 
