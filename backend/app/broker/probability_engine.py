@@ -181,9 +181,9 @@ def evaluate_mathematical_expectation(opportunity: Dict, strategy_params: Dict) 
     b = rr_est
     kelly_f = (max(0.0, (p_win * b - q) / b) if b > 0 else 0.0) * vol_penalty
 
-    # Entry is approved mathematically if Expected Value E[PnL] >= min_expected_value_r (default +0.15R) AND P_win >= 0.58
-    min_ev_r = float(strategy_params.get("min_expected_value_r", 0.15))
-    is_positive_ev = (e_pnl_r >= min_ev_r) and (p_win >= 0.58)
+    # Entry is approved mathematically if Expected Value E[PnL] >= 0.05R or P_win >= 0.50
+    min_ev_r = float(strategy_params.get("min_expected_value_r", 0.05))
+    is_positive_ev = (e_pnl_r >= min_ev_r) or (p_win >= 0.50)
 
     return {
         "win_probability": p_win,

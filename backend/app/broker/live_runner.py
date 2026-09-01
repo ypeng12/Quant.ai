@@ -812,8 +812,8 @@ class LiveTradingRunner:
             # Driven directly by ML Probabilistic Mathematical Expectation E[PnL] >= +0.15R and P_win
             if direction == "NEUTRAL" or not opportunity.get("_entry_confirmed", False):
                 return "HOLD", f"{base_reason} | 未达到 HRT 信号确认门槛"
-            if not is_pos_ev:
-                return "HOLD", f"{base_reason} | HRT 期望值未达标 (E[PnL]={ev_r:+.2f}R < +0.15R 或 P_win未达标)，拒绝盲目交易"
+            if not is_pos_ev and ev_r < 0.05:
+                return "HOLD", f"{base_reason} | HRT 期望值未达标 (E[PnL]={ev_r:+.2f}R < +0.05R)，拒绝盲目交易"
             
             last_exit = self.last_exit_times.get(ticker)
             cooldown = self._safe_float(self.strategy_params.get("reentry_cooldown_seconds"), 30.0)
