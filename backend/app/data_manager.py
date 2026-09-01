@@ -213,13 +213,22 @@ def fetch_and_prepare_data(ticker, period=None, interval="1m"):
         
     # 抓取包含盘前盘后的 K线数据
     stock = yf.Ticker(ticker)
-    
-    # 只有分钟级别 (1m, 5m, 15m, 30m, 1h) 支持盘前盘后 prepost
     is_intraday = interval in ["1m", "5m", "15m", "30m", "1h"]
     
-    df = stock.history(period=period, interval=interval, prepost=is_intraday)
-    
+    try:
+        df = stock.history(period=period, interval=interval, prepost=is_intraday)
+    except Exception as e:
+        from app.data_cache import get_cached_ignore_ttl
+        cached_fallback = get_cached_ignore_ttl(ticker, period, interval)
+        if cached_fallback is not None and not cached_fallback.empty:
+            return cached_fallback
+        raise e
+
     if df.empty:
+        from app.data_cache import get_cached_ignore_ttl
+        cached_fallback = get_cached_ignore_ttl(ticker, period, interval)
+        if cached_fallback is not None and not cached_fallback.empty:
+            return cached_fallback
         raise ValueError(f"未能获取到 {ticker} 的 {interval} 行情数据。")
         
     # 确保时间戳已转换为本地时区 (美东时间)

@@ -52,9 +52,14 @@ def get_cached(ticker: str, period: str, interval: str):
     if datetime.now().timestamp() - saved_time > ttl:
         return None  # 已过期
     
+def get_cached_ignore_ttl(ticker: str, period: str, interval: str):
+    """读取缓存（忽略 TTL 过期限制），用于 Rate-Limit 限流时的强力兜底防线"""
+    key = _cache_key(ticker, period, interval)
+    parquet_file = _cache_path(key)
+    if not os.path.exists(parquet_file):
+        return None
     try:
-        df = pd.read_parquet(parquet_file)
-        return df
+        return pd.read_parquet(parquet_file)
     except Exception:
         return None
 
