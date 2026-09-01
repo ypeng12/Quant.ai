@@ -80,21 +80,34 @@ class AlpacaAdapter:
 
     def get_open_positions(self) -> List[Dict]:
         """
-        Fetch all active positions.
+        Fetch all active positions with 3s in-memory cache and 429 Rate-Limit fallback.
         """
-        positions = self.client.get_all_positions()
-        parsed_positions = []
-        for pos in positions:
-            parsed_positions.append({
-                "ticker": pos.symbol,
-                "shares": int(pos.qty),
-                "avg_entry_price": float(pos.avg_entry_price),
-                "market_value": float(pos.market_value),
-                "current_price": float(pos.current_price),
-                "unrealized_pnl": float(pos.unrealized_pl),
-                "unrealized_pnl_pct": float(pos.unrealized_plpc) * 100, # Convert to %
-            })
-        return parsed_positions
+        import time
+        now = time.time()
+        if hasattr(self, "_positions_cache") and hasattr(self, "_positions_cache_time"):
+            if now - self._positions_cache_time < 3.0:
+                return self._positions_cache
+
+        try:
+            positions = self.client.get_all_positions()
+            parsed_positions = []
+            for pos in positions:
+                parsed_positions.append({
+                    "ticker": pos.symbol,
+                    "shares": int(pos.qty),
+                    "avg_entry_price": float(pos.avg_entry_price),
+                    "market_value": float(pos.market_value),
+                    "current_price": float(pos.current_price),
+                    "unrealized_pnl": float(pos.unrealized_pl),
+                    "unrealized_pnl_pct": float(pos.unrealized_plpc) * 100, # Convert to %
+                })
+            self._positions_cache = parsed_positions
+            self._positions_cache_time = now
+            return parsed_positions
+        except Exception as e:
+            if hasattr(self, "_positions_cache"):
+                return self._positions_cache
+            raise e
 
     def get_position(self, symbol: str) -> Optional[Dict]:
         """

@@ -1543,9 +1543,10 @@ class LiveTradingRunner:
                         await asyncio.sleep(30)
                         continue
                 except Exception as e:
-                    self.add_log(f"⚠️ Failed to fetch Alpaca positions: {str(e)}, skipping round.")
-                    await asyncio.sleep(20)
-                    continue
+                    self.add_log(f"⚡ [Alpaca 持仓 Rate-Limit 避让生效] {str(e)} -> 自动使用上一轮已知持仓无缝继续执行！")
+                    positions_list = getattr(self, "_last_known_positions_list", [])
+                    positions_by_ticker = {pos['ticker']: pos for pos in positions_list if pos.get('ticker')}
+                    active_pos_tickers = set(positions_by_ticker.keys())
 
                 user_watchlist = load_watchlist()
                 if not user_watchlist:
