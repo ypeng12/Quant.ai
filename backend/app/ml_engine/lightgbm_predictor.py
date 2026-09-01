@@ -44,6 +44,9 @@ class LightGBMALphaPredictor:
         vpin = float(features.get("vpin", 0.15))
         rvol = float(features.get("rvol", 1.0))
         spread = float(features.get("spread_ratio", 0.0005))
+        adx_14 = float(features.get("adx_14", 25.0))
+        sub_min_vol = float(features.get("sub_min_vol_accel", 1.0))
+        trend_15m = float(features.get("trend_15m_slope", 0.0))
 
         if self.model is not None:
             X_input = pd.DataFrame([{
@@ -51,12 +54,23 @@ class LightGBMALphaPredictor:
                 "microprice_velocity": micro_vel,
                 "vpin": vpin,
                 "rvol": rvol,
-                "spread_ratio": spread
+                "spread_ratio": spread,
+                "adx_14": adx_14,
+                "sub_min_vol_accel": sub_min_vol,
+                "trend_15m_slope": trend_15m
             }])
             raw_prob = float(self.model.predict(X_input)[0])
         else:
             # Mathematical fallback formulation
-            logit = (0.85 * ofi + 24.0 * micro_vel + 1.10 * (rvol - 1.0) - 1.80 * (vpin - 0.20))
+            logit = (
+                0.85 * ofi + 
+                24.0 * micro_vel + 
+                1.10 * (rvol - 1.0) - 
+                1.80 * (vpin - 0.20) +
+                0.75 * (adx_14 / 25.0) +
+                1.40 * (sub_min_vol - 1.0) +
+                1.60 * trend_15m * 50.0
+            )
             raw_prob = float(1.0 / (1.0 + np.exp(-logit)))
 
         p_win = round(raw_prob, 4)

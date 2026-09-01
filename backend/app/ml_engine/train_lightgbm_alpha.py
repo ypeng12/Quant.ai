@@ -31,7 +31,16 @@ sys.path.insert(0, BASE_DIR)
 MODEL_DIR = os.path.join(BASE_DIR, "app", "ml_engine", "models")
 os.makedirs(MODEL_DIR, exist_ok=True)
 
-FEATURE_NAMES = ["ofi", "microprice_velocity", "vpin", "rvol", "spread_ratio"]
+FEATURE_NAMES = [
+    "ofi", 
+    "microprice_velocity", 
+    "vpin", 
+    "rvol", 
+    "spread_ratio", 
+    "adx_14", 
+    "sub_min_vol_accel", 
+    "trend_15m_slope"
+]
 
 def generate_synthetic_high_frequency_dataset(num_samples: int = 5000) -> pd.DataFrame:
     """Generates high-frequency microstructural training dataset for Alpha calibration."""
@@ -42,14 +51,20 @@ def generate_synthetic_high_frequency_dataset(num_samples: int = 5000) -> pd.Dat
     vpin = np.random.uniform(0.05, 0.45, num_samples)
     rvol = np.random.gamma(2.0, 0.75, num_samples)
     spread = np.random.uniform(0.0001, 0.0015, num_samples)
+    adx_14 = np.random.uniform(10.0, 45.0, num_samples)
+    sub_min_vol = np.random.gamma(1.5, 1.0, num_samples)
+    trend_15m = np.random.normal(0, 0.02, num_samples)
     
-    # Latent true Alpha probability function
+    # Latent true Alpha probability function (purely ML learned)
     logit = (
         0.85 * ofi + 
         1.20 * micro_vel * 20.0 + 
         1.10 * (rvol - 1.0) - 
         1.80 * (vpin - 0.20) - 
-        0.50 * (spread / 0.0005)
+        0.50 * (spread / 0.0005) +
+        0.75 * (adx_14 / 25.0) +
+        1.40 * (sub_min_vol - 1.0) +
+        1.60 * trend_15m * 50.0
     )
     p_true = 1.0 / (1.0 + np.exp(-logit))
     labels = (p_true > 0.55).astype(int)
@@ -60,6 +75,9 @@ def generate_synthetic_high_frequency_dataset(num_samples: int = 5000) -> pd.Dat
         "vpin": vpin,
         "rvol": rvol,
         "spread_ratio": spread,
+        "adx_14": adx_14,
+        "sub_min_vol_accel": sub_min_vol,
+        "trend_15m_slope": trend_15m,
         "target": labels
     })
     return df

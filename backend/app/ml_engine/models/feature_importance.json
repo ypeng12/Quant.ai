@@ -4,16 +4,22 @@
     "microprice_velocity",
     "vpin",
     "rvol",
-    "spread_ratio"
+    "spread_ratio",
+    "adx_14",
+    "sub_min_vol_accel",
+    "trend_15m_slope"
   ],
   "importance_gain_pct": {
-    "ofi": 28.41,
-    "microprice_velocity": 33.67,
-    "vpin": 1.19,
-    "rvol": 30.97,
-    "spread_ratio": 5.75
+    "ofi": 13.01,
+    "microprice_velocity": 17.08,
+    "vpin": 0.03,
+    "rvol": 15.8,
+    "spread_ratio": 1.73,
+    "adx_14": 0.74,
+    "sub_min_vol_accel": 23.69,
+    "trend_15m_slope": 27.92
   },
-  "auc_score": 0.9923,
-  "optimal_probability_threshold": 0.5239,
-  "out_of_sample_precision": 0.9545
+  "auc_score": 0.9832,
+  "optimal_probability_threshold": 0.5058,
+  "out_of_sample_precision": 0.921
 }
