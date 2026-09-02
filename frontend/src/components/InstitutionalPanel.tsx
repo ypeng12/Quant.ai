@@ -796,20 +796,4 @@ export const InstitutionalPanel: React.FC = () => {
                     <span className="text-slate-500 block text-[10px]">SHARPE RATIO</span>
                     <span className="text-indigo-400 font-bold">{resultData.sharpe_ratio?.toFixed(2)}</span>
                   </div>
-                  <div className="bg-slate-900 p-3 rounded-lg border border-slate-800">
-                    <span className="text-slate-500 block text-[10px]">MAX DRAWDOWN</span>
-                    <span className="text-rose-400 font-bold">{(resultData.max_drawdown * 100).toFixed(2)}%</span>
-                  </div>
-                  <div className="bg-slate-900 p-3 rounded-lg border border-slate-800">
-                    <span className="text-slate-500 block text-[10px]">TOTAL REBALANCES</span>
-                    <span className="text-amber-300 font-bold">{resultData.total_rebalance_count}</span>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
+                  <div className="bg-slate-900 p-3 rounded-lg bor
