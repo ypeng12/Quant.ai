@@ -17,22 +17,11 @@ COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY backend/ ./backend/
-COPY src/ ./src/
-COPY run_experiment.py ./
-COPY generate_interactive_quant_dashboard.py ./
-COPY run_max_profit_simulation.py ./
-COPY run_daily_reflection.py ./
-COPY cpp_engine/ ./cpp_engine/
 COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
 
 ENV PYTHONPATH=/app/backend:/app
-ENV OMP_NUM_THREADS=8
-ENV MKL_NUM_THREADS=8
-ENV OPENBLAS_NUM_THREADS=8
-ENV NUMEXPR_NUM_THREADS=8
-
-RUN python3 generate_interactive_quant_dashboard.py || true
+ENV PORT=7860
 
 EXPOSE 7860
 
-CMD ["uvicorn", "backend.main_api:app", "--host", "0.0.0.0", "--port", "7860", "--workers", "4"]
+CMD ["uvicorn", "backend.main_api:app", "--host", "0.0.0.0", "--port", "7860"]

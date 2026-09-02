@@ -415,4 +415,67 @@ export const MLDynamicVisualizationDashboard: React.FC = () => {
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: '#cbd5e1', marginBottom: '4px' }}>
                     <span>🐂 BULL_TREND (牛市主升浪 - 仓位 100%)</span>
-             
+                    <strong style={{ color: '#22c55e' }}>{(hmmProbs.BULL * 100).toFixed(0)}%</strong>
+                  </div>
+                  <div style={{ height: '8px', background: '#0f172a', borderRadius: '4px', overflow: 'hidden' }}>
+                    <div style={{ width: `${hmmProbs.BULL * 100}%`, background: '#22c55e', height: '100%', transition: 'width 0.6s ease' }} />
+                  </div>
+                </div>
+
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: '#cbd5e1', marginBottom: '4px' }}>
+                    <span>🦀 RANGE_SIDEWAYS (震荡洗盘 - 仓位 50%)</span>
+                    <strong style={{ color: '#f59e0b' }}>{(hmmProbs.RANGE * 100).toFixed(0)}%</strong>
+                  </div>
+                  <div style={{ height: '8px', background: '#0f172a', borderRadius: '4px', overflow: 'hidden' }}>
+                    <div style={{ width: `${hmmProbs.RANGE * 100}%`, background: '#f59e0b', height: '100%', transition: 'width 0.6s ease' }} />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '20px' }}>
+            <div style={{ background: '#131b2e', padding: '18px', borderRadius: '10px', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+              <h3 style={{ margin: '0 0 12px 0', fontSize: '1.05rem', color: '#10b981', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span>⚡ 跨标的 Lead-Lag 领涨领跌套利热力脉冲</span>
+                <span style={{ fontSize: '0.75rem', color: '#34d399' }}>领头羊: NVDA (C_ij={leadLagCorr})</span>
+              </h3>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '10px' }}>
+                <div style={{ background: '#0f172a', padding: '12px', borderRadius: '6px', textAlign: 'center' }}>
+                  <div style={{ color: '#94a3b8', fontSize: '0.75rem' }}>NVDA 领头羊脉冲</div>
+                  <div style={{ fontSize: '1.3rem', color: '#22c55e', fontWeight: 800, marginTop: '4px' }}>+3.2 σ</div>
+                </div>
+
+                <div style={{ background: '#0f172a', padding: '12px', borderRadius: '6px', textAlign: 'center' }}>
+                  <div style={{ color: '#94a3b8', fontSize: '0.75rem' }}>[{ticker}] 滞后补涨差价</div>
+                  <div style={{ fontSize: '1.3rem', color: '#38bdf8', fontWeight: 800, marginTop: '4px' }}>+{leadLagDelta} bps</div>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ background: '#131b2e', padding: '18px', borderRadius: '10px', border: '1px solid rgba(168, 85, 247, 0.3)' }}>
+              <h3 style={{ margin: '0 0 12px 0', fontSize: '1.05rem', color: '#a855f7' }}>
+                📊 LightGBM 5 大微观特征贡献度 (Gain %)
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {features.map((f) => (
+                  <div key={f.name}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#cbd5e1', marginBottom: '2px' }}>
+                      <span>{f.name}</span>
+                      <strong style={{ color: f.color }}>{f.weight.toFixed(2)}%</strong>
+                    </div>
+                    <div style={{ height: '6px', background: '#0f172a', borderRadius: '3px', overflow: 'hidden' }}>
+                      <div style={{ width: `${f.weight}%`, background: f.color, height: '100%', transition: 'width 0.4s ease' }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
