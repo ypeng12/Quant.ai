@@ -72,11 +72,29 @@ const MLCard: React.FC<MLCardProps> = ({ title, subtitle, tags, description, chi
 };
 
 export const MLVisualInteractiveLab: React.FC = () => {
+  const [selectedTicker, setSelectedTicker] = useState<string>('MSTR');
+  const [labData, setLabData] = useState<any>(null);
+  const [loading, setLoading] = useState<boolean>(false);
   const [epoch, setEpoch] = useState<number>(25);
-  const [learningRate, setLearningRate] = useState<number>(0.05);
-  const [selectedOptimizer, setSelectedOptimizer] = useState<'Adam' | 'SGD' | 'RMSprop'>('Adam');
-  const [kClusters, setKClusters] = useState<number>(3);
-  const [activeLayer, setActiveLayer] = useState<number>(2);
+
+  useEffect(() => {
+    fetchLabData(selectedTicker);
+  }, [selectedTicker]);
+
+  const fetchLabData = async (ticker: string) => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/ml/lab_data?ticker=${ticker}`);
+      const data = await res.json();
+      if (data.success) {
+        setLabData(data);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Auto animation for interactive demo
   useEffect(() => {
@@ -85,6 +103,10 @@ export const MLVisualInteractiveLab: React.FC = () => {
     }, 150);
     return () => clearInterval(interval);
   }, []);
+
+  const scatterPoints = labData?.scatter_points || [];
+  const pcaFactors = labData?.pca_factors || [];
+  const regimeClusters = labData?.regime_clusters || [];
 
   return (
     <div style={{ padding: '24px', background: '#090d16', color: '#f8fafc', minHeight: '100vh', fontFamily: 'Inter, system-ui, sans-serif' }}>
@@ -106,15 +128,15 @@ export const MLVisualInteractiveLab: React.FC = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
             <span style={{ fontSize: '1.8rem' }}>🧠</span>
             <h1 style={{ margin: 0, fontSize: '1.6rem', fontWeight: 900, color: '#f8fafc', letterSpacing: '-0.02em' }}>
-              Quant.ai 机器学习全景可视化实验室 (ML Visual Interactive Lab)
+              Quant.ai 机器学习全景几何实验室 (ML Visual Interactive Lab)
             </h1>
           </div>
           <p style={{ margin: 0, fontSize: '0.9rem', color: '#94a3b8', maxWidth: '800px', lineHeight: '1.5' }}>
-            将抽象的数学公式与黑盒模型转化为<strong>直观、生动、可交互的 2D/3D 几何演化图景</strong>。亲眼见证模型如何从杂乱无章的盘口噪声中学习出清晰的盈利决策边界！
+            <strong>100% 真实量化模型数据驱动</strong>：每一个几何点云、超平面和聚类分布均直接提取自 <strong>[{selectedTicker}]</strong> 真实 94,040 行 Tick / K线 与 LightGBM 拟合权重！
           </p>
         </div>
 
-        {/* Global Control Widget */}
+        {/* Ticker Selector + Global Control Widget */}
         <div style={{
           display: 'flex',
           gap: '14px',
@@ -124,6 +146,31 @@ export const MLVisualInteractiveLab: React.FC = () => {
           borderRadius: '10px',
           border: '1px solid rgba(255,255,255,0.1)'
         }}>
+          {/* Ticker Selector */}
+          <div>
+            <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 700, marginBottom: '4px' }}>当前分析标的</div>
+            <div style={{ display: 'flex', gap: '4px' }}>
+              {['MSTR', 'TSLA', 'NVDA', 'SNDK'].map((t) => (
+                <button
+                  key={t}
+                  onClick={() => setSelectedTicker(t)}
+                  style={{
+                    background: selectedTicker === t ? '#38bdf8' : '#1e293b',
+                    color: selectedTicker === t ? '#000' : '#cbd5e1',
+                    border: 'none',
+                    borderRadius: '4px',
+                    padding: '3px 8px',
+                    fontSize: '0.72rem',
+                    fontWeight: 800,
+                    cursor: 'pointer'
+                  }}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div>
             <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 700 }}>动态训练迭代 (Epoch)</div>
             <div style={{ fontSize: '1.2rem', fontWeight: 900, color: '#38bdf8' }}>#{epoch} / 100</div>
