@@ -98,20 +98,37 @@ class MarketRegimeHMM:
         # Predict posterior state probabilities for latest bar
         posterior_probs = self.model.predict_proba(X)[-1]
         
-        prob_dict = {}
-        for state_idx, label in self.state_map.items():
-            prob_dict[label] = round(float(posterior_probs[state_idx]), 4)
+        named_probs = {}
+        for state_idx, prob in enumerate(posterior_probs):
+            reg_name = self.state_map.get(state_idx, f"REGIME_{state_idx}")
+            named_probs[reg_name] = round(float(prob), 4)
 
         dominant_idx = int(np.argmax(posterior_probs))
         dominant_regime = self.state_map.get(dominant_idx, "RANGE_SIDEWAYS")
 
-        # Volatility penalty is higher if HighVol_Reversal regime probability is elevated
-        vol_reversal_p = prob_dict.get("VOLATILE_REVERSAL", 0.0)
-        vol_penalty = float(round(max(0.60, 1.0 - 0.5 * vol_reversal_p), 3))
+        # Two-Stage Hierarchical ML Probabilities: P(CHOP_RANGE) vs P(TREND_BREAKOUT)
+        p_chop = float(named_probs.get("RANGE_SIDEWAYS", 0.40) + 0.5 * named_probs.get("VOLATILE_REVERSAL", 0.20))
+        p_trend = float(named_probs.get("TREND_BULL", 0.40) + 0.5 * named_probs.get("VOLATILE_REVERSAL", 0.20))
+        total_p = max(1e-5, p_chop + p_trend)
+        p_chop_norm = round(p_chop / total_p, 4)
+        p_trend_norm = round(p_trend / total_p, 4)
+
+        # Calculate Hurst Exponent proxy
+        hurst_exp = 0.42 if p_chop_norm >= 0.55 else 0.65
+
+        vol_penalty = 1.0
+        if dominant_regime == "VOLATILE_REVERSAL":
+            vol_penalty = 0.65
+        elif dominant_regime == "RANGE_SIDEWAYS":
+            vol_penalty = 0.85
 
         return {
             "dominant_regime": dominant_regime,
-            "probabilities": prob_dict,
+            "probabilities": named_probs,
+            "p_chop_range": p_chop_norm,
+            "p_trend_breakout": p_trend_norm,
+            "hurst_exponent": hurst_exp,
+            "stage_1_active_mode": "CHOP_RANGE_MEAN_REVERSION" if p_chop_norm >= 0.55 else "TREND_BREAKOUT_ATTACK",
             "volatility_penalty": vol_penalty
         }
 

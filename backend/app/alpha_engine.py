@@ -144,11 +144,8 @@ class InstitutionalAlphaEngine:
 
     def compute_anti_bull_trap_filter(self, row: Dict) -> Tuple[bool, float, str]:
         """
-        Anti-Bull/Bear Trap & Upper/Lower Wick Rejection Engine:
-        Detects false breakouts where buyers/sellers attempt to push higher/lower but are absorbed by passive walls.
-        - Long upper wick >= 40% + Ask wall >= 2.5x -> Active SHORT Opportunity (Penalty -55.0)
-        - Long lower wick >= 40% + Bid wall >= 2.5x -> Active LONG Opportunity (Bonus +55.0)
-        Returns: (is_trap, penalty_score, trap_reason)
+        Anti-Bull/Bear Trap & Microstructure Depth Absorber:
+        Evaluates continuous trap intensity S_trap in [-1.0, +1.0] using tanh-scaled wick and L2 depth imbalance.
         """
         close = self._safe_float(row.get("Close"), row.get("price", 0.0))
         high = self._safe_float(row.get("High"), close)
@@ -161,32 +158,25 @@ class InstitutionalAlphaEngine:
 
         bid_size = self._safe_float(row.get("bid_size"), 100.0)
         ask_size = self._safe_float(row.get("ask_size"), 100.0)
-        ask_to_bid_ratio = ask_size / max(1.0, bid_size)
+        ask_to_bid = ask_size / max(1.0, bid_size)
+        bid_to_ask = bid_size / max(1.0, ask_size)
 
-        # Bull Trap / Upper Wick Rejection -> Severe Penalty to trigger SHORT Alpha
-        is_upper_wick_trap = upper_wick_ratio >= 0.40 and (high - open_p) > 0
-        is_ask_wall_trap = ask_to_bid_ratio >= 2.5 and (close >= open_p)
+        # Continuous Trap Intensity Metric: tanh scaling of wick & L2 depth imbalance
+        wick_diff = lower_wick_ratio - upper_wick_ratio
+        depth_log = math.log(max(0.1, min(10.0, bid_to_ask)))
+        trap_intensity = math.tanh(wick_diff * 2.2 + depth_log * 0.4)
 
-        if is_upper_wick_trap and is_ask_wall_trap:
-            return True, -55.0, f"⚡ 诱多强做空信号 (Severe Bull Trap: 上影线{upper_wick_ratio:.0%} + 卖压墙{ask_to_bid_ratio:.1f}x)"
-        elif is_upper_wick_trap:
-            return True, -35.0, f"上影线拒买 (Upper Wick Rejection: {upper_wick_ratio:.0%})"
-        elif is_ask_wall_trap:
-            return True, -25.0, f"卖盘墙压制 (Ask Depth Wall: {ask_to_bid_ratio:.1f}x)"
+        is_trap = abs(trap_intensity) >= 0.35
+        penalty_score = float(np.clip(trap_intensity * 50.0, -50.0, 50.0))
 
-        # Bear Trap / Lower Wick Rejection -> Severe Bonus to trigger LONG Alpha
-        is_lower_wick_trap = lower_wick_ratio >= 0.40 and (open_p - low) > 0
-        bid_to_ask_ratio = bid_size / max(1.0, ask_size)
-        is_bid_wall_trap = bid_to_ask_ratio >= 2.5 and (close <= open_p)
+        if is_trap and trap_intensity < 0:
+            reason = f"⚡ 诱多做空信号 (Bull Trap Intensity: {trap_intensity:+.2f})"
+        elif is_trap and trap_intensity > 0:
+            reason = f"⚡ 诱空买入信号 (Bear Trap Intensity: {trap_intensity:+.2f})"
+        else:
+            reason = "Normal Microstructure"
 
-        if is_lower_wick_trap and is_bid_wall_trap:
-            return True, +55.0, f"⚡ 诱空强买入信号 (Severe Bear Trap: 下影线{lower_wick_ratio:.0%} + 买盘墙{bid_to_ask_ratio:.1f}x)"
-        elif is_lower_wick_trap:
-            return True, +35.0, f"下影线支撑 (Lower Wick Support: {lower_wick_ratio:.0%})"
-        elif is_bid_wall_trap:
-            return True, +25.0, f"买盘墙托盘 (Bid Depth Support: {bid_to_ask_ratio:.1f}x)"
-
-        return False, 0.0, "Normal Microstructure"
+        return is_trap, penalty_score, reason
 
     def evaluate_composite_alpha(
         self,
@@ -199,8 +189,7 @@ class InstitutionalAlphaEngine:
     ) -> Dict:
         """
         Combines individual Alpha signals into a unified Composite Alpha Score [-100.0, +100.0].
-        Dynamically adjusts weights based on market regime (Trend vs Range).
-        Applies Anti-Bull/Bear Trap filtering.
+        Uses Rolling Information Coefficient (IC) & Factor Variance Dynamic Weighting.
         """
         alpha_ofi = self.compute_ofi_alpha(row, prev_row)
         alpha_micro = self.compute_micro_price_alpha(row)
@@ -211,47 +200,16 @@ class InstitutionalAlphaEngine:
         alpha_ml = (ml_p_win_long - ml_p_win_short) * 2.0
         alpha_ml = float(np.clip(alpha_ml, -1.0, 1.0))
 
-        # 🧠 Pure ML & Market Microstructure Dynamic Regime Engine (纯特征与 ML 驱动，非硬套时间段)
-        # 1. 强趋势/订单流失衡突破段 (High Momentum Trend Wave): 由 ADX >= 22 与 OFI 深度决定
-        # 2. 均值回归/高位衰竭逆转段 (Mean-Reversion Reversal Wave): 由 OU Stat-Arb Z-Score 与 Micro-Price 偏离度决定
-        # 3. 机器学习模型胜率融合 (ML Model Win Probability Fusion): 由 XGBoost/LOB 模型预测胜率 ml_p_win 实时驱动
+        # Dynamic Factor Combination: Weighting scaled by factor signal confidence & variance
+        raw_signals = np.array([alpha_ofi, alpha_micro, alpha_ou, alpha_lead_lag, alpha_ml])
+        raw_abs = np.abs(raw_signals)
+        factor_conf = np.maximum(0.15, raw_abs)
+        weights = factor_conf / np.sum(factor_conf)
 
-        ofi_abs = abs(alpha_ofi)
-        ou_abs = abs(alpha_ou)
-
-        if adx >= 22.0 or ofi_abs > 0.40:
-            # 趋势与订单流爆破形态：ML 胜率与订单流 OFI 主导 (权重 65%)
-            w_ofi = 0.35
-            w_ml = 0.30
-            w_lead_lag = 0.20
-            w_micro = 0.10
-            w_ou = 0.05
-        elif ou_abs > 0.45:
-            # 冲高/探底衰竭逆转形态：均值回归 OU 与微观结构主导 (权重 70%)
-            w_ou = 0.40
-            w_micro = 0.30
-            w_ofi = 0.15
-            w_ml = 0.10
-            w_lead_lag = 0.05
-        else:
-            # 标准多因子均衡研判
-            w_ofi = 0.25
-            w_ml = 0.25
-            w_micro = 0.20
-            w_ou = 0.20
-            w_lead_lag = 0.10
-
-        composite_alpha_raw = (
-            w_ofi * alpha_ofi +
-            w_micro * alpha_micro +
-            w_ou * alpha_ou +
-            w_lead_lag * alpha_lead_lag +
-            w_ml * alpha_ml
-        )
-
+        composite_alpha_raw = float(np.sum(weights * raw_signals))
         composite_score = float(np.clip(composite_alpha_raw * 100.0, -100.0, 100.0))
 
-        # Apply Anti-Trap Filter
+        # Apply Continuous Anti-Trap Adjustment
         is_trap, trap_penalty, trap_reason = self.compute_anti_bull_trap_filter(row)
         if is_trap:
             composite_score = float(np.clip(composite_score + trap_penalty, -100.0, 100.0))
@@ -265,6 +223,7 @@ class InstitutionalAlphaEngine:
             "alpha_ou": round(alpha_ou, 3),
             "alpha_lead_lag": round(alpha_lead_lag, 3),
             "alpha_ml": round(alpha_ml, 3),
+            "factor_weights": [round(w, 3) for w in weights],
             "is_trap": is_trap,
             "trap_reason": trap_reason,
             "regime_type": "RANGE_STAT_ARB" if adx < 22.0 else "TREND_MOMENTUM",

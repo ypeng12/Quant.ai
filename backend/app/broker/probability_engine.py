@@ -115,17 +115,19 @@ def calculate_win_rate_probability(
         except Exception:
             pass # Fall back to heuristic if feature mapping fails
 
-    # --- Heuristic Fallback ---
-    z_score = (score - 78.0) / 10.0
+    # --- Feature-Weighted Logistic Fallback (when joblib model is uninitialized) ---
+    vwap_dist = float(opportunity.get("vwap_dist_pct", 0.0)) if opportunity else 0.0
+    z_vwap = max(-1.5, min(1.5, vwap_dist)) * 0.4
     z_rvol = max(-1.0, min(2.0, rvol - 1.0)) * 0.4
-    z_mom = max(-2.0, min(2.0, abs(momentum_3_pct) / max(0.2, atr_pct))) * 0.3
-    regime_bonus = 0.5 if "REVERSAL" in regime else (0.2 if "TREND" in regime else 0.0)
+    z_mom = max(-2.0, min(2.0, abs(momentum_3_pct) / max(0.2, atr_pct))) * 0.4
+    regime_bonus = 0.4 if "REVERSAL" in regime else (0.2 if "TREND" in regime else 0.0)
 
-    logits = z_score + z_rvol + z_mom + regime_bonus
+    logits = z_vwap + z_rvol + z_mom + regime_bonus
     base_p = sigmoid(logits)
 
     p_win = 0.35 + base_p * (0.88 - 0.35)
-    return round(p_win, 4), 0.05, round(z_score, 4)
+    rank_score = round(base_p * 100.0, 4)
+    return round(p_win, 4), 0.05, rank_score
 
 def calculate_expected_rr_ratio(
     atr_pct: float,

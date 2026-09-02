@@ -2039,15 +2039,10 @@ def get_ml_prediction(ticker: str = "TSLA"):
             low_to_now_pct = (t_seed % 6) * 0.2
             vwap = close * (1.0 - vwap_dist_pct / 100.0)
 
-        # Construct opportunity dict
-        score = 50.0 + min(30.0, max(-30.0, momentum_3_pct * 5.0 + (rvol - 1.0) * 10.0))
-        direction = "LONG" if close >= vwap else "SHORT"
-        regime = "TREND_BULL" if close > vwap and momentum_3_pct > 0 else "RANGE_SIDEWAYS"
-
         opp = {
             "ticker": clean_ticker,
             "direction": direction,
-            "score": score,
+            "score": 50.0,
             "rvol": rvol,
             "vwap_dist_pct": vwap_dist_pct,
             "momentum_3_pct": momentum_3_pct,
@@ -2062,6 +2057,7 @@ def get_ml_prediction(ticker: str = "TSLA"):
 
         # 2. Evaluate Mathematical Expectation & Calibrated ML Probability
         eval_res = evaluate_mathematical_expectation(opp, {"min_expected_value_r": 0.15})
+        opp["score"] = eval_res.get("win_rate_pct", 50.0)
 
         # 3. Evaluate Smart Order Router (SOR) for ticker's spread & imbalance
         sor_suite = LOBMicrostructureMLSuite().fit_synthetic_microstructure()

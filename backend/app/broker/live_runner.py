@@ -92,13 +92,10 @@ class LiveTradingRunner:
             "reentry_cooldown_seconds": 300, # 300 seconds (5 min) cooldown to eliminate whipsaw chasing
             "max_concurrent_positions": 2,  # max 2 simultaneous high-conviction positions
             "max_losses_per_ticker_session": 2, # max 2 consecutive losses per symbol per session
-            "pyramid_trigger_pct": 0.006,   # 0.6% profit triggers pyramid add
-            "min_stock_price": 5.00,
             "buying_power_utilization_pct": 0.95,
             "starter_buying_power_pct": 0.35,
             "max_position_buying_power_pct": 0.95,
             "max_position_risk_pct": 0.030,
-            "daily_loss_limit_pct": 0.030,
             "initial_stop_atr_mult": 1.80,
             "stop_min_pct": 0.0080,
             "stop_max_pct": 0.0200,
@@ -567,54 +564,8 @@ class LiveTradingRunner:
         price_range = max(0.0, session_high - session_low)
         range_position = ((close - session_low) / price_range) if price_range > 0 else 0.5
 
-        activity_score = (
-            min(18.0, max(0.0, session_range_pct) * 3.5)
-            + min(12.0, max(0.0, rvol - 1.0) * 8.0)
-            + min(8.0, max(0.0, atr_pct) * 5.0)
-        )
-        long_score = activity_score
-        short_score = activity_score
-
-        if close > vwap:
-            long_score += 12.0
-        else:
-            short_score += 12.0
-        if ema_9 > ema_21:
-            long_score += 12.0
-        else:
-            short_score += 12.0
-
-        if momentum_3_pct >= 0.20:
-            long_score += min(10.0, 6.0 + momentum_3_pct * 4.0)
-        elif momentum_3_pct <= -0.20:
-            short_score += min(10.0, 6.0 + abs(momentum_3_pct) * 4.0)
-        if momentum_10_pct >= 0.45:
-            long_score += min(10.0, 6.0 + momentum_10_pct * 2.0)
-        elif momentum_10_pct <= -0.45:
-            short_score += min(10.0, 6.0 + abs(momentum_10_pct) * 2.0)
-
-        if session_move_pct >= 1.0:
-            long_score += min(15.0, 8.0 + session_move_pct * 2.0)
-        elif session_move_pct <= -1.0:
-            short_score += min(15.0, 8.0 + abs(session_move_pct) * 2.0)
-        if range_position >= 0.68:
-            long_score += 8.0 + min(4.0, (range_position - 0.68) * 12.0)
-        elif range_position <= 0.32:
-            short_score += 8.0 + min(4.0, (0.32 - range_position) * 12.0)
-
-        long_breakout = (
-            close > vwap and ema_9 > ema_21 and momentum_3_pct > 0.15
-            and high_to_now_pct >= -0.65
-        )
-        short_breakdown = (
-            close < vwap and ema_9 < ema_21 and momentum_3_pct < -0.15
-            and low_to_now_pct <= 0.90
-        )
-        if long_breakout:
-            long_score += 8.0
-        if short_breakdown:
-            short_score += 8.0
-
+        # Institutional Microstructure & Market Structure Direction Classification
+        # (Heuristic point additions removed: pure feature vector + ML probability inference)
         reversal_short = (
             up_from_open_pct >= 1.20
             and high_to_now_pct <= -0.80
@@ -627,30 +578,33 @@ class LiveTradingRunner:
             and close > vwap
             and momentum_3_pct > 0.05
         )
-        if reversal_short:
-            short_score += 18.0
-        if reversal_long:
-            long_score += 18.0
 
-        long_score = round(max(0.0, min(100.0, long_score)), 1)
-        short_score = round(max(0.0, min(100.0, short_score)), 1)
-        # Relaxed directional classification: gap of 3.0 (was 5.0) → fewer NEUTRAL signals
-        if abs(long_score - short_score) < 3.0:
-            direction = "NEUTRAL"
-            score = max(long_score, short_score)
-            regime = "RANGE"
-        elif long_score > short_score:
+        long_structure = close > vwap and ema_9 > ema_21 and momentum_3_pct >= 0.0
+        short_structure = close < vwap and ema_9 < ema_21 and momentum_3_pct <= 0.0
+
+        if reversal_long:
             direction = "LONG"
-            score = long_score
-            regime = "LONG_REVERSAL" if reversal_long else "LONG_TREND"
-        else:
+            regime = "LONG_REVERSAL"
+        elif reversal_short:
             direction = "SHORT"
-            score = short_score
-            regime = "SHORT_REVERSAL" if reversal_short else "SHORT_TREND"
+            regime = "SHORT_REVERSAL"
+        elif long_structure:
+            direction = "LONG"
+            regime = "LONG_TREND"
+        elif short_structure:
+            direction = "SHORT"
+            regime = "SHORT_TREND"
+        else:
+            direction = "NEUTRAL"
+            regime = "RANGE"
+
+        # Initial placeholders; win_probability and score will be set by probability_engine evaluation below
+        score = 50.0
+        long_score = 50.0
+        short_score = 50.0
 
         prev_long_structure = prev_close > prev_vwap or prev_close > prev_ema_21
         prev_short_structure = prev_close < prev_vwap or prev_close < prev_ema_21
-        # Pure ML Model Entry Confirmation: Driven directly by LightGBM 8-Feature ML Probabilistic Inference
         long_confirmed = (direction == "LONG")
         short_confirmed = (direction == "SHORT")
         
@@ -732,6 +686,11 @@ class LiveTradingRunner:
         # Evaluate Probabilistic Win Rate P_win and Expected Value E[PnL]
         prob_eval = evaluate_mathematical_expectation(opp, self.strategy_params)
         opp.update(prob_eval)
+        # Sync score metrics to ML calibrated win rate percentage for API/UI display compatibility
+        ml_score = prob_eval.get("win_rate_pct", 50.0)
+        opp["score"] = ml_score
+        opp["long_score"] = ml_score if direction == "LONG" else round(100.0 - ml_score, 1)
+        opp["short_score"] = ml_score if direction == "SHORT" else round(100.0 - ml_score, 1)
 
         # Opening Catalyst Zero-Delay Trigger (9:30 - 9:45 EST Blitz):
         # Bypasses multi-bar lag for high RVOL / high volatility catalyst stocks
@@ -804,9 +763,6 @@ class LiveTradingRunner:
             # Quality Stock & Warrant/Unit Filter (dynamic quality screening instead of static blacklists)
             if not is_valid_quality_stock_symbol(ticker):
                 return "HOLD", f"{base_reason} | 标的属于权证/衍生单元 (Warrant/Unit)，拒绝交易"
-
-            if close < min_price:
-                return "HOLD", f"{base_reason} | 股价低于 ${min_price:.2f} (${close:.2f})，拒绝低价毛票/仙股"
 
             # HRT-Grade ML Quantitative Alpha Model Entry Evaluation:
             # Driven directly by ML Probabilistic Mathematical Expectation E[PnL] >= 0.0R or P_win >= 50%
@@ -897,31 +853,28 @@ class LiveTradingRunner:
             if side == "LONG":
                 invalid_now = close < opportunity.get("_ema_21", close) and close < opportunity.get("_vwap", close)
                 invalid_prev = prev_close < opportunity.get("_prev_ema_21", prev_close) and prev_close < opportunity.get("_prev_vwap", prev_close)
-                if invalid_now and invalid_prev and opportunity.get("short_score", 0.0) >= 70.0:
+                if invalid_now and invalid_prev and (direction == "SHORT" or p_win_pct < 45.0):
                     return "SELL", f"{base_reason} | 连续两根跌破 EMA21/VWAP，长趋势失效"
             else:
                 invalid_now = close > opportunity.get("_ema_21", close) and close > opportunity.get("_vwap", close)
                 invalid_prev = prev_close > opportunity.get("_prev_ema_21", prev_close) and prev_close > opportunity.get("_prev_vwap", prev_close)
-                if invalid_now and invalid_prev and opportunity.get("long_score", 0.0) >= 70.0:
+                if invalid_now and invalid_prev and (direction == "LONG" or p_win_pct < 45.0):
                     return "COVER", f"{base_reason} | 连续两根收复 EMA21/VWAP，空趋势失效"
 
         max_hold = self._safe_float(self.strategy_params.get("max_hold_minutes"), 300.0)
-        same_side_score = opportunity.get("long_score", 0.0) if side == "LONG" else opportunity.get("short_score", 0.0)
-        if minutes_held >= max_hold and same_side_score < self._safe_float(self.strategy_params.get("time_stop_min_score"), 52.0) and pnl_pct <= 0.0:
+        if minutes_held >= max_hold and not is_pos_ev and pnl_pct <= 0.0:
             return ("SELL" if side == "LONG" else "COVER"), f"{base_reason} | 尾段趋势消失且未盈利"
 
         # ─── Pyramiding Buy / Short (浮盈加仓/补仓) ─────────────────────────────
         # Fires once per position when:
         #   - Position is profitable >= 0.4% (configurable via pyramid_trigger_pct)
-        #   - Same-side score strong (>= entry_score_min) AND positive EV >= +0.20R
+        #   - Positive ML Expected Value EV >= +0.20R and win probability >= 55%
         #   - RVOL >= 1.2 and trend structure still valid above VWAP + EMA21
         #   - Not already pyramided for this trade (pyramid_done[ticker] == False)
         pyramid_threshold_pct = self._safe_float(self.strategy_params.get("pyramid_trigger_pct"), 0.004)
-        pyramid_min_score = self._safe_float(self.strategy_params.get("entry_score_min"), 78.0)
         can_pyramid = (
             pnl_pct >= pyramid_threshold_pct
-            and same_side_score >= pyramid_min_score
-            and is_pos_ev
+            and (is_pos_ev or p_win_pct >= 55.0)
             and ev_r >= 0.20
             and self._safe_float(opportunity.get("rvol"), 1.0) >= 1.2
             and not self.pyramid_done.get(ticker, False)
@@ -1614,21 +1567,6 @@ class LiveTradingRunner:
                                 if cycle_new_entries >= 1:
                                     action = "HOLD"
                                     reason += " | 本轮已提交一笔新仓，等待 buying power 刷新"
-
-                            account_summary = self.adapter.get_account_summary()
-                            total_eq = self._safe_float(account_summary.get('equity'), 100000.0)
-                            daily_loss_limit_pct = self.strategy_params.get("daily_loss_limit_pct", 0.040)
-                            
-                            today_str = datetime.datetime.now().strftime("%Y-%m-%d")
-                            today_trades_pnl = sum(t.get("pnl", 0.0) for t in self.trade_history if t.get("date") == today_str)
-                            open_pnl = sum((p.get("unrealized_pnl", 0.0)) for p in positions_list)
-                            official_today_pnl = account_summary.get("today_pnl")
-                            estimated_today_pnl = self._safe_float(official_today_pnl, today_trades_pnl + open_pnl) if official_today_pnl is not None else (today_trades_pnl + open_pnl)
-                            est_daily_pnl_pct = estimated_today_pnl / total_eq if total_eq > 0 else 0.0
-
-                            if est_daily_pnl_pct <= -daily_loss_limit_pct and action in ("BUY", "SHORT"):
-                                action = "HOLD"
-                                reason = f"[DailyLossLimit] Daily drawdown ({est_daily_pnl_pct*100:.2f}%) reached max limit (-{daily_loss_limit_pct*100:.2f}%). Blocked new entry order."
 
                             allowed_entry_symbols = set(user_watchlist)
                             if ticker not in allowed_entry_symbols and action in ("BUY", "SHORT"):
