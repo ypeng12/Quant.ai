@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { API_BASE } from '../config';
 import { MLDynamicVisualizationDashboard } from './MLDynamicVisualizationDashboard';
+import { MLVisualInteractiveLab } from './MLVisualInteractiveLab';
 
 export const InstitutionalPanel: React.FC = () => {
-  const [activeSubTab, setActiveSubTab] = useState<'twoStage' | 'alphaLab' | 'optimal' | 'statArb' | 'riskParity' | 'dsr' | 'lowLatency' | 'ofi' | 'multiAsset'>('twoStage');
+  const [activeSubTab, setActiveSubTab] = useState<'mlVisualLab' | 'twoStage' | 'alphaLab' | 'optimal' | 'statArb' | 'riskParity' | 'dsr' | 'lowLatency' | 'ofi' | 'multiAsset'>('mlVisualLab');
   const [loading, setLoading] = useState<boolean>(false);
   const [resultData, setResultData] = useState<any>(null);
   const [alphaResearchData, setAlphaResearchData] = useState<any>(null);
@@ -188,6 +189,17 @@ export const InstitutionalPanel: React.FC = () => {
       {/* Sub-tab Selectors */}
       <div className="flex gap-2 border-b border-slate-800 pb-3 mb-6 overflow-x-auto">
         <button
+          onClick={() => { setActiveSubTab('mlVisualLab'); setResultData(null); }}
+          className={`px-4 py-2 text-xs font-semibold rounded-lg transition-all ${
+            activeSubTab === 'mlVisualLab'
+              ? 'bg-sky-600 text-white shadow-lg shadow-sky-600/30'
+              : 'bg-slate-800 text-slate-400 hover:text-white'
+          }`}
+        >
+          🧠 机器学习全景几何实验室 (ML Visual Lab)
+        </button>
+
+        <button
           onClick={() => { setActiveSubTab('twoStage'); setResultData(null); }}
           className={`px-4 py-2 text-xs font-semibold rounded-lg transition-all ${
             activeSubTab === 'twoStage'
@@ -294,6 +306,12 @@ export const InstitutionalPanel: React.FC = () => {
       )}
 
       {/* SubTab Content */}
+      {activeSubTab === 'mlVisualLab' && (
+        <div className="mb-6">
+          <MLVisualInteractiveLab />
+        </div>
+      )}
+
       {activeSubTab === 'twoStage' && (
         <div className="mb-6">
           <MLDynamicVisualizationDashboard />
