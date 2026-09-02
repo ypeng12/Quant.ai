@@ -1,52 +1,40 @@
 {
-  "dataset_name": "SNDK",
-  "num_samples": 2713,
+  "dataset_name": "recent_2w_multi_asset",
+  "tickers": [
+    "NVDA",
+    "TSLA",
+    "MSTR",
+    "SNDK"
+  ],
+  "num_samples": 15066,
   "feature_cols": [
+    "feature_ofi",
     "feature_rvol",
     "feature_vwap_dist_pct",
-    "feature_mom_3_pct",
-    "feature_mom_10_pct",
-    "feature_atr_pct",
-    "feature_high_to_now_pct",
-    "feature_low_to_now_pct",
-    "feature_session_range_pct"
+    "feature_ema_diff_pct",
+    "feature_mom_5m",
+    "feature_mom_15m",
+    "feature_er",
+    "feature_atr_pct"
   ],
+  "feature_importances": {
+    "feature_ofi": 100,
+    "feature_rvol": 119,
+    "feature_vwap_dist_pct": 215,
+    "feature_ema_diff_pct": 214,
+    "feature_mom_5m": 122,
+    "feature_mom_15m": 131,
+    "feature_er": 134,
+    "feature_atr_pct": 346
+  },
   "long_model": {
-    "direction": "long",
     "model_file": "win_rate_model_long.joblib",
-    "cv_brier_mean": 0.20396870194452893,
-    "cv_auc_mean": 0.48015051535687636,
-    "final_brier": 0.18119368558635135,
-    "final_auc": 0.35196476964769646,
-    "final_logloss": 0.5505746685962501,
-    "feature_cols": [
-      "feature_rvol",
-      "feature_vwap_dist_pct",
-      "feature_mom_3_pct",
-      "feature_mom_10_pct",
-      "feature_atr_pct",
-      "feature_high_to_now_pct",
-      "feature_low_to_now_pct",
-      "feature_session_range_pct"
-    ]
+    "test_auc": 0.5965,
+    "test_brier": 0.1534
   },
   "short_model": {
-    "direction": "short",
     "model_file": "win_rate_model_short.joblib",
-    "cv_brier_mean": 0.20689150203591186,
-    "cv_auc_mean": 0.5555566801202234,
-    "final_brier": 0.20973984874591275,
-    "final_auc": 0.5553358088472715,
-    "final_logloss": 0.6103179845458313,
-    "feature_cols": [
-      "feature_rvol",
-      "feature_vwap_dist_pct",
-      "feature_mom_3_pct",
-      "feature_mom_10_pct",
-      "feature_atr_pct",
-      "feature_high_to_now_pct",
-      "feature_low_to_now_pct",
-      "feature_session_range_pct"
-    ]
+    "test_auc": 0.5394,
+    "test_brier": 0.16
   }
 }

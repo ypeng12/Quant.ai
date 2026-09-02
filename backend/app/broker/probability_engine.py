@@ -13,9 +13,14 @@ from typing import Dict, Optional
 
 import math
 import os
+import sys
 import joblib
 import pandas as pd
 from typing import Dict, Optional, Tuple
+
+backend_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+if backend_dir not in sys.path:
+    sys.path.insert(0, backend_dir)
 
 MODELS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "ml", "models")
 _ML_MODELS_CACHE = {}
@@ -28,7 +33,6 @@ def get_ml_zoo_model():
     zoo_path = os.path.join(MODELS_DIR, "quant_ml_zoo.joblib")
     if os.path.exists(zoo_path):
         try:
-            import sys
             from app.ml.ml_model_zoo import QuantMLModelZoo
             main_mod = sys.modules.get("__main__")
             if main_mod and not hasattr(main_mod, "QuantMLModelZoo"):
@@ -88,29 +92,35 @@ def calculate_win_rate_probability(
 
     if opportunity is not None and (zoo_model is not None or ml_model is not None):
         try:
+            # Map features for the newly trained 2-week multi-asset model
             feature_dict = {
+                "feature_ofi": float(opportunity.get("alpha_ofi", opportunity.get("feature_ofi", 0.0))),
                 "feature_rvol": float(opportunity.get("rvol", rvol)),
-                "feature_vwap_dist_pct": float(opportunity.get("vwap_dist_pct", 0.0)),
-                "feature_mom_3_pct": float(opportunity.get("momentum_3_pct", momentum_3_pct)),
-                "feature_mom_10_pct": float(opportunity.get("momentum_10_pct", 0.0)),
+                "feature_vwap_dist_pct": float(opportunity.get("vwap_dist_pct", opportunity.get("_vwap_dist_pct", 0.0))),
+                "feature_ema_diff_pct": float(opportunity.get("ema_diff_pct", 
+                    ((opportunity.get("_ema_9", 1.0) - opportunity.get("_ema_21", 1.0)) / max(1e-5, opportunity.get("_ema_21", 1.0)) * 100.0)
+                )),
+                "feature_mom_5m": float(opportunity.get("momentum_5m_pct", opportunity.get("momentum_3_pct", momentum_3_pct))),
+                "feature_mom_15m": float(opportunity.get("momentum_15m_pct", opportunity.get("momentum_10_pct", 0.0))),
+                "feature_er": float(opportunity.get("er", opportunity.get("efficiency_ratio", 0.20))),
                 "feature_atr_pct": float(opportunity.get("atr_pct", atr_pct)),
-                "feature_high_to_now_pct": float(opportunity.get("high_to_now_pct", 0.0)),
-                "feature_low_to_now_pct": float(opportunity.get("low_to_now_pct", 0.0)),
-                "feature_session_range_pct": float(opportunity.get("session_range_pct", 1.0)),
             }
             df_feat = pd.DataFrame([feature_dict])
 
-            if zoo_model is not None:
+            if ml_model is not None:
+                prob_calibrated = float(ml_model.predict_proba(df_feat)[0, 1])
+                p_std = 0.04
+            elif zoo_model is not None:
                 joint_res = zoo_model.predict_joint(df_feat)
                 prob_calibrated = joint_res["p_win"]
                 p_std = joint_res["p_std"]
-                rank_score = joint_res["rank_score"]
             else:
-                prob_calibrated = float(ml_model.predict_proba(df_feat)[0, 1])
+                prob_calibrated = 0.50
 
-            # Apply prediction uncertainty penalization
-            prob_adj = prob_calibrated - 1.5 * p_std
+            # Apply prediction uncertainty penalization smoothly
+            prob_adj = prob_calibrated - 1.0 * p_std
             bounded_p_win = max(0.35, min(0.88, prob_adj))
+            rank_score = round(bounded_p_win * 100.0, 1)
             return round(bounded_p_win, 4), round(p_std, 4), round(rank_score, 4)
         except Exception:
             pass # Fall back to heuristic if feature mapping fails
@@ -183,9 +193,9 @@ def evaluate_mathematical_expectation(opportunity: Dict, strategy_params: Dict) 
     b = rr_est
     kelly_f = (max(0.0, (p_win * b - q) / b) if b > 0 else 0.0) * vol_penalty
 
-    # Entry is approved mathematically if Expected Value E[PnL] >= 0.05R or P_win >= 0.50
+    # Entry is approved mathematically only if Expected Value E[PnL] >= 0.05R AND calibrated win probability >= 52%
     min_ev_r = float(strategy_params.get("min_expected_value_r", 0.05))
-    is_positive_ev = (e_pnl_r >= min_ev_r) or (p_win >= 0.50)
+    is_positive_ev = (e_pnl_r >= min_ev_r) and (p_win >= 0.52)
 
     return {
         "win_probability": p_win,

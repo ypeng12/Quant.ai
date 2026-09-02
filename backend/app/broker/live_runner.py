@@ -813,58 +813,59 @@ class LiveTradingRunner:
             self.ticker_consecutive_losses[ticker] = self.ticker_consecutive_losses.get(ticker, 0) + 1
             return ("SELL" if side == "LONG" else "COVER"), f"{base_reason} | 初始硬止损 {stop_pct*100:.2f}% (单日第 {self.ticker_consecutive_losses[ticker]} 次)"
 
-        # ─── Alpha Decay Exit (Alpha 动能衰减离场) ──────────────────────────────────
+        # ─── HRT-Grade Institutional Order Flow & Large Model Exit Framework ──────────────
+        # Zero hardcoded static percentages (no 0.25% cutoffs). Exits are strictly driven by:
+        # 1. Institutional Order Flow Imbalance (OFI) collapse / Big players dumping (大单离场)
+        # 2. Climax Volume Institutional Trap & Distribution (天量诱捕主力出货)
+        # 3. Large Quantitative Alpha Model Direction Reversal (大模型方向彻底反转)
+        # 4. Severe Volume Exhaustion with momentum decay after extended holding (量能耗尽衰竭)
+        
         alpha_score = self._safe_float(opportunity.get("composite_alpha_score"), 0.0)
-        if side == "LONG" and alpha_score < 15.0 and pnl_pct >= 0.0025:
-            return "SELL", f"{base_reason} | 📉 Composite Alpha 动能衰减 (Alpha={alpha_score:+.1f} < +15.0)，主动落袋锁利"
-        if side == "SHORT" and alpha_score > -15.0 and pnl_pct >= 0.0025:
-            return "COVER", f"{base_reason} | 📈 Composite Alpha 做空动能衰减 (Alpha={alpha_score:+.1f} > -15.0)，主动平空锁利"
+        alpha_ofi = self._safe_float(opportunity.get("alpha_ofi"), 0.0)
+        rvol = self._safe_float(opportunity.get("rvol"), 1.0)
+        is_trap = opportunity.get("is_trap", False)
+        trap_reason = opportunity.get("trap_reason", "")
 
-        # ─── Partial Take-Profit (分批止盈/锁利) ──────────────────────────────────
-        # When unrealized gain reaches >= 1.2% (or 1.2 * stop_pct) and position has > 1 share,
-        # scale out 50% to lock in profit, then set Breakeven stop for the rest!
-        tp1_pct = max(0.0100, 1.2 * stop_pct)
-        if pnl_pct >= tp1_pct and not self.partial_tp_done.get(ticker, False) and abs(current_shares) > 1:
-            action_str = "PARTIAL_SELL" if side == "LONG" else "PARTIAL_COVER"
-            est_pnl_usd = pnl_pct * close * abs(current_shares) / 2.0
-            return action_str, (
-                f"{base_reason} | 🟢 [分批止盈 50%] 浮盈 +{pnl_pct*100:.2f}% (预估锁利 +${est_pnl_usd:.2f}) — "
-                f"落袋为安半仓，余仓开启移动止盈与保本风控"
-            )
+        # 1. Institutional Order Flow Imbalance (OFI) Dump / Big Money Departure (大单出逃离场)
+        if side == "LONG" and alpha_ofi <= -0.55 and rvol >= 1.2:
+            return "SELL", f"{base_reason} | 🚨 [HRT 大单离场] 订单流卖盘倾泻 (OFI={alpha_ofi:+.2f}, RVOL={rvol:.2f}x) 主力大单撤退，执行平仓"
+        if side == "SHORT" and alpha_ofi >= 0.55 and rvol >= 1.2:
+            return "COVER", f"{base_reason} | 🚨 [HRT 大单扫盘] 订单流买盘强攻 (OFI={alpha_ofi:+.2f}, RVOL={rvol:.2f}x) 主力大单进场扫盘，空头避险平仓"
 
-        atr = self._safe_float(opportunity.get("_atr"), close * 0.004)
-        regime = opportunity.get("regime", "RANGE")
-        atr_mult = 2.80 if "REVERSAL" in regime else self._safe_float(self.strategy_params.get("trailing_stop_atr_mult"), 2.20)
-        max_trail = 0.0400 if "REVERSAL" in regime else self._safe_float(self.strategy_params.get("trailing_stop_max_pct"), 0.0250)
+        # 2. Institutional Climax Volume Distribution / Trap (天量诱捕与主力对倒出货)
+        if side == "LONG" and is_trap and ("Bull Trap" in trap_reason or "Ask Depth" in trap_reason) and rvol >= 1.3:
+            return "SELL", f"{base_reason} | ⚠️ [HRT 诱多出货] 主力假突破诱多，成交量异动伴随大额卖单压盘 ({trap_reason})"
+        if side == "SHORT" and is_trap and ("Bear Trap" in trap_reason or "Bid Depth" in trap_reason) and rvol >= 1.3:
+            return "COVER", f"{base_reason} | ⚠️ [HRT 诱空吸筹] 主力假跌破诱空，成交量异动伴随大额买单托盘 ({trap_reason})"
 
-        trail_pct = min(
-            max_trail,
-            max(
-                self._safe_float(self.strategy_params.get("trailing_stop_min_pct"), 0.0080),
-                atr_mult * (atr / close if close > 0 else 0.0),
-            ),
-        )
-        trail_start = max(self._safe_float(self.strategy_params.get("trail_start_pct"), 0.0120), stop_pct)
-        best_price = self._safe_float(state.get("best_price"), close)
-        trail_hit = False
-        if pnl_pct >= trail_start:
-            trail_hit = (side == "LONG" and close <= best_price * (1.0 - trail_pct)) or (side == "SHORT" and close >= best_price * (1.0 + trail_pct))
-        if trail_hit:
-            return ("SELL" if side == "LONG" else "COVER"), f"{base_reason} | 趋势追踪回撤 {trail_pct*100:.2f}% 触发全平"
+        # 3. Large Quantitative Alpha Model Direction Reversal (大模型方向彻底反转)
+        if side == "LONG" and direction == "SHORT" and alpha_score <= -25.0:
+            return "SELL", f"{base_reason} | 🔄 [大模型方向反转] 量化大模型方向由多转空 (Model Direction={direction}, Alpha={alpha_score:+.1f})，顺应模型平仓"
+        if side == "SHORT" and direction == "LONG" and alpha_score >= 25.0:
+            return "COVER", f"{base_reason} | 🔄 [大模型方向反转] 量化大模型方向由空转多 (Model Direction={direction}, Alpha={alpha_score:+.1f})，顺应模型平仓"
 
-        min_hold = self._safe_float(self.strategy_params.get("minimum_hold_minutes"), 4.0)
+        # 4. Volume Exhaustion with Structural Momentum Decay (仅在长持仓后成交量严重枯竭且动能反向时平仓)
+        min_hold = self._safe_float(self.strategy_params.get("minimum_hold_minutes"), 15.0)
+        if minutes_held >= min_hold and rvol <= 0.35:
+            m3 = self._safe_float(opportunity.get("momentum_3_pct"), 0.0)
+            if side == "LONG" and m3 <= -0.15 and alpha_score < -10.0:
+                return "SELL", f"{base_reason} | ⏳ [量能耗尽衰竭] 持仓超 {minutes_held:.1f}m 且成交量严重枯竭 (RVOL={rvol:.2f}x, M3={m3:+.2f}%)，主力资金离场"
+            if side == "SHORT" and m3 >= 0.15 and alpha_score > 10.0:
+                return "COVER", f"{base_reason} | ⏳ [量能耗尽衰竭] 持仓超 {minutes_held:.1f}m 且空头量能衰竭 (RVOL={rvol:.2f}x, M3={m3:+.2f}%)，主力买盘回补"
+
+        # 5. Structural Breakdown Invalidation (仅在持仓充分后，趋势与均价结构双重破位才确认失效)
         if minutes_held >= min_hold:
             prev_close = self._safe_float(opportunity.get("_prev_close"), close)
             if side == "LONG":
                 invalid_now = close < opportunity.get("_ema_21", close) and close < opportunity.get("_vwap", close)
                 invalid_prev = prev_close < opportunity.get("_prev_ema_21", prev_close) and prev_close < opportunity.get("_prev_vwap", prev_close)
-                if invalid_now and invalid_prev and (direction == "SHORT" or p_win_pct < 45.0):
-                    return "SELL", f"{base_reason} | 连续两根跌破 EMA21/VWAP，长趋势失效"
+                if invalid_now and invalid_prev and (direction == "SHORT" or alpha_score <= -20.0):
+                    return "SELL", f"{base_reason} | 连续跌破 EMA21/VWAP 且大模型转空，长趋势结构失效"
             else:
                 invalid_now = close > opportunity.get("_ema_21", close) and close > opportunity.get("_vwap", close)
                 invalid_prev = prev_close > opportunity.get("_prev_ema_21", prev_close) and prev_close > opportunity.get("_prev_vwap", prev_close)
-                if invalid_now and invalid_prev and (direction == "LONG" or p_win_pct < 45.0):
-                    return "COVER", f"{base_reason} | 连续两根收复 EMA21/VWAP，空趋势失效"
+                if invalid_now and invalid_prev and (direction == "LONG" or alpha_score >= 20.0):
+                    return "COVER", f"{base_reason} | 连续收复 EMA21/VWAP 且大模型转多，空趋势结构失效"
 
         max_hold = self._safe_float(self.strategy_params.get("max_hold_minutes"), 300.0)
         if minutes_held >= max_hold and not is_pos_ev and pnl_pct <= 0.0:
