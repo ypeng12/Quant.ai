@@ -17,13 +17,13 @@
     "max_concurrent_positions": 2,
     "max_losses_per_ticker_session": 2,
     "buying_power_utilization_pct": 0.95,
-    "starter_buying_power_pct": 0.6,
-    "max_position_buying_power_pct": 0.95,
-    "max_single_position_equity_pct": 0.7,
+    "starter_buying_power_pct": 0.30,
+    "max_position_buying_power_pct": 0.40,
+    "max_single_position_equity_pct": 0.85,
     "max_position_risk_pct": 0.035,
     "max_trade_risk_pct": 0.035,
-    "pyramid_trigger_pct": 0.005,
-    "pyramid_multiplier": 1.8,
+    "pyramid_trigger_pct": 0.008,
+    "pyramid_multiplier": 1.5,
     "min_stock_price": 5.0,
     "daily_loss_limit_pct": 0.05,
     "initial_stop_atr_mult": 1.8,
@@ -38,5 +38,5 @@
     "time_stop_min_score": 52.0,
     "orders_sync_interval_seconds": 2.0
   },
-  "updated_at": "2026-09-02 14:04:32"
+  "updated_at": "2026-09-02 15:58:41"
 }
