@@ -76,33 +76,38 @@ class LiveTradingRunner:
     @staticmethod
     def _aggressive_intraday_defaults() -> Dict:
         return {
-            "strategy_version": "aggressive_intraday_v5",
+            "strategy_version": "aggressive_intraday_v6_max_profit",
             "strategy_mode": "aggressive_intraday",
             "paper_only_aggressive": True,
             "allow_aggressive_live": False,
-            "dynamic_screener_enabled": False,  # Strict focus on 4-stock focus watchlist (SNDK, TSLA, MSTR, NVDA)
+            "dynamic_screener_enabled": False,  # Strict focus on focus watchlist (SNDK, TSLA, MSTR, NVDA)
             "screener_refresh_seconds": 120,
             "screener_top_actives": 6,
             "screener_top_movers": 4,
             "max_scan_symbols": 14,
-            # Strict High-Probability & Risk Controls to prevent losses
-            "entry_score_min": 78.0,        # strict entry score threshold >= 78.0
-            "full_size_score": 85.0,        # scale to full size at 85.0
-            "min_expected_value_r": 0.15,   # require strong positive EV (>= +0.15R)
-            "reentry_cooldown_seconds": 300, # 300 seconds (5 min) cooldown to eliminate whipsaw chasing
-            "max_concurrent_positions": 2,  # max 2 simultaneous high-conviction positions
-            "max_losses_per_ticker_session": 2, # max 2 consecutive losses per symbol per session
+            "entry_score_min": 78.0,
+            "full_size_score": 85.0,
+            "min_expected_value_r": 0.15,
+            "reentry_cooldown_seconds": 180,
+            "max_concurrent_positions": 2,
+            "max_losses_per_ticker_session": 2,
             "buying_power_utilization_pct": 0.95,
-            "starter_buying_power_pct": 0.35,
+            "starter_buying_power_pct": 0.60,
             "max_position_buying_power_pct": 0.95,
-            "max_position_risk_pct": 0.030,
+            "max_single_position_equity_pct": 0.70,
+            "max_position_risk_pct": 0.035,
+            "max_trade_risk_pct": 0.035,
+            "pyramid_trigger_pct": 0.005,
+            "pyramid_multiplier": 1.8,
+            "min_stock_price": 5.0,
+            "daily_loss_limit_pct": 0.05,
             "initial_stop_atr_mult": 1.80,
             "stop_min_pct": 0.0080,
-            "stop_max_pct": 0.0200,
+            "stop_max_pct": 0.0250,
             "trail_start_pct": 0.0120,
             "trailing_stop_atr_mult": 2.20,
             "trailing_stop_min_pct": 0.0080,
-            "trailing_stop_max_pct": 0.0250,
+            "trailing_stop_max_pct": 0.0350,
             "minimum_hold_minutes": 4,
             "max_hold_minutes": 300,
             "time_stop_min_score": 52.0,
@@ -887,8 +892,9 @@ class LiveTradingRunner:
                 trend_ok = close <= opportunity.get("_vwap", close) and close <= opportunity.get("_ema_21", close)
             if trend_ok:
                 action_str = "PYRAMID_BUY" if side == "LONG" else "PYRAMID_SHORT"
+                current_score = self._safe_float(opportunity.get("score"), 0.0)
                 return action_str, (
-                    f"{base_reason} | 📈 [浮盈加仓 +{pnl_pct*100:.2f}% PnL] 趋势强劲 Score={same_side_score:.0f} / "
+                    f"{base_reason} | 📈 [浮盈加仓 +{pnl_pct*100:.2f}% PnL] 趋势强劲 Score={current_score:.0f} / "
                     f"E[R]={ev_r:+.2f}R — 触发 {action_str}，顺势补强"
                 )
 
