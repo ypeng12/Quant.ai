@@ -50,9 +50,6 @@ class LiveTradingRunner:
         self.pyramid_done = {}  # {ticker: bool} tracks whether a pyramid add has been done for current position
         self.partial_tp_done = {}  # {ticker: bool} tracks whether partial profit scaling has been taken
         self.ticker_consecutive_losses = {}  # {ticker: int} tracks consecutive losses per session to avoid whipsaw losses
-        self.ticker_daily_pnl = {}  # {ticker: float} tracks cumulative realized PnL per symbol today
-        self.last_loss_times = {}  # {ticker: float} timestamp of last loss per symbol
-        self.init_daily_pnl_tracker()
 
         self.screener = UniverseScreener(self._get_alpaca_credentials, self.add_log)
         self.risk_sizer = RiskPositionSizer()
@@ -76,67 +73,41 @@ class LiveTradingRunner:
         self.add_log("📡 [系统初始化完成] Quant AI 日内概率风控与研判引擎已就绪...")
         self.start()
 
-    def init_daily_pnl_tracker(self):
-        """
-        Scans today's trade history and Alpaca fills to initialize realized PnL and loss counts.
-        Guarantees that if a symbol incurred losses earlier today (e.g. SNDK), it is immediately locked out!
-        """
-        try:
-            today_str = datetime.date.today().strftime("%Y-%m-%d")
-            for trade in self.trade_history:
-                trade_date = str(trade.get("date", ""))
-                trade_time = str(trade.get("time", ""))
-                if today_str in trade_date or today_str in trade_time:
-                    ticker = trade.get("ticker")
-                    pnl = self._safe_float(trade.get("pnl"), 0.0)
-                    action = str(trade.get("action", "")).upper()
-                    if ticker and action in ("SELL", "COVER", "EXIT") and pnl != 0.0:
-                        self.ticker_daily_pnl[ticker] = self.ticker_daily_pnl.get(ticker, 0.0) + pnl
-                        if pnl < 0:
-                            self.ticker_consecutive_losses[ticker] = self.ticker_consecutive_losses.get(ticker, 0) + 1
-                            self.last_loss_times[ticker] = time.time()
-            if "SNDK" in self.ticker_daily_pnl or "SNDK" in self.ticker_consecutive_losses:
-                self.add_log(f"🛡️ [风控追踪] 初始化已同步今日亏损状态: SNDK 累计盈亏 ${self.ticker_daily_pnl.get('SNDK', 0.0):.2f}, 亏损次数 {self.ticker_consecutive_losses.get('SNDK', 0)} 次，自动执行风控锁死。")
-        except Exception as e:
-            self.add_log(f"⚠️ 初始化今日盈亏追踪器失败: {e}")
-
     @staticmethod
     def _aggressive_intraday_defaults() -> Dict:
         return {
-            "strategy_version": "conservative_institutional_v1",
+            "strategy_version": "aggressive_intraday_v6_max_profit",
             "strategy_mode": "aggressive_intraday",
             "paper_only_aggressive": True,
             "allow_aggressive_live": False,
-            "dynamic_screener_enabled": False,  # Strict focus on focus watchlist (TSLA, MSTR, NVDA)
+            "dynamic_screener_enabled": False,  # Strict focus on focus watchlist (SNDK, TSLA, MSTR, NVDA)
             "screener_refresh_seconds": 120,
             "screener_top_actives": 6,
             "screener_top_movers": 4,
             "max_scan_symbols": 14,
             "entry_score_min": 78.0,
             "full_size_score": 85.0,
-            "min_expected_value_r": 0.20,
-            "reentry_cooldown_seconds": 300,
-            "loss_reentry_cooldown_seconds": 1800,  # 30 minutes cooldown after any loss
+            "min_expected_value_r": 0.15,
+            "reentry_cooldown_seconds": 180,
             "max_concurrent_positions": 2,
-            "max_losses_per_ticker_session": 1,  # Strict: 1 loss per symbol per day triggers lockout
-            "max_dollar_loss_per_ticker": 250.0,  # Max $250 loss per symbol per day
-            "buying_power_utilization_pct": 0.80,
-            "starter_buying_power_pct": 0.20,
-            "max_position_buying_power_pct": 0.25,
-            "max_single_position_equity_pct": 0.20,  # Max 20% equity notional per position ($11.4k on $57k)
-            "max_position_risk_pct": 0.010,  # Max 1.0% equity risk ($570 max loss)
-            "max_trade_risk_pct": 0.010,
-            "pyramid_trigger_pct": 0.008,  # Only pyramid after >= 0.8% profit
-            "pyramid_multiplier": 0.35,  # Add max 35% of base position
+            "max_losses_per_ticker_session": 2,
+            "buying_power_utilization_pct": 0.95,
+            "starter_buying_power_pct": 0.60,
+            "max_position_buying_power_pct": 0.95,
+            "max_single_position_equity_pct": 0.70,
+            "max_position_risk_pct": 0.035,
+            "max_trade_risk_pct": 0.035,
+            "pyramid_trigger_pct": 0.005,
+            "pyramid_multiplier": 1.8,
             "min_stock_price": 5.0,
-            "daily_loss_limit_pct": 0.03,  # 3% daily account drawdown limit ($1,700)
-            "initial_stop_atr_mult": 1.50,
-            "stop_min_pct": 0.0060,
-            "stop_max_pct": 0.0150,  # Cap max stop at 1.5%
-            "trail_start_pct": 0.0100,
-            "trailing_stop_atr_mult": 1.80,
-            "trailing_stop_min_pct": 0.0060,
-            "trailing_stop_max_pct": 0.0200,
+            "daily_loss_limit_pct": 0.05,
+            "initial_stop_atr_mult": 1.80,
+            "stop_min_pct": 0.0080,
+            "stop_max_pct": 0.0250,
+            "trail_start_pct": 0.0120,
+            "trailing_stop_atr_mult": 2.20,
+            "trailing_stop_min_pct": 0.0080,
+            "trailing_stop_max_pct": 0.0350,
             "minimum_hold_minutes": 4,
             "max_hold_minutes": 300,
             "time_stop_min_score": 52.0,
@@ -805,32 +776,12 @@ class LiveTradingRunner:
 
             # Direct ML Model Execution: If ML model evaluates positive EV or P_win >= 50%, trigger order immediately!
             if is_pos_ev or ev_r >= 0.0 or p_win_pct >= 50.0:
-                # ─── Institutional Risk Circuit Breakers ─────────────────────
-                # 1. Loss count circuit breaker
-                ticker_losses = self.ticker_consecutive_losses.get(ticker, 0)
-                max_losses = int(self.strategy_params.get("max_losses_per_ticker_session", 1))
-                if ticker_losses >= max_losses:
-                    return "HOLD", f"{base_reason} | 🛑 [单股风控熔断] 今日连亏 {ticker_losses} 次 (>=上限 {max_losses} 次)，全天禁止开仓防反复被割"
-
-                # 2. Cumulative dollar loss circuit breaker
-                ticker_pnl = self.ticker_daily_pnl.get(ticker, 0.0)
-                max_ticker_loss = self._safe_float(self.strategy_params.get("max_dollar_loss_per_ticker"), 250.0)
-                if ticker_pnl <= -max_ticker_loss:
-                    return "HOLD", f"{base_reason} | 🛑 [金额风控熔断] 今日累计亏损 ${ticker_pnl:.2f} 达上限 (-${max_ticker_loss:.2f})，全天锁定禁入"
-
-                # 3. Post-loss cooling period (30 mins)
-                last_loss = self.last_loss_times.get(ticker)
-                loss_cooldown = self._safe_float(self.strategy_params.get("loss_reentry_cooldown_seconds"), 1800.0)
-                if last_loss and (time.time() - last_loss) < loss_cooldown:
-                    remain = int(loss_cooldown - (time.time() - last_loss))
-                    return "HOLD", f"{base_reason} | ⏳ [止损防杂音冷却] 该股刚止损，强制冷静期 ({remain}s 剩余) 防情绪化追单"
-
                 last_exit = self.last_exit_times.get(ticker)
-                cooldown = self._safe_float(self.strategy_params.get("reentry_cooldown_seconds"), 300.0)
+                cooldown = self._safe_float(self.strategy_params.get("reentry_cooldown_seconds"), 10.0)
                 if last_exit and (time.time() - last_exit) < cooldown:
                     remain = int(cooldown - (time.time() - last_exit))
                     return "HOLD", f"{base_reason} | 平仓冷却中 ({remain}s 剩余)"
-                if open_position_count >= int(self.strategy_params.get("max_concurrent_positions", 2)):
+                if open_position_count >= int(self.strategy_params.get("max_concurrent_positions", 4)):
                     return "HOLD", f"{base_reason} | 已达最大同时持仓数"
                 if direction == "SHORT" and not self._can_open_short(ticker):
                     return "HOLD", f"{base_reason} | Alpaca Asset 当前不可直接卖空/需要 locate"
@@ -968,14 +919,13 @@ class LiveTradingRunner:
             prob_eval=prob_eval or opportunity
         )
 
-    def _size_pyramid_entry(self, account: Dict, close_price: float, opportunity: Dict, current_shares: int = 0) -> Dict:
+    def _size_pyramid_entry(self, account: Dict, close_price: float, opportunity: Dict) -> Dict:
         return self.risk_sizer.size_pyramid_entry(
             account=account,
             close_price=close_price,
             opportunity=opportunity,
             strategy_params=self.strategy_params,
-            prob_eval=opportunity,
-            current_shares=current_shares
+            prob_eval=opportunity
         )
 
     def start(self, strategy_params: Optional[Dict] = None, tickers: Optional[List[str]] = None, **kwargs):
@@ -1784,15 +1734,6 @@ class LiveTradingRunner:
                                     self.last_exit_times[ticker] = time.time()
                                     self.entry_times.pop(ticker, None)
                                     self.position_extremes.pop(ticker, None)
-                                    if pnl < -1.0:
-                                        self.ticker_consecutive_losses[ticker] = self.ticker_consecutive_losses.get(ticker, 0) + 1
-                                        self.ticker_daily_pnl[ticker] = self.ticker_daily_pnl.get(ticker, 0.0) + pnl
-                                        self.last_loss_times[ticker] = time.time()
-                                        self.add_log(f"⚠️ [{ticker}] 录得亏损 ${pnl:.2f} | 今日该股累计盈亏: ${self.ticker_daily_pnl[ticker]:+.2f} | 连亏次数: {self.ticker_consecutive_losses[ticker]}")
-                                    elif pnl > 1.0:
-                                        self.ticker_consecutive_losses[ticker] = 0
-                                        self.ticker_daily_pnl[ticker] = self.ticker_daily_pnl.get(ticker, 0.0) + pnl
-                                        self.add_log(f"🎉 [{ticker}] 录得盈利 +${pnl:.2f} | 今日该股累计盈亏: ${self.ticker_daily_pnl[ticker]:+.2f}")
                                 else:
                                     self.unlock_exit(ticker)
                                     self.add_log(f"❌ [{ticker}] SELL order failed. Reason: {order_res.get('error')}")
@@ -1815,15 +1756,6 @@ class LiveTradingRunner:
                                     self.last_exit_times[ticker] = time.time()
                                     self.entry_times.pop(ticker, None)
                                     self.position_extremes.pop(ticker, None)
-                                    if pnl < -1.0:
-                                        self.ticker_consecutive_losses[ticker] = self.ticker_consecutive_losses.get(ticker, 0) + 1
-                                        self.ticker_daily_pnl[ticker] = self.ticker_daily_pnl.get(ticker, 0.0) + pnl
-                                        self.last_loss_times[ticker] = time.time()
-                                        self.add_log(f"⚠️ [{ticker}] 录得亏损 ${pnl:.2f} | 今日该股累计盈亏: ${self.ticker_daily_pnl[ticker]:+.2f} | 连亏次数: {self.ticker_consecutive_losses[ticker]}")
-                                    elif pnl > 1.0:
-                                        self.ticker_consecutive_losses[ticker] = 0
-                                        self.ticker_daily_pnl[ticker] = self.ticker_daily_pnl.get(ticker, 0.0) + pnl
-                                        self.add_log(f"🎉 [{ticker}] 录得盈利 +${pnl:.2f} | 今日该股累计盈亏: ${self.ticker_daily_pnl[ticker]:+.2f}")
                                 else:
                                     self.unlock_exit(ticker)
                                     self.add_log(f"❌ [{ticker}] COVER order failed. Reason: {order_res.get('error')}")
@@ -1876,7 +1808,7 @@ class LiveTradingRunner:
                                     self.add_log(f"⏳ [{ticker}] 浮盈加仓跳过：订单锁定中 (避免重复)")
                                 else:
                                     account = self.adapter.get_account_summary()
-                                    pyr_sizing = self._size_pyramid_entry(account, close_price, opportunity, current_shares=current_shares)
+                                    pyr_sizing = self._size_pyramid_entry(account, close_price, opportunity)
                                     pyr_shares = pyr_sizing["shares"]
                                     if pyr_shares <= 0:
                                         self.add_log(f"⚠️ [{ticker}] Buying power 不足以执行浮盈加仓，跳过。")
@@ -1910,7 +1842,7 @@ class LiveTradingRunner:
                                     self.add_log(f"⏳ [{ticker}] 浮盈加空跳过：订单锁定中 (避免重复)")
                                 else:
                                     account = self.adapter.get_account_summary()
-                                    pyr_sizing = self._size_pyramid_entry(account, close_price, opportunity, current_shares=abs(current_shares))
+                                    pyr_sizing = self._size_pyramid_entry(account, close_price, opportunity)
                                     pyr_shares = pyr_sizing["shares"]
                                     if pyr_shares <= 0:
                                         self.add_log(f"⚠️ [{ticker}] Buying power 不足以执行浮盈加空，跳过。")
