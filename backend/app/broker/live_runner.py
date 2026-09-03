@@ -14,6 +14,7 @@ import threading
 import time
 import uuid
 from typing import Dict, List, Optional
+import pandas as pd
 
 from app.broker.alpaca_adapter import AlpacaAdapter
 from app.broker.mock_adapter import MockAlpacaAdapter
@@ -632,8 +633,34 @@ class LiveTradingRunner:
             ),
         )
 
-        # Evaluate Institutional Composite Alpha Factors
-        alpha_eval = self.alpha_engine.evaluate_composite_alpha(row=row, prev_row=prev_row)
+        # Extract features and compute true ML model probabilities for directional alpha
+        from app.broker.probability_engine import get_calibrated_ml_model
+        ml_model_l = get_calibrated_ml_model("long")
+        ml_model_s = get_calibrated_ml_model("short")
+        p_long = 0.50
+        p_short = 0.50
+        if ml_model_l is not None and ml_model_s is not None:
+            try:
+                feat_dict = {
+                    "feature_ofi": float(self.alpha_engine.compute_ofi_alpha(row, prev_row)),
+                    "feature_rvol": float(rvol),
+                    "feature_vwap_dist_pct": float(vwap_dist_pct),
+                    "feature_ema_diff_pct": float((ema_9 - ema_21) / max(1e-5, ema_21) * 100.0),
+                    "feature_mom_5m": float(momentum_3_pct),
+                    "feature_mom_15m": float(momentum_10_pct),
+                    "feature_er": float(row.get("er", 0.35)),
+                    "feature_atr_pct": float(atr_pct),
+                }
+                df_feat = pd.DataFrame([feat_dict])
+                p_long = float(ml_model_l.predict_proba(df_feat)[0, 1])
+                p_short = float(ml_model_s.predict_proba(df_feat)[0, 1])
+            except Exception:
+                pass
+
+        # Evaluate Institutional Composite Alpha Factors including alpha_ml
+        alpha_eval = self.alpha_engine.evaluate_composite_alpha(
+            row=row, prev_row=prev_row, ml_p_win_long=p_long, ml_p_win_short=p_short
+        )
 
         is_trap = alpha_eval.get("is_trap", False)
         trap_reason = alpha_eval.get("trap_reason", "")
