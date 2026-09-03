@@ -4,7 +4,7 @@ import { MLDynamicVisualizationDashboard } from './MLDynamicVisualizationDashboa
 import { MLVisualInteractiveLab } from './MLVisualInteractiveLab';
 
 export const InstitutionalPanel: React.FC = () => {
-  const [activeSubTab, setActiveSubTab] = useState<'mlVisualLab' | 'twoStage' | 'alphaLab' | 'optimal' | 'statArb' | 'riskParity' | 'dsr' | 'lowLatency' | 'ofi' | 'multiAsset'>('mlVisualLab');
+  const [activeSubTab, setActiveSubTab] = useState<'itchEngine' | 'mlVisualLab' | 'twoStage' | 'alphaLab' | 'optimal' | 'statArb' | 'riskParity' | 'dsr' | 'lowLatency' | 'ofi' | 'multiAsset'>('itchEngine');
   const [loading, setLoading] = useState<boolean>(false);
   const [resultData, setResultData] = useState<any>(null);
   const [alphaResearchData, setAlphaResearchData] = useState<any>(null);
@@ -189,6 +189,17 @@ export const InstitutionalPanel: React.FC = () => {
       {/* Sub-tab Selectors */}
       <div className="flex gap-2 border-b border-slate-800 pb-3 mb-6 overflow-x-auto">
         <button
+          onClick={() => { setActiveSubTab('itchEngine'); setResultData(null); }}
+          className={`px-4 py-2 text-xs font-semibold rounded-lg transition-all ${
+            activeSubTab === 'itchEngine'
+              ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30'
+              : 'bg-slate-800 text-slate-400 hover:text-white'
+          }`}
+        >
+          ⚡ C++20 引擎与 ITCH 5.0 微观结构大屏
+        </button>
+
+        <button
           onClick={() => { setActiveSubTab('mlVisualLab'); setResultData(null); }}
           className={`px-4 py-2 text-xs font-semibold rounded-lg transition-all ${
             activeSubTab === 'mlVisualLab'
@@ -306,6 +317,18 @@ export const InstitutionalPanel: React.FC = () => {
       )}
 
       {/* SubTab Content */}
+      {activeSubTab === 'itchEngine' && (
+        <div className="mb-6">
+          <div className="bg-slate-950/80 border border-slate-800 rounded-xl overflow-hidden shadow-2xl">
+            <iframe
+              src="/microstructure_visual_dashboard.html"
+              title="C++20 Engine and Nasdaq ITCH 5.0 Microstructure Visualizer"
+              style={{ width: '100%', height: '940px', border: 'none', display: 'block' }}
+            />
+          </div>
+        </div>
+      )}
+
       {activeSubTab === 'mlVisualLab' && (
         <div className="mb-6">
           <MLVisualInteractiveLab />
