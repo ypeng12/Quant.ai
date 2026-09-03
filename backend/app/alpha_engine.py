@@ -209,11 +209,8 @@ class InstitutionalAlphaEngine:
         composite_alpha_raw = float(np.sum(weights * raw_signals))
         composite_score = float(np.clip(composite_alpha_raw * 100.0, -100.0, 100.0))
 
-        # Apply Continuous Anti-Trap Adjustment
+        # Composite Alpha Score: strictly governed by multi-factor variance & confidence weighting
         is_trap, trap_penalty, trap_reason = self.compute_anti_bull_trap_filter(row)
-        if is_trap:
-            composite_score = float(np.clip(composite_score + trap_penalty, -100.0, 100.0))
-
         composite_score = round(composite_score, 1)
 
         return {

@@ -666,12 +666,12 @@ class LiveTradingRunner:
         trap_reason = alpha_eval.get("trap_reason", "")
 
         # Anti-Bull/Bear Trap Engine: Convert false breakouts into active SHORT/LONG opportunities
-        if is_trap and ("Bull Trap" in trap_reason or "Upper Wick" in trap_reason or "Ask Depth" in trap_reason):
+        if is_trap and ("Bull Trap" in trap_reason or "Upper Wick" in trap_reason or "Ask Depth" in trap_reason) and close < ema_9:
             long_confirmed = False
             if alpha_eval["composite_alpha_score"] <= -45.0:
                 direction = "SHORT"
                 short_confirmed = True
-        elif is_trap and ("Bear Trap" in trap_reason or "Lower Wick" in trap_reason or "Bid Depth" in trap_reason):
+        elif is_trap and ("Bear Trap" in trap_reason or "Lower Wick" in trap_reason or "Bid Depth" in trap_reason) and close > ema_9:
             short_confirmed = False
             if alpha_eval["composite_alpha_score"] >= 45.0:
                 direction = "LONG"
@@ -859,17 +859,17 @@ class LiveTradingRunner:
         if side == "SHORT" and alpha_ofi >= 0.55 and rvol >= 1.2:
             return "COVER", f"{base_reason} | 🚨 [HRT 大单扫盘] 订单流买盘强攻 (OFI={alpha_ofi:+.2f}, RVOL={rvol:.2f}x) 主力大单进场扫盘，空头避险平仓"
 
-        # 2. Institutional Climax Volume Distribution / Trap (天量诱捕与主力对倒出货)
-        if side == "LONG" and is_trap and ("Bull Trap" in trap_reason or "Ask Depth" in trap_reason) and rvol >= 1.3:
-            return "SELL", f"{base_reason} | ⚠️ [HRT 诱多出货] 主力假突破诱多，成交量异动伴随大额卖单压盘 ({trap_reason})"
-        if side == "SHORT" and is_trap and ("Bear Trap" in trap_reason or "Bid Depth" in trap_reason) and rvol >= 1.3:
-            return "COVER", f"{base_reason} | ⚠️ [HRT 诱空吸筹] 主力假跌破诱空，成交量异动伴随大额买单托盘 ({trap_reason})"
+        # 2. Institutional Climax Volume Distribution / Trap (天量诱捕与主力对倒出货，且价格跌破 EMA9 确认破位)
+        if side == "LONG" and is_trap and ("Bull Trap" in trap_reason or "Ask Depth" in trap_reason) and rvol >= 1.5 and close < opportunity.get("_ema_9", close):
+            return "SELL", f"{base_reason} | ⚠️ [HRT 诱多出货] 主力假突破诱多且跌破 EMA9，成交量异动伴随大额卖单压盘 ({trap_reason})"
+        if side == "SHORT" and is_trap and ("Bear Trap" in trap_reason or "Bid Depth" in trap_reason) and rvol >= 1.5 and close > opportunity.get("_ema_9", close):
+            return "COVER", f"{base_reason} | ⚠️ [HRT 诱空吸筹] 主力假跌破诱空且收复 EMA9，成交量异动伴随大额买单托盘 ({trap_reason})"
 
-        # 3. Large Quantitative Alpha Model Direction Reversal (大模型方向彻底反转)
-        if side == "LONG" and direction == "SHORT" and alpha_score <= -25.0:
-            return "SELL", f"{base_reason} | 🔄 [大模型方向反转] 量化大模型方向由多转空 (Model Direction={direction}, Alpha={alpha_score:+.1f})，顺应模型平仓"
-        if side == "SHORT" and direction == "LONG" and alpha_score >= 25.0:
-            return "COVER", f"{base_reason} | 🔄 [大模型方向反转] 量化大模型方向由空转多 (Model Direction={direction}, Alpha={alpha_score:+.1f})，顺应模型平仓"
+        # 3. Large Quantitative Alpha Model Direction Reversal (大模型方向彻底反转，且均线结构破位)
+        if side == "LONG" and direction == "SHORT" and alpha_score <= -25.0 and close < opportunity.get("_ema_9", close):
+            return "SELL", f"{base_reason} | 🔄 [大模型方向反转] 量化大模型方向由多转空且跌破 EMA9 (Model Direction={direction}, Alpha={alpha_score:+.1f})，顺应模型平仓"
+        if side == "SHORT" and direction == "LONG" and alpha_score >= 25.0 and close > opportunity.get("_ema_9", close):
+            return "COVER", f"{base_reason} | 🔄 [大模型方向反转] 量化大模型方向由空转多且收复 EMA9 (Model Direction={direction}, Alpha={alpha_score:+.1f})，顺应模型平仓"
 
         # 4. Volume Exhaustion with Structural Momentum Decay (仅在长持仓后成交量严重枯竭且动能反向时平仓)
         min_hold = self._safe_float(self.strategy_params.get("minimum_hold_minutes"), 15.0)
@@ -1541,16 +1541,15 @@ class LiveTradingRunner:
                         if not self.is_running:
                             break
                         try:
-                            df = None
-                            try:
-                                df = fetch_and_prepare_data(ticker, period="3d", interval="1m")
-                                if df is not None and not df.empty and len(df) >= 2:
-                                    self._ticker_df_cache[ticker] = df
-                            except Exception as fetch_err:
-                                if "429" in str(fetch_err) or "rate limit" in str(fetch_err).lower():
-                                    df = self._ticker_df_cache.get(ticker)
-                                    if df is not None:
-                                        self.add_log(f"⚡ [{ticker}] Alpaca Rate-Limit 避让生效：已成功无缝使用缓存数据，持续监控！")
+                            bar_iv = self.strategy_params.get("bar_interval", "5m")
+                            df = fetch_and_prepare_data(ticker, period="5d", interval=bar_iv)
+                            if df is not None and not df.empty and len(df) >= 2:
+                                self._ticker_df_cache[ticker] = df
+                        except Exception as fetch_err:
+                            if "429" in str(fetch_err) or "rate limit" in str(fetch_err).lower():
+                                df = self._ticker_df_cache.get(ticker)
+                                if df is not None:
+                                    self.add_log(f"⚡ [{ticker}] Alpaca Rate-Limit 避让生效：已成功无缝使用缓存数据，持续监控！")
 
                             if ticker in EXCLUDED_TICKERS:
                                 continue
