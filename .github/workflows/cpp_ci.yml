@@ -1,0 +1,84 @@
+name: C++20 Production Trading Engine CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    name: Build & Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python dependencies
+        run: |
+          pip install --upgrade pip pybind11 pytest numpy
+
+      - name: Configure CMake (Release)
+        run: |
+          cmake -S cpp_engine -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_TESTS=ON \
+            -DBUILD_BENCHMARKS=ON
+
+      - name: Build Engine, Gateway, Tests, and Benchmarks
+        run: |
+          cmake --build build --parallel $(nproc 2>/dev/null || sysctl -n hw.logicalcpu)
+
+      - name: Run GoogleTest Suite
+        run: |
+          ctest --test-dir build --output-on-failure
+
+      - name: Run Latency & Throughput Benchmark
+        run: |
+          ./build/benchmark_engine
+
+  sanitizers:
+    name: Memory & Thread Sanitizers (Ubuntu)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python dependencies
+        run: |
+          pip install --upgrade pip pybind11
+
+      - name: Configure & Test with ASan and UBSan
+        run: |
+          cmake -S cpp_engine -B build-asan \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DENABLE_ASAN=ON \
+            -DENABLE_UBSAN=ON \
+            -DBUILD_TESTS=ON \
+            -DBUILD_BENCHMARKS=OFF
+          cmake --build build-asan --parallel $(nproc)
+          ./build-asan/engine_tests
+
+      - name: Configure & Test with TSan (ThreadSanitizer)
+        run: |
+          cmake -S cpp_engine -B build-tsan \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DENABLE_TSAN=ON \
+            -DBUILD_TESTS=ON \
+            -DBUILD_BENCHMARKS=OFF
+          cmake --build build-tsan --parallel $(nproc)
+          ./build-tsan/engine_tests

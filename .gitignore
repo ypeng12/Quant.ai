@@ -31,6 +31,8 @@ backend/app/experiments.db
 *.db
 *.joblib
 *.so
+*.a
+cpp_engine/build*/
 low_latency_network_test
 scratch/
 

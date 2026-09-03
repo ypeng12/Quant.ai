@@ -90,13 +90,16 @@ class MaxProfitQuantOptimizer:
             is_bull_trend = (cur_price >= cur_vwap) and (cur_e9 >= cur_e21) and (cur_mom >= 0.05)
             is_bear_trend = (cur_price < cur_vwap) and (cur_e9 < cur_e21) and (cur_mom <= -0.05)
 
+            base_leverage = min(1.0, self.pyramid_multiplier)
+            max_pos = self.pyramid_multiplier
+
             if current_pos == 0.0:
                 if is_bull_trend:
-                    current_pos = 1.2 # Initial Heavy Entry (1.2x)
+                    current_pos = base_leverage
                     entry_price = cur_price
                     peak_price = cur_price
                 elif is_bear_trend:
-                    current_pos = -1.2 # Initial Heavy Short Entry (-1.2x)
+                    current_pos = -base_leverage
                     entry_price = cur_price
                     peak_price = cur_price
             else:
@@ -108,7 +111,7 @@ class MaxProfitQuantOptimizer:
 
                     # Check Pyramiding Scale-up
                     if floating_pnl_pct >= 0.008 and ofi_val >= 0.5:
-                        current_pos = 2.2 # Scale leverage up to 2.2x on trend acceleration
+                        current_pos = max_pos # Scale leverage up to pyramid_multiplier
                     elif cur_price <= trail_stop or not is_bull_trend:
                         current_pos = 0.0 # Trend exit / Trailing stop
                 else:
@@ -117,7 +120,7 @@ class MaxProfitQuantOptimizer:
                     trail_stop = peak_price + 2.5 * cur_atr
 
                     if floating_pnl_pct >= 0.008 and ofi_val <= -0.5:
-                        current_pos = -2.2 # Scale short leverage up to -2.2x
+                        current_pos = -max_pos
                     elif cur_price >= trail_stop or not is_bear_trend:
                         current_pos = 0.0 # Trend exit / Trailing stop
             
@@ -145,16 +148,21 @@ class MaxProfitQuantOptimizer:
     ) -> Dict:
         """
         Executes Aggressive Alpha Concentration across top momentum leaders:
-        - 1st Ranked Ticker: 70% of Total Capital ($210,000)
-        - 2nd Ranked Ticker: 30% of Total Capital ($90,000)
+        - 1st Ranked Ticker: 60%
+        - 2nd Ranked Ticker: 25%
+        - 3rd Ranked Ticker: 15%
         """
         ranked_tickers = self.rank_cross_sectional_alpha(ticker_dfs)
-        allocations = [0.70, 0.30]
+        n_tickers = min(len(ranked_tickers), 3)
+        default_alloc = [0.60, 0.25, 0.15]
+        allocations = default_alloc[:n_tickers]
+        tot = sum(allocations)
+        allocations = [a / tot for a in allocations]
         
         portfolio_results = []
         total_dollar_pnl = 0.0
 
-        for idx, (ticker, score) in enumerate(ranked_tickers[:2]):
+        for idx, (ticker, score) in enumerate(ranked_tickers[:n_tickers]):
             alloc_pct = allocations[idx] if idx < len(allocations) else 0.0
             capital = total_capital * alloc_pct
             
