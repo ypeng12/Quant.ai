@@ -585,8 +585,8 @@ class LiveTradingRunner:
             and momentum_3_pct > 0.05
         )
 
-        long_structure = close > vwap and ema_9 > ema_21 and momentum_3_pct >= 0.0
-        short_structure = close < vwap and ema_9 < ema_21 and momentum_3_pct <= 0.0
+        long_structure = close > vwap and ema_9 > ema_21 and close >= ema_21
+        short_structure = close < vwap and ema_9 < ema_21 and close <= ema_21
 
         if reversal_long:
             direction = "LONG"
@@ -1541,15 +1541,17 @@ class LiveTradingRunner:
                         if not self.is_running:
                             break
                         try:
-                            bar_iv = self.strategy_params.get("bar_interval", "5m")
-                            df = fetch_and_prepare_data(ticker, period="5d", interval=bar_iv)
-                            if df is not None and not df.empty and len(df) >= 2:
-                                self._ticker_df_cache[ticker] = df
-                        except Exception as fetch_err:
-                            if "429" in str(fetch_err) or "rate limit" in str(fetch_err).lower():
-                                df = self._ticker_df_cache.get(ticker)
-                                if df is not None:
-                                    self.add_log(f"⚡ [{ticker}] Alpaca Rate-Limit 避让生效：已成功无缝使用缓存数据，持续监控！")
+                            df = None
+                            try:
+                                bar_iv = self.strategy_params.get("bar_interval", "5m")
+                                df = fetch_and_prepare_data(ticker, period="5d", interval=bar_iv)
+                                if df is not None and not df.empty and len(df) >= 2:
+                                    self._ticker_df_cache[ticker] = df
+                            except Exception as fetch_err:
+                                if "429" in str(fetch_err) or "rate limit" in str(fetch_err).lower():
+                                    df = self._ticker_df_cache.get(ticker)
+                                    if df is not None:
+                                        self.add_log(f"⚡ [{ticker}] Alpaca Rate-Limit 避让生效：已成功无缝使用缓存数据，持续监控！")
 
                             if ticker in EXCLUDED_TICKERS:
                                 continue
