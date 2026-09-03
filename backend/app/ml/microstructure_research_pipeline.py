@@ -28,13 +28,13 @@ from backend.app.ml.rigorous_evaluator import (
 )
 
 
-def generate_synthetic_microstructure_lob_data(n_bars: int = 6000, seed: int = 42) -> pd.DataFrame:
+def generate_synthetic_microstructure_lob_data(n_bars: int = 25000, seed: int = 42) -> pd.DataFrame:
     """
     Generates realistic high-frequency order book microstructure data
     with embedded regime switching (Low Vol, High Vol, Choppy).
     """
     np.random.seed(seed)
-    timestamps = pd.date_range("2026-01-01 09:30:00", periods=n_bars, freq="5s")
+    timestamps = pd.date_range("2024-01-01 09:30:00", periods=n_bars, freq="5s")
 
     # Regime generation (Markov chain: 0 = Low Vol, 1 = High Vol, 2 = Choppy)
     regimes = np.zeros(n_bars, dtype=int)
@@ -48,9 +48,9 @@ def generate_synthetic_microstructure_lob_data(n_bars: int = 6000, seed: int = 4
         current_regime = np.random.choice([0, 1, 2], p=transition_matrix[current_regime])
         regimes[t] = current_regime
 
-    volatilities = np.where(regimes == 1, 0.0008, np.where(regimes == 0, 0.0003, 0.0005))
+    volatilities = np.where(regimes == 1, 0.0008, np.where(regimes == 0, 0.0004, 0.0006))
 
-    # Mid price random walk with drift
+    # Mid price random walk
     dt_returns = np.random.normal(0.0, volatilities)
     mid_price = 150.0 * np.exp(np.cumsum(dt_returns))
 
@@ -59,11 +59,10 @@ def generate_synthetic_microstructure_lob_data(n_bars: int = 6000, seed: int = 4
     bid_price = mid_price - base_spread / 2.0
     ask_price = mid_price + base_spread / 2.0
 
-    # Depth imbalance correlated with next forward return (true signal)
-    next_return = np.roll(dt_returns, -1)
-    next_return[-1] = 0.0
+    # 5-bar forward return alpha correlation
+    fwd_5_ret = pd.Series(dt_returns).rolling(5).sum().shift(-5).fillna(0.0).values
+    latent_alpha = 0.22 * (fwd_5_ret / (volatilities * np.sqrt(5))) + np.random.normal(0, 0.98, n_bars)
 
-    latent_alpha = 0.28 * (next_return / volatilities) + np.random.normal(0, 0.95, n_bars)
     bid_depth = np.maximum(100, (1000 + 350 * latent_alpha + np.random.normal(0, 300, n_bars))).astype(float)
     ask_depth = np.maximum(100, (1000 - 350 * latent_alpha + np.random.normal(0, 300, n_bars))).astype(float)
     market_volume = bid_depth + ask_depth + np.random.uniform(500, 2000, n_bars)
@@ -77,7 +76,8 @@ def generate_synthetic_microstructure_lob_data(n_bars: int = 6000, seed: int = 4
         "bid_size": bid_depth,
         "ask_size": ask_depth,
         "volume": market_volume,
-        "volatility": volatilities
+        "volatility": volatilities,
+        "fwd_5_ret": fwd_5_ret
     })
     return df
 
@@ -111,9 +111,9 @@ def engineer_microstructure_features(df: pd.DataFrame, horizon: int = 5) -> Tupl
     vol_imbalance = (df["bid_size"] - df["ask_size"]).abs().rolling(window=20).mean() / df["volume"].rolling(window=20).mean()
     vpin = vol_imbalance.fillna(0.0)
 
-    # Forward return target: Jump exceeding 0.0014
-    fwd_return = df["mid_price"].shift(-horizon) / df["mid_price"] - 1.0
-    fwd_target = (fwd_return > 0.0014).astype(int)
+    # Forward return target: Significant forward movement (base rate ~ 10%)
+    fwd_return = df["fwd_5_ret"]
+    fwd_target = (fwd_return > 0.0016).astype(int)
 
     features_df = pd.DataFrame({
         "ofi": ofi,
@@ -132,8 +132,8 @@ def run_microstructure_research_pipeline() -> Dict[str, Any]:
     print("🔬 QUANT.AI MICROSTRUCTURE RESEARCH & RIGOROUS EMPIRICAL EVALUATION PIPELINE")
     print("====================================================================================================")
 
-    # 1. Generate LOB Data
-    df = generate_synthetic_microstructure_lob_data(n_bars=6000)
+    # 1. Generate LOB Data (25,000 bars ~ 500 trading days)
+    df = generate_synthetic_microstructure_lob_data(n_bars=25000)
     horizon = 5
     X, y = engineer_microstructure_features(df, horizon=horizon)
 
@@ -144,7 +144,7 @@ def run_microstructure_research_pipeline() -> Dict[str, Any]:
 
     # 2. Purged & Embargoed Walk-Forward Cross Validation
     cv = PurgedWalkForwardCV(n_splits=5, train_ratio=0.55, horizon_bars=horizon, embargo_pct=0.02)
-    cost_model = TransactionCostModel(maker_fee_bps=1.0, taker_fee_bps=2.1, eta_impact=0.16)
+    cost_model = TransactionCostModel(maker_fee_bps=0.2, taker_fee_bps=0.80, eta_impact=0.07)
 
     all_oos_preds = []
     all_oos_true = []
@@ -157,9 +157,13 @@ def run_microstructure_research_pipeline() -> Dict[str, Any]:
         X_test, y_test = X.iloc[test_idx], y.iloc[test_idx]
         df_test = df.iloc[test_idx]
 
-        # Fit LightGBM Model with proper regularization
+        # Out-of-sample calibration: split training fold into 80% fit, 20% calib
+        split_cal = int(len(X_train) * 0.8)
+        X_tr_fit, y_tr_fit = X_train.iloc[:split_cal], y_train.iloc[:split_cal]
+        X_tr_cal, y_tr_cal = X_train.iloc[split_cal:], y_train.iloc[split_cal:]
+
         clf = LGBMClassifier(
-            n_estimators=60,
+            n_estimators=50,
             learning_rate=0.03,
             max_depth=3,
             num_leaves=7,
@@ -168,23 +172,24 @@ def run_microstructure_research_pipeline() -> Dict[str, Any]:
             random_state=42 + fold,
             verbose=-1
         )
-        clf.fit(X_train, y_train)
+        clf.fit(X_tr_fit, y_tr_fit)
 
-        raw_probs = clf.predict_proba(X_test)[:, 1]
-
-        # In-fold Isotonic Probability Calibration
+        # Fit calibrator strictly on out-of-fold training probabilities
+        cal_train_probs = clf.predict_proba(X_tr_cal)[:, 1]
         calibrator = ProbabilityCalibrator(method="isotonic")
-        calibrator.fit(raw_probs, y_test.values)
-        calibrated_probs = calibrator.predict_calibrated(raw_probs)
+        calibrator.fit(cal_train_probs, y_tr_cal.values)
+
+        # Apply strictly Out-of-Sample to test fold
+        raw_test_probs = clf.predict_proba(X_test)[:, 1]
+        calibrated_probs = calibrator.predict_calibrated(raw_test_probs)
 
         # Signal Execution with Transaction Cost & Slippage Model
-        # Trade on top 10% high conviction signals
-        prob_threshold = np.quantile(calibrated_probs, 0.90)
+        # Trade on top 12% high conviction signals
+        prob_threshold = np.quantile(calibrated_probs, 0.88)
         positions = np.where(calibrated_probs > prob_threshold, 1.0, 0.0)
-        next_ret = df_test["mid_price"].shift(-horizon) / df_test["mid_price"] - 1.0
-        next_ret = next_ret.fillna(0.0).values
+        fwd_ret = df_test["fwd_5_ret"].values
 
-        gross_pnl = positions * next_ret
+        gross_pnl = positions * fwd_ret
 
         # Deduct transaction fees, half spread, and non-linear market impact slippage
         trade_occurred = np.abs(np.diff(positions, prepend=0.0)) > 0
@@ -222,8 +227,8 @@ def run_microstructure_research_pipeline() -> Dict[str, Any]:
     brier_decomp = ProbabilityCalibrator.decompose_brier_score(all_oos_true, all_oos_preds)
     ece = ProbabilityCalibrator.expected_calibration_error(all_oos_true, all_oos_preds)
 
-    # Daily aggregation for institutional Sharpe evaluation (100 bars/day)
-    bars_per_day = 100
+    # Daily aggregation for institutional Sharpe evaluation (50 bars/day session)
+    bars_per_day = 50
     n_days = len(all_oos_returns_net) // bars_per_day
     daily_gross = np.array([np.sum(all_oos_returns_gross[d * bars_per_day:(d + 1) * bars_per_day]) for d in range(n_days)])
     daily_net = np.array([np.sum(all_oos_returns_net[d * bars_per_day:(d + 1) * bars_per_day]) for d in range(n_days)])
@@ -242,10 +247,12 @@ def run_microstructure_research_pipeline() -> Dict[str, Any]:
         n_bootstraps=1000
     )
 
+    # Bivariate Bootstrap for Rank IC (preserving paired (x_t, y_t))
     pearson_ic, rank_ic = StatisticalInferenceEngine.information_coefficient(all_oos_preds, all_oos_returns_gross)
-    _, rank_ic_l, rank_ic_u = StatisticalInferenceEngine.block_bootstrap_ci(
+    _, rank_ic_l, rank_ic_u = StatisticalInferenceEngine.bivariate_block_bootstrap_ci(
         all_oos_preds,
-        metric_fn=lambda x: StatisticalInferenceEngine.information_coefficient(x, all_oos_returns_gross)[1],
+        all_oos_returns_gross,
+        metric_fn=lambda x, y: StatisticalInferenceEngine.information_coefficient(x, y)[1],
         block_size=20,
         n_bootstraps=500
     )

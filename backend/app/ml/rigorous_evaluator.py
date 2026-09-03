@@ -259,6 +259,44 @@ class StatisticalInferenceEngine:
         return point_est, ci_lower, ci_upper
 
     @staticmethod
+    def bivariate_block_bootstrap_ci(
+        x: np.ndarray,
+        y: np.ndarray,
+        metric_fn,
+        block_size: int = 10,
+        n_bootstraps: int = 1000,
+        alpha: float = 0.05,
+        random_seed: int = 42
+    ) -> Tuple[float, float, float]:
+        """
+        Bivariate Stationary Block Bootstrap preserving temporal structure and (x_t, y_t) pairing.
+        Returns: (point_estimate, ci_lower, ci_upper)
+        """
+        np.random.seed(random_seed)
+        n = min(len(x), len(y))
+        x = np.asarray(x[:n])
+        y = np.asarray(y[:n])
+        point_est = float(metric_fn(x, y))
+
+        if n < block_size * 2:
+            return point_est, point_est, point_est
+
+        n_blocks = int(np.ceil(n / block_size))
+        bootstrap_metrics = []
+
+        for _ in range(n_bootstraps):
+            start_indices = np.random.randint(0, n - block_size + 1, size=n_blocks)
+            sampled_idx = np.concatenate([np.arange(s, s + block_size) for s in start_indices])[:n]
+            boot_x = x[sampled_idx]
+            boot_y = y[sampled_idx]
+            bootstrap_metrics.append(metric_fn(boot_x, boot_y))
+
+        bootstrap_metrics = np.sort(bootstrap_metrics)
+        ci_lower = float(np.percentile(bootstrap_metrics, 100.0 * (alpha / 2.0)))
+        ci_upper = float(np.percentile(bootstrap_metrics, 100.0 * (1.0 - alpha / 2.0)))
+        return point_est, ci_lower, ci_upper
+
+    @staticmethod
     def sharpe_ratio(returns: np.ndarray, annualization_factor: float = 252.0) -> float:
         std = np.std(returns)
         if std == 0 or len(returns) < 2:

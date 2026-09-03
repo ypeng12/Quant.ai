@@ -83,6 +83,23 @@ def test_statistical_inference_bootstrap_ci():
     assert ci_upper - ci_lower > 0.0
 
 
+def test_statistical_inference_bivariate_bootstrap_ci():
+    np.random.seed(42)
+    x = np.random.normal(0, 1, 500)
+    y = 0.4 * x + np.random.normal(0, 0.9, 500)
+
+    point_ic, ci_l, ci_u = StatisticalInferenceEngine.bivariate_block_bootstrap_ci(
+        x, y,
+        metric_fn=lambda a, b: StatisticalInferenceEngine.information_coefficient(a, b)[1],
+        block_size=10,
+        n_bootstraps=300
+    )
+
+    # Point estimate must be strictly inside empirical confidence interval
+    assert ci_l <= point_ic <= ci_u
+    assert ci_l > 0.0 # Positively correlated
+
+
 def test_deflated_sharpe_ratio():
     returns = np.random.normal(0.001, 0.01, 250)
     sr = StatisticalInferenceEngine.sharpe_ratio(returns, 252.0)
