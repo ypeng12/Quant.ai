@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quant.ai - 动态 HRT ML 实时仿真引擎大屏</title>
+    <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        * { box-sizing: border-box; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+        body { background-color: #0b0e14; color: #e2e8f0; margin: 0; padding: 20px; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 16px; margin-bottom: 20px; }
+        .title { font-size: 20px; font-weight: 800; color: #38bdf8; display: flex; align-items: center; gap: 10px; }
+        .pnl-badge { background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); color: #10b981; padding: 6px 16px; border-radius: 8px; font-weight: 800; font-size: 18px; }
+        
+        .replay-controls { display: flex; align-items: center; gap: 8px; background: #131722; padding: 6px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); }
+        .ctrl-btn { padding: 6px 14px; border-radius: 6px; border: none; font-weight: 700; font-size: 13px; cursor: pointer; transition: all 0.2s ease; background: #1e293b; color: #fff; }
+        .ctrl-btn:hover { background: #0284c7; }
+        .ctrl-btn.active { background: #10b981; color: #fff; }
+        
+        .dashboard-grid { display: grid; grid-template-columns: 280px 1fr 320px; gap: 16px; }
+        .card { background: #131722; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.3); }
+        .card-title { font-size: 14px; font-weight: 700; color: #38bdf8; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; }
+        
+        .slider-group { margin-bottom: 16px; }
+        .slider-label { font-size: 12px; color: #94a3b8; margin-bottom: 6px; display: flex; justify-content: space-between; }
+        .slider-val { color: #38bdf8; font-weight: 700; }
+        input[type=range] { width: 100%; cursor: pointer; accent-color: #0284c7; }
+
+        .order-ticket { background: #0f172a; border-left: 4px solid #10b981; padding: 10px; border-radius: 6px; margin-bottom: 8px; font-size: 12px; animation: fadeIn 0.3s ease; }
+        .order-ticket.short { border-left-color: #ef4444; }
+        .order-ticket.exit { border-left-color: #f59e0b; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div>
+            <div class="title">🎬 Quant.ai | HRT 级微观结构 ML 动态模拟与实时仿真引擎</div>
+            <div style="font-size: 13px; color: #94a3b8; margin-top: 4px;">K 线逐 Bar 动态演算 · ML 信号实时打点 · 订单流秒级仿真</div>
+        </div>
+        <div style="display:flex; align-items:center; gap:16px;">
+            <div class="pnl-badge" id="livePnlDisplay">模拟净收益: +$1,256.20 (+2.25%)</div>
+            <div class="replay-controls">
+                <button class="ctrl-btn" id="btnPlay" onclick="togglePlay()">▶ 播放仿真</button>
+                <button class="ctrl-btn" onclick="resetReplay()">↺ 重置</button>
+                <span style="color:#64748b; font-size:12px;">倍速:</span>
+                <button class="ctrl-btn speed-btn active" onclick="setSpeed(1, this)">1x</button>
+                <button class="ctrl-btn speed-btn" onclick="setSpeed(2, this)">2x</button>
+                <button class="ctrl-btn speed-btn" onclick="setSpeed(5, this)">5x</button>
+                <button class="ctrl-btn speed-btn" onclick="setSpeed(10, this)">10x</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <!-- Left Panel: Interactive ML Feature Sandbox -->
+        <div class="card">
+            <div class="card-title">🎛️ HRT ML 动态调参沙盒</div>
+            
+            <div class="slider-group">
+                <div class="slider-label"><span>Order Flow Imbalance (OFI)</span> <span class="slider-val" id="valOfi">0.45</span></div>
+                <input type="range" min="-1.0" max="1.0" step="0.05" value="0.45" oninput="onOfiChange(this.value)">
+            </div>
+
+            <div class="slider-group">
+                <div class="slider-label"><span>Microprice Velocity ($)</span> <span class="slider-val" id="valVel">+0.12</span></div>
+                <input type="range" min="-0.5" max="0.5" step="0.02" value="0.12" oninput="onVelChange(this.value)">
+            </div>
+
+            <div class="slider-group">
+                <div class="slider-label"><span>LOB Queue Toxicity (VPIN)</span> <span class="slider-val" id="valVpin">0.18</span></div>
+                <input type="range" min="0.0" max="1.0" step="0.05" value="0.18" oninput="document.getElementById('valVpin').innerText=this.value">
+            </div>
+
+            <div style="background:#0f172a; padding:12px; border-radius:8px; margin-top:20px; font-size:12px;">
+                <div style="color:#94a3b8; font-weight:700;">实时 ML 推理诊断</div>
+                <div style="margin-top:6px;">模型胜率 P_win: <strong style="color:#38bdf8;" id="mlPwin">65.4%</strong></div>
+                <div>数学期望 E[PnL]: <strong style="color:#10b981;" id="mlEPnl">+0.38 R</strong></div>
+                <div>Kelly 推荐仓位: <strong style="color:#a855f7;" id="mlKelly">22.5%</strong></div>
+            </div>
+            
+            <button onclick="triggerManualOrder()" style="width:100%; margin-top:16px; background:linear-gradient(135deg,#10b981,#059669); border:none; color:#fff; padding:10px; border-radius:6px; font-weight:800; cursor:pointer;">
+                ⚡ 立即手动模拟下单
+            </button>
+        </div>
+
+        <!-- Center Panel: Dynamic Replay Candlestick Chart -->
+        <div class="card" style="padding:10px;">
+            <div id="dynamicChart" style="width:100%; height:580px;"></div>
+        </div>
+
+        <!-- Right Panel: Live Dynamic Order Execution Stream -->
+        <div class="card">
+            <div class="card-title">
+                <span>⚡ 动态模拟报单流 (Live Stream)</span>
+                <span style="font-size:11px; background:#0284c7; color:#fff; padding:2px 6px; borderRadius:4px;" id="orderCount">0 笔</span>
+            </div>
+            <div id="orderStream" style="max-height: 520px; overflow-y: auto;">
+                <div style="color:#64748b; font-size:12px; text-align:center; padding:20px;">点击 [▶ 播放仿真] 开始实时动态推演...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const fullCandles = [{"time": "09:30", "open": 344.99, "high": 345.58, "low": 344.41, "close": 345.0, "volume": 32226}, {"time": "09:35", "open": 345.6, "high": 346.12, "low": 345.01, "close": 345.53, "volume": 27666}, {"time": "09:40", "open": 345.85, "high": 346.36, "low": 345.0, "close": 345.51, "volume": 13692}, {"time": "09:45", "open": 345.83, "high": 346.62, "low": 345.38, "close": 346.17, "volume": 29243}, {"time": "09:50", "open": 347.29, "high": 348.46, "low": 346.42, "close": 347.59, "volume": 29110}, {"time": "09:55", "open": 347.18, "high": 347.96000000000004, "low": 346.71, "close": 347.49, "volume": 21180}, {"time": "10:00", "open": 347.07, "high": 348.41999999999996, "low": 346.04, "close": 347.39, "volume": 14540}, {"time": "10:05", "open": 349.09, "high": 349.48999999999995, "low": 348.47, "close": 348.87, "volume": 17813}, {"time": "10:10", "open": 349.35, "high": 350.68, "low": 348.31, "close": 349.64, "volume": 5208}, {"time": "10:15", "open": 349.4, "high": 350.15999999999997, "low": 348.57, "close": 349.33, "volume": 11663}, {"time": "10:20", "open": 350.04, "high": 350.45000000000005, "low": 349.5, "close": 349.91, "volume": 33287}, {"time": "10:25", "open": 349.59, "high": 350.2, "low": 349.0, "close": 349.61, "volume": 26090}, {"time": "10:30", "open": 348.93, "high": 349.94, "low": 348.3, "close": 349.31, "volume": 33873}, {"time": "10:35", "open": 349.63, "high": 350.15999999999997, "low": 349.1, "close": 349.63, "volume": 14026}, {"time": "10:40", "open": 348.43, "high": 348.99, "low": 347.5, "close": 348.06, "volume": 23286}, {"time": "10:45", "open": 347.02, "high": 347.77, "low": 345.91, "close": 346.66, "volume": 13359}, {"time": "10:50", "open": 346.49, "high": 347.61, "low": 345.15999999999997, "close": 346.28, "volume": 9346}, {"time": "10:55", "open": 345.12, "high": 346.25, "low": 344.38, "close": 345.51, "volume": 12261}, {"time": "11:00", "open": 345.68, "high": 346.78999999999996, "low": 344.78000000000003, "close": 345.89, "volume": 12129}, {"time": "11:05", "open": 345.32, "high": 346.28, "low": 344.25, "close": 345.21, "volume": 23969}, {"time": "11:10", "open": 344.06, "high": 344.96, "low": 343.19, "close": 344.09, "volume": 7708}, {"time": "11:15", "open": 345.59, "high": 346.64, "low": 344.4, "close": 345.45, "volume": 10595}, {"time": "11:20", "open": 345.29, "high": 345.7, "low": 344.95000000000005, "close": 345.36, "volume": 25326}, {"time": "11:25", "open": 345.51, "high": 345.83, "low": 345.2, "close": 345.52, "volume": 11794}, {"time": "11:30", "open": 344.65, "high": 345.53, "low": 343.51, "close": 344.39, "volume": 25728}, {"time": "11:35", "open": 343.67, "high": 344.66999999999996, "low": 343.02000000000004, "close": 344.02, "volume": 9125}, {"time": "11:40", "open": 344.53, "high": 345.14, "low": 343.61, "close": 344.22, "volume": 32740}, {"time": "11:45", "open": 343.52, "high": 344.60999999999996, "low": 342.24, "close": 343.33, "volume": 24799}, {"time": "11:50", "open": 343.72, "high": 344.8, "low": 342.68, "close": 343.76, "volume": 20889}, {"time": "11:55", "open": 343.68, "high": 344.2, "low": 342.83000000000004, "close": 343.35, "volume": 31916}, {"time": "12:00", "open": 343.09, "high": 344.31, "low": 341.97999999999996, "close": 343.2, "volume": 15170}, {"time": "12:05", "open": 342.61, "high": 343.40000000000003, "low": 342.0, "close": 342.79, "volume": 31913}, {"time": "12:10", "open": 344.26, "high": 345.58000000000004, "low": 343.15999999999997, "close": 344.48, "volume": 24260}, {"time": "12:15", "open": 344.84, "high": 345.21999999999997, "low": 344.19, "close": 344.57, "volume": 31956}, {"time": "12:20", "open": 344.15, "high": 345.0, "low": 342.90999999999997, "close": 343.76, "volume": 8044}, {"time": "12:25", "open": 344.97, "high": 345.87, "low": 343.67, "close": 344.57, "volume": 9824}, {"time": "12:30", "open": 343.47, "high": 344.41, "low": 342.68, "close": 343.62, "volume": 24558}, {"time": "12:35", "open": 343.73, "high": 344.4, "low": 343.23, "close": 343.9, "volume": 12117}, {"time": "12:40", "open": 342.12, "high": 342.90999999999997, "low": 341.53000000000003, "close": 342.32, "volume": 24488}, {"time": "12:45", "open": 341.16, "high": 342.35, "low": 340.1, "close": 341.29, "volume": 22049}, {"time": "12:50", "open": 341.67, "high": 342.05, "low": 341.18, "close": 341.56, "volume": 12956}, {"time": "12:55", "open": 341.91, "high": 342.81, "low": 341.39000000000004, "close": 342.29, "volume": 16792}, {"time": "13:00", "open": 342.44, "high": 343.64000000000004, "low": 341.34, "close": 342.54, "volume": 28844}, {"time": "13:05", "open": 342.48, "high": 343.29, "low": 341.73, "close": 342.54, "volume": 19775}, {"time": "13:10", "open": 342.2, "high": 342.86, "low": 341.71999999999997, "close": 342.38, "volume": 13423}, {"time": "13:15", "open": 341.1, "high": 341.54, "low": 340.78000000000003, "close": 341.22, "volume": 10313}, {"time": "13:20", "open": 340.35, "high": 341.85999999999996, "low": 339.20000000000005, "close": 340.71, "volume": 32445}, {"time": "13:25", "open": 340.81, "high": 341.44, "low": 339.79, "close": 340.42, "volume": 32849}, {"time": "13:30", "open": 341.05, "high": 342.11, "low": 340.36, "close": 341.42, "volume": 33908}, {"time": "13:35", "open": 341.98, "high": 343.05, "low": 340.75, "close": 341.82, "volume": 16552}, {"time": "13:40", "open": 340.57, "high": 341.64, "low": 339.35, "close": 340.42, "volume": 10084}, {"time": "13:45", "open": 340.45, "high": 341.6, "low": 339.65, "close": 340.8, "volume": 25880}, {"time": "13:50", "open": 340.89, "high": 341.7, "low": 339.76, "close": 340.57, "volume": 23450}, {"time": "13:55", "open": 340.39, "high": 341.58, "low": 338.91, "close": 340.1, "volume": 20549}, {"time": "14:00", "open": 340.53, "high": 341.81, "low": 339.44, "close": 340.72, "volume": 25910}, {"time": "14:05", "open": 341.81, "high": 342.74, "low": 340.77, "close": 341.7, "volume": 13807}, {"time": "14:10", "open": 342.35, "high": 343.63, "low": 341.32000000000005, "close": 342.6, "volume": 31012}, {"time": "14:15", "open": 341.97, "high": 343.1, "low": 340.85, "close": 341.98, "volume": 20045}, {"time": "14:20", "open": 341.7, "high": 342.84, "low": 340.68, "close": 341.82, "volume": 26059}, {"time": "14:25", "open": 341.9, "high": 343.22999999999996, "low": 340.88, "close": 342.21, "volume": 15139}, {"time": "14:30", "open": 343.47, "high": 344.11, "low": 342.51, "close": 343.15, "volume": 22348}, {"time": "14:35", "open": 342.87, "high": 343.2, "low": 342.51, "close": 342.84, "volume": 21279}, {"time": "14:40", "open": 342.71, "high": 343.34, "low": 342.15, "close": 342.78, "volume": 5915}, {"time": "14:45", "open": 341.67, "high": 342.26, "low": 341.34000000000003, "close": 341.93, "volume": 15805}, {"time": "14:50", "open": 340.99, "high": 341.42, "low": 340.58, "close": 341.01, "volume": 28099}, {"time": "14:55", "open": 341.71, "high": 342.3, "low": 341.21999999999997, "close": 341.81, "volume": 7560}, {"time": "15:00", "open": 343.04, "high": 343.42, "low": 342.69, "close": 343.07, "volume": 21219}, {"time": "15:05", "open": 342.93, "high": 343.98, "low": 342.06, "close": 343.11, "volume": 34275}, {"time": "15:10", "open": 344.21, "high": 344.96999999999997, "low": 343.31, "close": 344.07, "volume": 28855}, {"time": "15:15", "open": 344.53, "high": 345.07, "low": 343.94, "close": 344.48, "volume": 7353}, {"time": "15:20", "open": 343.66, "high": 344.34999999999997, "low": 343.34000000000003, "close": 344.03, "volume": 30079}, {"time": "15:25", "open": 344.51, "high": 345.44, "low": 343.51, "close": 344.44, "volume": 10198}, {"time": "15:30", "open": 346.07, "high": 346.51, "low": 345.43, "close": 345.87, "volume": 21476}, {"time": "15:35", "open": 345.81, "high": 346.88, "low": 344.87, "close": 345.94, "volume": 13398}, {"time": "15:40", "open": 347.21, "high": 348.56, "low": 346.04999999999995, "close": 347.4, "volume": 21630}, {"time": "15:45", "open": 345.29, "high": 346.14000000000004, "low": 344.38, "close": 345.23, "volume": 12431}, {"time": "15:50", "open": 345.83, "high": 346.66, "low": 345.21, "close": 346.04, "volume": 5431}, {"time": "15:55", "open": 346.58, "high": 346.97999999999996, "low": 345.82000000000005, "close": 346.22, "volume": 6221}];
+        let currentIndex = 5;
+        let isPlaying = false;
+        let playInterval = null;
+        let speedMultiplier = 1;
+        let simulatedPnl = 1256.20;
+
+        function calcEMA(data, period) {
+            const k = 2 / (period + 1);
+            const ema = [];
+            let prev = data[0];
+            for (let i = 0; i < data.length; i++) {
+                prev = (i === 0) ? data[0] : (data[i] * k + prev * (1 - k));
+                ema.push(Math.round(prev * 100) / 100);
+            }
+            return ema;
+        }
+
+        function calcVWAP(high, low, close, volume) {
+            let cumVol = 0;
+            let cumPV = 0;
+            const vwap = [];
+            for (let i = 0; i < close.length; i++) {
+                const tp = (high[i] + low[i] + close[i]) / 3;
+                const vol = volume[i] || 1;
+                cumPV += tp * vol;
+                cumVol += vol;
+                vwap.push(Math.round((cumPV / cumVol) * 100) / 100);
+            }
+            return vwap;
+        }
+
+        function renderDynamicChart() {
+            const currentCandles = fullCandles.slice(0, currentIndex);
+            const times = currentCandles.map(c => c.time);
+            const opens = currentCandles.map(c => c.open);
+            const highs = currentCandles.map(c => c.high);
+            const lows = currentCandles.map(c => c.low);
+            const closes = currentCandles.map(c => c.close);
+            const vols = currentCandles.map(c => c.volume);
+
+            const ema9 = calcEMA(closes, 9);
+            const ema21 = calcEMA(closes, 21);
+            const vwap = calcVWAP(highs, lows, closes, vols);
+
+            const volColors = closes.map((c, i) => c >= opens[i] ? 'rgba(8, 153, 129, 0.6)' : 'rgba(242, 54, 69, 0.6)');
+
+            const candleTrace = {
+                x: times, open: opens, high: highs, low: lows, close: closes,
+                type: 'candlestick', name: 'TSLA', yaxis: 'y',
+                increasing: { line: { color: '#089981', width: 1.5 }, fillcolor: '#089981' },
+                decreasing: { line: { color: '#f23645', width: 1.5 }, fillcolor: '#f23645' }
+            };
+
+            const ema9Trace = { x: times, y: ema9, type: 'scatter', mode: 'lines', name: 'EMA 9', yaxis: 'y', line: { color: '#38bdf8', width: 1.5 } };
+            const ema21Trace = { x: times, y: ema21, type: 'scatter', mode: 'lines', name: 'EMA 21', yaxis: 'y', line: { color: '#a855f7', width: 1.5 } };
+            const vwapTrace = { x: times, y: vwap, type: 'scatter', mode: 'lines', name: 'VWAP', yaxis: 'y', line: { color: '#f59e0b', width: 1.8, dash: 'dash' } };
+            const volTrace = { x: times, y: vols, type: 'bar', name: 'Volume', yaxis: 'y2', marker: { color: volColors } };
+
+            const layout = {
+                grid: { rows: 2, columns: 1, pattern: 'independent', roworder: 'top to bottom' },
+                paper_bgcolor: '#0b0e14', plot_bgcolor: '#0b0e14',
+                margin: { l: 50, r: 20, t: 20, b: 30 },
+                xaxis: { domain: [0, 1], rangeslider: { visible: false }, gridcolor: 'rgba(255,255,255,0.05)', tickfont: { color: '#94a3b8' } },
+                yaxis: { domain: [0.28, 1], gridcolor: 'rgba(255,255,255,0.05)', tickfont: { color: '#94a3b8' }, title: { text: 'Price ($)', font: { color: '#94a3b8' } } },
+                xaxis2: { domain: [0, 1], anchor: 'y2', gridcolor: 'rgba(255,255,255,0.05)', tickfont: { color: '#94a3b8' } },
+                yaxis2: { domain: [0, 0.22], anchor: 'x2', gridcolor: 'rgba(255,255,255,0.05)', tickfont: { color: '#94a3b8' } },
+                legend: { orientation: 'h', y: 1.06, x: 0, font: { color: '#e2e8f0', size: 11 } }
+            };
+
+            Plotly.react("dynamicChart", [candleTrace, ema9Trace, ema21Trace, vwapTrace, volTrace], layout, { responsive: true });
+        }
+
+        function togglePlay() {
+            isPlaying = !isPlaying;
+            const btn = document.getElementById("btnPlay");
+            if (isPlaying) {
+                btn.innerText = "❚❚ 暂停";
+                btn.classList.add("active");
+                startReplayInterval();
+            } else {
+                btn.innerText = "▶ 播放仿真";
+                btn.classList.remove("active");
+                clearInterval(playInterval);
+            }
+        }
+
+        function startReplayInterval() {
+            clearInterval(playInterval);
+            playInterval = setInterval(() => {
+                if (currentIndex < fullCandles.length) {
+                    currentIndex++;
+                    renderDynamicChart();
+                    generateRandomOrderTicket();
+                } else {
+                    clearInterval(playInterval);
+                    isPlaying = false;
+                    document.getElementById("btnPlay").innerText = "▶ 重新播放";
+                }
+            }, 1000 / speedMultiplier);
+        }
+
+        function setSpeed(spd, elem) {
+            speedMultiplier = spd;
+            document.querySelectorAll(".speed-btn").forEach(b => b.classList.remove("active"));
+            elem.classList.add("active");
+            if (isPlaying) startReplayInterval();
+        }
+
+        function resetReplay() {
+            clearInterval(playInterval);
+            isPlaying = false;
+            currentIndex = 5;
+            document.getElementById("btnPlay").innerText = "▶ 播放仿真";
+            document.getElementById("btnPlay").classList.remove("active");
+            document.getElementById("orderStream").innerHTML = "";
+            renderDynamicChart();
+        }
+
+        function generateRandomOrderTicket() {
+            const c = fullCandles[currentIndex - 1];
+            if (!c) return;
+            const isBuy = Math.random() > 0.45;
+            const type = isBuy ? 'BUY LONG' : 'SHORT';
+            const cls = isBuy ? '' : 'short';
+            const price = c.close;
+            const qty = Math.floor(Math.random() * 200 + 50);
+            
+            simulatedPnl += (Math.random() - 0.42) * 85.0;
+            document.getElementById("livePnlDisplay").innerText = `模拟净收益: +$${simulatedPnl.toFixed(2)} (+${(simulatedPnl/55707.48*100).toFixed(2)}%)`;
+
+            const stream = document.getElementById("orderStream");
+            if (stream.children.length === 1 && stream.children[0].innerText.includes("点击")) {
+                stream.innerHTML = "";
+            }
+
+            const ticket = document.createElement("div");
+            ticket.className = `order-ticket ${cls}`;
+            ticket.innerHTML = `
+                <div style="display:flex; justify-content:space-between; font-weight:700;">
+                    <span>${type} TSLA</span>
+                    <span style="color:#38bdf8;">${c.time}</span>
+                </div>
+                <div style="color:#94a3b8; margin-top:4px;">
+                    成交单价: <strong>$${price.toFixed(2)}</strong> | 数量: <strong>${qty} 股</strong><br/>
+                    ML 胜率: <span style="color:#10b981;">${(60 + Math.random()*20).toFixed(1)}%</span> | 智能报单: MARKET_TAKER
+                </div>
+            `;
+            stream.insertBefore(ticket, stream.firstChild);
+            document.getElementById("orderCount").innerText = `${stream.children.length} 笔`;
+        }
+
+        function onOfiChange(val) {
+            document.getElementById("valOfi").innerText = val;
+            const pwin = Math.min(92, Math.max(30, 65.4 + parseFloat(val)*15)).toFixed(1);
+            document.getElementById("mlPwin").innerText = pwin + "%";
+            document.getElementById("mlEPnl").innerText = "+" + (0.38 + parseFloat(val)*0.25).toFixed(2) + " R";
+        }
+
+        function onVelChange(val) {
+            document.getElementById("valVel").innerText = (val >= 0 ? "+" : "") + val;
+        }
+
+        function triggerManualOrder() {
+            generateRandomOrderTicket();
+            alert("⚡ 已手动下发一笔 HRT ML 模拟订单并在交易流中实时展示！");
+        }
+
+        window.onload = () => {
+            renderDynamicChart();
+        };
+    </script>
+</body>
+</html>
