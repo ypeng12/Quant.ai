@@ -81,6 +81,7 @@ class LiveTradingRunner:
             "strategy_mode": "aggressive_intraday",
             "paper_only_aggressive": True,
             "allow_aggressive_live": False,
+            "allow_shorting": False,  # Strict Long-Only mode: Disable counter-trend shorting on momentum leaders
             "dynamic_screener_enabled": False,  # Strict focus on focus watchlist (SNDK, TSLA, MSTR, NVDA)
             "screener_refresh_seconds": 120,
             "screener_top_actives": 6,
@@ -143,6 +144,8 @@ class LiveTradingRunner:
         self.risk_sizer.unlock_exit(ticker)
 
     def _can_open_short(self, ticker: str) -> bool:
+        if not self.strategy_params.get("allow_shorting", False):
+            return False
         return self.risk_sizer.can_open_short(ticker, self.adapter)
 
     def _bg_refresh_account(self):
@@ -810,8 +813,11 @@ class LiveTradingRunner:
                     return "HOLD", f"{base_reason} | 平仓冷却中 ({remain}s 剩余)"
                 if open_position_count >= int(self.strategy_params.get("max_concurrent_positions", 4)):
                     return "HOLD", f"{base_reason} | 已达最大同时持仓数"
-                if direction == "SHORT" and not self._can_open_short(ticker):
-                    return "HOLD", f"{base_reason} | Alpaca Asset 当前不可直接卖空/需要 locate"
+                if direction == "SHORT":
+                    if not self.strategy_params.get("allow_shorting", False):
+                        return "HOLD", f"{base_reason} | 🛡️ Long-Only 纯多头保护（禁止逆势做空强势科技股）"
+                    if not self._can_open_short(ticker):
+                        return "HOLD", f"{base_reason} | Alpaca Asset 当前不可直接卖空/需要 locate"
                 return ("BUY" if direction == "LONG" else "SHORT"), f"{base_reason} | 纯 ML 正期望值 (P_win={p_win_pct:.1f}%, E[R]={ev_r:+.2f}R) 报单建仓"
 
             return "HOLD", f"{base_reason} | 负期望值 (E[PnL]={ev_r:+.2f}R)"
