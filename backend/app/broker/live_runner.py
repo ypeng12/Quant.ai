@@ -858,18 +858,25 @@ class LiveTradingRunner:
         rvol = self._safe_float(opportunity.get("rvol"), 1.0)
         is_trap = opportunity.get("is_trap", False)
         trap_reason = opportunity.get("trap_reason", "")
+        # 1. Institutional Order Flow Imbalance (OFI) Dump / Big Money Departure:
+        # Crucial Fix: For high-volatility momentum runners (like SNDK), do NOT panic sell on minor pullbacks.
+        # Must require: (1) Held for at least minimum_hold_minutes (default 4m)
+        #              (2) Real structural breakdown: close < EMA9 and close < VWAP
+        #              (3) Severe selling imbalance: alpha_ofi <= -0.75
+        min_hold = self._safe_float(self.strategy_params.get("minimum_hold_minutes"), 4.0)
+        ema_9_val = opportunity.get("_ema_9", close)
+        vwap_val = opportunity.get("_vwap", close)
 
-        # 1. Institutional Order Flow Imbalance (OFI) Dump / Big Money Departure (大单出逃离场)
-        if side == "LONG" and alpha_ofi <= -0.55 and rvol >= 1.2:
-            return "SELL", f"{base_reason} | 🚨 [HRT 大单离场] 订单流卖盘倾泻 (OFI={alpha_ofi:+.2f}, RVOL={rvol:.2f}x) 主力大单撤退，执行平仓"
-        if side == "SHORT" and alpha_ofi >= 0.55 and rvol >= 1.2:
-            return "COVER", f"{base_reason} | 🚨 [HRT 大单扫盘] 订单流买盘强攻 (OFI={alpha_ofi:+.2f}, RVOL={rvol:.2f}x) 主力大单进场扫盘，空头避险平仓"
+        if side == "LONG" and minutes_held >= min_hold and alpha_ofi <= -0.75 and rvol >= 1.8 and close < ema_9_val and close < vwap_val:
+            return "SELL", f"{base_reason} | 🚨 [HRT 大单离场] 跌破 EMA9/VWAP 且订单流严重倾泻 (OFI={alpha_ofi:+.2f}, RVOL={rvol:.2f}x)，执行平仓"
+        if side == "SHORT" and minutes_held >= min_hold and alpha_ofi >= 0.75 and rvol >= 1.8 and close > ema_9_val and close > vwap_val:
+            return "COVER", f"{base_reason} | 🚨 [HRT 大单扫盘] 收复 EMA9/VWAP 且大额买盘强攻 (OFI={alpha_ofi:+.2f}, RVOL={rvol:.2f}x)，空头平仓"
 
-        # 2. Institutional Climax Volume Distribution / Trap (天量诱捕与主力对倒出货，且价格跌破 EMA9 确认破位)
-        if side == "LONG" and is_trap and ("Bull Trap" in trap_reason or "Ask Depth" in trap_reason) and rvol >= 1.5 and close < opportunity.get("_ema_9", close):
-            return "SELL", f"{base_reason} | ⚠️ [HRT 诱多出货] 主力假突破诱多且跌破 EMA9，成交量异动伴随大额卖单压盘 ({trap_reason})"
-        if side == "SHORT" and is_trap and ("Bear Trap" in trap_reason or "Bid Depth" in trap_reason) and rvol >= 1.5 and close > opportunity.get("_ema_9", close):
-            return "COVER", f"{base_reason} | ⚠️ [HRT 诱空吸筹] 主力假跌破诱空且收复 EMA9，成交量异动伴随大额买单托盘 ({trap_reason})"
+        # 2. Institutional Climax Volume Distribution / Trap
+        if side == "LONG" and minutes_held >= min_hold and is_trap and ("Bull Trap" in trap_reason or "Ask Depth" in trap_reason) and rvol >= 2.0 and close < ema_9_val and close < vwap_val:
+            return "SELL", f"{base_reason} | ⚠️ [HRT 诱多出货] 主力假突破诱多且跌破 EMA9/VWAP ({trap_reason})"
+        if side == "SHORT" and minutes_held >= min_hold and is_trap and ("Bear Trap" in trap_reason or "Bid Depth" in trap_reason) and rvol >= 2.0 and close > ema_9_val and close > vwap_val:
+            return "COVER", f"{base_reason} | ⚠️ [HRT 诱空吸筹] 主力假跌破诱空且收复 EMA9/VWAP ({trap_reason})"
 
         # 3. Large Quantitative Alpha Model Direction Reversal (大模型方向彻底反转，且均线结构破位)
         if side == "LONG" and direction == "SHORT" and alpha_score <= -25.0 and close < opportunity.get("_ema_9", close):
