@@ -944,6 +944,7 @@ class LiveTradingRunner:
             and self._safe_float(opportunity.get("rvol"), 1.0) >= 1.2
             and not self.pyramid_done.get(ticker, False)
             and self._aggressive_orders_allowed()
+            and (side == "LONG" or self.strategy_params.get("allow_shorting", False))
         )
         if can_pyramid:
             if side == "LONG":
