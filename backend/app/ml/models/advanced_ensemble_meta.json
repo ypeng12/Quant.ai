@@ -1,0 +1,49 @@
+{
+  "SNDK": {
+    "ticker": "SNDK",
+    "samples": 12359,
+    "test_auc": 0.4661,
+    "test_brier": 0.2452,
+    "mfe_r2": 0.2448,
+    "base_rate_p0": 0.4254,
+    "avg_mfe": 1.0896,
+    "avg_mae": 1.0522
+  },
+  "TSLA": {
+    "ticker": "TSLA",
+    "samples": 12805,
+    "test_auc": 0.4748,
+    "test_brier": 0.2473,
+    "mfe_r2": 0.1854,
+    "base_rate_p0": 0.422,
+    "avg_mfe": 0.4443,
+    "avg_mae": 0.4443
+  },
+  "NVDA": {
+    "ticker": "NVDA",
+    "samples": 12824,
+    "test_auc": 0.5094,
+    "test_brier": 0.2451,
+    "mfe_r2": 0.2185,
+    "base_rate_p0": 0.4069,
+    "avg_mfe": 0.4059,
+    "avg_mae": 0.3662
+  },
+  "MSTR": {
+    "ticker": "MSTR",
+    "samples": 12172,
+    "test_auc": 0.5341,
+    "test_brier": 0.251,
+    "mfe_r2": 0.1525,
+    "base_rate_p0": 0.4302,
+    "avg_mfe": 0.815,
+    "avg_mae": 0.7302
+  },
+  "UNIVERSAL": {
+    "samples": 50160,
+    "test_auc": 0.5357,
+    "base_rate_p0": 0.421,
+    "avg_mfe": 0.6835,
+    "avg_mae": 0.6435
+  }
+}

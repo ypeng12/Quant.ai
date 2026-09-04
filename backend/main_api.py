@@ -2310,6 +2310,167 @@ def get_single_kline(ticker: str = "TSLA", tf: str = "5m", date: Optional[str] =
     except Exception as e:
         return {"success": False, "error": str(e)}
 
+@app.get("/api/ml/prediction-trajectory")
+def get_ml_prediction_trajectory(ticker: str = "SNDK", date: Optional[str] = None):
+    """
+    Robinhood-Style ML Prediction vs Reality Engine Endpoint.
+    Returns:
+    1. Real Asset Price Curve (Robinhood Green/Neon Line)
+    2. ML Model Forecast Trajectory (Dashed Glowing Projected Line)
+    3. Forward 15-minute Extrapolated Forecast
+    4. Exact Filled Buy/Sell Trade Action Markers
+    5. Real-Time Model Accuracy & Expectancy Scorecard
+    """
+    try:
+        from app.config import ALPACA_API_KEY, ALPACA_SECRET_KEY
+        from alpaca.data.historical import StockHistoricalDataClient
+        from alpaca.data.requests import StockBarsRequest
+        from alpaca.data.timeframe import TimeFrame
+        from alpaca.data.enums import DataFeed
+        from app.broker.probability_engine import get_advanced_ml_bundle
+        from backend.data.train_advanced_ml_ensemble import compute_advanced_features_and_targets, ADVANCED_FEATURE_COLS
+
+        import pytz
+        tk = str(ticker).upper().strip()
+        client = StockHistoricalDataClient(ALPACA_API_KEY, ALPACA_SECRET_KEY)
+        end_dt = datetime.datetime.now(pytz.timezone('America/New_York'))
+        start_dt = end_dt - datetime.timedelta(days=4)
+
+        req = StockBarsRequest(symbol_or_symbols=[tk], timeframe=TimeFrame.Minute, start=start_dt, end=end_dt, feed=DataFeed.IEX)
+        bars = client.get_stock_bars(req)
+        raw = bars.data.get(tk, [])
+        if not raw:
+            return {"success": False, "error": f"No data found for {tk}"}
+
+        data = [{
+            'timestamp': b.timestamp,
+            'Open': float(b.open),
+            'High': float(b.high),
+            'Low': float(b.low),
+            'Close': float(b.close),
+            'Volume': float(b.volume),
+            'vwap': float(b.vwap or b.close)
+        } for b in raw]
+        df = pd.DataFrame(data).set_index('timestamp')
+        df.index = pd.to_datetime(df.index).tz_convert('America/New_York')
+        df = df.between_time('09:30', '16:00').copy()
+
+        bundle = get_advanced_ml_bundle(tk)
+        df_feat = compute_advanced_features_and_targets(df, tk)
+
+        target_date = date or end_dt.strftime('%Y-%m-%d')
+        today_df = df_feat[df_feat.index.strftime('%Y-%m-%d') == target_date]
+        if today_df.empty:
+            latest_day = df_feat.index[-1].strftime('%Y-%m-%d')
+            today_df = df_feat[df_feat.index.strftime('%Y-%m-%d') == latest_day]
+            target_date = latest_day
+
+        X_today = today_df[ADVANCED_FEATURE_COLS]
+        p_win_raw = bundle['classifier'].predict_proba(X_today)[:, 1] if bundle else np.full(len(today_df), 0.50)
+        p0 = bundle.get('base_rate_p0', 0.42) if bundle else 0.42
+        odds = (p_win_raw / np.maximum(1e-5, 1.0 - p_win_raw)) / (p0 / (1.0 - p0))
+        p_win = np.clip(odds / (1.0 + odds), 0.35, 0.88)
+        pred_mfe = bundle['regressor_mfe'].predict(X_today) if bundle else np.full(len(today_df), 1.0)
+        pred_mae = bundle['regressor_mae'].predict(X_today) if bundle else np.full(len(today_df), 0.8)
+
+        closes = today_df['Close'].values
+        times = [t.strftime('%H:%M') for t in today_df.index]
+
+        # Model predicted target trajectory
+        pred_direction = (p_win - 0.50) * 2.0
+        pred_prices = closes * (1.0 + (pred_mfe * np.maximum(0.2, pred_direction) / 100.0))
+        pred_highs = closes * (1.0 + pred_mfe / 100.0)
+        pred_lows = closes * (1.0 - pred_mae / 100.0)
+
+        # Future projection (Next 15 minutes beyond current time)
+        last_close = float(closes[-1])
+        last_pwin = float(p_win[-1])
+        last_mfe = float(pred_mfe[-1])
+        last_mae = float(pred_mae[-1])
+        last_time = today_df.index[-1]
+
+        future_times = []
+        future_predicted = []
+        future_high = []
+        future_low = []
+        for step in range(1, 16):
+            fut_t = last_time + datetime.timedelta(minutes=step)
+            prog = step / 15.0
+            future_times.append(fut_t.strftime('%H:%M'))
+            fut_p = last_close * (1.0 + (last_mfe * (last_pwin - 0.45) * 2.0 / 100.0) * prog)
+            future_predicted.append(round(fut_p, 2))
+            future_high.append(round(last_close * (1.0 + last_mfe / 100.0 * prog), 2))
+            future_low.append(round(last_close * (1.0 - last_mae / 100.0 * prog), 2))
+
+        # Real Trades for this ticker
+        trades = []
+        try:
+            from app.broker.live_runner import runner
+            for tr in getattr(runner, "trade_history", []):
+                if tr.get("symbol", tr.get("ticker", "")).upper() == tk:
+                    tr_time = tr.get("time", "")
+                    if target_date in tr_time or len(tr_time) <= 8:
+                        time_str = tr_time.split()[-1][:5] if " " in tr_time else tr_time[:5]
+                        trades.append({
+                            "time": time_str,
+                            "action": tr.get("action", tr.get("type", "BUY")),
+                            "price": float(tr.get("price", 0.0)),
+                            "shares": int(tr.get("shares", tr.get("qty", 0))),
+                            "pnl": float(tr.get("pnl", 0.0)),
+                            "reason": tr.get("reason", "")
+                        })
+        except Exception:
+            pass
+
+        # Summary Metrics
+        open_p = float(today_df['Open'].iloc[0])
+        high_p = float(today_df['High'].max())
+        low_p = float(today_df['Low'].min())
+        day_move_pct = (last_close - open_p) / open_p * 100.0
+        actual_mfe = (high_p - open_p) / open_p * 100.0
+
+        # Model accuracy calculation (did direction match 15m return?)
+        correct_directions = 0
+        total_eval = max(1, len(today_df) - 15)
+        for idx in range(total_eval):
+            model_up = p_win[idx] >= 0.50
+            real_up = closes[min(len(closes)-1, idx+15)] >= closes[idx]
+            if model_up == real_up:
+                correct_directions += 1
+        accuracy_pct = round(correct_directions / total_eval * 100.0, 1)
+
+        return {
+            "success": True,
+            "ticker": tk,
+            "date": target_date,
+            "summary": {
+                "current_price": round(last_close, 2),
+                "open_price": round(open_p, 2),
+                "high_price": round(high_p, 2),
+                "low_price": round(low_p, 2),
+                "day_change_pct": round(day_move_pct, 2),
+                "ml_predicted_mfe_pct": round(float(np.mean(pred_mfe)), 2),
+                "actual_max_gain_pct": round(actual_mfe, 2),
+                "ml_p_win_pct": round(float(last_pwin * 100.0), 1),
+                "prediction_accuracy_pct": accuracy_pct
+            },
+            "times": times,
+            "actual_prices": [round(float(x), 2) for x in closes],
+            "predicted_prices": [round(float(x), 2) for x in pred_prices],
+            "predicted_highs": [round(float(x), 2) for x in pred_highs],
+            "predicted_lows": [round(float(x), 2) for x in pred_lows],
+            "p_win_series": [round(float(x) * 100.0, 1) for x in p_win],
+            "future": {
+                "times": future_times,
+                "prices": future_predicted,
+                "highs": future_high,
+                "lows": future_low
+            },
+            "trades": trades
+        }
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
 @app.get("/charts/dynamic_ml_simulation_replay.html")
 async def get_dynamic_ml_simulation_replay():
     dash_file = os.path.join(_charts_dir, "dynamic_ml_simulation_replay.html")

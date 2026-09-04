@@ -33,6 +33,8 @@ backend/app/experiments.db
 *.so
 *.a
 cpp_engine/build*/
+cpp_engine/.cache/
+*.parquet
 low_latency_network_test
 scratch/
 

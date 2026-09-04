@@ -45,8 +45,8 @@ export function TradeComparisonPanel({ watchlist, activeTicker, onSelectTicker }
         justifyContent: 'space-between',
         alignItems: 'center'
       }}>
-        <div style={{ fontWeight: 800, color: '#38bdf8', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          📈 HRT ML 动态仿真与历史 K 线复盘大屏 (2-in-1 实时强刷模式)
+        <div style={{ fontWeight: 800, color: '#38bdf8', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          📈 HRT 级 ML 走势预估与真实对比大屏 (Robinhood 风格动态曲线 & 买卖点复盘)
         </div>
         <button
           onClick={handleRefresh}

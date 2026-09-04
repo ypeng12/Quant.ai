@@ -103,8 +103,10 @@ class RiskPositionSizer:
         p_win = self._safe_float(opportunity.get("win_probability", prob_eval.get("win_probability", 0.50) if prob_eval else 0.50), 0.50)
         starter_bp_pct = self._safe_float(strategy_params.get("starter_buying_power_pct"), 0.60)
         
-        # Dynamic allocation fraction: 50% ~ 70% of equity for high-conviction trades
+        # Dynamic allocation fraction: scales with P_win, starter_bp_pct, and ML Explosive Surge detection
         eq_fraction = max(0.50, min(max_eq_pct, p_win * starter_bp_pct * 1.6))
+        if opportunity.get("is_explosive", False) or self._safe_float(opportunity.get("expected_mfe_pct"), 0.0) >= 1.8:
+            eq_fraction = max_eq_pct
         target_notional = equity * eq_fraction
         
         # Double Cap: Notional cannot exceed max_position_notional OR available_bp * 0.95

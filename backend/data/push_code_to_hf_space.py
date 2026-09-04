@@ -24,7 +24,7 @@ def push_code_to_hf_space():
 
         api = HfApi(token=token) if token else HfApi()
 
-        print(f"[*] Uploading source code to HF Space ({space_id})...")
+        print(f"[*] Uploading source code to HF Space ({space_id})...", flush=True)
         res = api.upload_folder(
             folder_path=repo_root,
             repo_id=space_id,
@@ -44,11 +44,11 @@ def push_code_to_hf_space():
                 ".cache/*",
                 "*/.cache/*"
             ],
-            commit_message="feat(ai): migrate to 5m timeframe and remove hardcoded trap penalty"
+            commit_message="feat(ai): integrate per-ticker ml models and dynamic trailing stop"
         )
-        print(f"✅ 成功将最新代码与配置同步上传至 Hugging Face Space ({space_id})！\nCommit: {res}")
+        print(f"✅ 成功将最新代码与配置同步上传至 Hugging Face Space ({space_id})！\nCommit: {res}", flush=True)
     except Exception as e:
-        print(f"❌ 上传至 Hugging Face Space 提示/失败: {e}")
+        print(f"❌ 上传至 Hugging Face Space 提示/失败: {e}", flush=True)
 
 if __name__ == "__main__":
     push_code_to_hf_space()

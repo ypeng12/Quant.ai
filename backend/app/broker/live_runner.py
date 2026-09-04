@@ -680,6 +680,28 @@ class LiveTradingRunner:
                 direction = "LONG"
                 long_confirmed = True
 
+        # Compute Advanced ML 24-feature inputs
+        candle_range = max(1e-5, self._safe_float(row.get("High"), close) - self._safe_float(row.get("Low"), close))
+        bar_close_loc = (close - self._safe_float(row.get("Low"), close)) / candle_range
+        body_high = max(self._safe_float(row.get("Open"), close), close)
+        upper_wick_ratio = (self._safe_float(row.get("High"), close) - body_high) / candle_range
+        volume_cur = self._safe_float(row.get("Volume"), 1000.0)
+        vol_prev = self._safe_float(prev_row.get("Volume"), volume_cur)
+        vol_accel = volume_cur / max(1.0, vol_prev)
+        dollar_vol_log = math.log(max(1.0, close * volume_cur))
+        mom_1m = ((close / prev_close) - 1.0) * 100.0 if prev_close > 0 else 0.0
+        mom_accel = momentum_3_pct - momentum_10_pct
+        vwap_slope = ((vwap / prev_vwap) - 1.0) * 100.0 if prev_vwap > 0 else 0.0
+        vwap_zscore = max(-3.0, min(3.0, (close - vwap) / max(1e-5, atr * 0.5)))
+        ema9_slope = ((ema_9 / prev_close) - 1.0) * 100.0 if prev_close > 0 else 0.0
+        atr_expansion = atr / max(1e-5, self._safe_float(df.iloc[-30].get("ATR") if len(df) >= 30 else atr, atr))
+        er_val = self._safe_float(row.get("er"), 0.25)
+        donchian_breakout = max(-3.0, min(3.0, (close - session_high) / max(1e-5, atr)))
+        est = pytz.timezone("America/New_York")
+        now_ny = datetime.datetime.now(est)
+        ny_time = now_ny.hour + now_ny.minute / 60.0 + now_ny.second / 3600.0
+        minutes_from_open = max(0.0, min(1.0, (ny_time - 9.5) / 6.5))
+
         opp = {
             "ticker": ticker,
             "direction": direction,
@@ -687,9 +709,9 @@ class LiveTradingRunner:
             "score": score,
             "long_score": long_score,
             "short_score": short_score,
-            "ticker": ticker,
             "composite_alpha_score": alpha_eval["composite_alpha_score"],
             "alpha_ofi": alpha_eval["alpha_ofi"],
+            "alpha_ofi_slope": 0.0,
             "alpha_micro": alpha_eval["alpha_micro"],
             "alpha_ou": alpha_eval["alpha_ou"],
             "alpha_lead_lag": alpha_eval["alpha_lead_lag"],
@@ -699,11 +721,28 @@ class LiveTradingRunner:
             "session_range_pct": round(session_range_pct, 2),
             "high_to_now_pct": round(high_to_now_pct, 2),
             "low_to_now_pct": round(low_to_now_pct, 2),
+            "momentum_1m_pct": round(mom_1m, 2),
             "momentum_3_pct": round(momentum_3_pct, 2),
+            "momentum_5m_pct": round(momentum_3_pct, 2),
             "momentum_10_pct": round(momentum_10_pct, 2),
+            "momentum_15m_pct": round(momentum_10_pct, 2),
+            "momentum_accel": round(mom_accel, 2),
             "rvol": round(rvol, 2),
+            "vol_accel": round(vol_accel, 2),
+            "dollar_vol_log": round(dollar_vol_log, 2),
+            "bar_close_loc": round(bar_close_loc, 2),
+            "upper_wick_ratio": round(upper_wick_ratio, 2),
+            "vwap_dist_pct": vwap_dist_pct,
+            "vwap_slope": round(vwap_slope, 2),
+            "vwap_zscore": round(vwap_zscore, 2),
+            "ema9_slope": round(ema9_slope, 2),
             "atr_pct": round(atr_pct, 2),
+            "atr_expansion": round(atr_expansion, 2),
+            "er": round(er_val, 2),
+            "donchian_breakout": round(donchian_breakout, 2),
+            "minutes_from_open": round(minutes_from_open, 2),
             "price": round(close, 4),
+            "volume": volume_cur,
             "_entry_confirmed": long_confirmed if direction == "LONG" else short_confirmed,
             "_stop_pct": stop_pct,
             "_vwap_dist_pct": vwap_dist_pct,
@@ -1706,9 +1745,13 @@ class LiveTradingRunner:
                                     rvol_val = self._safe_float(opportunity.get("rvol"), 1.0)
                                     p_win = self._safe_float(opportunity.get("win_rate_pct"), 50.0)
                                     ev_val = self._safe_float(opportunity.get("expected_value_r"), 0.0)
-                                    # Leader Score formula: dynamically weights day momentum, RVOL, and per-ticker ML expectancy
-                                    # High beta momentum runners (e.g. SNDK +10% RVOL 3.5) will strongly dominate over low beta (NVDA +1% RVOL 1.0)
-                                    leader_score = (p_win / 100.0) * max(0.01, ev_val + 0.5) * (1.0 + max(0.0, day_move) / 5.0) * min(3.0, max(0.5, rvol_val))
+                                    # Advanced Quant Alpha Leader Ranking:
+                                    # Directly driven by ML Model's expected gain (MFE), net edge %, and RVOL
+                                    pred_mfe = self._safe_float(opportunity.get("expected_mfe_pct"), 1.0)
+                                    net_edge = self._safe_float(opportunity.get("expected_net_edge_pct"), 0.0)
+                                    is_explosive = opportunity.get("is_explosive", False)
+                                    explosive_bonus = 2.0 if is_explosive else 1.0
+                                    leader_score = (p_win / 100.0) * max(0.05, 1.0 + net_edge) * max(0.2, pred_mfe) * min(3.5, max(0.5, rvol_val)) * explosive_bonus
                                     candidate_entries.append({
                                         "ticker": ticker,
                                         "action": action,
