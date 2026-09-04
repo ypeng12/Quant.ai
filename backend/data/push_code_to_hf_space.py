@@ -39,9 +39,12 @@ def push_code_to_hf_space():
                 "dist/*",
                 "build/*",
                 "backend/data/datasets/*",
-                "cpp_engine/*.so"
+                "cpp_engine/*.so",
+                "*.cache/*",
+                ".cache/*",
+                "*/.cache/*"
             ],
-            commit_message="feat(ai): fix grouping method and enhance prompt"
+            commit_message="feat(ai): migrate to 5m timeframe and remove hardcoded trap penalty"
         )
         print(f"✅ 成功将最新代码与配置同步上传至 Hugging Face Space ({space_id})！\nCommit: {res}")
     except Exception as e:

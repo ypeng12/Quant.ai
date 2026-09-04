@@ -1,0 +1,78 @@
+{
+  "SNDK": {
+    "ticker": "SNDK",
+    "model_file": "win_rate_model_SNDK.joblib",
+    "samples": 8195,
+    "test_auc": 0.6169,
+    "test_brier": 0.16,
+    "test_acc": 0.796,
+    "win_rate_rate": 0.1893,
+    "feature_importances": {
+      "feature_ofi": 59,
+      "feature_rvol": 64,
+      "feature_vwap_dist_pct": 135,
+      "feature_ema_diff_pct": 118,
+      "feature_mom_5m": 60,
+      "feature_mom_15m": 68,
+      "feature_er": 58,
+      "feature_atr_pct": 215
+    }
+  },
+  "MSTR": {
+    "ticker": "MSTR",
+    "model_file": "win_rate_model_MSTR.joblib",
+    "samples": 8114,
+    "test_auc": 0.598,
+    "test_brier": 0.1674,
+    "test_acc": 0.7827,
+    "win_rate_rate": 0.2053,
+    "feature_importances": {
+      "feature_ofi": 66,
+      "feature_rvol": 51,
+      "feature_vwap_dist_pct": 195,
+      "feature_ema_diff_pct": 99,
+      "feature_mom_5m": 45,
+      "feature_mom_15m": 83,
+      "feature_er": 37,
+      "feature_atr_pct": 222
+    }
+  },
+  "TSLA": {
+    "ticker": "TSLA",
+    "model_file": "win_rate_model_TSLA.joblib",
+    "samples": 8566,
+    "test_auc": 0.637,
+    "test_brier": 0.1493,
+    "test_acc": 0.8119,
+    "win_rate_rate": 0.2106,
+    "feature_importances": {
+      "feature_ofi": 123,
+      "feature_rvol": 194,
+      "feature_vwap_dist_pct": 241,
+      "feature_ema_diff_pct": 222,
+      "feature_mom_5m": 88,
+      "feature_mom_15m": 154,
+      "feature_er": 176,
+      "feature_atr_pct": 375
+    }
+  },
+  "NVDA": {
+    "ticker": "NVDA",
+    "model_file": "win_rate_model_NVDA.joblib",
+    "samples": 8582,
+    "test_auc": 0.572,
+    "test_brier": 0.1631,
+    "test_acc": 0.7922,
+    "win_rate_rate": 0.1906,
+    "feature_importances": {
+      "feature_ofi": 149,
+      "feature_rvol": 162,
+      "feature_vwap_dist_pct": 206,
+      "feature_ema_diff_pct": 208,
+      "feature_mom_5m": 214,
+      "feature_mom_15m": 139,
+      "feature_er": 151,
+      "feature_atr_pct": 303
+    }
+  }
+}

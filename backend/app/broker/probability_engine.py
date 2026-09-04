@@ -44,9 +44,27 @@ def get_ml_zoo_model():
             print(f"⚠️ Failed to load QuantMLModelZoo from {zoo_path}: {e}")
     return None
 
-def get_calibrated_ml_model(direction: str = "long"):
-    """Loads and caches the calibrated LightGBM ML model for long/short win probability."""
+def get_calibrated_ml_model(direction: str = "long", ticker: Optional[str] = None):
+    """
+    Loads and caches specialized per-ticker LightGBM ML model (e.g. SNDK, TSLA, MSTR, NVDA),
+    falling back to general direction model if per-ticker model not available.
+    """
     direction = direction.lower()
+    if ticker:
+        ticker = str(ticker).upper()
+        ticker_cache_key = f"{ticker}_{direction}"
+        if ticker_cache_key in _ML_MODELS_CACHE:
+            return _ML_MODELS_CACHE[ticker_cache_key]
+
+        per_ticker_path = os.path.join(MODELS_DIR, "per_ticker", f"win_rate_model_{ticker}.joblib")
+        if os.path.exists(per_ticker_path):
+            try:
+                model = joblib.load(per_ticker_path)
+                _ML_MODELS_CACHE[ticker_cache_key] = model
+                return model
+            except Exception as e:
+                print(f"⚠️ Failed to load per-ticker ML model from {per_ticker_path}: {e}")
+
     if direction in _ML_MODELS_CACHE:
         return _ML_MODELS_CACHE[direction]
 
@@ -79,13 +97,15 @@ def calculate_win_rate_probability(
         Tuple of (p_win_adjusted, p_std_uncertainty, rank_score)
     """
     direction = "long"
+    ticker = ""
     if opportunity:
         dir_str = opportunity.get("direction", "LONG").lower()
         if "short" in dir_str:
             direction = "short"
+        ticker = opportunity.get("ticker", "")
 
     zoo_model = get_ml_zoo_model()
-    ml_model = get_calibrated_ml_model(direction)
+    ml_model = get_calibrated_ml_model(direction, ticker=ticker)
 
     p_std = 0.05
     rank_score = 0.0
