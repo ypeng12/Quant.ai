@@ -1624,13 +1624,13 @@ class LiveTradingRunner:
                             regime = opportunity.get("regime", "RANGE")
                             trend_icon = "📈" if ema_9 > ema_21 else "📉"
                             vwap_pos   = "Above VWAP✅" if close_price >= vwap else "Below VWAP⚠️"
-                            ema_gap_pct = abs(ema_9 - ema_21) / ema_21 * 100
+                            ema_gap_pct = abs(ema_9 - ema_21) / max(1e-5, ema_21) * 100
 
                             if current_shares > 0:
-                                pnl_pct = (close_price - avg_cost) / avg_cost * 100
+                                pnl_pct = (close_price - avg_cost) / max(1e-5, avg_cost) * 100
                                 pos_label = f"LONG {current_shares} shs @ ${avg_cost:.2f} | PnL: {'+' if pnl_pct>=0 else ''}{pnl_pct:.2f}%"
                             elif current_shares < 0:
-                                pnl_pct = (avg_cost - close_price) / avg_cost * 100
+                                pnl_pct = (avg_cost - close_price) / max(1e-5, avg_cost) * 100
                                 pos_label = f"SHORT {abs(current_shares)} shs @ ${avg_cost:.2f} | PnL: {'+' if pnl_pct>=0 else ''}{pnl_pct:.2f}%"
                             else:
                                 pos_label = "📡 [系统开盘中·空仓研判] 正在全频段扫描研判中"
@@ -1640,8 +1640,8 @@ class LiveTradingRunner:
                                 f"P_win:{opportunity.get('win_rate_pct', 50):.0f}%",
                                 f"E[R]:{opportunity.get('expected_value_r', 0):+.2f}R",
                             ]
-                            vwap_dist_pct = abs(close_price - vwap) / vwap * 100
-                            ema_cross_dist = abs(ema_9 - ema_21) / ema_21 * 100
+                            vwap_dist_pct = abs(close_price - vwap) / max(1e-5, vwap) * 100
+                            ema_cross_dist = abs(ema_9 - ema_21) / max(1e-5, ema_21) * 100
                             if vwap_dist_pct < 0.15:
                                 alerts.append("🔔 Near VWAP Line")
                             if ema_cross_dist < 0.08:
