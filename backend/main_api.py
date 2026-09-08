@@ -2374,33 +2374,109 @@ def get_ml_prediction_trajectory(ticker: str = "SNDK", date: Optional[str] = Non
         pred_mae = bundle['regressor_mae'].predict(X_today) if bundle else np.full(len(today_df), 0.8)
 
         closes = today_df['Close'].values
+        highs_arr = today_df['High'].values
+        lows_arr = today_df['Low'].values
+        volumes_arr = today_df['Volume'].values
         times = [t.strftime('%H:%M') for t in today_df.index]
+        n_bars = len(today_df)
 
-        # Model predicted target trajectory
-        pred_direction = (p_win - 0.50) * 2.0
-        pred_prices = closes * (1.0 + (pred_mfe * np.maximum(0.2, pred_direction) / 100.0))
-        pred_highs = closes * (1.0 + pred_mfe / 100.0)
-        pred_lows = closes * (1.0 - pred_mae / 100.0)
+        # ─── 1. VALUE ENGINE (VWAP Bands & Volume Profile POC) ─────────────
+        typical_p = (highs_arr + lows_arr + closes) / 3.0
+        cum_vol = np.cumsum(volumes_arr)
+        cum_tp_vol = np.cumsum(typical_p * volumes_arr)
+        vwap_arr = cum_tp_vol / np.maximum(1.0, cum_vol)
+        
+        vwap_diff_sq = (typical_p - vwap_arr) ** 2
+        cum_vwap_var = np.cumsum(vwap_diff_sq * volumes_arr) / np.maximum(1.0, cum_vol)
+        vwap_std_arr = np.sqrt(np.maximum(0.01, cum_vwap_var))
 
-        # Future projection (Next 15 minutes beyond current time)
+        # Volume Profile Point of Control (POC)
+        p_min = float(np.min(lows_arr))
+        p_max = float(np.max(highs_arr))
+        bins = np.linspace(p_min, p_max, 25)
+        vol_hist, bin_edges = np.histogram(typical_p, bins=bins, weights=volumes_arr)
+        poc_idx = int(np.argmax(vol_hist))
+        poc_price = float((bin_edges[poc_idx] + bin_edges[poc_idx + 1]) / 2.0)
+
+        # ─── 2. BUY/SELL ORDER FLOW & K-LINE STRUCTURE ─────────────────────
+        candle_ranges = np.maximum(0.01, highs_arr - lows_arr)
+        close_locs = (closes - lows_arr) / candle_ranges
+        body_highs = np.maximum(today_df['Open'].values, closes)
+        body_lows = np.minimum(today_df['Open'].values, closes)
+        upper_wick_ratios = (highs_arr - body_highs) / candle_ranges
+        lower_wick_ratios = (body_lows - lows_arr) / candle_ranges
+
+        # OFI & Delta Pressure
+        vol_series = pd.Series(volumes_arr)
+        vol_ma20 = vol_series.rolling(20, min_periods=1).mean().values
+        rvol_arr = volumes_arr / np.maximum(1.0, vol_ma20)
+        delta_pressures = (close_locs - 0.5) * 2.0
+        ofi_arr = np.clip(delta_pressures * np.log1p(rvol_arr), -2.0, 2.0)
+
+        # ATR calculation
+        atr_series = pd.Series(candle_ranges).rolling(14, min_periods=1).mean().values
+
+        # Composite Multi-Factor Directional Alpha: Value Gravity + Order Flow + K-Line
+        # Value Gravity: When price stretches far from VWAP, mean-reversion pulls it back
+        value_stretch = (closes - vwap_arr) / np.maximum(0.5, vwap_std_arr)
+        value_gravity = -np.tanh(value_stretch * 0.7)
+
+        order_flow_signals = np.tanh(ofi_arr * 1.2)
+        kline_signals = np.tanh((lower_wick_ratios - upper_wick_ratios) * 1.4 + (p_win - 0.50) * 1.6)
+
+        composite_alphas = (0.35 * order_flow_signals + 0.35 * kline_signals + 0.30 * value_gravity)
+
+        # ─── 3. DYNAMIC WAVE TRAJECTORY (Expectation Curve) ────────────────
+        pred_prices = []
+        pred_highs = []
+        pred_lows = []
+
+        for i in range(n_bars):
+            cur_p = closes[i]
+            cur_alp = composite_alphas[i]
+            cur_v = vwap_arr[i]
+            cur_atr = atr_series[i]
+
+            # Dynamic Wave Target: Trend impulse + Value pull when overstretched
+            trend_comp = cur_atr * cur_alp * 1.4
+            mean_rev_comp = (cur_v - cur_p) * 0.22 if abs(cur_p - cur_v) > cur_atr * 1.4 else 0.0
+            
+            target_p = cur_p + trend_comp + mean_rev_comp
+            pred_prices.append(round(float(target_p), 2))
+            pred_highs.append(round(float(max(cur_p, target_p) + cur_atr * 0.85), 2))
+            pred_lows.append(round(float(min(cur_p, target_p) - cur_atr * 0.85), 2))
+
+        # ─── 4. FUTURE PROJECTION (Next 15-30 mins Forward Trajectory) ────
         last_close = float(closes[-1])
         last_pwin = float(p_win[-1])
         last_mfe = float(pred_mfe[-1])
-        last_mae = float(pred_mae[-1])
+        last_alp = float(composite_alphas[-1])
+        last_vwap = float(vwap_arr[-1])
+        last_atr = float(atr_series[-1])
         last_time = today_df.index[-1]
 
         future_times = []
         future_predicted = []
         future_high = []
         future_low = []
+
+        curr_proj = last_close
         for step in range(1, 16):
-            fut_t = last_time + datetime.timedelta(minutes=step)
-            prog = step / 15.0
+            fut_t = last_time + datetime.timedelta(minutes=step * 2)
             future_times.append(fut_t.strftime('%H:%M'))
-            fut_p = last_close * (1.0 + (last_mfe * (last_pwin - 0.45) * 2.0 / 100.0) * prog)
-            future_predicted.append(round(fut_p, 2))
-            future_high.append(round(last_close * (1.0 + last_mfe / 100.0 * prog), 2))
-            future_low.append(round(last_close * (1.0 - last_mae / 100.0 * prog), 2))
+            
+            decay = math.exp(-step / 6.5)
+            drift = last_atr * last_alp * 0.45 * decay
+            target_node = last_vwap if abs(last_close - last_vwap) < abs(last_close - poc_price) else poc_price
+            pull = (target_node - curr_proj) * (0.04 * (1.0 - decay))
+            wave = math.sin(step * 0.55) * (last_atr * 0.18)
+            
+            curr_proj = curr_proj + drift + pull + wave
+            band = last_atr * (0.55 + step * 0.04)
+
+            future_predicted.append(round(float(curr_proj), 2))
+            future_high.append(round(float(curr_proj + band), 2))
+            future_low.append(round(float(curr_proj - band), 2))
 
         # Real Trades for this ticker
         trades = []
