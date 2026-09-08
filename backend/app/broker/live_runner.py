@@ -875,16 +875,9 @@ class LiveTradingRunner:
         entry_at = self.entry_times.setdefault(ticker, datetime.datetime.now())
         minutes_held = max(0.0, (datetime.datetime.now() - entry_at).total_seconds() / 60.0)
         pnl_pct = ((close - avg_cost) / avg_cost) if side == "LONG" and avg_cost > 0 else ((avg_cost - close) / avg_cost if avg_cost > 0 else 0.0)
-        stop_pct = self._safe_float(opportunity.get("_stop_pct"), 0.0100)
-        
         # Breakeven Stop: If partial TP has been taken, protect remaining shares at cost price (avg_cost)
         if self.partial_tp_done.get(ticker, False) and pnl_pct <= 0.0:
             return ("SELL" if side == "LONG" else "COVER"), f"{base_reason} | 🛡️ 半仓止盈后触及保本线 (${avg_cost:.2f})，平余仓保本离场"
-
-        hard_stop = (side == "LONG" and close <= avg_cost * (1.0 - stop_pct)) or (side == "SHORT" and close >= avg_cost * (1.0 + stop_pct))
-        if hard_stop:
-            self.ticker_consecutive_losses[ticker] = self.ticker_consecutive_losses.get(ticker, 0) + 1
-            return ("SELL" if side == "LONG" else "COVER"), f"{base_reason} | 初始硬止损 {stop_pct*100:.2f}% (单日第 {self.ticker_consecutive_losses[ticker]} 次)"
 
         # ─── Dynamic ATR Trailing Stop & Per-Ticker ML Expectancy Exit ────────────────────
         # Strictly driven by:
