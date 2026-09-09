@@ -176,6 +176,10 @@ def compute_advanced_features_and_targets(df: pd.DataFrame, ticker: str) -> pd.D
     target_win = np.zeros(n, dtype=int)
     target_mfe = np.zeros(n, dtype=float)
     target_mae = np.zeros(n, dtype=float)
+    
+    is_high_vol = ticker in ("SNDK", "MSTR")
+    mult_up = 1.0 if is_high_vol else 1.4
+    mult_dn = 0.9 if is_high_vol else 1.0
 
     for i in range(n):
         end_idx = min(n, i + window + 1)
@@ -183,8 +187,8 @@ def compute_advanced_features_and_targets(df: pd.DataFrame, ticker: str) -> pd.D
             continue
         c = closes[i]
         a = atrs[i]
-        up_barrier = c + 1.5 * a
-        dn_barrier = c - 1.0 * a
+        up_barrier = c + mult_up * a
+        dn_barrier = c - mult_dn * a
 
         f_highs = highs[i+1:end_idx]
         f_lows = lows[i+1:end_idx]
@@ -225,13 +229,21 @@ def train_ticker_advanced_suite(ticker: str, df: pd.DataFrame) -> dict:
     y_mfe_train, y_mfe_test = y_mfe.iloc[:split_idx], y_mfe.iloc[split_idx:]
     y_mae_train, y_mae_test = y_mae.iloc[:split_idx], y_mae.iloc[split_idx:]
 
+    is_high_vol = ticker in ("SNDK", "MSTR")
+    max_depth = 3 if is_high_vol else 4
+    num_leaves = 10 if is_high_vol else 15
+    learning_rate = 0.02 if is_high_vol else 0.03
+    min_child_samples = 35 if is_high_vol else 25
+    reg_lambda = 3.0 if is_high_vol else 0.1
+
     # 1. Calibrated Classifier for Win Probability
     base_clf = LGBMClassifier(
         n_estimators=100,
-        learning_rate=0.03,
-        max_depth=4,
-        num_leaves=15,
-        min_child_samples=25,
+        learning_rate=learning_rate,
+        max_depth=max_depth,
+        num_leaves=num_leaves,
+        min_child_samples=min_child_samples,
+        reg_lambda=reg_lambda,
         subsample=0.8,
         colsample_bytree=0.8,
         random_state=42,
@@ -248,10 +260,10 @@ def train_ticker_advanced_suite(ticker: str, df: pd.DataFrame) -> dict:
     reg_mfe = LGBMRegressor(
         objective="huber",
         n_estimators=100,
-        learning_rate=0.03,
-        max_depth=4,
-        num_leaves=15,
-        min_child_samples=25,
+        learning_rate=learning_rate,
+        max_depth=max_depth,
+        num_leaves=num_leaves,
+        min_child_samples=min_child_samples,
         subsample=0.8,
         colsample_bytree=0.8,
         random_state=42,
@@ -259,17 +271,16 @@ def train_ticker_advanced_suite(ticker: str, df: pd.DataFrame) -> dict:
     )
     reg_mfe.fit(X_train, y_mfe_train)
     pred_mfe_test = reg_mfe.predict(X_test)
-    mfe_mse = mean_squared_error(y_mfe_test, pred_mfe_test)
     mfe_r2 = r2_score(y_mfe_test, pred_mfe_test)
 
     # 3. Regressor for Expected Maximum Drawdown (MAE %)
     reg_mae = LGBMRegressor(
         objective="huber",
         n_estimators=100,
-        learning_rate=0.03,
-        max_depth=4,
-        num_leaves=15,
-        min_child_samples=25,
+        learning_rate=learning_rate,
+        max_depth=max_depth,
+        num_leaves=num_leaves,
+        min_child_samples=min_child_samples,
         subsample=0.8,
         colsample_bytree=0.8,
         random_state=42,
@@ -284,13 +295,14 @@ def train_ticker_advanced_suite(ticker: str, df: pd.DataFrame) -> dict:
     reg_mfe.fit(X, y_mfe)
     reg_mae.fit(X, y_mae)
 
-    # Save dedicated bundle
+    # Save dedicated bundle with test_auc metadata
     bundle = {
         "ticker": ticker,
         "features": ADVANCED_FEATURE_COLS,
         "classifier": calibrated_clf,
         "regressor_mfe": reg_mfe,
         "regressor_mae": reg_mae,
+        "test_auc": float(test_auc),
         "base_rate_p0": float(y_win.mean()),
         "avg_mfe": float(y_mfe.mean()),
         "avg_mae": float(y_mae.mean()),
@@ -299,9 +311,10 @@ def train_ticker_advanced_suite(ticker: str, df: pd.DataFrame) -> dict:
     bundle_path = os.path.join(PER_TICKER_DIR, f"advanced_ml_bundle_{ticker}.joblib")
     joblib.dump(bundle, bundle_path)
 
-    # Also save the calibrated classifier as standard win rate model
+    # Only update legacy win_rate_model if test_auc is strong (>= 0.55)
     legacy_path = os.path.join(PER_TICKER_DIR, f"win_rate_model_{ticker}.joblib")
-    joblib.dump(calibrated_clf, legacy_path)
+    if test_auc >= 0.55 or not os.path.exists(legacy_path):
+        joblib.dump(calibrated_clf, legacy_path)
 
     print(f"   ├─ [{ticker}] 高维 ML 复合套件训练完成:")
     print(f"      • 胜率分类器 OOS AUC: {test_auc:.4f} | Brier: {test_brier:.4f} | 基准先验 P0: {y_win.mean()*100:.1f}%")

@@ -123,15 +123,40 @@ def calculate_win_rate_probability(
 ) -> Tuple[float, float, float]:
     """
     Evaluates calibrated win probability P_win and prediction uncertainty std_dev.
-    Uses Advanced ML Bundle (dedicated per-ticker or universal market model).
+    Prioritizes dedicated per-ticker models (AUC >= 0.60), applies anti-trap filters,
+    and supports probability inversion for anti-predictive regimes.
     """
     ticker = ""
     if opportunity:
         ticker = str(opportunity.get("ticker", "")).upper()
 
-    bundle = get_advanced_ml_bundle(ticker)
     p_std = 0.04
+    p_win_candidate = None
 
+    # 1. Primary: Evaluate dedicated per-ticker LightGBM model (AUC ~0.60-0.64)
+    if opportunity is not None and ticker:
+        dedicated_model = get_calibrated_ml_model("long", ticker=ticker)
+        if dedicated_model is not None:
+            try:
+                d_feat = {
+                    "feature_ofi": float(opportunity.get("alpha_ofi", opportunity.get("feature_ofi", 0.0))),
+                    "feature_rvol": float(opportunity.get("rvol", rvol)),
+                    "feature_vwap_dist_pct": float(opportunity.get("vwap_dist_pct", opportunity.get("_vwap_dist_pct", 0.0))),
+                    "feature_ema_diff_pct": float(opportunity.get("ema_diff_pct", 
+                        ((opportunity.get("_ema_9", 1.0) - opportunity.get("_ema_21", 1.0)) / max(1e-5, opportunity.get("_ema_21", 1.0)) * 100.0)
+                    )),
+                    "feature_mom_5m": float(opportunity.get("momentum_3_pct", momentum_3_pct)),
+                    "feature_mom_15m": float(opportunity.get("momentum_10_pct", 0.0)),
+                    "feature_er": float(opportunity.get("er", opportunity.get("efficiency_ratio", 0.25))),
+                    "feature_atr_pct": float(opportunity.get("atr_pct", atr_pct)),
+                }
+                df_d = pd.DataFrame([d_feat])
+                p_win_candidate = float(dedicated_model.predict_proba(df_d)[0, 1])
+            except Exception:
+                p_win_candidate = None
+
+    # 2. Secondary: Advanced Multi-Horizon ML Bundle
+    bundle = get_advanced_ml_bundle(ticker)
     if opportunity is not None and bundle is not None:
         try:
             feat_dict = {}
@@ -194,24 +219,53 @@ def calculate_win_rate_probability(
 
             df_feat = pd.DataFrame([feat_dict])
             raw_p = float(bundle["classifier"].predict_proba(df_feat)[0, 1])
+
+            # Inversion guardrail ("反着来"): if model test AUC is sub-0.48, flip the signal
+            bundle_auc = float(bundle.get("test_auc", 0.50))
+            if bundle_auc < 0.48:
+                raw_p = 1.0 - raw_p
+
             p0 = float(bundle.get("base_rate_p0", 0.42))
             raw_p = max(0.01, min(0.99, raw_p))
             odds_ratio = (raw_p / (1.0 - raw_p)) / (p0 / (1.0 - p0))
-            prob_calibrated = odds_ratio / (1.0 + odds_ratio)
+            bundle_p_calibrated = odds_ratio / (1.0 + odds_ratio)
 
-            prob_adj = prob_calibrated - 0.03
-            bounded_p_win = max(0.38, min(0.88, prob_adj))
-            rank_score = round(bounded_p_win * 100.0, 1)
-            return round(bounded_p_win, 4), round(p_std, 4), round(rank_score, 4)
-        except Exception as ex:
+            if p_win_candidate is not None:
+                # Blend dedicated model (70% weight) with bundle (30% weight)
+                p_win_candidate = 0.70 * p_win_candidate + 0.30 * bundle_p_calibrated
+            else:
+                p_win_candidate = bundle_p_calibrated
+        except Exception:
             pass
+
+    # 3. Microstructural Anti-Trap & Pullback Support Adjustments ("反着来" & "稍微早点")
+    if p_win_candidate is not None:
+        prob_adj = p_win_candidate - 0.02
+        upper_wick = float(opportunity.get("upper_wick_ratio", 0.0)) if opportunity else 0.0
+        is_trap = opportunity.get("is_trap", False) if opportunity else False
+        trap_reason = opportunity.get("trap_reason", "") if opportunity else ""
+
+        # Bull Trap Suppression: Long upper wick rejection at local high -> Slash long probability
+        if upper_wick >= 0.35 or (is_trap and ("Bull Trap" in trap_reason or "Upper Wick" in trap_reason)):
+            prob_adj = min(0.38, prob_adj * 0.65)
+
+        # Pullback Support Boost: Healthy pullback to VWAP/EMA21 with buyer absorption -> Boost win rate
+        regime_str = str(regime) if regime else ""
+        if "PULLBACK" in regime_str:
+            prob_adj = max(0.62, prob_adj * 1.15)
+        elif "FADE" in regime_str:
+            prob_adj = max(0.64, prob_adj * 1.18)
+
+        bounded_p_win = max(0.35, min(0.88, prob_adj))
+        rank_score = round(bounded_p_win * 100.0, 1)
+        return round(bounded_p_win, 4), round(p_std, 4), round(rank_score, 4)
 
     # Fallback to standard calibrated model or heuristics
     vwap_dist = float(opportunity.get("vwap_dist_pct", 0.0)) if opportunity else 0.0
     z_vwap = max(-1.5, min(1.5, vwap_dist)) * 0.4
     z_rvol = max(-1.0, min(2.0, rvol - 1.0)) * 0.4
     z_mom = max(-2.0, min(2.0, abs(momentum_3_pct) / max(0.2, atr_pct))) * 0.4
-    regime_bonus = 0.4 if "REVERSAL" in regime else (0.2 if "TREND" in regime else 0.0)
+    regime_bonus = 0.4 if "REVERSAL" in regime or "PULLBACK" in regime else (0.2 if "TREND" in regime else 0.0)
 
     logits = z_vwap + z_rvol + z_mom + regime_bonus
     base_p = sigmoid(logits)

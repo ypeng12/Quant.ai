@@ -49,6 +49,7 @@ class LiveTradingRunner:
         self.entry_times = {}
         self._score_warmup_complete = False
         self.pyramid_done = {}  # {ticker: bool} tracks whether a pyramid add has been done for current position
+        self.pyramid_counts = {}  # {ticker: int} tracks exact count of pyramid additions per trade
         self.partial_tp_done = {}  # {ticker: bool} tracks whether partial profit scaling has been taken
         self.ticker_consecutive_losses = {}  # {ticker: int} tracks consecutive losses per session to avoid whipsaw losses
 
@@ -302,10 +303,50 @@ class LiveTradingRunner:
                             short_q.append({"price": price, "qty": rem_qty})
                     else:
                         trade["action"] = "SHORT"
-                        trade["action_cn"] = "做空"
-                        short_q.append({"price": price, "qty": qty})
-                        trade_pnl = 0.0
                 trade["pnl"] = round(trade_pnl, 2)
+
+        # Recalculate session losses for circuit breaker
+        est = pytz.timezone('America/New_York')
+        today_str = datetime.datetime.now(est).strftime("%Y-%m-%d")
+        today_trades = trades_by_date.get(today_str, [])
+        session_losses = {}
+        for t in today_trades:
+            sym = str(t.get("ticker", "")).upper()
+            act = t.get("action", "")
+            pnl = float(t.get("pnl", 0.0) or 0.0)
+            if sym not in session_losses:
+                session_losses[sym] = 0
+            if act in ("SELL", "COVER") and pnl < -5.0:
+                session_losses[sym] += 1
+            elif act in ("SELL", "COVER") and pnl > 20.0:
+                session_losses[sym] = max(0, session_losses[sym] - 1)
+        self.ticker_consecutive_losses = session_losses
+
+    def get_ticker_session_losses(self, ticker: str) -> int:
+        """
+        Calculates number of consecutive or realized losses for this ticker in the current session.
+        """
+        ticker_upper = str(ticker).upper()
+        if ticker_upper in self.ticker_consecutive_losses:
+            return self.ticker_consecutive_losses[ticker_upper]
+
+        est = pytz.timezone('America/New_York')
+        today_str = datetime.datetime.now(est).strftime("%Y-%m-%d")
+        losses = 0
+        today_trades = [
+            t for t in self.trade_history
+            if (t.get("date") == today_str or str(t.get("time", ""))[:10] == today_str)
+            and str(t.get("ticker", "")).upper() == ticker_upper
+        ]
+        for t in today_trades:
+            action = t.get("action", "")
+            pnl = float(t.get("pnl", 0.0) or 0.0)
+            if action in ("SELL", "COVER") and pnl < -5.0:
+                losses += 1
+            elif action in ("SELL", "COVER") and pnl > 20.0:
+                losses = max(0, losses - 1)
+        self.ticker_consecutive_losses[ticker_upper] = losses
+        return losses
 
     def save_trade_history(self):
         try:
@@ -588,10 +629,31 @@ class LiveTradingRunner:
             and momentum_3_pct > 0.05
         )
 
+        candle_range = max(1e-5, self._safe_float(row.get("High"), close) - self._safe_float(row.get("Low"), close))
+        bar_close_loc = (close - self._safe_float(row.get("Low"), close)) / candle_range
+        body_high = max(self._safe_float(row.get("Open"), close), close)
+        body_low = min(self._safe_float(row.get("Open"), close), close)
+        upper_wick_ratio = (self._safe_float(row.get("High"), close) - body_high) / candle_range
+        lower_wick_ratio = (body_low - self._safe_float(row.get("Low"), close)) / candle_range
+        vwap_dist_pct = ((close - vwap) / vwap * 100.0) if vwap > 0 else 0.0
+
         long_structure = close > vwap and ema_9 > ema_21 and close >= ema_21
         short_structure = close < vwap and ema_9 < ema_21 and close <= ema_21
 
-        if reversal_long:
+        # "稍微早点" (Pullback Support Entry): Macro bullish trend pulling back to VWAP/EMA21 support
+        dist_to_ema21_pct = ((close - ema_21) / max(1e-5, ema_21)) * 100.0
+        pullback_support = (
+            ema_9 > ema_21
+            and abs(dist_to_ema21_pct) <= 0.40
+            and close >= min(vwap, ema_21) * 0.997
+            and momentum_3_pct >= -0.25
+            and lower_wick_ratio >= 0.18
+        )
+
+        if pullback_support:
+            direction = "LONG"
+            regime = "PULLBACK_LONG"
+        elif reversal_long:
             direction = "LONG"
             regime = "LONG_REVERSAL"
         elif reversal_short:
@@ -617,7 +679,6 @@ class LiveTradingRunner:
         long_confirmed = (direction == "LONG")
         short_confirmed = (direction == "SHORT")
         
-        vwap_dist_pct = ((close - vwap) / vwap * 100.0) if vwap > 0 else 0.0
         rsi = self._safe_float(row.get("RSI"), 50.0)
 
         # Pure ML Model Control: Traditional rule-based overextension blockers removed.
@@ -636,10 +697,10 @@ class LiveTradingRunner:
             ),
         )
 
-        # Extract features and compute true ML model probabilities for directional alpha
+        # Extract features and compute true ML model probabilities for directional alpha (100% dedicated per-ticker!)
         from app.broker.probability_engine import get_calibrated_ml_model
-        ml_model_l = get_calibrated_ml_model("long")
-        ml_model_s = get_calibrated_ml_model("short")
+        ml_model_l = get_calibrated_ml_model("long", ticker=ticker)
+        ml_model_s = get_calibrated_ml_model("short", ticker=ticker)
         p_long = 0.50
         p_short = 0.50
         if ml_model_l is not None and ml_model_s is not None:
@@ -668,17 +729,32 @@ class LiveTradingRunner:
         is_trap = alpha_eval.get("is_trap", False)
         trap_reason = alpha_eval.get("trap_reason", "")
 
-        # Anti-Bull/Bear Trap Engine: Convert false breakouts into active SHORT/LONG opportunities
-        if is_trap and ("Bull Trap" in trap_reason or "Upper Wick" in trap_reason or "Ask Depth" in trap_reason) and close < ema_9:
+        # Anti-Bull Trap ("反着来"): If near local high with upper wick rejection or trap detected
+        bull_trap_risk = (
+            upper_wick_ratio >= 0.32
+            and (vwap_dist_pct >= 0.45 or high_to_now_pct >= -0.25)
+            and (close < ema_9 or is_trap)
+        )
+        if bull_trap_risk:
+            long_confirmed = False
+            if self.strategy_params.get("allow_shorting", False) or ticker == "SNDK":
+                direction = "SHORT"
+                regime = "FADE_BULL_TRAP"
+                short_confirmed = True
+            else:
+                direction = "NEUTRAL"
+                regime = "TRAP_REJECT"
+                short_confirmed = False
+        elif (is_trap and ("Bear Trap" in trap_reason or lower_wick_ratio >= 0.35)) and close >= min(vwap, ema_21) * 0.995:
+            short_confirmed = False
+            direction = "LONG"
+            regime = "FADE_BEAR_TRAP"
+            long_confirmed = True
+        elif is_trap and ("Bull Trap" in trap_reason or "Ask Depth" in trap_reason) and close < ema_9:
             long_confirmed = False
             if alpha_eval["composite_alpha_score"] <= -45.0:
                 direction = "SHORT"
                 short_confirmed = True
-        elif is_trap and ("Bear Trap" in trap_reason or "Lower Wick" in trap_reason or "Bid Depth" in trap_reason) and close > ema_9:
-            short_confirmed = False
-            if alpha_eval["composite_alpha_score"] >= 45.0:
-                direction = "LONG"
-                long_confirmed = True
 
         # Compute Advanced ML 24-feature inputs
         candle_range = max(1e-5, self._safe_float(row.get("High"), close) - self._safe_float(row.get("Low"), close))
@@ -830,6 +906,7 @@ class LiveTradingRunner:
             # Reset pyramid and partial TP state when flat
             if ticker in self.pyramid_done:
                 del self.pyramid_done[ticker]
+            self.pyramid_counts[ticker] = 0
             if ticker in self.partial_tp_done:
                 del self.partial_tp_done[ticker]
             from app.broker.universe_screener import is_valid_quality_stock_symbol
@@ -839,10 +916,42 @@ class LiveTradingRunner:
             if not is_valid_quality_stock_symbol(ticker):
                 return "HOLD", f"{base_reason} | 标的属于权证/衍生单元 (Warrant/Unit)，拒绝交易"
 
+            # 🛑 1. Single Ticker Daily Loss Circuit Breaker (单票日内连亏熔断)
+            max_losses = int(self.strategy_params.get("max_losses_per_ticker_session", 2))
+            ticker_losses = self.get_ticker_session_losses(ticker)
+            if ticker_losses >= max_losses:
+                return "HOLD", f"{base_reason} | 🛑 [单票日内连亏熔断] 该股今日已亏损 {ticker_losses} 次 (>= 上限 {max_losses} 次)，锁定开仓以防持续回撤"
+
+            # ⚠️ 2. Bull Trap Protection ("反着来" - 一票否决高位追多)
+            if direction == "LONG" and (
+                opportunity.get("upper_wick_ratio", 0.0) >= 0.32
+                or (opportunity.get("is_trap", False) and "Bull Trap" in opportunity.get("trap_reason", ""))
+                or opportunity.get("regime") == "TRAP_REJECT"
+            ):
+                return "HOLD", f"{base_reason} | ⚠️ [诱多防守拦截 (反着来)] 顶部长上影线或主力卖单压盘，一票否决追多"
+
             # HRT-Grade ML Quantitative Alpha Model Entry Evaluation:
-            # Driven directly by ML Probabilistic Mathematical Expectation E[PnL] >= 0.0R or P_win >= 50%
             if direction == "NEUTRAL":
                 return "HOLD", f"{base_reason} | NEUTRAL 观望信号"
+
+            # 🎯 3. Support Pullback Entry ("稍微早点" - 回踩低吸建仓)
+            if opportunity.get("regime") == "PULLBACK_LONG" and p_win_pct >= 48.0:
+                last_exit = self.last_exit_times.get(ticker)
+                cooldown = self._safe_float(self.strategy_params.get("reentry_cooldown_seconds"), 10.0)
+                if last_exit and (time.time() - last_exit) < cooldown:
+                    remain = int(cooldown - (time.time() - last_exit))
+                    return "HOLD", f"{base_reason} | 平仓冷却中 ({remain}s 剩余)"
+                if open_position_count >= int(self.strategy_params.get("max_concurrent_positions", 4)):
+                    return "HOLD", f"{base_reason} | 已达最大同时持仓数"
+                return "BUY", f"{base_reason} | 🎯 [早点回踩接多 (Pullback Value Entry)] 均线/VWAP 支撑企稳低吸进场"
+
+            # ⚡ 4. Fade Bull Trap Short ("反着来做空")
+            if direction == "SHORT" and "FADE" in str(opportunity.get("regime", "")):
+                if not self.strategy_params.get("allow_shorting", False):
+                    return "HOLD", f"{base_reason} | 🛡️ Long-Only 纯多头保护（未开启做空）"
+                if not self._can_open_short(ticker):
+                    return "HOLD", f"{base_reason} | Alpaca Asset 当前不可直接卖空/需要 locate"
+                return "SHORT", f"{base_reason} | ⚡ [诱多反手做空 (反着来)] 顶部长上影假突破+主力抛压确认，反手做空斩获跳水"
 
             # Direct ML Model Execution: If ML model evaluates positive EV or P_win >= 50%, trigger order immediately!
             if is_pos_ev or ev_r >= 0.0 or p_win_pct >= 50.0:
@@ -975,6 +1084,7 @@ class LiveTradingRunner:
             and ev_r >= 0.20
             and self._safe_float(opportunity.get("rvol"), 1.0) >= 1.2
             and not self.pyramid_done.get(ticker, False)
+            and self.pyramid_counts.get(ticker, 0) < 1
             and self._aggressive_orders_allowed()
             and (side == "LONG" or self.strategy_params.get("allow_shorting", False))
         )
@@ -1867,6 +1977,7 @@ class LiveTradingRunner:
                                         order_res = self.adapter.submit_market_order(ticker, pyr_shares, "buy", client_order_id=client_order_id)
                                         if order_res.get("success"):
                                             self.pyramid_done[ticker] = True
+                                            self.pyramid_counts[ticker] = self.pyramid_counts.get(ticker, 0) + 1
                                             self.add_log(f"✅ [{ticker}] PYRAMID_BUY order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
                                             self.add_trade_action(
                                                 "PYRAMID_BUY", ticker, pyr_shares, close_price, reason,
@@ -1901,6 +2012,7 @@ class LiveTradingRunner:
                                         order_res = self.adapter.submit_market_order(ticker, pyr_shares, "sell", client_order_id=client_order_id)
                                         if order_res.get("success"):
                                             self.pyramid_done[ticker] = True
+                                            self.pyramid_counts[ticker] = self.pyramid_counts.get(ticker, 0) + 1
                                             self.add_log(f"✅ [{ticker}] PYRAMID_SHORT order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
                                             self.add_trade_action(
                                                 "SHORT", ticker, pyr_shares, close_price, reason,

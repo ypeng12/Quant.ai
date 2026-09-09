@@ -5,7 +5,7 @@
     "strategy_mode": "aggressive_intraday",
     "paper_only_aggressive": true,
     "allow_aggressive_live": false,
-    "allow_shorting": false,
+    "allow_shorting": true,
     "dynamic_screener_enabled": false,
     "screener_refresh_seconds": 120,
     "screener_top_actives": 6,
@@ -38,7 +38,9 @@
     "max_hold_minutes": 300,
     "time_stop_min_score": 52.0,
     "orders_sync_interval_seconds": 2.0,
+    "pullback_entry_enabled": true,
+    "pyramid_max_count": 1,
     "bar_interval": "5m"
   },
-  "updated_at": "2026-09-08 16:16:14"
+  "updated_at": "2026-09-09 18:14:35"
 }
