@@ -514,33 +514,23 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
           <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(5, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
             {/* 1. Today Net PnL */}
             <div className="stat-card" style={{ background: '#09090b', border: `1px solid ${netPnlVal >= 0 ? 'rgba(0,200,5,0.3)' : 'rgba(255,59,48,0.3)'}`, padding: '1.25rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                <span className="stat-label">Today Net PnL</span>
-                <span style={{ fontSize: '0.68rem', padding: '1px 5px', borderRadius: '3px', background: netPnlVal >= 0 ? 'rgba(0,200,5,0.15)' : 'rgba(255,59,48,0.15)', color: netPnlVal >= 0 ? '#00c805' : '#ff3b30', fontWeight: 700 }}>
-                  Closed + Open Floating (100% Conserved)
-                </span>
-              </div>
+              <span className="stat-label">Today Net PnL</span>
               <span className="stat-value" style={{ fontSize: '1.4rem', fontWeight: 900, color: netPnlVal >= 0 ? 'var(--color-green)' : 'var(--color-red)' }}>
                 {formatMoney(netPnlVal)}
               </span>
               <div style={{ fontSize: '0.72rem', color: '#888', marginTop: '4px' }}>
-                Realized: <span style={{ color: realizedPnl >= 0 ? '#00c805' : '#ff3b30', fontWeight: 700 }}>{formatMoney(realizedPnl)}</span> | Open Floating: <span style={{ color: unrealizedPnl >= 0 ? '#00c805' : '#ff3b30', fontWeight: 700 }}>{formatMoney(unrealizedPnl)}</span>
+                Realized: <span style={{ color: realizedPnl >= 0 ? '#00c805' : '#ff3b30', fontWeight: 700 }}>{formatMoney(realizedPnl)}</span> | Floating: <span style={{ color: unrealizedPnl >= 0 ? '#00c805' : '#ff3b30', fontWeight: 700 }}>{formatMoney(unrealizedPnl)}</span>
               </div>
-              {alpacaAccountDelta !== undefined && Math.abs(alpacaAccountDelta - netPnlVal) > 0.05 && (
-                <div style={{ fontSize: '0.68rem', color: '#64748b', marginTop: '4px', borderTop: '1px dashed rgba(255,255,255,0.08)', paddingTop: '3px' }}>
-                  Alpaca Overnight Net Change: <strong style={{ color: alpacaAccountDelta >= 0 ? '#00c805' : '#ff3b30' }}>{formatMoney(alpacaAccountDelta)}</strong> (incl. overnight gap)
-                </div>
-              )}
             </div>
 
             {/* 2. Win Rate */}
             <div className="stat-card" style={{ background: '#09090b', border: '1px solid var(--color-border)', padding: '1.25rem' }}>
               <span className="stat-label">Win Rate</span>
               <span className="stat-value" style={{ fontSize: '1.4rem', fontWeight: 900, color: closedCount > 0 ? (winRatePct >= 50 ? 'var(--color-green)' : 'var(--color-red)') : '#38bdf8' }}>
-                {closedCount > 0 ? `${winRatePct.toFixed(1)}%` : 'In Position ⏱️'}
+                {closedCount > 0 ? `${winRatePct.toFixed(1)}%` : '--'}
               </span>
               <div style={{ fontSize: '0.72rem', color: '#888', marginTop: '4px' }}>
-                {closedCount > 0 ? `Closed: ${closedCount} trades (${winsCount}W/${lossesCount}L)` : `Active: ${activePositionsCount} open positions`}
+                {closedCount > 0 ? `${closedCount} trades (${winsCount}W / ${lossesCount}L)` : `${activePositionsCount} open positions`}
               </div>
             </div>
 
@@ -556,25 +546,23 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
                   </>
                 ) : (
                   <span style={{ color: '#94a3b8', fontSize: '1.1rem' }}>
-                    0/0 ({activePositionsCount} in position)
+                    0 / 0
                   </span>
                 )}
               </span>
               <div style={{ fontSize: '0.72rem', color: '#888', marginTop: '4px' }}>
-                {closedCount > 0 ? (activePositionsCount > 0 ? `${activePositionsCount} additional open positions` : 'All settled today') : 'Auto calculated upon closing'}
+                {closedCount > 0 ? (activePositionsCount > 0 ? `${activePositionsCount} open positions` : 'All settled today') : 'No trades today'}
               </div>
             </div>
 
             {/* 4. Best Trade */}
             <div className="stat-card" style={{ background: '#09090b', border: '1px solid rgba(0,200,5,0.2)', padding: '1.25rem' }}>
               <span className="stat-label">Best Trade</span>
-              <span className="stat-value" style={{ fontSize: '1.3rem', fontWeight: 900, color: (closedCount > 0 && winsCount > 0) ? 'var(--color-green)' : (bestTradeNum < 0 ? 'var(--color-red)' : '#94a3b8') }}>
-                {closedCount > 0
-                  ? (winsCount > 0 ? formatMoney(bestTradeNum) : (lossesCount > 0 ? `No profit yet (${formatMoney(bestTradeNum, false)})` : '$0.00'))
-                  : (positions.length > 0 ? `Max unrealized: ${formatMoney(Math.max(0, ...positions.map(p => p.unrealized_pnl || 0)))}` : '$0.00')}
+              <span className="stat-value" style={{ fontSize: '1.3rem', fontWeight: 900, color: winsCount > 0 ? 'var(--color-green)' : '#94a3b8' }}>
+                {winsCount > 0 ? formatMoney(bestTradeNum) : (bestTradeNum !== 0 ? formatMoney(bestTradeNum, false) : '$0.00')}
               </span>
               <div style={{ fontSize: '0.72rem', color: '#888', marginTop: '4px' }}>
-                {closedCount > 0 ? (winsCount > 0 ? 'Highest realized gain today' : 'No profitable closed trades today') : 'Highest open floating gain'}
+                {winsCount > 0 ? 'Highest gain today' : 'No winning trades yet'}
               </div>
             </div>
 
@@ -582,12 +570,10 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
             <div className="stat-card" style={{ background: '#09090b', border: '1px solid rgba(255,59,48,0.2)', padding: '1.25rem' }}>
               <span className="stat-label">Worst Trade</span>
               <span className="stat-value" style={{ fontSize: '1.3rem', fontWeight: 900, color: worstTradeNum < 0 ? 'var(--color-red)' : '#94a3b8' }}>
-                {closedCount > 0
-                  ? formatMoney(worstTradeNum, false)
-                  : (positions.length > 0 ? `Max drawdown: ${formatMoney(Math.min(0, ...positions.map(p => p.unrealized_pnl || 0)), false)}` : '$0.00')}
+                {worstTradeNum < 0 ? formatMoney(worstTradeNum, false) : '$0.00'}
               </span>
               <div style={{ fontSize: '0.72rem', color: '#888', marginTop: '4px' }}>
-                {closedCount > 0 ? 'Largest closed loss today' : 'Maximum open drawdown'}
+                {worstTradeNum < 0 ? 'Largest loss today' : 'No losing trades yet'}
               </div>
             </div>
           </div>
