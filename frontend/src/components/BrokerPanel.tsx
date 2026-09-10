@@ -495,12 +495,16 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
         const winRateVal = (todaySummary?.win_rate !== undefined && todaySummary.win_rate > 0) ? todaySummary.win_rate : calcWinRate;
         const netPnlVal = todaySummary?.alpaca_official_pnl ?? todaySummary?.total_pnl ?? closedToday.reduce((sum, t) => sum + (t.pnl || 0), 0);
 
+        const activePositionsCount = positions.length;
+
         return (
           <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(5, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
             <div className="stat-card" style={{ background: '#09090b', border: `1px solid ${netPnlVal >= 0 ? 'rgba(0,200,5,0.3)' : 'rgba(255,59,48,0.3)'}`, padding: '1.25rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
                 <span className="stat-label">Today Net PnL</span>
-                <span style={{ fontSize: '0.68rem', padding: '1px 5px', borderRadius: '3px', background: 'rgba(0,200,5,0.15)', color: '#00c805', fontWeight: 700 }}>Realized + Float</span>
+                <span style={{ fontSize: '0.68rem', padding: '1px 5px', borderRadius: '3px', background: netPnlVal >= 0 ? 'rgba(0,200,5,0.15)' : 'rgba(255,59,48,0.15)', color: netPnlVal >= 0 ? '#00c805' : '#ff3b30', fontWeight: 700 }}>
+                  {activePositionsCount > 0 ? '已平仓 + 浮动持仓' : '已结算'}
+                </span>
               </div>
               <span className="stat-value" style={{ fontSize: '1.4rem', fontWeight: 900, color: netPnlVal >= 0 ? 'var(--color-green)' : 'var(--color-red)' }}>
                 {netPnlVal >= 0 ? '+' : ''}${netPnlVal.toFixed(2)}
@@ -509,31 +513,55 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
                 已平仓: <span style={{ color: (todaySummary?.realized_pnl || 0) >= 0 ? '#00c805' : '#ff3b30', fontWeight: 700 }}>{(todaySummary?.realized_pnl || 0) >= 0 ? '+' : ''}${(todaySummary?.realized_pnl || 0).toFixed(2)}</span> | 持仓浮动: <span style={{ color: (todaySummary?.unrealized_pnl || 0) >= 0 ? '#00c805' : '#ff3b30', fontWeight: 700 }}>{(todaySummary?.unrealized_pnl || 0) >= 0 ? '+' : ''}${(todaySummary?.unrealized_pnl || 0).toFixed(2)}</span>
               </div>
             </div>
+
             <div className="stat-card" style={{ background: '#09090b', border: '1px solid var(--color-border)', padding: '1.25rem' }}>
               <span className="stat-label">Win Rate</span>
-              <span className="stat-value" style={{ fontSize: '1.4rem', fontWeight: 900, color: winRateVal >= 50 ? 'var(--color-green)' : 'var(--color-red)' }}>
-                {winRateVal.toFixed(1)}%
+              <span className="stat-value" style={{ fontSize: '1.4rem', fontWeight: 900, color: calcClosed > 0 ? (winRateVal >= 50 ? 'var(--color-green)' : 'var(--color-red)') : '#38bdf8' }}>
+                {calcClosed > 0 ? `${winRateVal.toFixed(1)}%` : '持仓博弈中 ⏱️'}
               </span>
+              <div style={{ fontSize: '0.72rem', color: '#888', marginTop: '4px' }}>
+                {calcClosed > 0 ? `已平仓: ${calcClosed} 笔` : `活跃持仓: ${activePositionsCount} 笔待平仓`}
+              </div>
             </div>
+
             <div className="stat-card" style={{ background: '#09090b', border: '1px solid var(--color-border)', padding: '1.25rem' }}>
               <span className="stat-label">Wins / Losses</span>
               <span className="stat-value" style={{ fontSize: '1.4rem', fontWeight: 900 }}>
-                <span style={{ color: 'var(--color-green)' }}>{winsVal}</span>
-                <span style={{ color: '#555', margin: '0 4px' }}>/</span>
-                <span style={{ color: 'var(--color-red)' }}>{lossesVal}</span>
+                {calcClosed > 0 ? (
+                  <>
+                    <span style={{ color: 'var(--color-green)' }}>{winsVal}</span>
+                    <span style={{ color: '#555', margin: '0 4px' }}>/</span>
+                    <span style={{ color: 'var(--color-red)' }}>{lossesVal}</span>
+                  </>
+                ) : (
+                  <span style={{ color: '#94a3b8', fontSize: '1.1rem' }}>
+                    0/0 ({activePositionsCount}笔持仓中)
+                  </span>
+                )}
               </span>
+              <div style={{ fontSize: '0.72rem', color: '#888', marginTop: '4px' }}>
+                {calcClosed > 0 ? `结算完成率: 100%` : `平仓时自动统计胜负`}
+              </div>
             </div>
+
             <div className="stat-card" style={{ background: '#09090b', border: '1px solid rgba(0,200,5,0.2)', padding: '1.25rem' }}>
               <span className="stat-label">Best Trade</span>
               <span className="stat-value" style={{ fontSize: '1.3rem', fontWeight: 900, color: 'var(--color-green)' }}>
-                +${bestTradeVal.toFixed(2)}
+                {calcClosed > 0 ? `+$${bestTradeVal.toFixed(2)}` : (positions.length > 0 ? `浮盈最高: +$${Math.max(0, ...positions.map(p => p.unrealized_pnl || 0)).toFixed(2)}` : '+$0.00')}
               </span>
+              <div style={{ fontSize: '0.72rem', color: '#888', marginTop: '4px' }}>
+                {calcClosed > 0 ? '历史最佳平仓' : '盘中最高浮盈'}
+              </div>
             </div>
+
             <div className="stat-card" style={{ background: '#09090b', border: '1px solid rgba(255,59,48,0.2)', padding: '1.25rem' }}>
               <span className="stat-label">Worst Trade</span>
               <span className="stat-value" style={{ fontSize: '1.3rem', fontWeight: 900, color: 'var(--color-red)' }}>
-                ${worstTradeVal.toFixed(2)}
+                {calcClosed > 0 ? `$${worstTradeVal.toFixed(2)}` : (positions.length > 0 ? `浮亏最大: $${Math.min(0, ...positions.map(p => p.unrealized_pnl || 0)).toFixed(2)}` : '$0.00')}
               </span>
+              <div style={{ fontSize: '0.72rem', color: '#888', marginTop: '4px' }}>
+                {calcClosed > 0 ? '历史最大亏损' : '盘中最大回撤'}
+              </div>
             </div>
           </div>
         );
