@@ -56,8 +56,8 @@ def generate_multi_day_dashboard():
         
         df_5m['day'] = df_5m.index.strftime('%Y-%m-%d')
         all_days = sorted(df_5m['day'].unique().tolist())
-        # Pick the most recent 7 trading days for lightning-fast loading
-        days = all_days[-7:]
+        # Pick ONLY the single latest trading day (当天 / 最新实盘交易日) for ultra-fast instant execution
+        days = all_days[-1:]
         df_recent = df_5m[df_5m['day'].isin(days)].copy()
         
         # Extract 7 microstructure features vectorially
@@ -445,7 +445,7 @@ def generate_multi_day_dashboard():
             days.forEach((d, idx) => {{
                 const opt = document.createElement('option');
                 opt.value = d;
-                opt.textContent = idx === days.length - 1 ? `${{d}} (最新)` : d;
+                opt.textContent = `${d} (当天 / 最新实盘)`;
                 dateSelect.appendChild(opt);
             }});
             currentDate = days[days.length - 1];
