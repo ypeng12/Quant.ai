@@ -92,7 +92,6 @@ class LiveTradingRunner:
             "min_expected_value_r": 0.15,
             "reentry_cooldown_seconds": 180,
             "max_concurrent_positions": 2,
-            "max_losses_per_ticker_session": 2,
             "buying_power_utilization_pct": 0.95,
             "starter_buying_power_pct": 0.60,
             "max_position_buying_power_pct": 0.95,
@@ -944,11 +943,6 @@ class LiveTradingRunner:
             if not is_valid_quality_stock_symbol(ticker):
                 return "HOLD", f"{base_reason} | Asset is a warrant/unit derivative, trade blocked"
 
-            # 🛑 1. Single Ticker Daily Loss Circuit Breaker
-            max_losses = int(self.strategy_params.get("max_losses_per_ticker_session", 2))
-            ticker_losses = self.get_ticker_session_losses(ticker)
-            if ticker_losses >= max_losses:
-                return "HOLD", f"{base_reason} | 🛑 [Circuit Breaker] Daily losses {ticker_losses} >= max {max_losses}, entry locked to prevent drawdown"
 
             # ⚠️ 2. Bull Trap Protection (veto high chasing)
             if direction == "LONG" and (

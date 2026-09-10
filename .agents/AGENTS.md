@@ -9,3 +9,7 @@ Whenever providing updates or summarizing completed work to the user, ALWAYS str
 ## Git Commit Style
 Always format git commit messages like:
 `feat(ai): fix grouping method and enhance prompt`
+
+## Strict Prohibitions & Operational Rules
+- **NEVER add or reintroduce `max_losses` / `max_losses_per_ticker_session` circuit breakers** or daily loss lockouts that block new trades (用户明确要求永久禁止此类阻碍交易的逻辑).
+- **Before modifying `live_runner.py`**, ALWAYS explicitly inform the user beforehand of what you plan to do and get confirmation.

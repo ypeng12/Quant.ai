@@ -16,7 +16,6 @@
     "min_expected_value_r": 0.15,
     "reentry_cooldown_seconds": 180,
     "max_concurrent_positions": 1,
-    "max_losses_per_ticker_session": 2,
     "buying_power_utilization_pct": 0.95,
     "starter_buying_power_pct": 0.85,
     "max_position_buying_power_pct": 0.95,
