@@ -179,11 +179,28 @@ def generate_multi_day_dashboard():
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LOB 订单流微观结构波浪研判终端 (Microstructure Wave Alpha Terminal)</title>
-    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
-    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+    <!-- Multi-Tier Local & CDN ECharts Loader (Offline & Cross-Network Guaranteed) -->
+    <script src="echarts.min.js"></script>
+    <script>
+        if (typeof echarts === 'undefined') {{
+            document.write('<script src="/charts/echarts.min.js"><\\/script>');
+        }}
+    </script>
+    <script>
+        if (typeof echarts === 'undefined') {{
+            document.write('<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"><\\/script>');
+        }}
+    </script>
+    <script>
+        if (typeof echarts === 'undefined') {{
+            document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"><\\/script>');
+        }}
+    </script>
+    <script>
+        if (typeof echarts === 'undefined') {{
+            document.write('<script src="https://unpkg.com/echarts@5.4.3/dist/echarts.min.js"><\\/script>');
+        }}
+    </script>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&family=Inter:wght@400;600;700;900&display=swap" media="print" onload="this.media='all'">
     <noscript>
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&family=Inter:wght@400;600;700;900&display=swap">
@@ -497,11 +514,8 @@ def generate_multi_day_dashboard():
             renderDashboard();
         }}
 
-        // Initialize ECharts instances
-        const kChart = echarts.init(document.getElementById('klineChart'));
-        const oChart = echarts.init(document.getElementById('ofiChart'));
-        const qChart = echarts.init(document.getElementById('queueChart'));
-        const aChart = echarts.init(document.getElementById('alphaChart'));
+        // Chart instances
+        let kChart = null, oChart = null, qChart = null, aChart = null;
 
         function renderDashboard() {{
             const dayData = store[currentTicker].by_day[currentDate];
@@ -802,15 +816,37 @@ def generate_multi_day_dashboard():
             }}
         }}
 
-        // Initial setup
-        populateDates(currentTicker);
-        renderDashboard();
+        function startTerminal() {{
+            if (typeof echarts === 'undefined') {{
+                console.warn('Waiting for ECharts library to load...');
+                setTimeout(startTerminal, 50);
+                return;
+            }}
+            try {{
+                if (!kChart) {{
+                    kChart = echarts.init(document.getElementById('klineChart'));
+                    oChart = echarts.init(document.getElementById('ofiChart'));
+                    qChart = echarts.init(document.getElementById('queueChart'));
+                    aChart = echarts.init(document.getElementById('alphaChart'));
+                }}
+                populateDates(currentTicker);
+                renderDashboard();
+            }} catch (err) {{
+                console.error('Fatal initialization error:', err);
+            }}
+        }}
+
+        if (document.readyState === 'loading') {{
+            document.addEventListener('DOMContentLoaded', startTerminal);
+        }} else {{
+            startTerminal();
+        }}
 
         window.addEventListener('resize', () => {{
-            kChart.resize();
-            oChart.resize();
-            qChart.resize();
-            aChart.resize();
+            if (kChart) kChart.resize();
+            if (oChart) oChart.resize();
+            if (qChart) qChart.resize();
+            if (aChart) aChart.resize();
         }});
     </script>
 </body>

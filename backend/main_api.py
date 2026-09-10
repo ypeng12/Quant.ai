@@ -2273,6 +2273,27 @@ async def get_trade_comparison_dashboard():
     fallback_html = """<!DOCTYPE html><html><body style="background:#0b0f19;color:#fff;font-family:sans-serif;padding:40px;text-align:center;"><h2>Quant.ai Live ML Dashboard Active</h2><p style="color:#94a3b8;">Real-time quantitative analytics streaming via WebSocket and API.</p></body></html>"""
     return HTMLResponse(content=fallback_html)
 
+@app.get("/charts/saggese_wave_visual_dashboard.html")
+async def get_saggese_wave_visual_dashboard():
+    dash_file = os.path.join(_charts_dir, "saggese_wave_visual_dashboard.html")
+    if os.path.exists(dash_file) and os.path.getsize(dash_file) > 0:
+        return FileResponse(dash_file, headers={"Cache-Control": "no-cache, no-store, must-revalidate", "Pragma": "no-cache", "Expires": "0"})
+    root_dash = os.path.join(_project_root, "saggese_wave_visual_dashboard.html")
+    if os.path.exists(root_dash) and os.path.getsize(root_dash) > 0:
+        return FileResponse(root_dash, headers={"Cache-Control": "no-cache, no-store, must-revalidate", "Pragma": "no-cache", "Expires": "0"})
+    fallback_html = """<!DOCTYPE html><html><body style="background:#080a11;color:#fff;font-family:sans-serif;padding:40px;text-align:center;"><h2>Saggese Wave Dashboard Loading...</h2></body></html>"""
+    return HTMLResponse(content=fallback_html)
+
+@app.get("/charts/echarts.min.js")
+async def get_echarts_js():
+    for candidate in [
+        os.path.join(_charts_dir, "echarts.min.js"),
+        os.path.join(_project_root, "echarts.min.js")
+    ]:
+        if os.path.exists(candidate) and os.path.getsize(candidate) > 0:
+            return FileResponse(candidate, media_type="application/javascript", headers={"Cache-Control": "public, max-age=86400"})
+    raise HTTPException(status_code=404, detail="echarts.min.js not found")
+
 @app.get("/api/kline/single")
 def get_single_kline(ticker: str = "TSLA", tf: str = "5m", date: Optional[str] = None):
     """
