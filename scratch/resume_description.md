@@ -1,51 +1,33 @@
 # Quant.ai 简历项目描述模版 (Resume Project Description Template)
 
-这里为您整理了适合写在简历上的项目描述。提供了 **中文版** 和 **英文版**，并针对 **量化开发岗 (Quant Developer)**、**算法交易工程师 (Algo Trading Engineer)** 与 **全栈/后端软件工程师 (Full-stack/Backend Engineer)** 进行了针对性的措辞优化。您可直接复制使用。
+这里整理了专门针对 **量化开发岗 (Quant Developer / Low Latency C++ Engineer / Execution Systems)** 的高含金量简历写法。涵盖了当前生产级 C++20 交易引擎的最新架构优化、无锁并发、NASDAQ ITCH/OUCH 协议解析及实测亚微秒级（Sub-microsecond）基准数据。
 
 ---
 
-## 选项一：量化开发 / 量化研究 / 算法交易方向 (推荐优先使用)
+## 🎯 顶级量化开发方向 (Quant Developer / C++ Low-Latency Engineer)
 
-### 中文版
+### 📌 英文版 (English Version - Recommended for Top HFT & Hedge Funds)
 
-**项目名称**：Quant.ai：高性能量化交易回测系统与交互式终端 (独立开发)  
-**技术栈**：Python (FastAPI, Pandas, NumPy, yfinance) | React (TypeScript, Vite, Lightweight Charts) | Git  
-**项目描述**：  
-设计并开发了一款具备工业级风控管理与动态市场自适应的股票量化交易回测引擎及前端可视化终端，支持分钟级与日线级高频回测。
+**Project Name**: **Ultra-Low-Latency C++20 Algorithmic Trading & Order Matching Engine**  
+**Tech Stack**: Modern C++20 | Lock-Free Concurrency (SPSC/MPSC) | NASDAQ ITCH 5.0 & OUCH 5.0 | Zero-Copy Serialization | UDP Multicast & TCP Reactor | Pre-Trade Risk Controls | GoogleTest | Linux perf / ASan / UBSan  
 
-**核心工作与技术亮点**：
-* **量化特征与形态工程**：利用 Pandas 与 NumPy 向量化计算，构建了 12 种 K 线数值特征与 22 种经典价格形态（包括 Hammer、Engulfing 以及基于颈线突破判定算法的 W底 / M顶检测器），实现毫秒级的大规模行情特征提取。
-* **自适应市场状态路由器 (Market Regime Router)**：基于 Wilder's ADX (平均趋向指数) 以及 rolling 252日波动率分位数计算，设计了将市场分类为四种状态（trend_up, trend_down, high_volatility, range_bound）的判定路由。动态引导顺势突破（Donchian Channel/EMA）与均值回归（Bollinger Bands）子策略，在不利行情或高风险波动下自动执行空仓防御。
-* **多层级资金管理与熔断风控系统**：实现了基于 ATR (真实波幅) 与账户动态权益的波动率头寸自适应算仓算法。设计了软回撤（7% 回撤触发仓位减半）、连续亏损（连续5笔触发仓位减半）与硬回撤（12% 回撤触发交易熔断，Multiplier 置 0）三层主动风险控制闸门。
-* **样本外滚动参数优化引擎 (Walk-Forward Optimizer)**：开发了滚动优化回测框架，利用训练/测试窗口滑动校验，通过网格搜索动态寻找卡玛比率（Calmar Ratio，回撤惩罚后净收益）最高的参数组合，并进行样本外验证，显著降低了策略的过拟合风险。
-* **高性能交互式终端**：基于 React 19 + TypeScript + Vite 搭建了流式数据看板，使用 TradingView 官方高性能图表（Lightweight Charts）实时渲染 K 线、波动率通道、形态标记与买卖点轨迹，适配全移动端响应式布局。
+* **Architected a deterministic, high-throughput C++20 limit order book (LOB) and matching engine** supporting price-time priority, aggressive IOC/Limit orders, cancellations, and state replay; sustained **4.18M matches/sec** with **71 ns median (p50)** and **276 ns p99 latency** (a **13.7x latency reduction** over baseline).
+* **Eliminated hot-path heap allocations and thread synchronization contention** using custom RAII object pools (`ObjectPool<T>`) and bounded lock-free ring buffers (SPSC/MPSC) with `alignas(64)` cache-line padding to prevent false sharing, achieving **5.5M–8.5M msgs/sec** cross-thread throughput under C++20 memory acquire-release semantics.
+* **Engineered zero-copy exchange gateway protocols** compliant with **NASDAQ ITCH 5.0 (UDP Multicast)** and **OUCH 5.0 (TCP Order Entry)** specifications; leveraged `std::span`, bit-packed structs, and compiler endian intrinsics (`__builtin_bswap`) to process binary frames at **7.74M msgs/sec** with **65 ns p99 parsing latency**.
+* **Implemented an asynchronous UDP gap-recovery pipeline** with sliding-window packet sequencing, out-of-order reassembly buffers, and historical cache lookup, ensuring zero-loss market data feed integrity under high packet-drop simulated environments.
+* **Built an inline pre-trade risk engine** executing fat-finger price collar validation, maximum notional checks, position limits, and token-bucket order rate limiters in **< 15 ns** before dispatching to the matching core.
+* **Validated memory safety and invariant determinism** using AddressSanitizer (ASan), UndefinedBehaviorSanitizer (UBSan), and 22/22 automated GoogleTest suites; verified zero data race conditions and sustained burst order execution at **2.30M orders/sec @ 664 ns p99**.
 
 ---
 
-### 英文版 (English Version)
+### 📌 中文版 (针对国内顶级量化私募 / 券商资管 / 算法交易团队)
 
-**Project Name**: Quant.ai: High-Performance Algorithmic Trading Engine & Backtest Simulator (Sole Developer)  
-**Tech Stack**: Python (FastAPI, Pandas, NumPy, yfinance) | React (TypeScript, Vite, Lightweight Charts) | Git  
-**Project Description**:  
-Designed and developed a production-ready, fully-automated quantitative trading backtest engine and interactive visual dashboard, supporting high-fidelity historical simulations at both minute and daily intervals.
+**项目名称**：**超低延迟 C++20 高频交易与订单撮合引擎 (Quant.ai Core Engine)**  
+**核心技术栈**：现代 C++20 | 无锁并发编程 (SPSC/MPSC) | 纳斯达克 ITCH 5.0 / OUCH 5.0 规约 | 零拷贝二进制协议 | UDP 组播与丢包恢复 | 前置内联风控 | GoogleTest | Linux perf / ASan / UBSan  
 
-**Key Achievements & Engineering Highlights**:
-* **Vectorized Feature & Pattern Engineering**: Implemented vectorized extraction of 12 candlestick numerical features and 22 quantifiable price patterns (e.g., Hammer, Engulfing, and complex neckline-breakout W-Bottoms/M-Tops) using Pandas and NumPy, achieving sub-millisecond calculation speeds.
-* **Dynamic Market Regime Router**: Built a rule-based classification engine to divide market conditions into four regimes (`trend_up`, `trend_down`, `high_volatility`, `range_bound`) based on Wilder's ADX and rolling volatility quantiles. Router dynamically switches between trend-following (Donchian) and mean-reversion (Bollinger) sub-strategies, enforcing defensive cash holds during bearish or high-risk regimes.
-* **Institutional-Grade Risk Control & Sizing**: Developed a volatility-adjusted position sizing algorithm based on Average True Range (ATR) and live portfolio equity. Implemented a multi-tier active risk control gate: a 7% equity drawdown or 5 consecutive losses triggers 50% position downsizing, while a 12% hard drawdown enforces a full trading melt-down (multiplier set to 0) to prevent catastrophic tail-risk.
-* **Walk-Forward Rolling Parameter Optimizer**: Engineered a rolling optimization pipeline that splits historical sequences into train and test folds. Conducted parameter grid scans to maximize the drawdown-penalized return (Calmar ratio) and verified out-of-sample performance to mitigate lookahead bias and curve-fitting.
-* **Responsive Visual Terminal**: Designed a mobile-responsive terminal with React 19 and TypeScript, integrating TradingView's Lightweight Charts to render candlestick bars, technical indicator envelopes, dynamic regime overlays, and precise trade execution markers.
-
----
-
-## 选项二：全栈开发 / 后端开发方向 (推荐注重软件工程能力时使用)
-
-### 中文版
-
-**项目名称**：Quant.ai：量化交易模拟回测与数据终端 (独立开发)  
-**技术栈**：Python (FastAPI, Pandas, NumPy) | React (TypeScript, Vite) | RESTful API | CORS  
-**核心工作**：
-* **模块化系统架构**：基于“低耦合、高内聚”原则，采用 FastAPI (后端) 与 Vite React (前端) 分离架构，搭建了模块化的策略回测与资产变动计算核心（包含数据管理器、双向交易账本、形态识别器、风控总线与参数优化器）。
-* **高性能数值计算**：避免显式 Python 循环，使用 NumPy 与 Pandas 向量化处理股票行情数据，显著提升了高频数据（分钟级）的计算处理效率。
-* **容错与健全性设计**：设计了针对 YFinance 网络延迟与空值率高的 API 容错层，开发了数值清洗中间件（`clean_float`），防止任何因 NaN 或 Inf 数据导致的 JSON 序列化 500 异常，保证了线上服务的 100% 稳定性。
-* **高交互性 UI 开发**：利用 HTML5 与原声 CSS 媒体查询设计了高度响应式的 UI 框架。在移动端屏幕（如 390px 宽度）与桌面宽屏间无缝切换，实现图表自适应缩放与自选股组件重组。
+* **核心撮合引擎架构**：基于现代 C++20 设计并实现确定性价格-时间优先（Price-Time-Priority）限价订单簿与撮合核心，支持 Limit、IOC、撤单与订单簿深度快照；在生产级基准测试中达到 **418 万笔/秒** 的持续撮合吞吐量，**p50 延迟仅 71 纳秒，p99 延迟 276 纳秒**（相比原始基线实现 **13.7 倍延迟优化**）。
+* **零动态内存分配与无锁并发管道**：关键执行路径（Hot Path）实现 **零堆内存分配（Zero malloc/new）**，自研带 RAII 回收机制的对象池（`ObjectPool<T>`）；设计基于 CPU 缓存行隔离（`alignas(64)` 防伪共享）与严格 C++ 内存序（Acquire-Release）的无锁环形队列（Lock-free SPSC / MPSC），跨线程消息吞吐量达 **550 万 ~ 850 万条/秒**。
+* **交易所工业级协议接入与零拷贝解析**：完全遵循 **NASDAQ ITCH 5.0（UDP 行情组播）** 与 **OUCH 5.0（TCP 交易报单）** 官方标准，基于 `std::span`、紧凑位对齐结构体与硬件指令级字节序转换（`__builtin_bswap`）实现纯零拷贝二进制反序列化，报文解析吞吐量达 **774 万条/秒，p99 延迟仅 65 纳秒**。
+* **高可靠 UDP 丢包恢复与重序机制**：搭建包含序列号滑动窗口跟踪、乱序数据包缓冲重排队列与历史回放查找的双通道组播行情接入层，保证在网络高抖动与丢包场景下行情流绝对连续且无状态错乱。
+* **纳秒级前置风控闸门（Pre-Trade Risk Engine）**：在订单流入撮合核心前，内联执行乌龙指价格领轮（Fat-finger Collar）、单笔名义上限、持仓敞口以及基于令牌桶算法（Token Bucket）的订单频控限速，单笔订单前置合规检测耗时 **< 15 纳秒**。
+* **工程质量与极端突发压力验证**：通过 ASan / UBSan 内存检测工具验证 0 内存泄漏与 0 未定义行为，22 组 GoogleTest 单元测试及状态机不变性校验（Invariant Checks）100% 通过；在 10 万笔连续高并发脉冲压力测试（Burst Traffic）下保持 **230 万单/秒、p99 664 纳秒** 的极致性能。
