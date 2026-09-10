@@ -1588,22 +1588,23 @@ class LiveTradingRunner:
 
     def is_eod_no_entry_window(self) -> bool:
         """
-        Stop taking new entries from 15:45 EST onwards (15 minutes before market close).
-        Prevents late-session entries that don't have enough time to resolve.
+        Allows full trading into the high-volatility final 15 minutes!
+        Only halts new entries at 15:57:00 EST (3 minutes before market close)
+        so the algorithm can maximize late-day MOC momentum profit opportunities.
         """
         est = pytz.timezone('America/New_York')
         now_ny = datetime.datetime.now(est)
         if now_ny.weekday() > 4:
             return False
         ny_time = now_ny.hour + now_ny.minute / 60.0 + now_ny.second / 3600.0
-        return 15.75 <= ny_time < 16.0  # 15:45 to 16:00 EST
+        return 15.95 <= ny_time < 16.0  # 15:57 to 16:00 EST (Only stops 3 mins before bell!)
 
     def check_and_trigger_eod_close(self, positions_list: list) -> bool:
         """
-        Robust 10-minute EOD Liquidation Window (15:50 to 16:00 EST).
-        Continuously ensures all pending orders are canceled and all positions are closed,
-        with multi-attempt retries until the account is confirmed 100% flat (0 shares).
-        GUARANTEES ZERO OVERNIGHT RISK!
+        Final 2.5-minute Close Execution (starts at 15:57:30 EST).
+        Allows trading almost the entire final 15 minutes to capture big profit opportunities,
+        while strictly guaranteeing that by 16:00:00 all positions are closed with zero overnight risk!
+        CRUCIAL: No strict < 16.0 cutoff, so even if clock hits 16:00:02, positions are STILL liquidated!
         """
         if not positions_list:
             return False
@@ -1613,21 +1614,24 @@ class LiveTradingRunner:
             return False
         ny_time = now_ny.hour + now_ny.minute / 60.0 + now_ny.second / 3600.0
         
-        # 10 full minutes: from 15:50:00 (15.8333) to 16:00:00 (16.0)
-        if not (15.8333 <= ny_time < 16.0):
+        # Starts 2.5 minutes before bell: 15:57:30 (15.9583)
+        if ny_time < 15.9583:
+            return False
+
+        # Only stop retrying if deep into after-hours (> 16:15)
+        if ny_time > 16.25:
             return False
 
         today = now_ny.date()
-        # Cooldown between successive close attempts: at least 15 seconds so orders have time to fill
         last_attempt = getattr(self, "_last_eod_close_attempt_time", 0.0)
-        if time.time() - last_attempt < 15.0:
+        if time.time() - last_attempt < 10.0:
             return True
 
         self._last_eod_close_attempt_time = time.time()
         seconds_left = max(0.0, (16.0 - ny_time) * 3600.0)
         self.add_log(
-            f"🌇 [美东尾盘 15:50-16:00 强制清场风控] 距收盘仅剩 {seconds_left/60:.1f} 分钟！"
-            f"执行【双重清场】：撤销全部挂单 + 市价全平 {len(positions_list)} 笔持仓，坚决 100% 现金过夜..."
+            f"🌇 [美东收盘倒计时终极清场 15:57:30] 距 16:00 仅剩 {seconds_left:.0f} 秒！"
+            f"充分享受尾盘波段机会后，执行终极全平撤单，确保 16:00 敲钟时零持仓现金过夜..."
         )
         try:
             if hasattr(self.adapter, "cancel_all_orders"):
@@ -1646,11 +1650,11 @@ class LiveTradingRunner:
                         ticker=sym,
                         shares=abs(shares),
                         price=pos.get("current_price", 0.0),
-                        reason="EOD Forced Flat (尾盘 15:50 强制清空头寸·绝不过夜)"
+                        reason="EOD Bell Liquidation (16:00 敲钟前终极全平·零持仓过夜)"
                     )
             return True
         except Exception as e:
-            self.add_log(f"⚠️ [尾盘强制清场异常，下个循环将自动重试]: {str(e)}")
+            self.add_log(f"⚠️ [尾盘清仓异常，自动重试中]: {str(e)}")
             return False
 
     async def _run_loop(self):
@@ -1661,6 +1665,7 @@ class LiveTradingRunner:
                 now_ny = datetime.datetime.now(est)
                 ny_time = now_ny.hour + now_ny.minute / 60.0 + now_ny.second / 3600.0
                 is_market_opening_window = (now_ny.weekday() <= 4) and (9.50 <= ny_time < 9.75)
+                is_market_closing_window = (now_ny.weekday() <= 4) and (15.75 <= ny_time <= 16.02)
 
                 if is_open:
                     self._afterhours_scan_logged = False
@@ -1668,14 +1673,19 @@ class LiveTradingRunner:
                         if not getattr(self, "_opening_blitz_logged", False):
                             self.add_log(f"⚡ [开盘黄金 Blitz 9:30-9:45 EST] 开启 3 秒极速高频秒开枪！监控池 [{len(self.active_tickers)} 支标的]...")
                             self._opening_blitz_logged = True
+                    elif is_market_closing_window:
+                        if not getattr(self, "_closing_blitz_logged", False):
+                            self.add_log(f"🔥 [尾盘黄金 15:45-16:00 冲刺] 开启 5 秒高频扫描捕捉大赚机会！(持续交易至 15:57，16:00 敲钟前零持仓)")
+                            self._closing_blitz_logged = True
                     else:
                         self._opening_blitz_logged = False
+                        self._closing_blitz_logged = False
                         if not getattr(self, "_intraday_scan_logged", False):
                             self.add_log(f"📡 [美股开盘交易中·全频段扫描发单] 正在研判监控池股票 [{len(self.active_tickers)} 支标的]...")
                             self._intraday_scan_logged = True
                 else:
                     self._opening_blitz_logged = False
-                    self._intraday_scan_logged = False
+                    self._closing_blitz_logged = False
                     if not getattr(self, "_afterhours_scan_logged", False):
                         self.add_log(f"🌙 [美股盘后研判/休市监控中] 24/7 持续实时计算多因子与形态（休市期间仅研判记录，暂停实盘买卖发单）...")
                         self._afterhours_scan_logged = True
@@ -1700,7 +1710,7 @@ class LiveTradingRunner:
                             self.unlock_exit(lock_ticker)
 
                     if self.check_and_trigger_eod_close(positions_list):
-                        await asyncio.sleep(30)
+                        await asyncio.sleep(10)
                         continue
                 except Exception as e:
                     self.add_log(f"⚡ [Alpaca 持仓 Rate-Limit 避让生效] {str(e)} -> 自动使用上一轮已知持仓无缝继续执行！")
@@ -1713,7 +1723,7 @@ class LiveTradingRunner:
                     user_watchlist = WATCHLIST.copy()
                 
                 self.active_tickers = self._refresh_intraday_universe(user_watchlist, active_pos_tickers)
-                scan_passes = 3 if is_market_opening_window else 1
+                scan_passes = 3 if (is_market_opening_window or is_market_closing_window) else 1
                 cycle_new_entries = 0
                 for pass_idx in range(scan_passes):
                     if not self.is_running:
@@ -1795,7 +1805,7 @@ class LiveTradingRunner:
 
                             if self.is_eod_no_entry_window() and action in ("BUY", "SHORT", "PYRAMID_BUY"):
                                 action = "HOLD"
-                                reason = f"[{ticker}] EOD No-Entry Window (15:45-16:00 EST). Blocked new entry order."
+                                reason = f"[{ticker}] EOD No-Entry Window (15:57-16:00 EST). Blocked new entry order."
 
                             if action in ("BUY", "SHORT") and self.is_entry_locked(ticker):
                                 action = "HOLD"
@@ -2114,7 +2124,7 @@ class LiveTradingRunner:
                         self._eod_hf_synced_today = True
                         threading.Thread(target=self.sync_to_huggingface, daemon=True).start()
 
-                loop_delay = 5 if is_market_opening_window else 30
+                loop_delay = 5 if (is_market_opening_window or is_market_closing_window) else 30
                 await asyncio.sleep(loop_delay)
 
             except asyncio.CancelledError:
