@@ -117,8 +117,6 @@ class LiveTradingRunner:
             "staged_entry_enabled": True,  # Citadel-style 2-tier staged entry (40% starter, 60% golden add)
             "tier1_size_ratio": 0.40,  # 40% starter sizing
             "tier2_size_ratio": 0.60,  # 60% golden add sizing
-            "max_single_position_notional": 15000.0,  # $15,000 hard position cap
-            "catastrophic_stop_pct": 0.025,
         }
 
     # Proxy properties for locks to maintain full backward compatibility
@@ -1022,13 +1020,6 @@ class LiveTradingRunner:
         minutes_held = max(0.0, (datetime.datetime.now() - entry_at).total_seconds() / 60.0)
         pnl_pct = ((close - avg_cost) / avg_cost) if side == "LONG" and avg_cost > 0 else ((avg_cost - close) / avg_cost if avg_cost > 0 else 0.0)
 
-        # 🛑 Catastrophic Stop Loss (individual risk protection against sudden crashes)
-        catastrophic_stop_pct = self._safe_float(self.strategy_params.get("catastrophic_stop_pct"), 0.025)
-        if pnl_pct <= -catastrophic_stop_pct:
-            return ("SELL" if side == "LONG" else "COVER"), (
-                f"{base_reason} | 🛑 [Catastrophic Stop Loss] Loss reached -{abs(pnl_pct)*100:.2f}% "
-                f"(threshold: -{catastrophic_stop_pct*100:.2f}%), cutting loss to preserve capital"
-            )
 
         # 🎯 0. Early Partial Take Profit
         partial_tp_pct = self._safe_float(self.strategy_params.get("partial_tp_trigger_pct"), 0.0065)
@@ -1093,14 +1084,17 @@ class LiveTradingRunner:
             elif side == "SHORT" and close <= vwap_line:
                 return "COVER", f"{base_reason} | 🎯 [Mean Reversion Target] Pulled back down to VWAP (${vwap_line:.2f}), locking profit (+{pnl_pct*100:.2f}%)"
 
-        # 2. Dedicated Per-Ticker ML Model Expectancy Decay Exit
+        # 2. Pure Alpha & Dedicated Per-Ticker ML Model Expectancy Decay Exit
         min_hold = self._safe_float(self.strategy_params.get("minimum_hold_minutes"), 4.0)
+        alpha_score = self._safe_float(opportunity.get("score"), 50.0)
         if minutes_held >= min_hold:
             ema_9_val = opportunity.get("_ema_9", close)
-            if side == "LONG" and (not is_pos_ev) and ev_r <= -0.15 and p_win_pct < 42.0 and close < ema_9_val:
-                return "SELL", f"{base_reason} | 📉 [ML Expectancy Decay] Win rate decayed to {p_win_pct:.1f}% / E[R]={ev_r:+.2f}R, breaking EMA9, exiting"
-            if side == "SHORT" and (not is_pos_ev) and ev_r <= -0.15 and p_win_pct < 42.0 and close > ema_9_val:
-                return "COVER", f"{base_reason} | 📉 [ML Expectancy Decay] Win rate decayed to {p_win_pct:.1f}% / E[R]={ev_r:+.2f}R, breaking EMA9, exiting"
+            if side == "LONG":
+                if (not is_pos_ev and ev_r <= -0.15 and p_win_pct < 42.0 and close < ema_9_val) or (alpha_score < 38.0 and p_win_pct < 40.0):
+                    return "SELL", f"{base_reason} | 📉 [Alpha Invalidation Exit] Alpha score ({alpha_score:.1f}) / Win rate ({p_win_pct:.1f}%) / E[R]={ev_r:+.2f}R decayed, exiting by pure Alpha logic"
+            if side == "SHORT":
+                if (not is_pos_ev and ev_r <= -0.15 and p_win_pct < 42.0 and close > ema_9_val) or (alpha_score < 38.0 and p_win_pct < 40.0):
+                    return "COVER", f"{base_reason} | 📉 [Alpha Invalidation Exit] Alpha score ({alpha_score:.1f}) / Win rate ({p_win_pct:.1f}%) / E[R]={ev_r:+.2f}R decayed, exiting by pure Alpha logic"
 
         # 3. Structural Trend Invalidation (Active for trend-following mode)
         if minutes_held >= min_hold and not self.strategy_params.get("inverted_mode", True):
@@ -2090,14 +2084,14 @@ class LiveTradingRunner:
                                     )
                                     add_shares = sizing["shares"]
                                     if add_shares <= 0:
-                                        self.add_log(f"⚠️ [{ticker}] Buying power insufficient or max position cap ($15k) reached for Tier 2 Golden Add.")
+                                        self.add_log(f"⚠️ [{ticker}] Buying power insufficient for Tier 2 Golden Add.")
                                     else:
                                         client_order_id = f"{ticker}-{int(datetime.datetime.now().timestamp())}-{uuid.uuid4().hex[:8]}-TIER2"
                                         self.lock_entry(ticker)
                                         self.add_log(
                                             f"🎯 [{ticker}] TIER2_ADD_BUY (60% Golden Add) triggered! Dipped from entry ${avg_cost:.2f} to ${close_price:.2f} — "
                                             f"Adding {add_shares} shs @ ${close_price:.2f}, Est Notional ${sizing['notional']:,.0f} "
-                                            f"(Total Combined Notional: ${(curr_notional + sizing['notional']):,.0f} <= $15,000 cap)"
+                                            f"(Total Combined Notional: ${(curr_notional + sizing['notional']):,.0f})"
                                         )
                                         order_res = self.adapter.submit_market_order(ticker, add_shares, "buy", client_order_id=client_order_id)
                                         if order_res.get("success"):
@@ -2133,14 +2127,14 @@ class LiveTradingRunner:
                                     )
                                     add_shares = sizing["shares"]
                                     if add_shares <= 0:
-                                        self.add_log(f"⚠️ [{ticker}] Buying power insufficient or max position cap ($15k) reached for Tier 2 Golden Add Short.")
+                                        self.add_log(f"⚠️ [{ticker}] Buying power insufficient for Tier 2 Golden Add Short.")
                                     else:
                                         client_order_id = f"{ticker}-{int(datetime.datetime.now().timestamp())}-{uuid.uuid4().hex[:8]}-TIER2"
                                         self.lock_entry(ticker)
                                         self.add_log(
                                             f"⚡ [{ticker}] TIER2_ADD_SHORT (60% Golden Add) triggered! Surged from entry ${avg_cost:.2f} to ${close_price:.2f} — "
                                             f"Adding short {add_shares} shs @ ${close_price:.2f}, Est Notional ${sizing['notional']:,.0f} "
-                                            f"(Total Combined Notional: ${(curr_notional + sizing['notional']):,.0f} <= $15,000 cap)"
+                                            f"(Total Combined Notional: ${(curr_notional + sizing['notional']):,.0f})"
                                         )
                                         order_res = self.adapter.submit_market_order(ticker, add_shares, "sell", client_order_id=client_order_id)
                                         if order_res.get("success"):
@@ -2280,7 +2274,7 @@ class LiveTradingRunner:
                             icon_str = "🛒" if cand_action == "BUY" else "📉"
                             self.add_log(
                                 f"{icon_str} 👑 [Leader Entry Triggered - Tier 1 40% Starter] [{cand_ticker}] {pos_dir} Score:{cand_score:.1f} (P_win: {cand_opp.get('win_rate_pct')}%, E[R]: {cand_opp.get('expected_value_r'):+.2f}R): "
-                                f"Order {shares} shs @ ${cand_close:.2f}, Est Notional ${sizing['notional']:,.0f} (Cap: $15,000, Buying Power ${sizing['available_buying_power']:,.2f}), Stop Loss {sizing['stop_pct']*100:.2f}%."
+                                f"Order {shares} shs @ ${cand_close:.2f}, Est Notional ${sizing['notional']:,.0f} (Buying Power ${sizing['available_buying_power']:,.2f}), Stop Loss {sizing['stop_pct']*100:.2f}%."
                             )
                             order_res = self.adapter.submit_market_order(cand_ticker, shares, side_str, client_order_id=client_order_id)
                             if order_res.get("success"):

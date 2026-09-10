@@ -44,9 +44,7 @@
     "allow_shorting": true,
     "staged_entry_enabled": true,
     "tier1_size_ratio": 0.40,
-    "tier2_size_ratio": 0.60,
-    "max_single_position_notional": 15000.0,
-    "catastrophic_stop_pct": 0.025
+    "tier2_size_ratio": 0.60
   },
-  "updated_at": "2026-09-10 15:35:00"
+  "updated_at": "2026-09-10 15:42:00"
 }
