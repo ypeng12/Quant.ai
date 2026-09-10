@@ -100,7 +100,7 @@ def fetch_intraday_data(client, ticker: str, days: int = 40) -> pd.DataFrame:
     df = df.between_time("09:30", "16:00").copy()
     return df
 
-def compute_advanced_features_and_targets(df: pd.DataFrame, ticker: str) -> pd.DataFrame:
+def compute_advanced_features_and_targets(df: pd.DataFrame, ticker: str, is_training: bool = False) -> pd.DataFrame:
     d = df.copy()
     d["ticker"] = ticker
     d["date"] = d.index.date
@@ -214,7 +214,11 @@ def compute_advanced_features_and_targets(df: pd.DataFrame, ticker: str) -> pd.D
     d["target_net_edge_pct"] = target_mfe - target_mae
     d["target_explosive_win"] = ((target_mfe >= 2.0) & (target_win == 1)).astype(int)
 
-    clean = d.dropna().iloc[:-window].copy()
+    if is_training:
+        clean = d.dropna().iloc[:-window].copy()
+    else:
+        # In inference/online prediction mode, preserve all bars up to the very latest minute!
+        clean = d.dropna(subset=ADVANCED_FEATURE_COLS).copy()
     return clean
 
 def train_ticker_advanced_suite(ticker: str, df: pd.DataFrame) -> dict:
@@ -437,7 +441,7 @@ def run_advanced_training_pipeline(tickers=None):
             print(f"⚠️ [{sym}] 未获取到数据，跳过。")
             continue
         print(f"   └─ 成功拉取 {len(df)} 根 K 线，开始构建 22 维高阶微观结构特征工程与前向三屏障收益标签...")
-        df_feat = compute_advanced_features_and_targets(df, sym)
+        df_feat = compute_advanced_features_and_targets(df, sym, is_training=True)
         # Save parquet with index preserved
         feat_path = os.path.join(DATASETS_DIR, f"advanced_dataset_{sym}.parquet")
         df_feat.to_parquet(feat_path)

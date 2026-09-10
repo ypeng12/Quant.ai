@@ -10,6 +10,7 @@ interface TrajectoryData {
   success: boolean;
   ticker: string;
   date: string;
+  available_dates?: string[];
   summary: {
     current_price: number;
     open_price: number;
@@ -45,6 +46,8 @@ interface TrajectoryData {
 
 export const IntradayKlineChart: React.FC<IntradayKlineChartProps> = ({ ticker: propTicker }) => {
   const [selectedTicker, setSelectedTicker] = useState<string>(propTicker || 'SNDK');
+  const [selectedDate, setSelectedDate] = useState<string>('');
+  const [availableDates, setAvailableDates] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<'robinhood' | 'kline'>('robinhood');
   const [data, setData] = useState<TrajectoryData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -62,12 +65,19 @@ export const IntradayKlineChart: React.FC<IntradayKlineChartProps> = ({ ticker: 
     let isMounted = true;
     setLoading(true);
 
-    fetch(`${API_BASE}/api/ml/prediction-trajectory?ticker=${selectedTicker}`)
+    const dateParam = selectedDate ? `&date=${selectedDate}` : '';
+    fetch(`${API_BASE}/api/ml/prediction-trajectory?ticker=${selectedTicker}${dateParam}`)
       .then((res) => res.json())
       .then((resData) => {
         if (!isMounted) return;
         if (resData.success && resData.times && resData.times.length > 0) {
           setData(resData);
+          if (resData.available_dates && resData.available_dates.length > 0) {
+            setAvailableDates(resData.available_dates);
+            if (!selectedDate) {
+              setSelectedDate(resData.date);
+            }
+          }
         } else {
           setData(generateMockTrajectory(selectedTicker));
         }
@@ -83,7 +93,7 @@ export const IntradayKlineChart: React.FC<IntradayKlineChartProps> = ({ ticker: 
     return () => {
       isMounted = false;
     };
-  }, [selectedTicker]);
+  }, [selectedTicker, selectedDate]);
 
   const generateMockTrajectory = (sym: string): TrajectoryData => {
     const times: string[] = [];
@@ -312,33 +322,70 @@ export const IntradayKlineChart: React.FC<IntradayKlineChartProps> = ({ ticker: 
           </div>
         </div>
 
-        {/* Ticker Switcher Buttons */}
-        <div style={{ display: 'flex', gap: '8px', background: 'rgba(255, 255, 255, 0.04)', padding: '6px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.06)' }}>
-          {[
-            { sym: 'SNDK', name: '💎 SNDK 龙头' },
-            { sym: 'TSLA', name: '⚡ TSLA 动量' },
-            { sym: 'NVDA', name: '🤖 NVDA 标杆' },
-            { sym: 'MSTR', name: '₿ MSTR 强波动' }
-          ].map(item => (
-            <button
-              key={item.sym}
-              onClick={() => setSelectedTicker(item.sym)}
+        {/* Right Controls: Date Selector + Ticker Switcher */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+          {/* Historical Date Dropdown Selector */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            background: 'rgba(255, 255, 255, 0.04)',
+            padding: '5px 12px',
+            borderRadius: '10px',
+            border: '1px solid rgba(255,255,255,0.08)'
+          }}>
+            <span style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 700 }}>📅 复盘日期:</span>
+            <select
+              value={selectedDate || data.date}
+              onChange={(e) => setSelectedDate(e.target.value)}
               style={{
-                padding: '8px 14px',
-                borderRadius: '8px',
-                border: 'none',
-                cursor: 'pointer',
+                background: '#0d131f',
+                color: '#38bdf8',
+                border: '1px solid rgba(56, 189, 248, 0.3)',
+                borderRadius: '6px',
+                padding: '6px 12px',
+                fontSize: '12px',
                 fontWeight: 800,
-                fontSize: '13px',
-                transition: 'all 0.2s',
-                background: selectedTicker === item.sym ? 'linear-gradient(135deg, #0284c7, #0369a1)' : 'transparent',
-                color: selectedTicker === item.sym ? '#ffffff' : '#94a3b8',
-                boxShadow: selectedTicker === item.sym ? '0 4px 14px rgba(2, 132, 199, 0.4)' : 'none'
+                cursor: 'pointer',
+                outline: 'none'
               }}
             >
-              {item.name}
-            </button>
-          ))}
+              {(availableDates.length > 0 ? availableDates : [data.date]).map((d, i) => (
+                <option key={d} value={d} style={{ background: '#0d131f', color: '#ffffff' }}>
+                  {i === 0 ? `🔥 今日 (${d} 实时)` : i === 1 ? `⏪ 昨天 (${d})` : `📅 历史 (${d})`}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Ticker Switcher Buttons */}
+          <div style={{ display: 'flex', gap: '6px', background: 'rgba(255, 255, 255, 0.04)', padding: '5px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.06)' }}>
+            {[
+              { sym: 'SNDK', name: '💎 SNDK 龙头' },
+              { sym: 'TSLA', name: '⚡ TSLA 动量' },
+              { sym: 'NVDA', name: '🤖 NVDA 标杆' },
+              { sym: 'MSTR', name: '₿ MSTR 强波动' }
+            ].map(item => (
+              <button
+                key={item.sym}
+                onClick={() => setSelectedTicker(item.sym)}
+                style={{
+                  padding: '7px 12px',
+                  borderRadius: '7px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontWeight: 800,
+                  fontSize: '12px',
+                  transition: 'all 0.2s',
+                  background: selectedTicker === item.sym ? 'linear-gradient(135deg, #0284c7, #0369a1)' : 'transparent',
+                  color: selectedTicker === item.sym ? '#ffffff' : '#94a3b8',
+                  boxShadow: selectedTicker === item.sym ? '0 4px 14px rgba(2, 132, 199, 0.4)' : 'none'
+                }}
+              >
+                {item.name}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 

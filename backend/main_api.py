@@ -2334,7 +2334,7 @@ def get_ml_prediction_trajectory(ticker: str = "SNDK", date: Optional[str] = Non
         tk = str(ticker).upper().strip()
         client = StockHistoricalDataClient(ALPACA_API_KEY, ALPACA_SECRET_KEY)
         end_dt = datetime.datetime.now(pytz.timezone('America/New_York'))
-        start_dt = end_dt - datetime.timedelta(days=4)
+        start_dt = end_dt - datetime.timedelta(days=10)
 
         req = StockBarsRequest(symbol_or_symbols=[tk], timeframe=TimeFrame.Minute, start=start_dt, end=end_dt, feed=DataFeed.IEX)
         bars = client.get_stock_bars(req)
@@ -2356,14 +2356,14 @@ def get_ml_prediction_trajectory(ticker: str = "SNDK", date: Optional[str] = Non
         df = df.between_time('09:30', '16:00').copy()
 
         bundle = get_advanced_ml_bundle(tk)
-        df_feat = compute_advanced_features_and_targets(df, tk)
+        df_feat = compute_advanced_features_and_targets(df, tk, is_training=False)
 
-        target_date = date or end_dt.strftime('%Y-%m-%d')
+        unique_dates = sorted(list(set(df_feat.index.strftime('%Y-%m-%d').tolist())), reverse=True)
+        target_date = date if (date and date in unique_dates) else (unique_dates[0] if unique_dates else end_dt.strftime('%Y-%m-%d'))
         today_df = df_feat[df_feat.index.strftime('%Y-%m-%d') == target_date]
-        if today_df.empty:
-            latest_day = df_feat.index[-1].strftime('%Y-%m-%d')
-            today_df = df_feat[df_feat.index.strftime('%Y-%m-%d') == latest_day]
-            target_date = latest_day
+        if today_df.empty and unique_dates:
+            target_date = unique_dates[0]
+            today_df = df_feat[df_feat.index.strftime('%Y-%m-%d') == target_date]
 
         X_today = today_df[ADVANCED_FEATURE_COLS]
         p_win_raw = bundle['classifier'].predict_proba(X_today)[:, 1] if bundle else np.full(len(today_df), 0.50)
@@ -2542,7 +2542,8 @@ def get_ml_prediction_trajectory(ticker: str = "SNDK", date: Optional[str] = Non
                 "highs": future_high,
                 "lows": future_low
             },
-            "trades": trades
+            "trades": trades,
+            "available_dates": unique_dates
         }
     except Exception as e:
         return {"success": False, "error": str(e)}

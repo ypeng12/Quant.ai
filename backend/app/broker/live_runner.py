@@ -70,8 +70,6 @@ class LiveTradingRunner:
         self.ticker_scores = {}
         self._loaded_strategy_version = None
         self.load_runner_config()
-        if self._loaded_strategy_version != "aggressive_intraday_v2":
-            self.strategy_params.update(self._aggressive_intraday_defaults())
         self.add_log("📡 [系统初始化完成] Quant AI 日内概率风控与研判引擎已就绪...")
         self.start()
 
@@ -82,7 +80,7 @@ class LiveTradingRunner:
             "strategy_mode": "aggressive_intraday",
             "paper_only_aggressive": True,
             "allow_aggressive_live": False,
-            "allow_shorting": False,  # Strict Long-Only mode: Disable counter-trend shorting on momentum leaders
+            "allow_shorting": True,  # Enable high-expectancy counter-trend & bull-trap fade shorting
             "dynamic_screener_enabled": False,  # Strict focus on focus watchlist (SNDK, TSLA, MSTR, NVDA)
             "screener_refresh_seconds": 120,
             "screener_top_actives": 6,
