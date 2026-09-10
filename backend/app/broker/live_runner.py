@@ -439,7 +439,8 @@ class LiveTradingRunner:
         except Exception:
             pass
 
-        official_pnl = round(alpaca_official_today_pnl, 2) if alpaca_official_today_pnl is not None else round(realized_pnl + unrealized_pnl, 2)
+        total_strategy_pnl = round(realized_pnl + unrealized_pnl, 2)
+        official_pnl = round(alpaca_official_today_pnl, 2) if alpaca_official_today_pnl is not None else total_strategy_pnl
         return {
             "date": today,
             "total_trades": len(today_trades),
@@ -448,9 +449,10 @@ class LiveTradingRunner:
             "losses": len(losses),
             "win_rate": round(len(wins) / len(closed_trades) * 100, 1) if closed_trades else 0.0,
             "realized_pnl": round(realized_pnl, 2),
-            "alpaca_official_pnl": official_pnl,
             "unrealized_pnl": round(unrealized_pnl, 2),
-            "total_pnl": official_pnl,
+            "total_pnl": total_strategy_pnl,
+            "alpaca_official_pnl": official_pnl,
+            "overnight_gap_pnl": round(official_pnl - total_strategy_pnl, 2),
             "best_trade": round(max((t.get("pnl", 0.0) for t in closed_trades), default=0.0), 2),
             "worst_trade": round(min((t.get("pnl", 0.0) for t in closed_trades), default=0.0), 2)
         }

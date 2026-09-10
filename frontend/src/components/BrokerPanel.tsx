@@ -498,7 +498,9 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
         const winRatePct = (todaySummary?.win_rate !== undefined) ? todaySummary.win_rate : calcWinRate;
         const realizedPnl = todaySummary?.realized_pnl ?? closedToday.reduce((sum, t) => sum + (t.pnl || 0), 0);
         const unrealizedPnl = todaySummary?.unrealized_pnl ?? positions.reduce((sum, p) => sum + (p.unrealized_pnl || 0), 0);
-        const netPnlVal = todaySummary?.alpaca_official_pnl ?? (realizedPnl + unrealizedPnl);
+        // Mathematical Law: Net PnL = Realized PnL + Unrealized PnL exactly
+        const netPnlVal = Number((realizedPnl + unrealizedPnl).toFixed(2));
+        const alpacaAccountDelta = todaySummary?.alpaca_official_pnl;
 
         const bestTradeNum = (todaySummary?.best_trade !== undefined && todaySummary.best_trade !== 0)
           ? todaySummary.best_trade
@@ -515,7 +517,7 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
                 <span className="stat-label">Today Net PnL</span>
                 <span style={{ fontSize: '0.68rem', padding: '1px 5px', borderRadius: '3px', background: netPnlVal >= 0 ? 'rgba(0,200,5,0.15)' : 'rgba(255,59,48,0.15)', color: netPnlVal >= 0 ? '#00c805' : '#ff3b30', fontWeight: 700 }}>
-                  {activePositionsCount > 0 ? '平仓 + 浮动持仓' : '已结算'}
+                  平仓 + 浮动持仓 (100% 守恒)
                 </span>
               </div>
               <span className="stat-value" style={{ fontSize: '1.4rem', fontWeight: 900, color: netPnlVal >= 0 ? 'var(--color-green)' : 'var(--color-red)' }}>
@@ -524,6 +526,11 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
               <div style={{ fontSize: '0.72rem', color: '#888', marginTop: '4px' }}>
                 已平仓: <span style={{ color: realizedPnl >= 0 ? '#00c805' : '#ff3b30', fontWeight: 700 }}>{formatMoney(realizedPnl)}</span> | 持仓浮动: <span style={{ color: unrealizedPnl >= 0 ? '#00c805' : '#ff3b30', fontWeight: 700 }}>{formatMoney(unrealizedPnl)}</span>
               </div>
+              {alpacaAccountDelta !== undefined && Math.abs(alpacaAccountDelta - netPnlVal) > 0.05 && (
+                <div style={{ fontSize: '0.68rem', color: '#64748b', marginTop: '4px', borderTop: '1px dashed rgba(255,255,255,0.08)', paddingTop: '3px' }}>
+                  Alpaca 隔夜总资产净变动: <strong style={{ color: alpacaAccountDelta >= 0 ? '#00c805' : '#ff3b30' }}>{formatMoney(alpacaAccountDelta)}</strong> (含昨夜留仓跳空)
+                </div>
+              )}
             </div>
 
             {/* 2. Win Rate */}
