@@ -104,12 +104,13 @@ class LiveTradingRunner:
             "max_scan_symbols": 14,
             "entry_score_min": 78.0,
             "full_size_score": 85.0,
-            "min_expected_value_r": 0.20,
-            "min_p_win_pct": 55.0,  # Minimum institutional probability gate
-            "min_entry_rvol": 1.20,  # Minimum relative volume for institutional liquidity
-            "rl_gate_enabled": True,  # Reinforcement learning Q-policy trade gating
-            "midday_chop_filter_enabled": True,  # 11:30-14:00 EST low-volume chop shield
+            "min_expected_value_r": 0.0,
+            "min_p_win_pct": 50.0,
+            "min_entry_rvol": 0.0,
+            "rl_gate_enabled": False,
+            "midday_chop_filter_enabled": False,
             "reentry_cooldown_seconds": 180,
+
             "max_concurrent_positions": 2,
             "buying_power_utilization_pct": 0.95,
             "starter_buying_power_pct": 0.60,
@@ -971,21 +972,7 @@ class LiveTradingRunner:
             if not is_valid_quality_stock_symbol(ticker):
                 return "HOLD", f"{base_reason} | Asset is a warrant/unit derivative, trade blocked"
 
-            # 🛡️ 1. Midday Chop Shield (11:30 - 14:00 EST)
-            # In low-volume midday lunch hours, false breakouts and whipsaws dominate.
-            # Block NEW entries during this window to preserve capital and morning profits.
-            # Existing positions continue to be actively managed and trailing-stopped!
-            if self.strategy_params.get("midday_chop_filter_enabled", True):
-                try:
-                    est = pytz.timezone('America/New_York')
-                    now_ny = datetime.datetime.now(est)
-                    ny_time = now_ny.hour + now_ny.minute / 60.0
-                    if 11.50 <= ny_time < 14.00:
-                        return "HOLD", f"{base_reason} | 🛡️ [Midday Chop Shield] 11:30-14:00 EST low-volume chop zone active; new entries filtered, awaiting power hour"
-                except Exception:
-                    pass
-
-            # ⚠️ 2. Bull Trap Protection (veto high chasing)
+            # ⚠️ Bull Trap Protection (veto high chasing)
             if direction == "LONG" and (
                 opportunity.get("upper_wick_ratio", 0.0) >= 0.32
                 or (opportunity.get("is_trap", False) and "Bull Trap" in opportunity.get("trap_reason", ""))
@@ -993,7 +980,7 @@ class LiveTradingRunner:
             ):
                 return "HOLD", f"{base_reason} | ⚠️ [Bull Trap Intercept] Upper wick rejection or heavy ask depth, blocking long chase"
 
-            # ⚠️ 3. Bear Trap Protection (veto shorting into strong bids)
+            # ⚠️ Bear Trap Protection (veto shorting into strong bids)
             if direction == "SHORT" and (
                 opportunity.get("lower_wick_ratio", 0.0) >= 0.32
                 or (opportunity.get("is_trap", False) and "Bear Trap" in opportunity.get("trap_reason", ""))
@@ -1001,50 +988,11 @@ class LiveTradingRunner:
             ):
                 return "HOLD", f"{base_reason} | ⚠️ [Bear Trap Intercept] Lower wick rejection or strong bid absorption, blocking short chase"
 
-            # HRT-Grade ML Quantitative Alpha Model Entry Evaluation:
+            # Alpha Model Entry Direction Evaluation:
             if direction == "NEUTRAL":
                 return "HOLD", f"{base_reason} | NEUTRAL signal, waiting"
 
-            # 🔍 4. Institutional Edge Threshold Gating:
-            # Coin-flip 50% entries and low-volume moves are mathematically unprofitable.
-            # Require minimum statistical edge: P_win >= min_p_win, E[R] >= min_expected_value_r, RVOL >= min_entry_rvol
-            min_p_win = self._safe_float(self.strategy_params.get("min_p_win_pct", 55.0), 55.0)
-            min_ev_r = self._safe_float(self.strategy_params.get("min_expected_value_r", 0.20), 0.20)
-            min_rvol = self._safe_float(self.strategy_params.get("min_entry_rvol", 1.20), 1.20)
-
-            if p_win_pct < min_p_win or ev_r < min_ev_r:
-                return "HOLD", f"{base_reason} | Sub-threshold statistical edge (P_win={p_win_pct:.1f}% < {min_p_win:.1f}%, E[R]={ev_r:+.2f}R < {min_ev_r:+.2f}R)"
-
-            if rvol < min_rvol:
-                return "HOLD", f"{base_reason} | Insufficient institutional volume (RVOL={rvol:.2f}x < {min_rvol:.2f}x)"
-
-            # 📊 5. Order Flow Imbalance (OFI) Concordance:
-            # Never buy when market orders are aggressively dumping into bids; never short into massive ask lifting.
-            if direction == "LONG" and ofi < -0.30:
-                return "HOLD", f"{base_reason} | ⚠️ [OFI Divergence] Order flow imbalance is negative ({ofi:+.2f}), opposing long entry"
-            elif direction == "SHORT" and ofi > 0.30:
-                return "HOLD", f"{base_reason} | ⚠️ [OFI Divergence] Order flow imbalance is positive ({ofi:+.2f}), opposing short entry"
-
-            # 🧠 6. Reinforcement Learning Q-Policy Trade Gating:
-            if self.strategy_params.get("rl_gate_enabled", True) and hasattr(self, "rl_agent") and self.rl_agent is not None:
-                try:
-                    p_win_norm = (p_win_pct - 50.0) / 25.0
-                    ev_norm = ev_r
-                    vol_factor = rvol
-                    mom_factor = mom_3
-                    atr_factor = atr_pct
-                    cur_pos = 0.0
-                    rl_state = np.array([p_win_norm, ev_norm, vol_factor, mom_factor, atr_factor, cur_pos])
-                    disc_s = self.rl_agent._discretize_state(rl_state)
-                    # Veto only if the Q-table explicitly learned that CASH is optimal for this state
-                    if disc_s in self.rl_agent.q_table:
-                        q_vals = self.rl_agent.q_table[disc_s]
-                        if np.argmax(q_vals) == 0 and q_vals[0] > q_vals[1] and q_vals[0] > q_vals[2]:
-                            return "HOLD", f"{base_reason} | 🧠 [RL Agent Veto] Q-policy predicts CASH is optimal (Action=CASH, Q_cash={q_vals[0]:.2f} > Q_long={q_vals[1]:.2f})"
-                except Exception:
-                    pass
-
-            # 🎯 7. Cooldown & Max Position Guards
+            # 🎯 Cooldown & Max Position Guards
             last_exit = self.last_exit_times.get(ticker)
             cooldown = self._safe_float(self.strategy_params.get("reentry_cooldown_seconds"), 180.0)
             if last_exit and (time.time() - last_exit) < cooldown:
@@ -1059,8 +1007,9 @@ class LiveTradingRunner:
                 if not self._can_open_short(ticker):
                     return "HOLD", f"{base_reason} | Alpaca asset not shortable or requires locate"
 
+            # Pure Quantitative Alpha Decision: Zero hardcoded prohibitions, 100% driven by Alpha model
             action_type = "BUY" if direction == "LONG" else "SHORT"
-            return action_type, f"{base_reason} | 🚀 High-Expectancy Institutional Alpha (P_win={p_win_pct:.1f}%, E[R]={ev_r:+.2f}R, RVOL={rvol:.2f}x) Submitting Order"
+            return action_type, f"{base_reason} | 🚀 Quantitative Alpha Model (P_win={p_win_pct:.1f}%, E[R]={ev_r:+.2f}R) Submitting Order"
 
         side = "LONG" if current_shares > 0 else "SHORT"
 
