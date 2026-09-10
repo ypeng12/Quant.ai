@@ -722,7 +722,7 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
           <div style={{ display: 'flex', gap: '8px', marginBottom: '1rem', borderBottom: '1px solid var(--color-border)', paddingBottom: '10px' }}>
             {([
               { id: 'analysis', label: '🧠 AI Live Analysis & Alerts' },
-              { id: 'wave', label: '🌊 Saggese 波浪每天大屏' },
+              { id: 'wave', label: '🌊 LOB 微观结构波浪终端' },
               { id: 'portfolio', label: '📈 Portfolio History' },
               { id: 'actions', label: '⚡ Execution Activity' },
               { id: 'history', label: '📅 Trade History' },

@@ -177,7 +177,7 @@ def generate_multi_day_dashboard():
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Saggese 微观结构波浪 Alpha 模型 (15-30m Wave) 交互式可视化看板</title>
+    <title>LOB 订单流微观结构波浪研判终端 (Microstructure Wave Alpha Terminal)</title>
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
     <style>
@@ -300,8 +300,8 @@ def generate_multi_day_dashboard():
 <body>
     <div class="header">
         <div>
-            <h1>🌊 GP Saggese 微观结构波浪 Alpha 模型 (15~30m Wave)</h1>
-            <p>基于 Teza Capital ($1.6B AUM, Sharpe > 5.0) 微观结构因果定价体系与日内波浪预测复盘</p>
+            <h1>🌊 LOB 订单流微观结构波浪研判终端 (Wave Alpha Terminal)</h1>
+            <p>基于 Teza Capital ($1.6B AUM, Sharpe > 5.0) 机构微观因果定价体系 (15~30m Wave) · 订单流不平衡 (OFI) & 微观价格漂移</p>
         </div>
         <div class="badge-bar">
             <span class="badge badge-green">● 样本外 Purged CV 61.97%</span>
@@ -317,10 +317,10 @@ def generate_multi_day_dashboard():
         </div>
 
         <div class="control-group">
-            <span class="control-label">交易日期 (每天复盘):</span>
-            <button id="prevDayBtn" class="nav-btn">◀ 前一天</button>
+            <span class="control-label">交易日历史复盘 (Trading Day):</span>
+            <button id="prevDayBtn" class="nav-btn">◀ 前一交易日</button>
             <select id="dateSelector" class="date-select"></select>
-            <button id="nextDayBtn" class="nav-btn">后一天 ▶</button>
+            <button id="nextDayBtn" class="nav-btn">后一交易日 ▶</button>
         </div>
     </div>
 

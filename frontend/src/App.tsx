@@ -688,7 +688,7 @@ function App() {
               transition: 'all 0.2s ease'
             }}
           >
-            🌊 Saggese 波浪每天大屏
+            🌊 LOB 微观结构波浪终端
           </button>
 
           <button
