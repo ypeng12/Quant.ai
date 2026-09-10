@@ -918,21 +918,7 @@ class LiveTradingRunner:
             if not is_valid_quality_stock_symbol(ticker):
                 return "HOLD", f"{base_reason} | Asset is a warrant/unit derivative, trade blocked"
 
-            # 🛑 1. Account-Level Daily Drawdown Circuit Breaker
-            summary = self.get_today_summary()
-            today_realized_loss = float(summary.get("realized_pnl", 0.0))
-            max_daily_drawdown = self._safe_float(self.strategy_params.get("max_daily_loss_dollars"), -500.0)
-            if max_daily_drawdown > 0:
-                max_daily_drawdown = -max_daily_drawdown
-            if today_realized_loss <= max_daily_drawdown:
-                return "HOLD", f"{base_reason} | 🛑 [Daily Loss Circuit Breaker] Realized loss ${today_realized_loss:.2f} <= max allowed ${max_daily_drawdown:.2f}, trading halted for today"
-
-            today_losses = int(summary.get("losses", 0))
-            today_wins = int(summary.get("wins", 0))
-            if today_losses >= 4 and today_wins == 0:
-                return "HOLD", f"{base_reason} | 🛑 [Consecutive Loss Halt] 0 wins / {today_losses} losses today, market conditions incompatible with current regime, entries halted"
-
-            # 🛑 2. Single Ticker Daily Loss Circuit Breaker
+            # 🛑 1. Single Ticker Daily Loss Circuit Breaker
             max_losses = int(self.strategy_params.get("max_losses_per_ticker_session", 2))
             ticker_losses = self.get_ticker_session_losses(ticker)
             if ticker_losses >= max_losses:
@@ -1000,16 +986,6 @@ class LiveTradingRunner:
         entry_at = self.entry_times.setdefault(ticker, datetime.datetime.now())
         minutes_held = max(0.0, (datetime.datetime.now() - entry_at).total_seconds() / 60.0)
         pnl_pct = ((close - avg_cost) / avg_cost) if side == "LONG" and avg_cost > 0 else ((avg_cost - close) / avg_cost if avg_cost > 0 else 0.0)
-
-        # 🛑 0. Immediate Hard Stop-Loss Guard (Immediate emergency exit on ATR/stop breach, no time lock)
-        stop_loss_pct = self._safe_float(opportunity.get("_stop_pct"), 0.010)
-        stop_loss_pct = max(0.006, min(stop_loss_pct, 0.012))
-        if pnl_pct <= -stop_loss_pct:
-            action_type = "SELL" if side == "LONG" else "COVER"
-            return action_type, (
-                f"{base_reason} | 🛑 [Immediate Hard Stop] Current loss {pnl_pct*100:.2f}% breached stop line "
-                f"(-{stop_loss_pct*100:.2f}%), cutting loss immediately to prevent drawdown"
-            )
 
         # 🎯 0. Early Partial Take Profit
         partial_tp_pct = self._safe_float(self.strategy_params.get("partial_tp_trigger_pct"), 0.0065)
