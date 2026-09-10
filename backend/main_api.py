@@ -2284,6 +2284,44 @@ async def get_saggese_wave_visual_dashboard():
     fallback_html = """<!DOCTYPE html><html><body style="background:#080a11;color:#fff;font-family:sans-serif;padding:40px;text-align:center;"><h2>Saggese Wave Dashboard Loading...</h2></body></html>"""
     return HTMLResponse(content=fallback_html)
 
+_wave_history_cache = None
+
+@app.get("/api/wave/day_data")
+async def get_wave_day_data(ticker: str = "TSLA", date: str = ""):
+    """
+    On-demand lazy-loading endpoint for historical wave data.
+    Returns full intraday features, K-lines, and signals for a specific date in < 1ms.
+    """
+    global _wave_history_cache
+    tk = ticker.upper().strip()
+    dt = date.strip()
+    
+    if _wave_history_cache is None:
+        cache_paths = [
+            os.path.join(_charts_dir, "wave_history_cache.json"),
+            os.path.join(_project_root, "wave_history_cache.json"),
+            os.path.join(_backend_dir, "data", "charts", "wave_history_cache.json")
+        ]
+        for p in cache_paths:
+            if os.path.exists(p) and os.path.getsize(p) > 0:
+                try:
+                    with open(p, "r", encoding="utf-8") as f:
+                        _wave_history_cache = json.load(f)
+                    break
+                except Exception as e:
+                    print(f"Error loading wave cache from {p}: {e}")
+                    
+    if _wave_history_cache and tk in _wave_history_cache:
+        by_day = _wave_history_cache[tk].get("by_day", {})
+        if dt in by_day:
+            return {"success": True, "ticker": tk, "date": dt, "data": by_day[dt]}
+        if not dt and _wave_history_cache[tk].get("days"):
+            latest_dt = _wave_history_cache[tk]["days"][-1]
+            return {"success": True, "ticker": tk, "date": latest_dt, "data": by_day.get(latest_dt)}
+            
+    return {"success": False, "error": f"No wave data found for {tk} on {dt}"}
+
+
 @app.get("/charts/echarts.min.js")
 async def get_echarts_js():
     for candidate in [

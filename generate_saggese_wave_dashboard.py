@@ -56,9 +56,9 @@ def generate_multi_day_dashboard():
         
         df_5m['day'] = df_5m.index.strftime('%Y-%m-%d')
         all_days = sorted(df_5m['day'].unique().tolist())
-        # Pick ONLY the single latest trading day (当天 / 最新实盘交易日) for ultra-fast instant execution
-        days = all_days[-1:]
-        df_recent = df_5m[df_5m['day'].isin(days)].copy()
+        # Hybrid Scheme C: Compute all historical days for full API cache, inline most recent 10 days for instant startup
+        days = all_days
+        df_recent = df_5m.copy()
         
         # Extract 7 microstructure features vectorially
         df_feat = wave_engine.build_microstructure_features(df_recent)
@@ -69,7 +69,7 @@ def generate_multi_day_dashboard():
         df_recent['ema_9'] = df_recent['Close'].ewm(span=9, adjust=False).mean()
         df_recent['ema_21'] = df_recent['Close'].ewm(span=21, adjust=False).mean()
         
-        all_data[ticker] = {'days': days, 'by_day': {}}
+        all_data[ticker] = {'days': all_days[-10:], 'all_available_days': all_days, 'by_day': {}}
 
         for d in days:
             day_df = df_recent[df_recent['day'] == d]
@@ -172,6 +172,16 @@ def generate_multi_day_dashboard():
                     'signal_count': len(signals)
                 }
             }
+
+    # Build inline store with recent 10 days for instant zero-latency start (< 200KB payload)
+    inline_store = {}
+    for tk, val in all_data.items():
+        recent_10 = val['days']
+        inline_store[tk] = {
+            'days': recent_10,
+            'all_available_days': val['all_available_days'],
+            'by_day': {d: val['by_day'][d] for d in recent_10 if d in val['by_day']}
+        }
 
     html_content = f"""<!DOCTYPE html>
 <html lang="zh-CN">
@@ -438,7 +448,7 @@ def generate_multi_day_dashboard():
     </div>
 
     <script>
-        const store = {json.dumps(all_data)};
+        const store = {json.dumps(inline_store)};
         let currentTicker = 'TSLA';
         let currentDate = '';
 
@@ -457,52 +467,78 @@ def generate_multi_day_dashboard():
         const nextBtn = document.getElementById('nextDayBtn');
 
         function populateDates(ticker) {{
-            const days = store[ticker].days;
+            const allDays = store[ticker].all_available_days || store[ticker].days;
+            const cachedDays = new Set(Object.keys(store[ticker].by_day || {{}}));
             dateSelect.innerHTML = '';
-            days.forEach((d, idx) => {{
+            allDays.forEach((d, idx) => {{
                 const opt = document.createElement('option');
                 opt.value = d;
-                opt.textContent = `${{d}} ${{idx === days.length - 1 ? '(当天 / 最新实盘)' : ''}}`;
+                const isLatest = (idx === allDays.length - 1);
+                const isPreloaded = cachedDays.has(d);
+                opt.textContent = `${{d}} ${{isLatest ? '★ (最新实盘)' : (isPreloaded ? '⚡ (秒开)' : '☁ (历史按需)')}}`;
                 dateSelect.appendChild(opt);
             }});
-            currentDate = days[days.length - 1];
+            currentDate = allDays[allDays.length - 1];
             dateSelect.value = currentDate;
             updateNavButtons();
         }}
 
         function updateNavButtons() {{
-            const days = store[currentTicker].days;
+            const days = store[currentTicker].all_available_days || store[currentTicker].days;
             const idx = days.indexOf(currentDate);
             prevBtn.disabled = (idx <= 0);
             nextBtn.disabled = (idx >= days.length - 1);
         }}
 
+        async function selectDay(d) {{
+            if (!d) return;
+            currentDate = d;
+            dateSelect.value = currentDate;
+            updateNavButtons();
+
+            // 1. Instant hit from inline/cached store
+            if (store[currentTicker] && store[currentTicker].by_day && store[currentTicker].by_day[d]) {{
+                renderDashboard();
+                return;
+            }}
+
+            // 2. Otherwise fetch dynamically from API
+            const titleEl = document.getElementById('klineTitle');
+            if (titleEl) titleEl.textContent = `⏳ 正在按需调取 ${{currentTicker}} (${{d}}) 历史高频波浪数据...`;
+
+            try {{
+                const resp = await fetch(`/api/wave/day_data?ticker=${{currentTicker}}&date=${{d}}`);
+                const res = await resp.json();
+                if (res && res.success && res.data) {{
+                    store[currentTicker].by_day[d] = res.data;
+                    renderDashboard();
+                }} else {{
+                    if (titleEl) titleEl.textContent = `⚠️ 未获取到 ${{currentTicker}} (${{d}}) 历史数据: ${{res && res.error || '无记录'}}`;
+                }}
+            }} catch (err) {{
+                console.error('Fetch error:', err);
+                if (titleEl) titleEl.textContent = `⚠️ 历史数据网络请求失败，请检查网络`;
+            }}
+        }}
+
         prevBtn.onclick = () => {{
-            const days = store[currentTicker].days;
+            const days = store[currentTicker].all_available_days || store[currentTicker].days;
             const idx = days.indexOf(currentDate);
             if (idx > 0) {{
-                currentDate = days[idx - 1];
-                dateSelect.value = currentDate;
-                renderDashboard();
-                updateNavButtons();
+                selectDay(days[idx - 1]);
             }}
         }};
 
         nextBtn.onclick = () => {{
-            const days = store[currentTicker].days;
+            const days = store[currentTicker].all_available_days || store[currentTicker].days;
             const idx = days.indexOf(currentDate);
             if (idx < days.length - 1) {{
-                currentDate = days[idx + 1];
-                dateSelect.value = currentDate;
-                renderDashboard();
-                updateNavButtons();
+                selectDay(days[idx + 1]);
             }}
         }};
 
         dateSelect.onchange = (e) => {{
-            currentDate = e.target.value;
-            renderDashboard();
-            updateNavButtons();
+            selectDay(e.target.value);
         }};
 
         function switchTicker(ticker) {{
@@ -511,7 +547,7 @@ def generate_multi_day_dashboard():
                 b.classList.toggle('active', b.textContent === ticker);
             }});
             populateDates(ticker);
-            renderDashboard();
+            selectDay(currentDate);
         }}
 
         // Chart instances
@@ -861,7 +897,15 @@ def generate_multi_day_dashboard():
     with open(charts_out, "w", encoding="utf-8") as f:
         f.write(html_content)
         
-    print(f"✅ Successfully regenerated multi-day clean dashboard at:\n -> {root_out}\n -> {charts_out}")
+    cache_charts_out = os.path.join(backend_dir, "data", "charts", "wave_history_cache.json")
+    cache_root_out = os.path.join(os.path.dirname(os.path.abspath(__file__)), "wave_history_cache.json")
+    with open(cache_charts_out, "w", encoding="utf-8") as f:
+        json.dump(all_data, f)
+    with open(cache_root_out, "w", encoding="utf-8") as f:
+        json.dump(all_data, f)
+        
+    print(f"✅ Successfully regenerated hybrid wave dashboard & full history cache at:\n -> {root_out}\n -> {charts_out}\n -> {cache_charts_out}")
 
 if __name__ == "__main__":
     generate_multi_day_dashboard()
+
