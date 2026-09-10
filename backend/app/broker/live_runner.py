@@ -81,6 +81,7 @@ class LiveTradingRunner:
             "paper_only_aggressive": True,
             "allow_aggressive_live": False,
             "allow_shorting": True,  # Enable high-expectancy counter-trend & bull-trap fade shorting
+            "inverted_mode": True,  # Inverted mean-reversion counter-trend engine (fade tops, buy oversold dips)
             "dynamic_screener_enabled": False,  # Strict focus on focus watchlist (SNDK, TSLA, MSTR, NVDA)
             "screener_refresh_seconds": 120,
             "screener_top_actives": 6,
@@ -652,24 +653,49 @@ class LiveTradingRunner:
             and lower_wick_ratio >= 0.18
         )
 
-        if pullback_support:
-            direction = "LONG"
-            regime = "PULLBACK_LONG"
-        elif reversal_long:
-            direction = "LONG"
-            regime = "LONG_REVERSAL"
-        elif reversal_short:
-            direction = "SHORT"
-            regime = "SHORT_REVERSAL"
-        elif long_structure:
-            direction = "LONG"
-            regime = "LONG_TREND"
-        elif short_structure:
-            direction = "SHORT"
-            regime = "SHORT_TREND"
+        inverted_mode = bool(self.strategy_params.get("inverted_mode", True))
+
+        if inverted_mode:
+            # 🔄 INVERTED COUNTER-TREND ALPHA ENGINE (Fade the peaks, buy the oversold dips)
+            # When price breaks high above VWAP & EMA (retail chasers buy top) -> We SHORT the top!
+            # When price drops low below VWAP & EMA (retail panics at bottom) -> We BUY the oversold dip!
+            if long_structure:
+                direction = "SHORT"
+                regime = "FADE_TOP_SHORT"
+            elif short_structure:
+                direction = "LONG"
+                regime = "FADE_DIP_BUY"
+            elif pullback_support:
+                direction = "SHORT"
+                regime = "FADE_PULLBACK_SHORT"
+            elif reversal_long:
+                direction = "SHORT"
+                regime = "FADE_BOUNCE_SHORT"
+            elif reversal_short:
+                direction = "LONG"
+                regime = "FADE_DROP_LONG"
+            else:
+                direction = "NEUTRAL"
+                regime = "RANGE"
         else:
-            direction = "NEUTRAL"
-            regime = "RANGE"
+            if pullback_support:
+                direction = "LONG"
+                regime = "PULLBACK_LONG"
+            elif reversal_long:
+                direction = "LONG"
+                regime = "LONG_REVERSAL"
+            elif reversal_short:
+                direction = "SHORT"
+                regime = "SHORT_REVERSAL"
+            elif long_structure:
+                direction = "LONG"
+                regime = "LONG_TREND"
+            elif short_structure:
+                direction = "SHORT"
+                regime = "SHORT_TREND"
+            else:
+                direction = "NEUTRAL"
+                regime = "RANGE"
 
         # Initial placeholders; win_probability and score will be set by probability_engine evaluation below
         score = 50.0
@@ -936,8 +962,8 @@ class LiveTradingRunner:
             if direction == "NEUTRAL":
                 return "HOLD", f"{base_reason} | NEUTRAL signal, waiting"
 
-            # 🎯 3. Support Pullback Entry
-            if opportunity.get("regime") == "PULLBACK_LONG" and p_win_pct >= 48.0:
+            # 🎯 3. Support Pullback / Inverted Dip Buy Entry
+            if (opportunity.get("regime") == "PULLBACK_LONG" or (direction == "LONG" and "FADE" in str(opportunity.get("regime", "")))) and p_win_pct >= 48.0:
                 last_exit = self.last_exit_times.get(ticker)
                 cooldown = self._safe_float(self.strategy_params.get("reentry_cooldown_seconds"), 10.0)
                 if last_exit and (time.time() - last_exit) < cooldown:
@@ -945,15 +971,23 @@ class LiveTradingRunner:
                     return "HOLD", f"{base_reason} | Exit cooldown ({remain}s remaining)"
                 if open_position_count >= int(self.strategy_params.get("max_concurrent_positions", 4)):
                     return "HOLD", f"{base_reason} | Max concurrent positions reached"
-                return "BUY", f"{base_reason} | 🎯 [Pullback Value Entry] VWAP/EMA support bounce confirmed"
+                entry_label = "Inverted Dip Buy" if "FADE" in str(opportunity.get("regime", "")) else "Pullback Value Entry"
+                return "BUY", f"{base_reason} | 🎯 [{entry_label}] Bounce from oversold levels confirmed"
 
-            # ⚡ 4. Fade Bull Trap Short
+            # ⚡ 4. Fade Top Short / Bull Trap Short
             if direction == "SHORT" and "FADE" in str(opportunity.get("regime", "")):
                 if not self.strategy_params.get("allow_shorting", True):
                     return "HOLD", f"{base_reason} | 🛡️ Long-Only mode active (shorting disabled)"
                 if not self._can_open_short(ticker):
                     return "HOLD", f"{base_reason} | Alpaca asset not shortable or requires locate"
-                return "SHORT", f"{base_reason} | ⚡ [Fade Bull Trap Short] False breakout upper wick rejection confirmed, entering short"
+                last_exit = self.last_exit_times.get(ticker)
+                cooldown = self._safe_float(self.strategy_params.get("reentry_cooldown_seconds"), 10.0)
+                if last_exit and (time.time() - last_exit) < cooldown:
+                    remain = int(cooldown - (time.time() - last_exit))
+                    return "HOLD", f"{base_reason} | Exit cooldown ({remain}s remaining)"
+                if open_position_count >= int(self.strategy_params.get("max_concurrent_positions", 4)):
+                    return "HOLD", f"{base_reason} | Max concurrent positions reached"
+                return "SHORT", f"{base_reason} | ⚡ [Inverted Fade Top Short] Overbought breakout exhaustion confirmed, entering short"
 
             # Direct ML Model Execution: If ML model evaluates positive EV or P_win >= 50%, trigger order immediately!
             if is_pos_ev or ev_r >= 0.0 or p_win_pct >= 50.0:
@@ -1042,6 +1076,14 @@ class LiveTradingRunner:
                         f"rebounded to stop ${trail_stop_price:.2f}, locking profit"
                     )
 
+        # 🎯 Inverted Mean-Reversion Target Exit (VWAP Target Profit Taking)
+        if self.strategy_params.get("inverted_mode", True) and pnl_pct >= 0.003:
+            vwap_line = opportunity.get("_vwap", close)
+            if side == "LONG" and close >= vwap_line:
+                return "SELL", f"{base_reason} | 🎯 [Mean Reversion Target] Rebounded back to VWAP (${vwap_line:.2f}), locking profit (+{pnl_pct*100:.2f}%)"
+            elif side == "SHORT" and close <= vwap_line:
+                return "COVER", f"{base_reason} | 🎯 [Mean Reversion Target] Pulled back down to VWAP (${vwap_line:.2f}), locking profit (+{pnl_pct*100:.2f}%)"
+
         # 2. Dedicated Per-Ticker ML Model Expectancy Decay Exit
         min_hold = self._safe_float(self.strategy_params.get("minimum_hold_minutes"), 4.0)
         if minutes_held >= min_hold:
@@ -1051,8 +1093,8 @@ class LiveTradingRunner:
             if side == "SHORT" and (not is_pos_ev) and ev_r <= -0.15 and p_win_pct < 42.0 and close > ema_9_val:
                 return "COVER", f"{base_reason} | 📉 [ML Expectancy Decay] Win rate decayed to {p_win_pct:.1f}% / E[R]={ev_r:+.2f}R, breaking EMA9, exiting"
 
-        # 3. Structural Trend Invalidation
-        if minutes_held >= min_hold:
+        # 3. Structural Trend Invalidation (Active for trend-following mode)
+        if minutes_held >= min_hold and not self.strategy_params.get("inverted_mode", True):
             prev_close = self._safe_float(opportunity.get("_prev_close"), close)
             if side == "LONG":
                 invalid_now = close < opportunity.get("_ema_21", close) and close < opportunity.get("_vwap", close)

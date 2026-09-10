@@ -135,12 +135,34 @@ def calculate_win_rate_probability(
 
     # 1. Primary: Evaluate dedicated per-ticker LightGBM model (AUC ~0.60-0.64)
     if opportunity is not None and ticker:
-        dedicated_model = get_calibrated_ml_model("long", ticker=ticker)
-        if dedicated_model is not None:
+        dir_name = str(opportunity.get("direction", "long")).lower()
+        dedicated_model = get_calibrated_ml_model(dir_name if dir_name in ("long", "short") else "long", ticker=ticker)
+        if dedicated_model is None and dir_name == "short":
+            dedicated_long = get_calibrated_ml_model("long", ticker=ticker)
+            if dedicated_long is not None:
+                try:
+                    d_feat = {
+                        "feature_ofi": float(opportunity.get("alpha_ofi", opportunity.get("feature_ofi", 0.0))),
+                        "feature_rvol": float(rvol),
+                        "feature_vwap_dist_pct": float(opportunity.get("vwap_dist_pct", opportunity.get("_vwap_dist_pct", 0.0))),
+                        "feature_ema_diff_pct": float(opportunity.get("ema_diff_pct", 
+                            ((opportunity.get("_ema_9", 1.0) - opportunity.get("_ema_21", 1.0)) / max(1e-5, opportunity.get("_ema_21", 1.0)) * 100.0)
+                        )),
+                        "feature_mom_5m": float(opportunity.get("momentum_3_pct", momentum_3_pct)),
+                        "feature_mom_15m": float(opportunity.get("momentum_10_pct", 0.0)),
+                        "feature_er": float(opportunity.get("er", opportunity.get("efficiency_ratio", 0.25))),
+                        "feature_atr_pct": float(opportunity.get("atr_pct", atr_pct)),
+                    }
+                    df_d = pd.DataFrame([d_feat])
+                    raw_long_p = float(dedicated_long.predict_proba(df_d)[0, 1])
+                    p_win_candidate = float(max(0.35, min(0.85, 1.0 - raw_long_p)))
+                except Exception:
+                    p_win_candidate = None
+        elif dedicated_model is not None:
             try:
                 d_feat = {
                     "feature_ofi": float(opportunity.get("alpha_ofi", opportunity.get("feature_ofi", 0.0))),
-                    "feature_rvol": float(opportunity.get("rvol", rvol)),
+                    "feature_rvol": float(rvol),
                     "feature_vwap_dist_pct": float(opportunity.get("vwap_dist_pct", opportunity.get("_vwap_dist_pct", 0.0))),
                     "feature_ema_diff_pct": float(opportunity.get("ema_diff_pct", 
                         ((opportunity.get("_ema_9", 1.0) - opportunity.get("_ema_21", 1.0)) / max(1e-5, opportunity.get("_ema_21", 1.0)) * 100.0)
