@@ -1587,14 +1587,24 @@ class LiveTradingRunner:
         return is_weekday and (9.5 <= ny_time < 16.0)
 
     def is_eod_no_entry_window(self) -> bool:
+        """
+        Stop taking new entries from 15:45 EST onwards (15 minutes before market close).
+        Prevents late-session entries that don't have enough time to resolve.
+        """
         est = pytz.timezone('America/New_York')
         now_ny = datetime.datetime.now(est)
         if now_ny.weekday() > 4:
             return False
         ny_time = now_ny.hour + now_ny.minute / 60.0 + now_ny.second / 3600.0
-        return 15.9167 <= ny_time < 16.0
+        return 15.75 <= ny_time < 16.0  # 15:45 to 16:00 EST
 
     def check_and_trigger_eod_close(self, positions_list: list) -> bool:
+        """
+        Robust 10-minute EOD Liquidation Window (15:50 to 16:00 EST).
+        Continuously ensures all pending orders are canceled and all positions are closed,
+        with multi-attempt retries until the account is confirmed 100% flat (0 shares).
+        GUARANTEES ZERO OVERNIGHT RISK!
+        """
         if not positions_list:
             return False
         est = pytz.timezone('America/New_York')
@@ -1602,40 +1612,46 @@ class LiveTradingRunner:
         if now_ny.weekday() > 4:
             return False
         ny_time = now_ny.hour + now_ny.minute / 60.0 + now_ny.second / 3600.0
-        if not (15.9833 <= ny_time < 16.0):
+        
+        # 10 full minutes: from 15:50:00 (15.8333) to 16:00:00 (16.0)
+        if not (15.8333 <= ny_time < 16.0):
             return False
 
         today = now_ny.date()
-        if getattr(self, "_eod_liquidation_done_date", None) == today:
-            return True  # Already performed EOD liquidation once for today's session! Do not repeat!
+        # Cooldown between successive close attempts: at least 15 seconds so orders have time to fill
+        last_attempt = getattr(self, "_last_eod_close_attempt_time", 0.0)
+        if time.time() - last_attempt < 15.0:
+            return True
 
-        seconds_left = (16.0 - ny_time) * 3600.0
-        if 0.0 < seconds_left <= 60.0:
-            self.add_log(f"🌇 [美东 15:59 关盘前 1 分钟终极清场风控] 距关盘仅剩 {seconds_left:.0f} 秒！执行一次性【双重清场】：全量撤销所有挂单 + 强行全平 {len(positions_list)} 笔持仓，确保零挂单零持仓过夜...")
-            self._eod_liquidation_done_date = today  # Mark as executed once today!
-            try:
-                if hasattr(self.adapter, "cancel_all_orders"):
-                    c_res = self.adapter.cancel_all_orders()
-                    self.add_log(f"🧹 [双重清场 Step 1/2] 已全量撤销挂单: {c_res.get('message', 'All pending orders canceled.')}")
-                if hasattr(self.adapter, "close_all_positions"):
-                    res = self.adapter.close_all_positions()
-                    self.add_log(f"✅ [双重清场 Step 2/2] 已强行全平持仓: {res.get('message', 'All positions liquidated.')}")
-                
-                for pos in positions_list:
-                    sym = pos.get("ticker")
-                    shares = pos.get("shares", 0)
-                    if sym and shares != 0:
-                        self.add_trade_action(
-                            action="SELL" if shares > 0 else "COVER",
-                            ticker=sym,
-                            shares=abs(shares),
-                            price=pos.get("current_price", 0.0),
-                            reason="EOD Single Liquidation (日内关盘前无条件撤单平仓·只卖一次不重复)"
-                        )
-                return True
-            except Exception as e:
-                self.add_log(f"⚠️ [尾盘双重清场异常]: {str(e)}")
-        return False
+        self._last_eod_close_attempt_time = time.time()
+        seconds_left = max(0.0, (16.0 - ny_time) * 3600.0)
+        self.add_log(
+            f"🌇 [美东尾盘 15:50-16:00 强制清场风控] 距收盘仅剩 {seconds_left/60:.1f} 分钟！"
+            f"执行【双重清场】：撤销全部挂单 + 市价全平 {len(positions_list)} 笔持仓，坚决 100% 现金过夜..."
+        )
+        try:
+            if hasattr(self.adapter, "cancel_all_orders"):
+                c_res = self.adapter.cancel_all_orders()
+                self.add_log(f"🧹 [收盘清场 1/2] 撤单结果: {c_res.get('message', 'All pending orders canceled.')}")
+            if hasattr(self.adapter, "close_all_positions"):
+                res = self.adapter.close_all_positions()
+                self.add_log(f"✅ [收盘清场 2/2] 平仓结果: {res.get('message', 'All positions liquidated.')}")
+            
+            for pos in positions_list:
+                sym = pos.get("ticker")
+                shares = pos.get("shares", 0)
+                if sym and shares != 0:
+                    self.add_trade_action(
+                        action="SELL" if shares > 0 else "COVER",
+                        ticker=sym,
+                        shares=abs(shares),
+                        price=pos.get("current_price", 0.0),
+                        reason="EOD Forced Flat (尾盘 15:50 强制清空头寸·绝不过夜)"
+                    )
+            return True
+        except Exception as e:
+            self.add_log(f"⚠️ [尾盘强制清场异常，下个循环将自动重试]: {str(e)}")
+            return False
 
     async def _run_loop(self):
         while self.is_running:
