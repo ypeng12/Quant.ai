@@ -260,6 +260,16 @@ def calculate_win_rate_probability(
         except Exception:
             pass
 
+    # Blend Saggese Microstructure Wave Alpha (LOB order flow & 15-30m wave forecast)
+    if opportunity:
+        dir_name = str(opportunity.get("direction", "long")).lower()
+        wave_p = float(opportunity.get("wave_p_win_short" if dir_name == "short" else "wave_p_win_long", 0.0))
+        if wave_p > 0.0:
+            if p_win_candidate is not None:
+                p_win_candidate = 0.60 * p_win_candidate + 0.40 * wave_p
+            else:
+                p_win_candidate = wave_p
+
     # 3. Microstructural Anti-Trap & Pullback Support Adjustments ("反着来" & "稍微早点")
     if p_win_candidate is not None:
         prob_adj = p_win_candidate - 0.02

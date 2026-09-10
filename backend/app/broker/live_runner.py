@@ -772,9 +772,9 @@ class LiveTradingRunner:
             except Exception:
                 pass
 
-        # Evaluate Institutional Composite Alpha Factors including alpha_ml
-        alpha_eval = self.alpha_engine.evaluate_composite_alpha(
-            row=row, prev_row=prev_row, ml_p_win_long=p_long, ml_p_win_short=p_short
+        # Evaluate Institutional Composite Alpha Factors including alpha_ml & Saggese Microstructure Wave
+        alpha_eval = self.alpha_engine.evaluate_dataframe_alpha(
+            df=df, row=row, prev_row=prev_row, ml_p_win_long=p_long, ml_p_win_short=p_short
         )
 
         is_trap = alpha_eval.get("is_trap", False)
@@ -882,6 +882,9 @@ class LiveTradingRunner:
             "_prev_vwap": prev_vwap,
             "_prev_close": prev_close,
             "_atr": atr,
+            "wave_p_win_long": alpha_eval.get("wave_p_win_long", 0.50),
+            "wave_p_win_short": alpha_eval.get("wave_p_win_short", 0.50),
+            "expected_wave_return_pct": alpha_eval.get("expected_wave_return_pct", 0.0),
         }
 
 
