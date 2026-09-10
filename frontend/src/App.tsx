@@ -148,7 +148,7 @@ const INTERVAL_LABELS: Record<string, string> = {
   "1d": "Daily"
 };
 
-type ActiveTab = 'dashboard' | 'research' | 'report' | 'walkforward' | 'experiments' | 'replay' | 'broker' | 'institutional' | 'portfolio' | 'ml_assistant' | 'trade_comparison' | 'live_dashboard';
+type ActiveTab = 'dashboard' | 'research' | 'report' | 'walkforward' | 'experiments' | 'replay' | 'broker' | 'institutional' | 'portfolio' | 'ml_assistant' | 'trade_comparison' | 'live_dashboard' | 'saggese_wave';
 
 function App() {
   const [watchlist, setWatchlist] = useState<string[]>(["SNDK", "TSLA", "MSTR", "NVDA"]);
@@ -674,6 +674,24 @@ function App() {
           </button>
 
           <button
+            className={`nav-tab ${activeTab === 'saggese_wave' ? 'active' : ''}`}
+            onClick={() => setActiveTab('saggese_wave')}
+            style={{
+              padding: '8px 18px',
+              fontSize: '0.9rem',
+              fontWeight: 800,
+              background: activeTab === 'saggese_wave' ? 'linear-gradient(135deg, #06b6d4, #0891b2)' : 'transparent',
+              color: '#ffffff',
+              borderRadius: '6px',
+              border: activeTab === 'saggese_wave' ? 'none' : '1px solid rgba(6, 182, 212, 0.4)',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            🌊 Saggese 波浪每天大屏
+          </button>
+
+          <button
             className={`nav-tab ${activeTab === 'replay' || activeTab === 'trade_comparison' ? 'active' : ''}`}
             onClick={() => setActiveTab('replay')}
             style={{
@@ -711,7 +729,7 @@ function App() {
 
           {/* Optional Advanced Tools */}
           <select
-            value={['broker', 'portfolio', 'replay', 'institutional'].includes(activeTab) ? '' : activeTab}
+            value={['broker', 'portfolio', 'replay', 'institutional', 'saggese_wave'].includes(activeTab) ? '' : activeTab}
             onChange={(e) => {
               if (e.target.value) setActiveTab(e.target.value as ActiveTab);
             }}
@@ -806,6 +824,17 @@ function App() {
           {/* Alpaca Live Tab (Mode 1) */}
           {activeTab === 'broker' && (
             <BrokerPanel watchlist={watchlist} />
+          )}
+
+          {/* Saggese Microstructure Wave Dashboard Tab */}
+          {activeTab === 'saggese_wave' && (
+            <div style={{ width: '100%', height: 'calc(100vh - 120px)', background: '#080a11', borderRadius: '8px', overflow: 'hidden' }}>
+              <iframe
+                src="/charts/saggese_wave_visual_dashboard.html"
+                title="Saggese Microstructure Wave Alpha Dashboard"
+                style={{ width: '100%', height: '100%', border: 'none' }}
+              />
+            </div>
           )}
 
           {/* Institutional Quant & Low-Latency Architecture Tab */}

@@ -54,7 +54,7 @@ interface BrokerPanelProps {
   watchlist?: string[];
 }
 
-type ActiveTab = 'portfolio' | 'analysis' | 'actions' | 'history';
+type ActiveTab = 'portfolio' | 'analysis' | 'actions' | 'history' | 'wave';
 
 export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
   // Read persistent cached account & todaySummary from localStorage on cold startup
@@ -722,6 +722,7 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
           <div style={{ display: 'flex', gap: '8px', marginBottom: '1rem', borderBottom: '1px solid var(--color-border)', paddingBottom: '10px' }}>
             {([
               { id: 'analysis', label: '🧠 AI Live Analysis & Alerts' },
+              { id: 'wave', label: '🌊 Saggese 波浪每天大屏' },
               { id: 'portfolio', label: '📈 Portfolio History' },
               { id: 'actions', label: '⚡ Execution Activity' },
               { id: 'history', label: '📅 Trade History' },
@@ -741,6 +742,17 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
           {activeTab === 'portfolio' && (
             <div style={{ flex: 1, padding: '0.5rem 0' }}>
               <PortfolioHistoryChart />
+            </div>
+          )}
+
+          {/* Saggese Wave Tab */}
+          {activeTab === 'wave' && (
+            <div style={{ flex: 1, minHeight: '650px', height: '680px', borderRadius: '8px', overflow: 'hidden' }}>
+              <iframe
+                src="/charts/saggese_wave_visual_dashboard.html"
+                title="Saggese Microstructure Wave Alpha Dashboard"
+                style={{ width: '100%', height: '100%', border: 'none' }}
+              />
             </div>
           )}
 
