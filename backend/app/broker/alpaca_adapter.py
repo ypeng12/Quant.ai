@@ -228,6 +228,7 @@ class AlpacaAdapter:
     def close_all_positions(self) -> Dict:
         """
         Close all active positions (force liquidation).
+        Supports automatic fallback to Extended-Hours limit orders if outside regular hours!
         """
         try:
             close_orders = self.client.close_all_positions(cancel_orders=True)
@@ -236,14 +237,38 @@ class AlpacaAdapter:
                 "message": f"Submitted orders to close all positions. Initiated {len(close_orders)} closing orders."
             }
         except Exception as e:
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            # Fallback for after-hours (16:00 - 20:00 EST): liquidate each position via extended hours limit orders
+            try:
+                self.cancel_all_orders()
+                positions = self.get_open_positions()
+                if not positions:
+                    return {"success": True, "message": "No open positions to close."}
+                success_count = 0
+                for pos in positions:
+                    sym = pos.get("ticker")
+                    shares = pos.get("shares", 0)
+                    price = pos.get("current_price", 0.0) or pos.get("avg_entry_price", 0.0)
+                    if sym and shares != 0 and price > 0:
+                        side = "sell" if shares > 0 else "buy"
+                        limit_price = round(price * 0.995, 2) if shares > 0 else round(price * 1.005, 2)
+                        res = self.submit_limit_order(sym, abs(shares), side, limit_price, extended_hours=True)
+                        if res.get("success"):
+                            success_count += 1
+                return {
+                    "success": True,
+                    "message": f"Submitted {success_count} Extended-Hours closing limit orders during after-hours."
+                }
+            except Exception as ext_e:
+                return {
+                    "success": False,
+                    "error": str(e),
+                    "after_hours_error": str(ext_e)
+                }
 
     def close_position(self, symbol: str) -> Dict:
         """
         Close a specific open position for a single ticker (force liquidate/sell).
+        Supports automatic fallback to Extended-Hours limit orders if outside regular hours!
         """
         try:
             order = self.client.close_position(symbol_or_asset_id=symbol.upper())
@@ -254,6 +279,21 @@ class AlpacaAdapter:
                 "message": f"Successfully submitted market order to close position for {symbol.upper()}."
             }
         except Exception as e:
+            # Fallback for after-hours: liquidate via extended hours limit order
+            try:
+                pos = self.get_position(symbol)
+                if pos and pos.get("shares"):
+                    shares = pos["shares"]
+                    price = pos.get("current_price", 0.0) or pos.get("avg_entry_price", 0.0)
+                    if shares != 0 and price > 0:
+                        side = "sell" if shares > 0 else "buy"
+                        limit_price = round(price * 0.995, 2) if shares > 0 else round(price * 1.005, 2)
+                        ext_res = self.submit_limit_order(symbol, abs(shares), side, limit_price, extended_hours=True)
+                        if ext_res.get("success"):
+                            ext_res["message"] = f"盘后使用 Extended-Hours 限价单提交平仓: {symbol.upper()} {abs(shares)} 股 @ ${limit_price:.2f}"
+                            return ext_res
+            except Exception:
+                pass
             return {
                 "success": False,
                 "symbol": symbol.upper(),

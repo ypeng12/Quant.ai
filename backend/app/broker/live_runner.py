@@ -1618,8 +1618,8 @@ class LiveTradingRunner:
         if ny_time < 15.9583:
             return False
 
-        # Only stop retrying if deep into after-hours (> 16:15)
-        if ny_time > 16.25:
+        # Support continuous liquidation throughout After-Hours (16:00 to 20:00 EST)
+        if ny_time >= 20.0:
             return False
 
         today = now_ny.date()
@@ -1628,18 +1628,25 @@ class LiveTradingRunner:
             return True
 
         self._last_eod_close_attempt_time = time.time()
-        seconds_left = max(0.0, (16.0 - ny_time) * 3600.0)
-        self.add_log(
-            f"🌇 [美东收盘倒计时终极清场 15:57:30] 距 16:00 仅剩 {seconds_left:.0f} 秒！"
-            f"充分享受尾盘波段机会后，执行终极全平撤单，确保 16:00 敲钟时零持仓现金过夜..."
-        )
+        if ny_time < 16.0:
+            seconds_left = max(0.0, (16.0 - ny_time) * 3600.0)
+            self.add_log(
+                f"🌇 [美东收盘倒计时终极清场 15:57:30] 距 16:00 仅剩 {seconds_left:.0f} 秒！"
+                f"执行终极全平撤单，确保 16:00 敲钟时零持仓现金过夜..."
+            )
+        else:
+            self.add_log(
+                f"🌙 [美东盘后 Extended-Hours 自动清仓] 盘中未完全成交的剩余 {len(positions_list)} 笔头寸，"
+                f"无缝切换为【盘后限价单】执行清场，确保持仓清零现金过夜..."
+            )
+
         try:
             if hasattr(self.adapter, "cancel_all_orders"):
                 c_res = self.adapter.cancel_all_orders()
-                self.add_log(f"🧹 [收盘清场 1/2] 撤单结果: {c_res.get('message', 'All pending orders canceled.')}")
+                self.add_log(f"🧹 [收盘/盘后清场 1/2] 撤单结果: {c_res.get('message', 'All pending orders canceled.')}")
             if hasattr(self.adapter, "close_all_positions"):
                 res = self.adapter.close_all_positions()
-                self.add_log(f"✅ [收盘清场 2/2] 平仓结果: {res.get('message', 'All positions liquidated.')}")
+                self.add_log(f"✅ [收盘/盘后清场 2/2] 平仓结果: {res.get('message', 'All positions liquidated.')}")
             
             for pos in positions_list:
                 sym = pos.get("ticker")
@@ -1650,11 +1657,11 @@ class LiveTradingRunner:
                         ticker=sym,
                         shares=abs(shares),
                         price=pos.get("current_price", 0.0),
-                        reason="EOD Bell Liquidation (16:00 敲钟前终极全平·零持仓过夜)"
+                        reason="EOD/After-Hours Bell Liquidation (收盘/盘后终极全平·零持仓过夜)"
                     )
             return True
         except Exception as e:
-            self.add_log(f"⚠️ [尾盘清仓异常，自动重试中]: {str(e)}")
+            self.add_log(f"⚠️ [收盘/盘后清仓异常，自动重试中]: {str(e)}")
             return False
 
     async def _run_loop(self):
