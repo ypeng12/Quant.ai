@@ -56,8 +56,8 @@ def generate_multi_day_dashboard():
         
         df_5m['day'] = df_5m.index.strftime('%Y-%m-%d')
         all_days = sorted(df_5m['day'].unique().tolist())
-        # Pick the most recent 15 trading days
-        days = all_days[-15:]
+        # Pick the most recent 7 trading days for lightning-fast loading
+        days = all_days[-7:]
         df_recent = df_5m[df_5m['day'].isin(days)].copy()
         
         # Extract 7 microstructure features vectorially
@@ -86,7 +86,8 @@ def generate_multi_day_dashboard():
             day_vwap = (pv / v_cum).round(2).tolist()
 
             times = day_df.index.strftime('%H:%M').tolist()
-            kline = [[float(r['Open']), float(r['Close']), float(r['Low']), float(r['High'])] for _, r in day_df.iterrows()]
+            day_records = day_df.to_dict(orient='records')
+            kline = [[round(float(r['Open']), 2), round(float(r['Close']), 2), round(float(r['Low']), 2), round(float(r['High']), 2)] for r in day_records]
             vols = [int(v) for v in day_df['Volume'].values]
             ema9_vals = [round(float(v), 2) for v in day_df['ema_9'].values]
             ema21_vals = [round(float(v), 2) for v in day_df['ema_21'].values]
@@ -102,9 +103,9 @@ def generate_multi_day_dashboard():
             last_sig_idx = -999
             last_sig_dir = None
             
-            for i in range(len(day_df)):
-                row = day_df.iloc[i].to_dict()
-                prev_row = day_df.iloc[i-1].to_dict() if i > 0 else None
+            for i in range(len(day_records)):
+                row = day_records[i]
+                prev_row = day_records[i-1] if i > 0 else None
                 p_l = float(day_p_long[i])
                 a_eval = alpha_engine.evaluate_composite_alpha(row, prev_row, ml_p_win_long=p_l)
                 score = float(a_eval.get('composite_alpha_score', 0.0))
@@ -178,8 +179,15 @@ def generate_multi_day_dashboard():
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LOB 订单流微观结构波浪研判终端 (Microstructure Wave Alpha Terminal)</title>
-    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&family=Inter:wght@400;600;700;900&display=swap" media="print" onload="this.media='all'">
+    <noscript>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&family=Inter:wght@400;600;700;900&display=swap">
+    </noscript>
     <style>
         :root {{
             --bg-base: #080a11;
@@ -195,7 +203,7 @@ def generate_multi_day_dashboard():
             --text-secondary: #94a3b8;
             --text-muted: #64748b;
         }}
-        * {{ margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', -apple-system, sans-serif; }}
+        * {{ margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", sans-serif; }}
         body {{ background-color: var(--bg-base); color: var(--text-primary); padding: 20px 24px; min-height: 100vh; }}
         
         .header {{
