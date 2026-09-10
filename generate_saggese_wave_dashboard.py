@@ -462,7 +462,7 @@ def generate_multi_day_dashboard():
             days.forEach((d, idx) => {{
                 const opt = document.createElement('option');
                 opt.value = d;
-                opt.textContent = `${d} (当天 / 最新实盘)`;
+                opt.textContent = `${{d}} ${{idx === days.length - 1 ? '(当天 / 最新实盘)' : ''}}`;
                 dateSelect.appendChild(opt);
             }});
             currentDate = days[days.length - 1];
@@ -623,7 +623,7 @@ def generate_multi_day_dashboard():
                             borderColor0: '#f43f5e'
                         }},
                         markPoint: {{
-                            data: markPoints,
+                            data: markPointData,
                             symbolSize: 45
                         }}
                     }},

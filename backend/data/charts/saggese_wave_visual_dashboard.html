@@ -287,7 +287,7 @@
             days.forEach((d, idx) => {
                 const opt = document.createElement('option');
                 opt.value = d;
-                opt.textContent = `$2026-09-09 (当天 / 最新实盘)`;
+                opt.textContent = `${d} ${idx === days.length - 1 ? '(当天 / 最新实盘)' : ''}`;
                 dateSelect.appendChild(opt);
             });
             currentDate = days[days.length - 1];
@@ -448,7 +448,7 @@
                             borderColor0: '#f43f5e'
                         },
                         markPoint: {
-                            data: markPoints,
+                            data: markPointData,
                             symbolSize: 45
                         }
                     },
