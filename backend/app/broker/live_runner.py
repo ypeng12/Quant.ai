@@ -143,7 +143,7 @@ class LiveTradingRunner:
         self.risk_sizer.unlock_exit(ticker)
 
     def _can_open_short(self, ticker: str) -> bool:
-        if not self.strategy_params.get("allow_shorting", False):
+        if not self.strategy_params.get("allow_shorting", True):
             return False
         return self.risk_sizer.can_open_short(ticker, self.adapter)
 
@@ -203,6 +203,8 @@ class LiveTradingRunner:
                             return
                         self._loaded_strategy_version = saved.get("strategy_version")
                         self.strategy_params.update(saved)
+            # Guarantee allow_shorting is True so short trigger orders are never locked out
+            self.strategy_params["allow_shorting"] = bool(self.strategy_params.get("allow_shorting", True))
         except Exception as e:
             print(f"Error loading runner_config.json: {e}")
 
@@ -735,7 +737,7 @@ class LiveTradingRunner:
         )
         if bull_trap_risk:
             long_confirmed = False
-            if self.strategy_params.get("allow_shorting", False) or ticker == "SNDK":
+            if self.strategy_params.get("allow_shorting", True) or ticker == "SNDK":
                 direction = "SHORT"
                 regime = "FADE_BULL_TRAP"
                 short_confirmed = True
@@ -945,7 +947,7 @@ class LiveTradingRunner:
 
             # ⚡ 4. Fade Bull Trap Short ("反着来做空")
             if direction == "SHORT" and "FADE" in str(opportunity.get("regime", "")):
-                if not self.strategy_params.get("allow_shorting", False):
+                if not self.strategy_params.get("allow_shorting", True):
                     return "HOLD", f"{base_reason} | 🛡️ Long-Only 纯多头保护（未开启做空）"
                 if not self._can_open_short(ticker):
                     return "HOLD", f"{base_reason} | Alpaca Asset 当前不可直接卖空/需要 locate"
@@ -961,7 +963,7 @@ class LiveTradingRunner:
                 if open_position_count >= int(self.strategy_params.get("max_concurrent_positions", 4)):
                     return "HOLD", f"{base_reason} | 已达最大同时持仓数"
                 if direction == "SHORT":
-                    if not self.strategy_params.get("allow_shorting", False):
+                    if not self.strategy_params.get("allow_shorting", True):
                         return "HOLD", f"{base_reason} | 🛡️ Long-Only 纯多头保护（禁止逆势做空强势科技股）"
                     if not self._can_open_short(ticker):
                         return "HOLD", f"{base_reason} | Alpaca Asset 当前不可直接卖空/需要 locate"
@@ -1084,7 +1086,7 @@ class LiveTradingRunner:
             and not self.pyramid_done.get(ticker, False)
             and self.pyramid_counts.get(ticker, 0) < 1
             and self._aggressive_orders_allowed()
-            and (side == "LONG" or self.strategy_params.get("allow_shorting", False))
+            and (side == "LONG" or self.strategy_params.get("allow_shorting", True))
         )
         if can_pyramid:
             if side == "LONG":

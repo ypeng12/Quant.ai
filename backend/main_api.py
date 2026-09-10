@@ -81,16 +81,14 @@ def auto_start_live_runner():
     try:
         live_runner.start(
             strategy_params={
-                "strategy_mode": "dynamic",
-                "stop_loss_pct": 0.015,
-                "profit_target_pct": 0.030,
-                "trailing_stop_mode": "atr",
-                "trailing_stop_atr_mult": 2.0,
-                "rsi_threshold_buy": 70.0,
-                "market_open_focus": False
+                "strategy_mode": "aggressive_intraday",
+                "strategy_version": "aggressive_intraday_v6_max_profit",
+                "allow_shorting": True,
+                "entry_score_min": 78.0,
+                "pullback_entry_enabled": True
             }
         )
-        print("[System Startup] 🚀 AI 量化托管交易机器人已在后台自动启动上线（开盘状态 100% 依从 Alpaca 官方交易所 API 时钟）！")
+        print("[System Startup] 🚀 AI 量化托管交易机器人已在后台自动启动上线（支持多空双向全自动交易）！")
     except Exception as e:
         print(f"[System Startup Warning] 自动启动交易机器人异常: {e}")
 
