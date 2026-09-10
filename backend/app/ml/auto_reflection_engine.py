@@ -16,8 +16,13 @@ import numpy as np
 import pandas as pd
 from typing import Dict, List, Tuple, Optional
 
-from backend.app.ml.rl_trading_agent import RLTradingAgent
-from backend.app.ml.daily_consistency_quant_engine import DailyConsistencyQuantEngine
+try:
+    from app.ml.rl_trading_agent import RLTradingAgent
+    from app.ml.ml_model_zoo import FEATURE_COLS
+except ImportError:
+    from backend.app.ml.rl_trading_agent import RLTradingAgent
+    from backend.app.ml.ml_model_zoo import FEATURE_COLS
+
 
 class AutoReflectionEngine:
     def __init__(self, reports_dir: str = "reports/daily_reflections"):
@@ -25,26 +30,39 @@ class AutoReflectionEngine:
         os.makedirs(self.reports_dir, exist_ok=True)
         self.rl_agent = RLTradingAgent.load()
 
-    def load_daily_trade_log(self, date_str: str = "2026-08-12") -> pd.DataFrame:
-        """Loads trade log for specified date from daily_archives."""
+    def load_daily_trade_log(self, date_str: str = "2026-09-10") -> pd.DataFrame:
+        """Loads trade log for specified date from trade_history.json or daily_archives."""
+        # 1. First check master live trade_history.json
+        master_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "trade_history.json")
+        if not os.path.exists(master_path):
+            master_path = "backend/trade_history.json"
+        
+        if os.path.exists(master_path):
+            try:
+                with open(master_path, "r") as f:
+                    mdata = json.load(f)
+                trades = mdata.get("trade_history", []) if isinstance(mdata, dict) else mdata
+                df_all = pd.DataFrame(trades)
+                if not df_all.empty and "date" in df_all.columns:
+                    df_day = df_all[df_all["date"] == date_str]
+                    if not df_day.empty:
+                        return df_day
+            except Exception:
+                pass
+
+        # 2. Fallback to daily archives
         fpath = f"backend/data/datasets/daily_archives/trades_{date_str}.json"
         if not os.path.exists(fpath):
             files = glob.glob("backend/data/datasets/daily_archives/trades_*.json")
             if files:
-                fpath = files[-1]
+                fpath = sorted(files)[-1]
             else:
                 return pd.DataFrame()
 
         with open(fpath, "r") as f:
             data = json.load(f)
 
-        if isinstance(data, dict) and "trade_history" in data:
-            trades = data["trade_history"]
-        elif isinstance(data, list):
-            trades = data
-        else:
-            trades = []
-
+        trades = data.get("trade_history", []) if isinstance(data, dict) else (data if isinstance(data, list) else [])
         return pd.DataFrame(trades)
 
     def analyze_trade_attribution(self, df_trades: pd.DataFrame) -> Dict:
@@ -127,8 +145,10 @@ class AutoReflectionEngine:
             tuning_reasons.append("Execution metrics optimal; maintained default high-consistency parameters")
 
         # Retrain RL Agent Q-learning policy on attribution feedback
-        from backend.app.ml.rl_trading_agent import TradingEnvironment
-        from backend.app.ml.ml_model_zoo import FEATURE_COLS
+        try:
+            from app.ml.rl_trading_agent import TradingEnvironment
+        except ImportError:
+            from backend.app.ml.rl_trading_agent import TradingEnvironment
         dummy_df = pd.DataFrame({
             "Close": 100.0 + np.cumsum(np.random.normal(0.1, 1.0, 100)),
             "High": 102.0 + np.cumsum(np.random.normal(0.1, 1.0, 100)),

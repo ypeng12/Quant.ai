@@ -14,6 +14,7 @@ import threading
 import time
 import uuid
 from typing import Dict, List, Optional
+import numpy as np
 import pandas as pd
 
 from app.broker.alpaca_adapter import AlpacaAdapter
@@ -22,9 +23,16 @@ from app.broker.universe_screener import UniverseScreener
 from app.broker.risk_position_sizer import RiskPositionSizer
 from app.broker.probability_engine import evaluate_mathematical_expectation
 from app.alpha_engine import InstitutionalAlphaEngine
+try:
+    from app.ml.rl_trading_agent import RLTradingAgent
+    from app.ml.auto_reflection_engine import AutoReflectionEngine
+except ImportError:
+    from backend.app.ml.rl_trading_agent import RLTradingAgent
+    from backend.app.ml.auto_reflection_engine import AutoReflectionEngine
 from app.config import ALPACA_API_KEY, ALPACA_SECRET_KEY, ALPACA_BASE_URL, WATCHLIST, EXCLUDED_TICKERS, save_watchlist, load_watchlist
 from app.data_manager import fetch_and_prepare_data
 from app.data_cache import invalidate_cache
+
 
 class LiveTradingRunner:
     def __init__(self):
@@ -57,6 +65,12 @@ class LiveTradingRunner:
         self.screener = UniverseScreener(self._get_alpaca_credentials, self.add_log)
         self.risk_sizer = RiskPositionSizer()
         self.alpha_engine = InstitutionalAlphaEngine()
+        try:
+            self.rl_agent = RLTradingAgent.load()
+            self.add_log("🧠 [Reinforcement Learning] RLTradingAgent policy loaded successfully.")
+        except Exception as e:
+            self.rl_agent = RLTradingAgent(state_dim=6)
+            self.add_log(f"🧠 [Reinforcement Learning] Initialized fresh RLTradingAgent: {e}")
 
         self.loop_task = None
         self.order_sync_thread = None
@@ -90,7 +104,11 @@ class LiveTradingRunner:
             "max_scan_symbols": 14,
             "entry_score_min": 78.0,
             "full_size_score": 85.0,
-            "min_expected_value_r": 0.15,
+            "min_expected_value_r": 0.20,
+            "min_p_win_pct": 55.0,  # Minimum institutional probability gate
+            "min_entry_rvol": 1.20,  # Minimum relative volume for institutional liquidity
+            "rl_gate_enabled": True,  # Reinforcement learning Q-policy trade gating
+            "midday_chop_filter_enabled": True,  # 11:30-14:00 EST low-volume chop shield
             "reentry_cooldown_seconds": 180,
             "max_concurrent_positions": 2,
             "buying_power_utilization_pct": 0.95,
@@ -118,6 +136,7 @@ class LiveTradingRunner:
             "tier1_size_ratio": 0.40,  # 40% starter sizing
             "tier2_size_ratio": 0.60,  # 60% golden add sizing
         }
+
 
     # Proxy properties for locks to maintain full backward compatibility
     @property
@@ -925,11 +944,15 @@ class LiveTradingRunner:
         p_win_pct = opportunity.get("win_rate_pct", 50.0)
         ev_r = opportunity.get("expected_value_r", 0.0)
         is_pos_ev = opportunity.get("is_positive_ev", False)
+        ofi = self._safe_float(opportunity.get("ofi"), 0.0)
+        rvol = self._safe_float(opportunity.get("rvol"), 1.0)
+        atr_pct = self._safe_float(opportunity.get("atr_pct"), 1.5)
+        mom_3 = self._safe_float(opportunity.get("momentum_3_pct"), 0.0)
 
         base_reason = (
             f"[{opportunity.get('regime')}] {direction} | P_win={p_win_pct:.1f}% | "
             f"E[PnL]={ev_r:+.2f}R | Session={opportunity.get('session_move_pct', 0):+.2f}% | "
-            f"M3={opportunity.get('momentum_3_pct', 0):+.2f}% | RVOL={opportunity.get('rvol', 1):.2f}x"
+            f"M3={mom_3:+.2f}% | RVOL={rvol:.2f}x | OFI={ofi:+.2f}"
         )
 
         if current_shares == 0:
@@ -948,6 +971,19 @@ class LiveTradingRunner:
             if not is_valid_quality_stock_symbol(ticker):
                 return "HOLD", f"{base_reason} | Asset is a warrant/unit derivative, trade blocked"
 
+            # 🛡️ 1. Midday Chop Shield (11:30 - 14:00 EST)
+            # In low-volume midday lunch hours, false breakouts and whipsaws dominate.
+            # Block NEW entries during this window to preserve capital and morning profits.
+            # Existing positions continue to be actively managed and trailing-stopped!
+            if self.strategy_params.get("midday_chop_filter_enabled", True):
+                try:
+                    est = pytz.timezone('America/New_York')
+                    now_ny = datetime.datetime.now(est)
+                    ny_time = now_ny.hour + now_ny.minute / 60.0
+                    if 11.50 <= ny_time < 14.00:
+                        return "HOLD", f"{base_reason} | 🛡️ [Midday Chop Shield] 11:30-14:00 EST low-volume chop zone active; new entries filtered, awaiting power hour"
+                except Exception:
+                    pass
 
             # ⚠️ 2. Bull Trap Protection (veto high chasing)
             if direction == "LONG" and (
@@ -957,56 +993,77 @@ class LiveTradingRunner:
             ):
                 return "HOLD", f"{base_reason} | ⚠️ [Bull Trap Intercept] Upper wick rejection or heavy ask depth, blocking long chase"
 
+            # ⚠️ 3. Bear Trap Protection (veto shorting into strong bids)
+            if direction == "SHORT" and (
+                opportunity.get("lower_wick_ratio", 0.0) >= 0.32
+                or (opportunity.get("is_trap", False) and "Bear Trap" in opportunity.get("trap_reason", ""))
+                or opportunity.get("regime") == "BOUNCE_CONFIRM"
+            ):
+                return "HOLD", f"{base_reason} | ⚠️ [Bear Trap Intercept] Lower wick rejection or strong bid absorption, blocking short chase"
+
             # HRT-Grade ML Quantitative Alpha Model Entry Evaluation:
             if direction == "NEUTRAL":
                 return "HOLD", f"{base_reason} | NEUTRAL signal, waiting"
 
-            # 🎯 3. Support Pullback / Inverted Dip Buy Entry
-            if (opportunity.get("regime") == "PULLBACK_LONG" or (direction == "LONG" and "FADE" in str(opportunity.get("regime", "")))) and p_win_pct >= 48.0:
-                last_exit = self.last_exit_times.get(ticker)
-                cooldown = self._safe_float(self.strategy_params.get("reentry_cooldown_seconds"), 10.0)
-                if last_exit and (time.time() - last_exit) < cooldown:
-                    remain = int(cooldown - (time.time() - last_exit))
-                    return "HOLD", f"{base_reason} | Exit cooldown ({remain}s remaining)"
-                if open_position_count >= int(self.strategy_params.get("max_concurrent_positions", 4)):
-                    return "HOLD", f"{base_reason} | Max concurrent positions reached"
-                entry_label = "Inverted Dip Buy" if "FADE" in str(opportunity.get("regime", "")) else "Pullback Value Entry"
-                return "BUY", f"{base_reason} | 🎯 [{entry_label}] Bounce from oversold levels confirmed"
+            # 🔍 4. Institutional Edge Threshold Gating:
+            # Coin-flip 50% entries and low-volume moves are mathematically unprofitable.
+            # Require minimum statistical edge: P_win >= min_p_win, E[R] >= min_expected_value_r, RVOL >= min_entry_rvol
+            min_p_win = self._safe_float(self.strategy_params.get("min_p_win_pct", 55.0), 55.0)
+            min_ev_r = self._safe_float(self.strategy_params.get("min_expected_value_r", 0.20), 0.20)
+            min_rvol = self._safe_float(self.strategy_params.get("min_entry_rvol", 1.20), 1.20)
 
-            # ⚡ 4. Fade Top Short / Bull Trap Short
-            if direction == "SHORT" and "FADE" in str(opportunity.get("regime", "")):
+            if p_win_pct < min_p_win or ev_r < min_ev_r:
+                return "HOLD", f"{base_reason} | Sub-threshold statistical edge (P_win={p_win_pct:.1f}% < {min_p_win:.1f}%, E[R]={ev_r:+.2f}R < {min_ev_r:+.2f}R)"
+
+            if rvol < min_rvol:
+                return "HOLD", f"{base_reason} | Insufficient institutional volume (RVOL={rvol:.2f}x < {min_rvol:.2f}x)"
+
+            # 📊 5. Order Flow Imbalance (OFI) Concordance:
+            # Never buy when market orders are aggressively dumping into bids; never short into massive ask lifting.
+            if direction == "LONG" and ofi < -0.30:
+                return "HOLD", f"{base_reason} | ⚠️ [OFI Divergence] Order flow imbalance is negative ({ofi:+.2f}), opposing long entry"
+            elif direction == "SHORT" and ofi > 0.30:
+                return "HOLD", f"{base_reason} | ⚠️ [OFI Divergence] Order flow imbalance is positive ({ofi:+.2f}), opposing short entry"
+
+            # 🧠 6. Reinforcement Learning Q-Policy Trade Gating:
+            if self.strategy_params.get("rl_gate_enabled", True) and hasattr(self, "rl_agent") and self.rl_agent is not None:
+                try:
+                    p_win_norm = (p_win_pct - 50.0) / 25.0
+                    ev_norm = ev_r
+                    vol_factor = rvol
+                    mom_factor = mom_3
+                    atr_factor = atr_pct
+                    cur_pos = 0.0
+                    rl_state = np.array([p_win_norm, ev_norm, vol_factor, mom_factor, atr_factor, cur_pos])
+                    disc_s = self.rl_agent._discretize_state(rl_state)
+                    # Veto only if the Q-table explicitly learned that CASH is optimal for this state
+                    if disc_s in self.rl_agent.q_table:
+                        q_vals = self.rl_agent.q_table[disc_s]
+                        if np.argmax(q_vals) == 0 and q_vals[0] > q_vals[1] and q_vals[0] > q_vals[2]:
+                            return "HOLD", f"{base_reason} | 🧠 [RL Agent Veto] Q-policy predicts CASH is optimal (Action=CASH, Q_cash={q_vals[0]:.2f} > Q_long={q_vals[1]:.2f})"
+                except Exception:
+                    pass
+
+            # 🎯 7. Cooldown & Max Position Guards
+            last_exit = self.last_exit_times.get(ticker)
+            cooldown = self._safe_float(self.strategy_params.get("reentry_cooldown_seconds"), 180.0)
+            if last_exit and (time.time() - last_exit) < cooldown:
+                remain = int(cooldown - (time.time() - last_exit))
+                return "HOLD", f"{base_reason} | Exit cooldown ({remain}s remaining)"
+            if open_position_count >= int(self.strategy_params.get("max_concurrent_positions", 2)):
+                return "HOLD", f"{base_reason} | Max concurrent positions reached"
+
+            if direction == "SHORT":
                 if not self.strategy_params.get("allow_shorting", True):
                     return "HOLD", f"{base_reason} | 🛡️ Long-Only mode active (shorting disabled)"
                 if not self._can_open_short(ticker):
                     return "HOLD", f"{base_reason} | Alpaca asset not shortable or requires locate"
-                last_exit = self.last_exit_times.get(ticker)
-                cooldown = self._safe_float(self.strategy_params.get("reentry_cooldown_seconds"), 10.0)
-                if last_exit and (time.time() - last_exit) < cooldown:
-                    remain = int(cooldown - (time.time() - last_exit))
-                    return "HOLD", f"{base_reason} | Exit cooldown ({remain}s remaining)"
-                if open_position_count >= int(self.strategy_params.get("max_concurrent_positions", 4)):
-                    return "HOLD", f"{base_reason} | Max concurrent positions reached"
-                return "SHORT", f"{base_reason} | ⚡ [Inverted Fade Top Short] Overbought breakout exhaustion confirmed, entering short"
 
-            # Direct ML Model Execution: If ML model evaluates positive EV or P_win >= 50%, trigger order immediately!
-            if is_pos_ev or ev_r >= 0.0 or p_win_pct >= 50.0:
-                last_exit = self.last_exit_times.get(ticker)
-                cooldown = self._safe_float(self.strategy_params.get("reentry_cooldown_seconds"), 10.0)
-                if last_exit and (time.time() - last_exit) < cooldown:
-                    remain = int(cooldown - (time.time() - last_exit))
-                    return "HOLD", f"{base_reason} | Exit cooldown ({remain}s remaining)"
-                if open_position_count >= int(self.strategy_params.get("max_concurrent_positions", 4)):
-                    return "HOLD", f"{base_reason} | Max concurrent positions reached"
-                if direction == "SHORT":
-                    if not self.strategy_params.get("allow_shorting", True):
-                        return "HOLD", f"{base_reason} | 🛡️ Long-Only mode active (shorting disabled)"
-                    if not self._can_open_short(ticker):
-                        return "HOLD", f"{base_reason} | Alpaca asset not shortable or requires locate"
-                return ("BUY" if direction == "LONG" else "SHORT"), f"{base_reason} | Pure ML Positive Expectancy (P_win={p_win_pct:.1f}%, E[R]={ev_r:+.2f}R) Submitting Order"
-
-            return "HOLD", f"{base_reason} | Negative Expected Value (E[PnL]={ev_r:+.2f}R)"
+            action_type = "BUY" if direction == "LONG" else "SHORT"
+            return action_type, f"{base_reason} | 🚀 High-Expectancy Institutional Alpha (P_win={p_win_pct:.1f}%, E[R]={ev_r:+.2f}R, RVOL={rvol:.2f}x) Submitting Order"
 
         side = "LONG" if current_shares > 0 else "SHORT"
+
         state = self.position_extremes.get(ticker)
         if not state or state.get("side") != side:
             state = {"side": side, "best_price": avg_cost or close}
@@ -1760,6 +1817,7 @@ class LiveTradingRunner:
 
                 if is_open:
                     self._afterhours_scan_logged = False
+                    self._eod_synced_today = False
                     if is_market_opening_window:
                         if not getattr(self, "_opening_blitz_logged", False):
                             self.add_log(f"⚡ [Opening Blitz 9:30-9:45 EST] Fast 3-second scanning across {len(self.active_tickers)} watchlist tickers...")
@@ -2304,10 +2362,13 @@ class LiveTradingRunner:
 
                     self._score_warmup_complete = True
 
-                    # EOD HuggingFace Auto-Sync: Runs once at market close (16:01 - 16:05 EST)
-                    now_time = datetime.datetime.now().time()
-                    if datetime.time(16, 1) <= now_time <= datetime.time(16, 5) and not getattr(self, "_eod_hf_synced_today", False):
-                        self._eod_hf_synced_today = True
+                    # EOD HuggingFace Auto-Sync & Autonomous Self-Reflection: Runs once at market close (16:01 - 16:10 EST)
+                    est = pytz.timezone('America/New_York')
+                    now_ny = datetime.datetime.now(est)
+                    ny_time = now_ny.hour + now_ny.minute / 60.0
+                    if 16.01 <= ny_time <= 16.10 and not getattr(self, "_eod_synced_today", False):
+                        self._eod_synced_today = True
+                        threading.Thread(target=self.run_eod_reflection, daemon=True).start()
                         threading.Thread(target=self.sync_to_huggingface, daemon=True).start()
 
                 loop_delay = 5 if (is_market_opening_window or is_market_closing_window) else 30
@@ -2319,6 +2380,25 @@ class LiveTradingRunner:
             except Exception as e:
                 self.add_log(f"⚠️ Main loop exception: {str(e)}")
                 await asyncio.sleep(30)
+
+    def run_eod_reflection(self) -> Dict:
+        """Runs autonomous daily self-reflection, trade attribution, parameter self-tuning, and RL policy update."""
+        try:
+            from app.ml.auto_reflection_engine import AutoReflectionEngine
+            est = pytz.timezone('America/New_York')
+            today_str = datetime.datetime.now(est).strftime("%Y-%m-%d")
+            self.add_log(f"🧠 [Autonomous Reflection] Running daily trade attribution & RL policy self-tuning for {today_str}...")
+            engine = AutoReflectionEngine()
+            report_path, attribution = engine.run_daily_reflection(today_str)
+            self.add_log(f"✅ [Autonomous Reflection] Completed! Trades: {attribution.get('total_trades', 0)}, Win rate: {attribution.get('win_rate_%', 0)}%, PnL: ${attribution.get('total_pnl', 0):+.2f}. Report: {report_path}")
+            # Reload updated RL agent
+            from app.ml.rl_trading_agent import RLTradingAgent
+            self.rl_agent = RLTradingAgent.load()
+            return {"success": True, "report_path": report_path, "attribution": attribution}
+        except Exception as e:
+            err_msg = f"⚠️ [Autonomous Reflection Error] {str(e)}"
+            self.add_log(err_msg)
+            return {"success": False, "error": str(e)}
 
     def sync_to_huggingface(self) -> Dict:
         """Uploads full master trade_history.json and daily partitions to HuggingFace Dataset repository (Ypeng12/quant-ai-trade-history)."""
@@ -2332,3 +2412,4 @@ class LiveTradingRunner:
             err_msg = f"⚠️ [HF Auto-Sync Error] {str(e)}"
             self.add_log(err_msg)
             return {"success": False, "error": str(e)}
+

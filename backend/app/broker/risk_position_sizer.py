@@ -136,7 +136,18 @@ class RiskPositionSizer:
 
         shares = int(final_notional / close_price) if close_price > 0 else 0
         
-        # High-price stock protection (e.g. SNDK > $500/sh): ensure at least 1 share if buying power permits
+        # Volatility-Parity (Risk Parity) Guard:
+        # High-volatility & high-dollar stocks (e.g. SNDK > $1,500 moving $40+/day)
+        # must be scaled so that a 1.5x ATR swing cannot exceed the allocated trade risk budget.
+        atr_val = self._safe_float(opportunity.get("_atr"), close_price * 0.015)
+        atr_dollar_risk = max(close_price * 0.008, atr_val * 1.50)
+        tier_risk_ratio = tier1_ratio if tier == 1 else tier2_ratio
+        trade_risk_budget = equity * self._safe_float(strategy_params.get("max_trade_risk_pct"), 0.025) * tier_risk_ratio
+        vol_parity_shares = int(trade_risk_budget / atr_dollar_risk) if atr_dollar_risk > 0 else shares
+        if vol_parity_shares > 0:
+            shares = min(shares, vol_parity_shares)
+
+        # High-price stock protection: ensure at least 1 share if buying power permits
         if shares == 0 and close_price > 500.0 and available_bp >= close_price * 0.9:
             shares = 1
 

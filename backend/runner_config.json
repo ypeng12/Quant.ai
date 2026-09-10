@@ -13,7 +13,11 @@
     "max_scan_symbols": 14,
     "entry_score_min": 78.0,
     "full_size_score": 85.0,
-    "min_expected_value_r": 0.15,
+    "min_expected_value_r": 0.20,
+    "min_p_win_pct": 55.0,
+    "min_entry_rvol": 1.20,
+    "rl_gate_enabled": true,
+    "midday_chop_filter_enabled": true,
     "reentry_cooldown_seconds": 180,
     "max_concurrent_positions": 2,
     "buying_power_utilization_pct": 0.95,
@@ -45,5 +49,5 @@
     "tier1_size_ratio": 0.40,
     "tier2_size_ratio": 0.60
   },
-  "updated_at": "2026-09-10 15:43:00"
+  "updated_at": "2026-09-10 16:15:00"
 }
