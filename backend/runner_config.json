@@ -40,7 +40,7 @@
     "pullback_entry_enabled": true,
     "pyramid_max_count": 1,
     "bar_interval": "5m",
-    "inverted_mode": true,
+    "inverted_mode": false,
     "staged_entry_enabled": true,
     "tier1_size_ratio": 0.40,
     "tier2_size_ratio": 0.60

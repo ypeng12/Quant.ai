@@ -81,8 +81,8 @@ class LiveTradingRunner:
             "strategy_mode": "aggressive_intraday",
             "paper_only_aggressive": True,
             "allow_aggressive_live": False,
-            "allow_shorting": True,  # Enable high-expectancy counter-trend & bull-trap fade shorting
-            "inverted_mode": True,  # Inverted mean-reversion counter-trend engine (fade tops, buy oversold dips)
+            "allow_shorting": True,  # Enable high-expectancy trend following & breakdown shorting
+            "inverted_mode": False,  # True institutional trend-following & momentum alpha engine (trend long, breakdown short)
             "dynamic_screener_enabled": False,  # Strict focus on focus watchlist (SNDK, TSLA, MSTR, NVDA)
             "screener_refresh_seconds": 120,
             "screener_top_actives": 6,
