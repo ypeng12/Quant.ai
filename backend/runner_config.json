@@ -39,7 +39,14 @@
     "orders_sync_interval_seconds": 2.0,
     "pullback_entry_enabled": true,
     "pyramid_max_count": 1,
-    "bar_interval": "5m"
+    "bar_interval": "5m",
+    "inverted_mode": true,
+    "allow_shorting": true,
+    "staged_entry_enabled": true,
+    "tier1_size_ratio": 0.40,
+    "tier2_size_ratio": 0.60,
+    "max_single_position_notional": 15000.0,
+    "catastrophic_stop_pct": 0.025
   },
-  "updated_at": "2026-09-10 09:58:51"
+  "updated_at": "2026-09-10 15:35:00"
 }

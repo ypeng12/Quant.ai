@@ -37,7 +37,14 @@
     "max_hold_minutes": 300,
     "time_stop_min_score": 52.0,
     "orders_sync_interval_seconds": 2.0,
-    "bar_interval": "5m"
+    "bar_interval": "5m",
+    "inverted_mode": true,
+    "allow_shorting": true,
+    "staged_entry_enabled": true,
+    "tier1_size_ratio": 0.40,
+    "tier2_size_ratio": 0.60,
+    "max_single_position_notional": 15000.0,
+    "catastrophic_stop_pct": 0.025
   },
-  "updated_at": "2026-09-03 16:36:32"
+  "updated_at": "2026-09-10 15:35:00"
 }

@@ -52,6 +52,7 @@ class LiveTradingRunner:
         self.pyramid_counts = {}  # {ticker: int} tracks exact count of pyramid additions per trade
         self.partial_tp_done = {}  # {ticker: bool} tracks whether partial profit scaling has been taken
         self.ticker_consecutive_losses = {}  # {ticker: int} tracks consecutive losses per session to avoid whipsaw losses
+        self.staged_entries = {}  # {ticker: {"tier": int, "entry_price": float, "shares": int, "notional": float, "side": str}}
 
         self.screener = UniverseScreener(self._get_alpaca_credentials, self.add_log)
         self.risk_sizer = RiskPositionSizer()
@@ -113,6 +114,11 @@ class LiveTradingRunner:
             "max_hold_minutes": 300,
             "time_stop_min_score": 52.0,
             "orders_sync_interval_seconds": 2.0,
+            "staged_entry_enabled": True,  # Citadel-style 2-tier staged entry (40% starter, 60% golden add)
+            "tier1_size_ratio": 0.40,  # 40% starter sizing
+            "tier2_size_ratio": 0.60,  # 60% golden add sizing
+            "max_single_position_notional": 15000.0,  # $15,000 hard position cap
+            "catastrophic_stop_pct": 0.025,
         }
 
     # Proxy properties for locks to maintain full backward compatibility
@@ -930,6 +936,7 @@ class LiveTradingRunner:
 
         if current_shares == 0:
             self.position_extremes.pop(ticker, None)
+            self.staged_entries.pop(ticker, None)
             # Reset pyramid and partial TP state when flat
             if ticker in self.pyramid_done:
                 del self.pyramid_done[ticker]
@@ -1014,6 +1021,14 @@ class LiveTradingRunner:
         entry_at = self.entry_times.setdefault(ticker, datetime.datetime.now())
         minutes_held = max(0.0, (datetime.datetime.now() - entry_at).total_seconds() / 60.0)
         pnl_pct = ((close - avg_cost) / avg_cost) if side == "LONG" and avg_cost > 0 else ((avg_cost - close) / avg_cost if avg_cost > 0 else 0.0)
+
+        # 🛑 Catastrophic Stop Loss (individual risk protection against sudden crashes)
+        catastrophic_stop_pct = self._safe_float(self.strategy_params.get("catastrophic_stop_pct"), 0.025)
+        if pnl_pct <= -catastrophic_stop_pct:
+            return ("SELL" if side == "LONG" else "COVER"), (
+                f"{base_reason} | 🛑 [Catastrophic Stop Loss] Loss reached -{abs(pnl_pct)*100:.2f}% "
+                f"(threshold: -{catastrophic_stop_pct*100:.2f}%), cutting loss to preserve capital"
+            )
 
         # 🎯 0. Early Partial Take Profit
         partial_tp_pct = self._safe_float(self.strategy_params.get("partial_tp_trigger_pct"), 0.0065)
@@ -1105,6 +1120,39 @@ class LiveTradingRunner:
         if minutes_held >= max_hold and not is_pos_ev and pnl_pct <= 0.0:
             return ("SELL" if side == "LONG" else "COVER"), f"{base_reason} | Flat trend at max hold duration with no profit"
 
+        # ─── Citadel / Two Sigma Tiered Staged Entry (第二枪：黄金补仓点) ──────────
+        staged_info = self.staged_entries.get(ticker)
+        if not staged_info:
+            staged_info = {"tier": 1, "entry_price": avg_cost, "shares": abs(current_shares), "notional": abs(current_shares) * avg_cost, "side": side}
+            self.staged_entries[ticker] = staged_info
+
+        if self.strategy_params.get("staged_entry_enabled", True) and staged_info.get("tier") == 1 and not self.is_entry_locked(ticker):
+            entry_p = staged_info.get("entry_price", avg_cost)
+            if side == "LONG" and entry_p > 0:
+                dip_pct = (entry_p - close) / entry_p
+                atr_dip = (entry_p - close) / max(1e-5, atr_val)
+                # Golden oversold support: deeper dip (>= 0.5% or >= 0.9 ATR) + lower wick absorption / oversold RSI / bounce bar
+                lower_wick = self._safe_float(opportunity.get("lower_wick_ratio"), 0.0)
+                rsi_val = self._safe_float(opportunity.get("rsi"), 50.0)
+                is_bounce_bar = close > self._safe_float(opportunity.get("_open"), close)
+                if (dip_pct >= 0.005 or atr_dip >= 0.9) and (lower_wick >= 0.18 or rsi_val <= 38.0 or is_bounce_bar):
+                    return "TIER2_ADD_BUY", (
+                        f"{base_reason} | 🎯 [Tier 2 Golden Add 60%] Deeper dip confirmed (-{dip_pct*100:.2f}%, ATR dip={atr_dip:.1f}, "
+                        f"lower wick={lower_wick:.2f}, RSI={rsi_val:.0f}) — Deploying remaining 60% position to lower average cost basis!"
+                    )
+            elif side == "SHORT" and entry_p > 0 and self.strategy_params.get("allow_shorting", True):
+                rally_pct = (close - entry_p) / entry_p
+                atr_rally = (close - entry_p) / max(1e-5, atr_val)
+                # Golden overbought resistance: deeper rally (>= 0.5% or >= 0.9 ATR) + upper wick rejection / overbought RSI / rejection bar
+                upper_wick = self._safe_float(opportunity.get("upper_wick_ratio"), 0.0)
+                rsi_val = self._safe_float(opportunity.get("rsi"), 50.0)
+                is_reject_bar = close < self._safe_float(opportunity.get("_open"), close)
+                if (rally_pct >= 0.005 or atr_rally >= 0.9) and (upper_wick >= 0.18 or rsi_val >= 62.0 or is_reject_bar):
+                    return "TIER2_ADD_SHORT", (
+                        f"{base_reason} | ⚡ [Tier 2 Golden Add 60%] Overbought rally exhaustion confirmed (+{rally_pct*100:.2f}%, ATR rally={atr_rally:.1f}, "
+                        f"upper wick={upper_wick:.2f}, RSI={rsi_val:.0f}) — Deploying remaining 60% short position to optimize cost basis!"
+                    )
+
         # ─── Pyramiding Buy / Short ──────────────────────────────────────────
         pyramid_threshold_pct = self._safe_float(self.strategy_params.get("pyramid_trigger_pct"), 0.015)
         can_pyramid = (
@@ -1133,13 +1181,23 @@ class LiveTradingRunner:
 
         return "HOLD", f"{base_reason} | {side} trend valid, holding with dynamic trailing stop"
 
-    def _size_aggressive_entry(self, account: Dict, close_price: float, opportunity: Dict, prob_eval: Optional[Dict] = None) -> Dict:
+    def _size_aggressive_entry(
+        self,
+        account: Dict,
+        close_price: float,
+        opportunity: Dict,
+        prob_eval: Optional[Dict] = None,
+        tier: int = 1,
+        existing_notional: float = 0.0,
+    ) -> Dict:
         return self.risk_sizer.size_aggressive_entry(
             account=account,
             close_price=close_price,
             opportunity=opportunity,
             strategy_params=self.strategy_params,
-            prob_eval=prob_eval or opportunity
+            prob_eval=prob_eval or opportunity,
+            tier=tier,
+            existing_notional=existing_notional,
         )
 
     def _size_probe_entry(self, account: Dict, close_price: float, opportunity: Dict, prob_eval: Optional[Dict] = None) -> Dict:
@@ -1950,6 +2008,7 @@ class LiveTradingRunner:
                                     self.last_exit_times[ticker] = time.time()
                                     self.entry_times.pop(ticker, None)
                                     self.position_extremes.pop(ticker, None)
+                                    self.staged_entries.pop(ticker, None)
                                 else:
                                     self.unlock_exit(ticker)
                                     self.add_log(f"❌ [{ticker}] SELL order failed. Reason: {order_res.get('error')}")
@@ -2015,6 +2074,92 @@ class LiveTradingRunner:
                                 else:
                                     self.unlock_exit(ticker)
                                     self.add_log(f"❌ [{ticker}] PARTIAL_COVER order failed. Reason: {order_res.get('error')}")
+
+                            elif action == "TIER2_ADD_BUY" and current_shares > 0:
+                                # Citadel / Two Sigma Tier 2 Golden Add: Deploy remaining 60% at deep oversold support
+                                if not is_open:
+                                    self.add_log(f"🌙 [Off-Hours] [{ticker}] Tier 2 Golden Add signal (TIER2_ADD_BUY) | Market closed, logged.")
+                                elif self.is_entry_locked(ticker):
+                                    self.add_log(f"⏳ [{ticker}] Tier 2 Golden Add skipped: order lock active")
+                                else:
+                                    account = self.adapter.get_account_summary()
+                                    curr_notional = current_shares * avg_cost
+                                    sizing = self._size_aggressive_entry(
+                                        account, close_price, opportunity, prob_eval=opportunity,
+                                        tier=2, existing_notional=curr_notional
+                                    )
+                                    add_shares = sizing["shares"]
+                                    if add_shares <= 0:
+                                        self.add_log(f"⚠️ [{ticker}] Buying power insufficient or max position cap ($15k) reached for Tier 2 Golden Add.")
+                                    else:
+                                        client_order_id = f"{ticker}-{int(datetime.datetime.now().timestamp())}-{uuid.uuid4().hex[:8]}-TIER2"
+                                        self.lock_entry(ticker)
+                                        self.add_log(
+                                            f"🎯 [{ticker}] TIER2_ADD_BUY (60% Golden Add) triggered! Dipped from entry ${avg_cost:.2f} to ${close_price:.2f} — "
+                                            f"Adding {add_shares} shs @ ${close_price:.2f}, Est Notional ${sizing['notional']:,.0f} "
+                                            f"(Total Combined Notional: ${(curr_notional + sizing['notional']):,.0f} <= $15,000 cap)"
+                                        )
+                                        order_res = self.adapter.submit_market_order(ticker, add_shares, "buy", client_order_id=client_order_id)
+                                        if order_res.get("success"):
+                                            if ticker in self.staged_entries:
+                                                self.staged_entries[ticker]["tier"] = 2
+                                                self.staged_entries[ticker]["shares"] = self.staged_entries[ticker].get("shares", current_shares) + add_shares
+                                                self.staged_entries[ticker]["notional"] = self.staged_entries[ticker].get("notional", curr_notional) + sizing["notional"]
+                                            else:
+                                                self.staged_entries[ticker] = {"tier": 2, "shares": current_shares + add_shares, "notional": curr_notional + sizing["notional"]}
+                                            self.add_log(f"✅ [{ticker}] TIER2_ADD_BUY order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
+                                            self.add_trade_action(
+                                                "TIER2_ADD_BUY", ticker, add_shares, close_price, reason,
+                                                order_id=order_res.get("order_id") or order_res.get("id"),
+                                                client_order_id=client_order_id,
+                                                order_status=order_res.get("status") or "submitted",
+                                            )
+                                        else:
+                                            self.unlock_entry(ticker)
+                                            self.add_log(f"❌ [{ticker}] TIER2_ADD_BUY order failed. Reason: {order_res.get('error')}")
+
+                            elif action == "TIER2_ADD_SHORT" and current_shares < 0:
+                                # Citadel / Two Sigma Tier 2 Golden Add Short: Deploy remaining 60% at overbought surge exhaustion
+                                if not is_open:
+                                    self.add_log(f"🌙 [Off-Hours] [{ticker}] Tier 2 Golden Add Short signal (TIER2_ADD_SHORT) | Market closed, logged.")
+                                elif self.is_entry_locked(ticker):
+                                    self.add_log(f"⏳ [{ticker}] Tier 2 Golden Add Short skipped: order lock active")
+                                else:
+                                    account = self.adapter.get_account_summary()
+                                    curr_notional = abs(current_shares) * avg_cost
+                                    sizing = self._size_aggressive_entry(
+                                        account, close_price, opportunity, prob_eval=opportunity,
+                                        tier=2, existing_notional=curr_notional
+                                    )
+                                    add_shares = sizing["shares"]
+                                    if add_shares <= 0:
+                                        self.add_log(f"⚠️ [{ticker}] Buying power insufficient or max position cap ($15k) reached for Tier 2 Golden Add Short.")
+                                    else:
+                                        client_order_id = f"{ticker}-{int(datetime.datetime.now().timestamp())}-{uuid.uuid4().hex[:8]}-TIER2"
+                                        self.lock_entry(ticker)
+                                        self.add_log(
+                                            f"⚡ [{ticker}] TIER2_ADD_SHORT (60% Golden Add) triggered! Surged from entry ${avg_cost:.2f} to ${close_price:.2f} — "
+                                            f"Adding short {add_shares} shs @ ${close_price:.2f}, Est Notional ${sizing['notional']:,.0f} "
+                                            f"(Total Combined Notional: ${(curr_notional + sizing['notional']):,.0f} <= $15,000 cap)"
+                                        )
+                                        order_res = self.adapter.submit_market_order(ticker, add_shares, "sell", client_order_id=client_order_id)
+                                        if order_res.get("success"):
+                                            if ticker in self.staged_entries:
+                                                self.staged_entries[ticker]["tier"] = 2
+                                                self.staged_entries[ticker]["shares"] = self.staged_entries[ticker].get("shares", abs(current_shares)) + add_shares
+                                                self.staged_entries[ticker]["notional"] = self.staged_entries[ticker].get("notional", curr_notional) + sizing["notional"]
+                                            else:
+                                                self.staged_entries[ticker] = {"tier": 2, "shares": abs(current_shares) + add_shares, "notional": curr_notional + sizing["notional"]}
+                                            self.add_log(f"✅ [{ticker}] TIER2_ADD_SHORT order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
+                                            self.add_trade_action(
+                                                "TIER2_ADD_SHORT", ticker, add_shares, close_price, reason,
+                                                order_id=order_res.get("order_id") or order_res.get("id"),
+                                                client_order_id=client_order_id,
+                                                order_status=order_res.get("status") or "submitted",
+                                            )
+                                        else:
+                                            self.unlock_entry(ticker)
+                                            self.add_log(f"❌ [{ticker}] TIER2_ADD_SHORT order failed. Reason: {order_res.get('error')}")
 
                             elif action == "PYRAMID_BUY" and current_shares > 0:
                                 # Pyramiding Buy: Add to a profitable long position
@@ -2120,7 +2265,7 @@ class LiveTradingRunner:
                                 break
 
                             account = self.adapter.get_account_summary()
-                            sizing = self._size_aggressive_entry(account, cand_close, cand_opp, prob_eval=cand_opp)
+                            sizing = self._size_aggressive_entry(account, cand_close, cand_opp, prob_eval=cand_opp, tier=1)
                             shares = sizing["shares"]
                             if shares <= 0:
                                 self.add_log(f"⚠️ [{cand_ticker}] Buying power insufficient for 1 share, skipping signal.")
@@ -2134,12 +2279,20 @@ class LiveTradingRunner:
                             pos_dir = "LONG" if cand_action == "BUY" else "SHORT"
                             icon_str = "🛒" if cand_action == "BUY" else "📉"
                             self.add_log(
-                                f"{icon_str} 👑 [Leader Entry Triggered] [{cand_ticker}] {pos_dir} Score:{cand_score:.1f} (P_win: {cand_opp.get('win_rate_pct')}%, E[R]: {cand_opp.get('expected_value_r'):+.2f}R): "
-                                f"Order {shares} shs, Est Notional ${sizing['notional']:,.0f} ({sizing['buying_power_fraction']*100:.0f}% of Buying Power ${sizing['available_buying_power']:,.2f}), Stop Loss {sizing['stop_pct']*100:.2f}%."
+                                f"{icon_str} 👑 [Leader Entry Triggered - Tier 1 40% Starter] [{cand_ticker}] {pos_dir} Score:{cand_score:.1f} (P_win: {cand_opp.get('win_rate_pct')}%, E[R]: {cand_opp.get('expected_value_r'):+.2f}R): "
+                                f"Order {shares} shs @ ${cand_close:.2f}, Est Notional ${sizing['notional']:,.0f} (Cap: $15,000, Buying Power ${sizing['available_buying_power']:,.2f}), Stop Loss {sizing['stop_pct']*100:.2f}%."
                             )
                             order_res = self.adapter.submit_market_order(cand_ticker, shares, side_str, client_order_id=client_order_id)
                             if order_res.get("success"):
                                 cycle_new_entries += 1
+                                self.staged_entries[cand_ticker] = {
+                                    "tier": 1,
+                                    "entry_price": cand_close,
+                                    "shares": shares,
+                                    "notional": sizing["notional"],
+                                    "side": "LONG" if cand_action == "BUY" else "SHORT",
+                                    "entry_time": time.time(),
+                                }
                                 self.add_log(f"✅ [{cand_ticker}] {cand_action} order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
                                 if cand_action == "BUY":
                                     self.highest_prices[cand_ticker] = cand_close
@@ -2152,6 +2305,7 @@ class LiveTradingRunner:
                             else:
                                 self.unlock_entry(cand_ticker)
                                 self.entry_times.pop(cand_ticker, None)
+                                self.staged_entries.pop(cand_ticker, None)
                                 self.add_log(f"❌ [{cand_ticker}] {cand_action} order failed. Reason: {order_res.get('error')}")
 
                     self._score_warmup_complete = True

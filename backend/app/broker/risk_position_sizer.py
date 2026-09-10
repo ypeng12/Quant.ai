@@ -86,59 +86,62 @@ class RiskPositionSizer:
         close_price: float,
         opportunity: Dict,
         strategy_params: Dict,
-        prob_eval: Optional[Dict] = None
+        prob_eval: Optional[Dict] = None,
+        tier: int = 1,
+        existing_notional: float = 0.0,
     ) -> Dict:
         equity = max(0.0, self._safe_float(account.get("equity"), account.get("portfolio_value", 58000.0)))
         cash = max(0.0, self._safe_float(account.get("cash"), 0.0))
         multiplier = max(1.0, self._safe_float(account.get("multiplier"), 1.0))
         available_bp = max(0.0, self._safe_float(account.get("buying_power"), cash * multiplier))
-        
-        # Big Position (大仓 / Max Profit) Sizing Core Rule:
-        # If margin buying power is available (e.g. 4x day trading margin ~$200k),
-        # scale position size up to 35%~45% of available buying power (or up to 1.8x equity = ~$70k~$95k notional)
-        # to deliver multi-thousand dollar swings expected by aggressive quant trading.
-        max_bp_pct = self._safe_float(strategy_params.get("max_single_position_bp_pct"), 0.45)
-        max_eq_mult = self._safe_float(strategy_params.get("max_single_position_equity_multiplier"), 1.80)
-        
-        if available_bp > equity * 1.2:
-            max_position_notional = min(available_bp * max_bp_pct, equity * max_eq_mult)
-        else:
-            max_position_notional = equity * self._safe_float(strategy_params.get("max_single_position_equity_pct"), 0.70)
-        
-        # Kelly Criterion & ML Conviction Sizing
-        score = self._safe_float(opportunity.get("score"), 50.0)
-        p_win = self._safe_float(opportunity.get("win_probability", prob_eval.get("win_probability", 0.50) if prob_eval else 0.50), 0.50)
-        starter_bp_pct = self._safe_float(strategy_params.get("starter_buying_power_pct"), 0.65)
-        
-        # Dynamic allocation fraction: scales with P_win, starter_bp_pct, and ML Explosive Surge detection
-        conviction_mult = max(0.60, min(1.0, (p_win - 0.45) * 3.0 + (score / 100.0) * 0.5))
-        if opportunity.get("is_explosive", False) or self._safe_float(opportunity.get("expected_mfe_pct"), 0.0) >= 1.5:
-            conviction_mult = 1.0
-        target_notional = max_position_notional * conviction_mult
-        
-        # Double Cap: Notional cannot exceed max_position_notional OR available_bp * 0.95
         utilization = self._safe_float(strategy_params.get("buying_power_utilization_pct"), 0.95)
-        final_notional = min(target_notional, max_position_notional, available_bp * utilization)
         
-        # Risk Budget Cap (Max 4.0% portfolio risk per trade = ~$2,000+ max loss)
+        # Citadel / Two Sigma Tiered Staged Sizing Core Rule:
+        # Total position across both shots is hard-capped (default $15,000 max notional)
+        # Tier 1 (Starter Probe): 40% of target position budget
+        # Tier 2 (Golden Add at extreme oversold/overbought support): 60% of target budget
+        max_notional_cap = self._safe_float(strategy_params.get("max_single_position_notional"), 15000.0)
+        total_position_budget = min(max_notional_cap, available_bp * utilization)
+        
+        staged_enabled = strategy_params.get("staged_entry_enabled", True)
+        tier1_ratio = self._safe_float(strategy_params.get("tier1_size_ratio"), 0.40)
+        tier2_ratio = self._safe_float(strategy_params.get("tier2_size_ratio"), 0.60)
+        
         stop_pct = max(0.005, self._safe_float(opportunity.get("_stop_pct"), 0.0100))
-        max_risk_dollars = equity * self._safe_float(strategy_params.get("max_trade_risk_pct"), 0.040)
-        risk_constrained_notional = (max_risk_dollars / stop_pct) if stop_pct > 0 else final_notional
-        
-        final_notional = min(final_notional, risk_constrained_notional)
+        max_risk_dollars = equity * self._safe_float(strategy_params.get("max_trade_risk_pct"), 0.035)
+
+        if staged_enabled and tier == 1:
+            intended_notional = total_position_budget * tier1_ratio
+            risk_constrained_notional = (max_risk_dollars * tier1_ratio / stop_pct) if stop_pct > 0 else intended_notional
+            final_notional = min(intended_notional, risk_constrained_notional, available_bp * utilization)
+        elif staged_enabled and tier == 2:
+            remaining_budget = max(0.0, total_position_budget - existing_notional)
+            intended_notional = total_position_budget * tier2_ratio
+            final_notional = min(intended_notional, remaining_budget, available_bp * utilization)
+        else:
+            max_bp_pct = self._safe_float(strategy_params.get("max_single_position_bp_pct"), 0.45)
+            max_eq_mult = self._safe_float(strategy_params.get("max_single_position_equity_multiplier"), 1.80)
+            if available_bp > equity * 1.2:
+                max_position_notional = min(available_bp * max_bp_pct, equity * max_eq_mult, max_notional_cap)
+            else:
+                max_position_notional = min(equity * self._safe_float(strategy_params.get("max_single_position_equity_pct"), 0.70), max_notional_cap)
+            final_notional = min(max_position_notional, available_bp * utilization)
+
         shares = int(final_notional / close_price) if close_price > 0 else 0
         
         # High-price stock protection (e.g. SNDK > $500/sh): ensure at least 1 share if buying power permits
         if shares == 0 and close_price > 500.0 and available_bp >= close_price * 0.9:
-            shares = 1
+            if tier == 1 or (existing_notional + close_price <= max_notional_cap * 1.1):
+                shares = 1
 
         return {
             "shares": shares,
             "notional": shares * close_price,
             "available_buying_power": available_bp,
-            "buying_power_fraction": final_notional / equity if equity > 0 else starter_bp_pct,
+            "buying_power_fraction": (shares * close_price) / equity if equity > 0 else 0.0,
             "risk_budget": max_risk_dollars,
             "stop_pct": stop_pct,
+            "tier": tier,
         }
 
     def size_probe_entry(
