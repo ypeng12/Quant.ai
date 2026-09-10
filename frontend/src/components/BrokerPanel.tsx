@@ -135,7 +135,7 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
   const [tickerScores, setTickerScores] = useState<Record<string, number>>({});
 
   const handleClosePosition = async (ticker: string) => {
-    if (!window.confirm(`确定要手动强行卖出 / 平仓 ${ticker} 吗？\nConfirm manual force sell/close position for ${ticker}?`)) {
+    if (!window.confirm(`Are you sure you want to force close position for ${ticker}?`)) {
       return;
     }
     setClosingTicker(ticker);
@@ -149,10 +149,10 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
       if (data.success) {
         await fetchBrokerData();
       } else {
-        alert(`平仓失败: ${data.error || data.detail || 'Unknown error'}`);
+        alert(`Failed to close position: ${data.error || data.detail || 'Unknown error'}`);
       }
     } catch (err) {
-      alert(`请求失败: ${err}`);
+      alert(`Request failed: ${err}`);
     } finally {
       setClosingTicker(null);
     }
@@ -251,7 +251,7 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
   };
 
   const handleStopBot = async () => {
-    if (!window.confirm('⚠️ 确定要暂停 AI 量化交易托管机器人吗？\n(按“确定”才会暂停，默认一直保持开启托管状态)')) return;
+    if (!window.confirm('⚠️ Are you sure you want to pause the AI Quant Trading Bot?\n(Click OK to pause; bot runs continuously by default.)')) return;
     setActionLoading('stop');
     try {
       const res = await fetch(`${API_BASE}/api/live/stop`, { method: 'POST' });
@@ -310,18 +310,18 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
   };
 
   const handleArchiveHistory = async () => {
-    if (!window.confirm('📦 确定将过去旧的历史成交记录打包上传至 Hugging Face Dataset (Ypeng12/quant-ai-trade-history)，并自动清理本地文件吗？')) return;
+    if (!window.confirm('📦 Upload past trade history archive to Hugging Face Dataset (Ypeng12/quant-ai-trade-history) and prune local storage?')) return;
     setActionLoading('archive_history');
     try {
       const res = await fetch(`${API_BASE}/api/live/archive_history`, { method: 'POST' });
       const json = await res.json();
       if (json.success) {
-        alert(json.message || '归档上传成功！');
+        alert(json.message || 'Archived and uploaded successfully!');
       } else {
-        alert('归档失败: ' + (json.error || json.message || 'Unknown error'));
+        alert('Archive failed: ' + (json.error || json.message || 'Unknown error'));
       }
     } catch {
-      alert('请求失败');
+      alert('Request failed');
     } finally {
       setActionLoading(null);
       fetchBrokerData();
@@ -343,7 +343,7 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
     return (
       <div className="card" style={{ padding: '2rem', textAlign: 'center', background: 'transparent', border: 'none' }}>
         <div style={{ fontSize: '0.9rem', color: 'var(--color-text-secondary)' }}>
-          加载账户与交易数据中...
+          Loading account and trading data...
         </div>
       </div>
     );
@@ -418,7 +418,7 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
         fontSize: '0.82rem'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-          <span style={{ color: 'var(--color-green)', fontWeight: 700 }}>🎯 AI 实时研判股票池:</span>
+          <span style={{ color: 'var(--color-green)', fontWeight: 700 }}>🎯 AI Live Watchlist:</span>
           {activeTickers.map((t, idx) => {
             const score = tickerScores[t] !== undefined ? tickerScores[t] : 0;
             let badgeBg = 'rgba(255,255,255,0.06)';
@@ -446,7 +446,7 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
             return (
               <span
                 key={t}
-                title={`AI 多因子综合评分: ${score}/100 分`}
+                title={`AI Multi-Factor Score: ${score}/100`}
                 style={{
                   background: badgeBg,
                   border: badgeBorder,
@@ -517,18 +517,18 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
                 <span className="stat-label">Today Net PnL</span>
                 <span style={{ fontSize: '0.68rem', padding: '1px 5px', borderRadius: '3px', background: netPnlVal >= 0 ? 'rgba(0,200,5,0.15)' : 'rgba(255,59,48,0.15)', color: netPnlVal >= 0 ? '#00c805' : '#ff3b30', fontWeight: 700 }}>
-                  平仓 + 浮动持仓 (100% 守恒)
+                  Closed + Open Floating (100% Conserved)
                 </span>
               </div>
               <span className="stat-value" style={{ fontSize: '1.4rem', fontWeight: 900, color: netPnlVal >= 0 ? 'var(--color-green)' : 'var(--color-red)' }}>
                 {formatMoney(netPnlVal)}
               </span>
               <div style={{ fontSize: '0.72rem', color: '#888', marginTop: '4px' }}>
-                已平仓: <span style={{ color: realizedPnl >= 0 ? '#00c805' : '#ff3b30', fontWeight: 700 }}>{formatMoney(realizedPnl)}</span> | 持仓浮动: <span style={{ color: unrealizedPnl >= 0 ? '#00c805' : '#ff3b30', fontWeight: 700 }}>{formatMoney(unrealizedPnl)}</span>
+                Realized: <span style={{ color: realizedPnl >= 0 ? '#00c805' : '#ff3b30', fontWeight: 700 }}>{formatMoney(realizedPnl)}</span> | Open Floating: <span style={{ color: unrealizedPnl >= 0 ? '#00c805' : '#ff3b30', fontWeight: 700 }}>{formatMoney(unrealizedPnl)}</span>
               </div>
               {alpacaAccountDelta !== undefined && Math.abs(alpacaAccountDelta - netPnlVal) > 0.05 && (
                 <div style={{ fontSize: '0.68rem', color: '#64748b', marginTop: '4px', borderTop: '1px dashed rgba(255,255,255,0.08)', paddingTop: '3px' }}>
-                  Alpaca 隔夜总资产净变动: <strong style={{ color: alpacaAccountDelta >= 0 ? '#00c805' : '#ff3b30' }}>{formatMoney(alpacaAccountDelta)}</strong> (含昨夜留仓跳空)
+                  Alpaca Overnight Net Change: <strong style={{ color: alpacaAccountDelta >= 0 ? '#00c805' : '#ff3b30' }}>{formatMoney(alpacaAccountDelta)}</strong> (incl. overnight gap)
                 </div>
               )}
             </div>
@@ -537,10 +537,10 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
             <div className="stat-card" style={{ background: '#09090b', border: '1px solid var(--color-border)', padding: '1.25rem' }}>
               <span className="stat-label">Win Rate</span>
               <span className="stat-value" style={{ fontSize: '1.4rem', fontWeight: 900, color: closedCount > 0 ? (winRatePct >= 50 ? 'var(--color-green)' : 'var(--color-red)') : '#38bdf8' }}>
-                {closedCount > 0 ? `${winRatePct.toFixed(1)}%` : '持仓博弈中 ⏱️'}
+                {closedCount > 0 ? `${winRatePct.toFixed(1)}%` : 'In Position ⏱️'}
               </span>
               <div style={{ fontSize: '0.72rem', color: '#888', marginTop: '4px' }}>
-                {closedCount > 0 ? `已平仓: ${closedCount} 笔 (${winsCount}胜/${lossesCount}负)` : `活跃持仓: ${activePositionsCount} 笔待平仓`}
+                {closedCount > 0 ? `Closed: ${closedCount} trades (${winsCount}W/${lossesCount}L)` : `Active: ${activePositionsCount} open positions`}
               </div>
             </div>
 
@@ -556,12 +556,12 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
                   </>
                 ) : (
                   <span style={{ color: '#94a3b8', fontSize: '1.1rem' }}>
-                    0/0 ({activePositionsCount}笔持仓中)
+                    0/0 ({activePositionsCount} in position)
                   </span>
                 )}
               </span>
               <div style={{ fontSize: '0.72rem', color: '#888', marginTop: '4px' }}>
-                {closedCount > 0 ? (activePositionsCount > 0 ? `另有 ${activePositionsCount} 笔持仓中` : '今日已全部结算') : '平仓时自动统计胜负'}
+                {closedCount > 0 ? (activePositionsCount > 0 ? `${activePositionsCount} additional open positions` : 'All settled today') : 'Auto calculated upon closing'}
               </div>
             </div>
 
@@ -570,11 +570,11 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
               <span className="stat-label">Best Trade</span>
               <span className="stat-value" style={{ fontSize: '1.3rem', fontWeight: 900, color: (closedCount > 0 && winsCount > 0) ? 'var(--color-green)' : (bestTradeNum < 0 ? 'var(--color-red)' : '#94a3b8') }}>
                 {closedCount > 0
-                  ? (winsCount > 0 ? formatMoney(bestTradeNum) : (lossesCount > 0 ? `暂无盈利 (${formatMoney(bestTradeNum, false)})` : '$0.00'))
-                  : (positions.length > 0 ? `浮盈最高: ${formatMoney(Math.max(0, ...positions.map(p => p.unrealized_pnl || 0)))}` : '$0.00')}
+                  ? (winsCount > 0 ? formatMoney(bestTradeNum) : (lossesCount > 0 ? `No profit yet (${formatMoney(bestTradeNum, false)})` : '$0.00'))
+                  : (positions.length > 0 ? `Max unrealized: ${formatMoney(Math.max(0, ...positions.map(p => p.unrealized_pnl || 0)))}` : '$0.00')}
               </span>
               <div style={{ fontSize: '0.72rem', color: '#888', marginTop: '4px' }}>
-                {closedCount > 0 ? (winsCount > 0 ? '今日最高已落袋盈利' : '今日尚无盈利平仓单') : '持仓浮动最高收益'}
+                {closedCount > 0 ? (winsCount > 0 ? 'Highest realized gain today' : 'No profitable closed trades today') : 'Highest open floating gain'}
               </div>
             </div>
 
@@ -584,10 +584,10 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
               <span className="stat-value" style={{ fontSize: '1.3rem', fontWeight: 900, color: worstTradeNum < 0 ? 'var(--color-red)' : '#94a3b8' }}>
                 {closedCount > 0
                   ? formatMoney(worstTradeNum, false)
-                  : (positions.length > 0 ? `浮亏最大: ${formatMoney(Math.min(0, ...positions.map(p => p.unrealized_pnl || 0)), false)}` : '$0.00')}
+                  : (positions.length > 0 ? `Max drawdown: ${formatMoney(Math.min(0, ...positions.map(p => p.unrealized_pnl || 0)), false)}` : '$0.00')}
               </span>
               <div style={{ fontSize: '0.72rem', color: '#888', marginTop: '4px' }}>
-                {closedCount > 0 ? '今日最大已平仓亏损' : '持仓最大盘中回撤'}
+                {closedCount > 0 ? 'Largest closed loss today' : 'Maximum open drawdown'}
               </div>
             </div>
           </div>
@@ -621,7 +621,7 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
               {positions.length > 0 && (
                 <button
                   onClick={async () => {
-                    if (window.confirm("⚠️ 确定要强行全平所有持仓吗？(Force liquidate all positions)")) {
+                    if (window.confirm("⚠️ Force liquidate all open positions?")) {
                       try {
                         const res = await fetch(`${API_BASE}/api/broker/close_all`, { method: 'POST' });
                         const d = await res.json();
@@ -651,19 +651,19 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
               {!isMarketOpen ? (
                 <div>
                   <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#ff6b6b', marginBottom: '6px' }}>
-                    💤 休市中 (Market Closed)
+                    💤 Market Closed
                   </div>
                   <div style={{ fontSize: '0.82rem', color: 'var(--color-text-secondary)' }}>
-                    美股交易所处于非常规交易时段，系统依从 Alpaca 官方交易所 API 状态，正在等待美股开盘...
+                    US stock exchanges are outside regular trading hours. Waiting for market open...
                   </div>
                 </div>
               ) : (
                 <div>
                   <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#00c805', marginBottom: '6px' }}>
-                    📡 系统全频段研判中 (监控池目前空仓)
+                    📡 Market Scanning Active (Currently Flat)
                   </div>
                   <div style={{ fontSize: '0.82rem', color: 'var(--color-text-secondary)' }}>
-                    AI 量化引擎正在实时扫描 Watchlist 股票池微观数据，暂未发现符合条件的合适买点，持续全频监控中...
+                    AI Quant Engine is scanning watchlist microstructure. No active entry signals triggered yet...
                   </div>
                 </div>
               )}
@@ -693,7 +693,7 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
                         <button
                           onClick={() => handleClosePosition(pos.ticker)}
                           disabled={closingTicker === pos.ticker}
-                          title={isShort ? `强行平空仓 (Close Short ${pos.ticker})` : `强行卖出/平仓 (Sell ${pos.ticker})`}
+                          title={isShort ? `Force Close Short (${pos.ticker})` : `Force Close Long (${pos.ticker})`}
                           style={{
                             background: 'transparent',
                             border: '1px solid rgba(255, 59, 48, 0.35)',
@@ -736,7 +736,7 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
           <div style={{ display: 'flex', gap: '8px', marginBottom: '1rem', borderBottom: '1px solid var(--color-border)', paddingBottom: '10px' }}>
             {([
               { id: 'analysis', label: '🧠 AI Live Analysis & Alerts' },
-              { id: 'portfolio', label: '📈 Portfolio History 曲线' },
+              { id: 'portfolio', label: '📈 Portfolio History' },
               { id: 'actions', label: '⚡ Execution Activity' },
               { id: 'history', label: '📅 Trade History' },
             ] as { id: ActiveTab; label: string }[]).map((tab) => (

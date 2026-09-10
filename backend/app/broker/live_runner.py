@@ -70,7 +70,7 @@ class LiveTradingRunner:
         self.ticker_scores = {}
         self._loaded_strategy_version = None
         self.load_runner_config()
-        self.add_log("📡 [系统初始化完成] Quant AI 日内概率风控与研判引擎已就绪...")
+        self.add_log("📡 [System Initialized] Quant AI Intraday Probability & Risk Engine ready...")
         self.start()
 
     @staticmethod
@@ -220,7 +220,7 @@ class LiveTradingRunner:
             print(f"Error saving runner_config.json: {e}")
 
     def set_market_mode(self, mode: str = "AUTO_EXCHANGE") -> Dict:
-        msg = "⏱️ 开盘关盘已 100% 绑定 Alpaca 官方交易所 API 实操时钟 (AUTO_EXCHANGE)。"
+        msg = "⏱️ Market hours 100% synchronized to Alpaca exchange clock (AUTO_EXCHANGE)."
         self.save_runner_config()
         self.add_log(msg)
         return {"success": True, "market_mode": "AUTO_EXCHANGE", "message": msg}
@@ -269,7 +269,7 @@ class LiveTradingRunner:
                 if raw_action in ("BUY", "PYRAMID_BUY", "COVER", "PARTIAL_COVER"):
                     if short_q:
                         trade["action"] = "COVER"
-                        trade["action_cn"] = "平空"
+                        trade["action_cn"] = "COVER"
                         rem_qty = qty
                         while rem_qty > 0 and short_q:
                             entry = short_q[0]
@@ -283,13 +283,13 @@ class LiveTradingRunner:
                             long_q.append({"price": price, "qty": rem_qty})
                     else:
                         trade["action"] = "BUY"
-                        trade["action_cn"] = "买入"
+                        trade["action_cn"] = "BUY"
                         long_q.append({"price": price, "qty": qty})
                         trade_pnl = 0.0
                 elif raw_action in ("SELL", "PARTIAL_SELL", "SHORT"):
                     if long_q:
                         trade["action"] = "SELL"
-                        trade["action_cn"] = "卖出"
+                        trade["action_cn"] = "SELL"
                         rem_qty = qty
                         while rem_qty > 0 and long_q:
                             entry = long_q[0]
@@ -475,7 +475,7 @@ class LiveTradingRunner:
                     if r_sym in open_tickers:
                         pos = open_tickers[r_sym]
                         shares = pos.get('shares', 0)
-                        self.add_log(f"🗑️ [自选股移除清仓] 检测到 [{r_sym}] 已从 Watchlist 移除，立刻自动提交 Alpaca 强行全卖清仓指令！")
+                        self.add_log(f"🗑️ [Watchlist Removal] [{r_sym}] removed from Watchlist, submitting market liquidation order to Alpaca!")
                         close_res = {}
                         if hasattr(self.adapter, "close_position"):
                             close_res = self.adapter.close_position(r_sym) or {}
@@ -489,12 +489,12 @@ class LiveTradingRunner:
                             order_status=close_res.get("status") or "submitted",
                         )
             except Exception as e:
-                self.add_log(f"⚠️ 自选股移除自动清仓警告: {e}")
+                self.add_log(f"⚠️ Watchlist removal liquidation warning: {e}")
 
         if set(cleaned) != set(previous_watchlist):
             self.active_tickers = cleaned
             save_watchlist(cleaned, allow_empty=True)
-            self.add_log(f"🔄 已更新手动种子池；Alpaca 日内涨跌幅/活跃榜仍会动态补充: {cleaned}")
+            self.add_log(f"🔄 Updated seed watchlist: {cleaned}")
 
     def close_individual_position(self, ticker: str) -> dict:
         sym = ticker.upper().strip()
@@ -502,7 +502,7 @@ class LiveTradingRunner:
             if hasattr(self.adapter, "close_position"):
                 res = self.adapter.close_position(sym)
                 if res.get("success"):
-                    self.add_log(f"⚡ [用户手动平仓] 已成功发起 {sym} 的强行卖出/平仓指令")
+                    self.add_log(f"⚡ [Manual Close] Submitted force close order for {sym}")
                     self.add_trade_action(
                         action="SELL",
                         ticker=sym,
@@ -642,7 +642,7 @@ class LiveTradingRunner:
         long_structure = close > vwap and ema_9 > ema_21 and close >= ema_21
         short_structure = close < vwap and ema_9 < ema_21 and close <= ema_21
 
-        # "稍微早点" (Pullback Support Entry): Macro bullish trend pulling back to VWAP/EMA21 support
+        # Pullback Support Entry: Macro bullish trend pulling back to VWAP/EMA21 support
         dist_to_ema21_pct = ((close - ema_21) / max(1e-5, ema_21)) * 100.0
         pullback_support = (
             ema_9 > ema_21
@@ -731,7 +731,7 @@ class LiveTradingRunner:
         is_trap = alpha_eval.get("is_trap", False)
         trap_reason = alpha_eval.get("trap_reason", "")
 
-        # Anti-Bull Trap ("反着来"): If near local high with upper wick rejection or trap detected
+        # Anti-Bull Trap: If near local high with upper wick rejection or trap detected
         bull_trap_risk = (
             upper_wick_ratio >= 0.32
             and (vwap_dist_pct >= 0.45 or high_to_now_pct >= -0.25)
@@ -899,7 +899,7 @@ class LiveTradingRunner:
 
         base_reason = (
             f"[{opportunity.get('regime')}] {direction} | P_win={p_win_pct:.1f}% | "
-            f"E[PnL]={ev_r:+.2f}R | 日内={opportunity.get('session_move_pct', 0):+.2f}% | "
+            f"E[PnL]={ev_r:+.2f}R | Session={opportunity.get('session_move_pct', 0):+.2f}% | "
             f"M3={opportunity.get('momentum_3_pct', 0):+.2f}% | RVOL={opportunity.get('rvol', 1):.2f}x"
         )
 
@@ -916,44 +916,44 @@ class LiveTradingRunner:
 
             # Quality Stock & Warrant/Unit Filter (dynamic quality screening instead of static blacklists)
             if not is_valid_quality_stock_symbol(ticker):
-                return "HOLD", f"{base_reason} | 标的属于权证/衍生单元 (Warrant/Unit)，拒绝交易"
+                return "HOLD", f"{base_reason} | Asset is a warrant/unit derivative, trade blocked"
 
-            # 🛑 1. Single Ticker Daily Loss Circuit Breaker (单票日内连亏熔断)
+            # 🛑 1. Single Ticker Daily Loss Circuit Breaker
             max_losses = int(self.strategy_params.get("max_losses_per_ticker_session", 2))
             ticker_losses = self.get_ticker_session_losses(ticker)
             if ticker_losses >= max_losses:
-                return "HOLD", f"{base_reason} | 🛑 [单票日内连亏熔断] 该股今日已亏损 {ticker_losses} 次 (>= 上限 {max_losses} 次)，锁定开仓以防持续回撤"
+                return "HOLD", f"{base_reason} | 🛑 [Circuit Breaker] Daily losses {ticker_losses} >= max {max_losses}, entry locked to prevent drawdown"
 
-            # ⚠️ 2. Bull Trap Protection ("反着来" - 一票否决高位追多)
+            # ⚠️ 2. Bull Trap Protection (veto high chasing)
             if direction == "LONG" and (
                 opportunity.get("upper_wick_ratio", 0.0) >= 0.32
                 or (opportunity.get("is_trap", False) and "Bull Trap" in opportunity.get("trap_reason", ""))
                 or opportunity.get("regime") == "TRAP_REJECT"
             ):
-                return "HOLD", f"{base_reason} | ⚠️ [诱多防守拦截 (反着来)] 顶部长上影线或主力卖单压盘，一票否决追多"
+                return "HOLD", f"{base_reason} | ⚠️ [Bull Trap Intercept] Upper wick rejection or heavy ask depth, blocking long chase"
 
             # HRT-Grade ML Quantitative Alpha Model Entry Evaluation:
             if direction == "NEUTRAL":
-                return "HOLD", f"{base_reason} | NEUTRAL 观望信号"
+                return "HOLD", f"{base_reason} | NEUTRAL signal, waiting"
 
-            # 🎯 3. Support Pullback Entry ("稍微早点" - 回踩低吸建仓)
+            # 🎯 3. Support Pullback Entry
             if opportunity.get("regime") == "PULLBACK_LONG" and p_win_pct >= 48.0:
                 last_exit = self.last_exit_times.get(ticker)
                 cooldown = self._safe_float(self.strategy_params.get("reentry_cooldown_seconds"), 10.0)
                 if last_exit and (time.time() - last_exit) < cooldown:
                     remain = int(cooldown - (time.time() - last_exit))
-                    return "HOLD", f"{base_reason} | 平仓冷却中 ({remain}s 剩余)"
+                    return "HOLD", f"{base_reason} | Exit cooldown ({remain}s remaining)"
                 if open_position_count >= int(self.strategy_params.get("max_concurrent_positions", 4)):
-                    return "HOLD", f"{base_reason} | 已达最大同时持仓数"
-                return "BUY", f"{base_reason} | 🎯 [早点回踩接多 (Pullback Value Entry)] 均线/VWAP 支撑企稳低吸进场"
+                    return "HOLD", f"{base_reason} | Max concurrent positions reached"
+                return "BUY", f"{base_reason} | 🎯 [Pullback Value Entry] VWAP/EMA support bounce confirmed"
 
-            # ⚡ 4. Fade Bull Trap Short ("反着来做空")
+            # ⚡ 4. Fade Bull Trap Short
             if direction == "SHORT" and "FADE" in str(opportunity.get("regime", "")):
                 if not self.strategy_params.get("allow_shorting", True):
-                    return "HOLD", f"{base_reason} | 🛡️ Long-Only 纯多头保护（未开启做空）"
+                    return "HOLD", f"{base_reason} | 🛡️ Long-Only mode active (shorting disabled)"
                 if not self._can_open_short(ticker):
-                    return "HOLD", f"{base_reason} | Alpaca Asset 当前不可直接卖空/需要 locate"
-                return "SHORT", f"{base_reason} | ⚡ [诱多反手做空 (反着来)] 顶部长上影假突破+主力抛压确认，反手做空斩获跳水"
+                    return "HOLD", f"{base_reason} | Alpaca asset not shortable or requires locate"
+                return "SHORT", f"{base_reason} | ⚡ [Fade Bull Trap Short] False breakout upper wick rejection confirmed, entering short"
 
             # Direct ML Model Execution: If ML model evaluates positive EV or P_win >= 50%, trigger order immediately!
             if is_pos_ev or ev_r >= 0.0 or p_win_pct >= 50.0:
@@ -961,17 +961,17 @@ class LiveTradingRunner:
                 cooldown = self._safe_float(self.strategy_params.get("reentry_cooldown_seconds"), 10.0)
                 if last_exit and (time.time() - last_exit) < cooldown:
                     remain = int(cooldown - (time.time() - last_exit))
-                    return "HOLD", f"{base_reason} | 平仓冷却中 ({remain}s 剩余)"
+                    return "HOLD", f"{base_reason} | Exit cooldown ({remain}s remaining)"
                 if open_position_count >= int(self.strategy_params.get("max_concurrent_positions", 4)):
-                    return "HOLD", f"{base_reason} | 已达最大同时持仓数"
+                    return "HOLD", f"{base_reason} | Max concurrent positions reached"
                 if direction == "SHORT":
                     if not self.strategy_params.get("allow_shorting", True):
-                        return "HOLD", f"{base_reason} | 🛡️ Long-Only 纯多头保护（禁止逆势做空强势科技股）"
+                        return "HOLD", f"{base_reason} | 🛡️ Long-Only mode active (shorting disabled)"
                     if not self._can_open_short(ticker):
-                        return "HOLD", f"{base_reason} | Alpaca Asset 当前不可直接卖空/需要 locate"
-                return ("BUY" if direction == "LONG" else "SHORT"), f"{base_reason} | 纯 ML 正期望值 (P_win={p_win_pct:.1f}%, E[R]={ev_r:+.2f}R) 报单建仓"
+                        return "HOLD", f"{base_reason} | Alpaca asset not shortable or requires locate"
+                return ("BUY" if direction == "LONG" else "SHORT"), f"{base_reason} | Pure ML Positive Expectancy (P_win={p_win_pct:.1f}%, E[R]={ev_r:+.2f}R) Submitting Order"
 
-            return "HOLD", f"{base_reason} | 负期望值 (E[PnL]={ev_r:+.2f}R)"
+            return "HOLD", f"{base_reason} | Negative Expected Value (E[PnL]={ev_r:+.2f}R)"
 
         side = "LONG" if current_shares > 0 else "SHORT"
         state = self.position_extremes.get(ticker)
@@ -987,15 +987,15 @@ class LiveTradingRunner:
         minutes_held = max(0.0, (datetime.datetime.now() - entry_at).total_seconds() / 60.0)
         pnl_pct = ((close - avg_cost) / avg_cost) if side == "LONG" and avg_cost > 0 else ((avg_cost - close) / avg_cost if avg_cost > 0 else 0.0)
 
-        # 🎯 0. Early Partial Take Profit (早点分批止盈：浮盈 >= +0.65% 立即平半仓锁利落袋为安，坚决杜绝利润回吐变亏损！)
+        # 🎯 0. Early Partial Take Profit
         partial_tp_pct = self._safe_float(self.strategy_params.get("partial_tp_trigger_pct"), 0.0065)
         if not self.partial_tp_done.get(ticker, False) and pnl_pct >= partial_tp_pct:
             action_type = "PARTIAL_SELL" if side == "LONG" else "PARTIAL_COVER"
-            return action_type, f"{base_reason} | 🎯 [早点分批止盈 (Scaled TP)] 浮盈达到 +{pnl_pct*100:.2f}%，市价平半仓落袋为安，余仓移至保本！"
+            return action_type, f"{base_reason} | 🎯 [Scaled Take-Profit] Gain reached +{pnl_pct*100:.2f}%, taking 50% profit, remainder to breakeven!"
 
         # Breakeven Stop: If partial TP has been taken, protect remaining shares at cost price (avg_cost)
         if self.partial_tp_done.get(ticker, False) and pnl_pct <= 0.001:
-            return ("SELL" if side == "LONG" else "COVER"), f"{base_reason} | 🛡️ 半仓已锁利，剩余仓位触及保本线 (${avg_cost:.2f})，保本平仓离场！"
+            return ("SELL" if side == "LONG" else "COVER"), f"{base_reason} | 🛡️ Scaled profit secured, remainder hit breakeven (${avg_cost:.2f}), closing position!"
 
         # ─── Dynamic ATR Trailing Stop & Per-Ticker ML Expectancy Exit ────────────────────
         trail_start_pct = self._safe_float(self.strategy_params.get("trail_start_pct"), 0.0065)
@@ -1003,7 +1003,7 @@ class LiveTradingRunner:
         atr_val = opportunity.get("_atr", close * 0.01)
         best_p = state.get("best_price", close)
 
-        # 1. Dynamic ATR Trailing Stop with Profit Ratchet (移动追踪止损/止盈)
+        # 1. Dynamic ATR Trailing Stop with Profit Ratchet
         if side == "LONG":
             peak_pnl = (best_p - avg_cost) / max(1e-5, avg_cost)
             if peak_pnl >= trail_start_pct:
@@ -1016,12 +1016,12 @@ class LiveTradingRunner:
                 elif peak_pnl >= 0.02:
                     trail_stop_price = max(trail_stop_price, avg_cost * 1.012)
                 elif peak_pnl >= trail_start_pct:
-                    trail_stop_price = max(trail_stop_price, avg_cost * 1.002)  # 触及 +0.65% 至少保本
+                    trail_stop_price = max(trail_stop_price, avg_cost * 1.002)
 
                 if close <= trail_stop_price:
                     return "SELL", (
-                        f"{base_reason} | 🎯 [动态移动止盈 Trailing Stop] 最高触及 ${best_p:.2f} (+{peak_pnl*100:.2f}%)，"
-                        f"现价回撤至止盈线 ${trail_stop_price:.2f}，执行利润锁定平仓"
+                        f"{base_reason} | 🎯 [Dynamic Trailing Stop] Peak ${best_p:.2f} (+{peak_pnl*100:.2f}%), "
+                        f"pulled back to stop ${trail_stop_price:.2f}, locking profit"
                     )
         else:
             peak_pnl = (avg_cost - best_p) / max(1e-5, avg_cost)
@@ -1038,41 +1038,38 @@ class LiveTradingRunner:
 
                 if close >= trail_stop_price:
                     return "COVER", (
-                        f"{base_reason} | 🎯 [动态移动止盈 Trailing Stop] 空头最低触及 ${best_p:.2f} (+{peak_pnl*100:.2f}%)，"
-                        f"现价反弹至止盈线 ${trail_stop_price:.2f}，执行利润锁定平仓"
+                        f"{base_reason} | 🎯 [Dynamic Trailing Stop] Short low ${best_p:.2f} (+{peak_pnl*100:.2f}%), "
+                        f"rebounded to stop ${trail_stop_price:.2f}, locking profit"
                     )
 
-        # 2. Dedicated Per-Ticker ML Model Expectancy Decay Exit (专有 ML 模型边缘衰竭信号)
+        # 2. Dedicated Per-Ticker ML Model Expectancy Decay Exit
         min_hold = self._safe_float(self.strategy_params.get("minimum_hold_minutes"), 4.0)
         if minutes_held >= min_hold:
             ema_9_val = opportunity.get("_ema_9", close)
-            # 只有当该股专属 ML 模型计算出的胜率严重倒挂、期望值为负，且实体破位时才退出
             if side == "LONG" and (not is_pos_ev) and ev_r <= -0.15 and p_win_pct < 42.0 and close < ema_9_val:
-                return "SELL", f"{base_reason} | 📉 [ML专有模型期望值衰竭] 模型胜率衰减至 {p_win_pct:.1f}% / E[R]={ev_r:+.2f}R 且跌破 EMA9，模型主导离场"
+                return "SELL", f"{base_reason} | 📉 [ML Expectancy Decay] Win rate decayed to {p_win_pct:.1f}% / E[R]={ev_r:+.2f}R, breaking EMA9, exiting"
             if side == "SHORT" and (not is_pos_ev) and ev_r <= -0.15 and p_win_pct < 42.0 and close > ema_9_val:
-                return "COVER", f"{base_reason} | 📉 [ML专有模型期望值衰竭] 模型胜率衰减至 {p_win_pct:.1f}% / E[R]={ev_r:+.2f}R 且突破 EMA9，模型主导离场"
+                return "COVER", f"{base_reason} | 📉 [ML Expectancy Decay] Win rate decayed to {p_win_pct:.1f}% / E[R]={ev_r:+.2f}R, breaking EMA9, exiting"
 
-        # 3. Structural Trend Invalidation (仅在充分持仓后，双重均线均价结构破位才确认失效)
+        # 3. Structural Trend Invalidation
         if minutes_held >= min_hold:
             prev_close = self._safe_float(opportunity.get("_prev_close"), close)
             if side == "LONG":
                 invalid_now = close < opportunity.get("_ema_21", close) and close < opportunity.get("_vwap", close)
                 invalid_prev = prev_close < opportunity.get("_prev_ema_21", prev_close) and prev_close < opportunity.get("_prev_vwap", prev_close)
                 if invalid_now and invalid_prev and (direction == "SHORT" or p_win_pct < 45.0):
-                    return "SELL", f"{base_reason} | 连续跌破 EMA21/VWAP 且模型转空，长趋势结构失效"
+                    return "SELL", f"{base_reason} | Broke EMA21/VWAP for 2 bars with bearish signal, trend invalidated"
             else:
                 invalid_now = close > opportunity.get("_ema_21", close) and close > opportunity.get("_vwap", close)
                 invalid_prev = prev_close > opportunity.get("_prev_ema_21", prev_close) and prev_close > opportunity.get("_prev_vwap", prev_close)
                 if invalid_now and invalid_prev and (direction == "LONG" or p_win_pct > 55.0):
-                    return "COVER", f"{base_reason} | 连续收复 EMA21/VWAP 且模型转多，空趋势结构失效"
+                    return "COVER", f"{base_reason} | Reclaimed EMA21/VWAP for 2 bars with bullish signal, short invalidated"
 
         max_hold = self._safe_float(self.strategy_params.get("max_hold_minutes"), 300.0)
         if minutes_held >= max_hold and not is_pos_ev and pnl_pct <= 0.0:
-            return ("SELL" if side == "LONG" else "COVER"), f"{base_reason} | 尾段趋势消失且未盈利"
+            return ("SELL" if side == "LONG" else "COVER"), f"{base_reason} | Flat trend at max hold duration with no profit"
 
-        # ─── Pyramiding Buy / Short (浮盈顺势加仓) ─────────────────────────────
-        # STRICT RULE: Only add to a position AFTER partial profits have been safely banked into cash!
-        # Prevents high-level double-downs that turn profitable trades into disasters.
+        # ─── Pyramiding Buy / Short ──────────────────────────────────────────
         pyramid_threshold_pct = self._safe_float(self.strategy_params.get("pyramid_trigger_pct"), 0.015)
         can_pyramid = (
             self.partial_tp_done.get(ticker, False)
@@ -1094,11 +1091,11 @@ class LiveTradingRunner:
                 action_str = "PYRAMID_BUY" if side == "LONG" else "PYRAMID_SHORT"
                 current_score = self._safe_float(opportunity.get("score"), 0.0)
                 return action_str, (
-                    f"{base_reason} | 📈 [半仓落袋后顺势加仓 +{pnl_pct*100:.2f}% PnL] 强趋势放量 Score={current_score:.0f} / "
-                    f"E[R]={ev_r:+.2f}R — 触发 {action_str}，保底止盈护航"
+                    f"{base_reason} | 📈 [Pyramid Add +{pnl_pct*100:.2f}% PnL] Strong trend with volume Score={current_score:.0f} / "
+                    f"E[R]={ev_r:+.2f}R — Triggering {action_str}"
                 )
 
-        return "HOLD", f"{base_reason} | {side} 趋势有效，动态保本追踪持仓中"
+        return "HOLD", f"{base_reason} | {side} trend valid, holding with dynamic trailing stop"
 
     def _size_aggressive_entry(self, account: Dict, close_price: float, opportunity: Dict, prob_eval: Optional[Dict] = None) -> Dict:
         return self.risk_sizer.size_aggressive_entry(
@@ -1129,7 +1126,7 @@ class LiveTradingRunner:
 
     def start(self, strategy_params: Optional[Dict] = None, tickers: Optional[List[str]] = None, **kwargs):
         if getattr(self, '_loop_thread', None) is not None and self._loop_thread.is_alive():
-            self.add_log("[Warning] 交易机器人已在运行中，无需重复启动。")
+            self.add_log("[Warning] AI Quant Bot is already running.")
             return False
 
         try:
@@ -1137,7 +1134,7 @@ class LiveTradingRunner:
             self.highest_prices.clear()
             self.position_extremes.clear()
             self._score_warmup_complete = False
-            self.add_log("🧹 [手动启动重置] 已强制清空上一日盘后缓存与最高价记录，初始化全新交易周期。")
+            self.add_log("🧹 [Manual Reset] Cleared intraday cache and high-water records, initialized clean session cycle.")
         except Exception as e:
             print(f"Cache clear warning on start: {e}")
             
@@ -1158,16 +1155,16 @@ class LiveTradingRunner:
                     base_url=base_url
                 )
                 self.adapter.get_account_summary()
-                self.add_log("🟢 已成功连接至 Alpaca 实盘/Paper 交易接口。")
+                self.add_log("🟢 Successfully connected to Alpaca Paper/Live trading gateway.")
             else:
                 self.adapter = MockAlpacaAdapter()
-                self.add_log("💡 未同时检测到 Alpaca API Key 与 Secret，自动切换至【本地虚拟盘模拟模式】。")
+                self.add_log("💡 Alpaca API credentials not detected, operating in local simulated mode.")
         except Exception as e:
             self.adapter = MockAlpacaAdapter()
-            self.add_log(f"⚠️ [Alpaca 连接失败警报] API 密钥配置存在异常 ({str(e)})，暂降级至【本地虚拟盘模拟模式】！")
+            self.add_log(f"⚠️ [Alpaca Connection Alert] API configuration exception ({str(e)}), downgraded to local simulation!")
         self.is_running = True
         self._start_order_sync_worker()
-        self.add_log(f"🤖 【AI 24/7 全自动托管开启】系统已进入无人值守全自动轮询模式！监控标的({len(self.active_tickers)}): {self.active_tickers}")
+        self.add_log(f"🤖 [AI Automated Execution Active] Unattended 24/7 scanning enabled across {len(self.active_tickers)} tickers: {self.active_tickers}")
         
         def start_background_loop():
             loop = asyncio.new_event_loop()
@@ -1440,7 +1437,7 @@ class LiveTradingRunner:
                 self.trade_history.sort(key=lambda trade: trade.get("time", ""))
                 self.save_trade_history()
                 if added_count:
-                    self.add_log(f"📥 已从 Alpaca 官方订单接口同步 {added_count} 笔新成交，订单页与本地复盘账本已对齐。")
+                    self.add_log(f"📥 Synced {added_count} new fills from Alpaca API, orders and local ledger aligned.")
             return {"success": True, "added": added_count, "updated": updated_count}
         except Exception as exc:
             print(f"Sync Alpaca orders warning: {exc}")
@@ -1468,7 +1465,7 @@ class LiveTradingRunner:
                     older_trades.append(t)
             
             if not older_trades:
-                return {"success": True, "message": "没有需要归档的旧历史记录，本地已保持极简精简。", "archived_count": 0}
+                return {"success": True, "message": "No older historical trades require archiving; local ledger is lean.", "archived_count": 0}
                 
             dataset_trades = []
             try:
@@ -1501,33 +1498,33 @@ class LiveTradingRunner:
             if os.path.exists(temp_file):
                 os.remove(temp_file)
 
-            msg = f"📦 成功将 {added} 笔历史交易全量备份上传至 Hugging Face Dataset ({repo_id})！"
+            msg = f"📦 Successfully uploaded {added} historical trades to Hugging Face Dataset ({repo_id})!"
             self.add_log(msg)
             return {"success": True, "message": msg, "archived_count": added, "local_remaining": len(self.trade_history)}
         except Exception as e:
-            err_msg = f"HF Dataset 归档失败: {str(e)}"
+            err_msg = f"HF Dataset archive failed: {str(e)}"
             self.add_log(f"⚠️ {err_msg}")
             return {"success": False, "error": err_msg}
 
     def stop(self):
         if not self.is_running:
-            self.add_log("[Notice] AI 托管引擎处于暂停备用状态。")
+            self.add_log("[Notice] AI Quant Bot is paused in standby mode.")
             return False
         self.is_running = False
         if self.loop_task:
             self.loop_task.cancel()
             self.loop_task = None
         self.save_runner_config()
-        self.add_log("🤖 【AI 引擎云端平滑重载】系统配置已同步保存，后台进程就绪中。")
+        self.add_log("🤖 [AI Engine Reload] Configuration saved, background worker ready.")
         return True
 
     def toggle(self, strategy_params: Optional[Dict] = None, tickers: Optional[List[str]] = None) -> Dict:
         if self.is_running:
             self.stop()
-            return {"status": "stopped", "is_running": False, "message": "已手动关闭量化交易系统"}
+            return {"status": "stopped", "is_running": False, "message": "Manually stopped AI Quant Trading Bot"}
         else:
             self.start(strategy_params=strategy_params, tickers=tickers)
-            return {"status": "started", "is_running": True, "message": "已手动启动量化交易系统"}
+            return {"status": "started", "is_running": True, "message": "Manually started AI Quant Trading Bot"}
 
     def submit_extended_hours_order(self, symbol: str, qty: int, side: str, limit_price: float) -> Dict:
         try:
@@ -1538,13 +1535,13 @@ class LiveTradingRunner:
                 
             if res.get("success"):
                 action_type = "BUY" if side.lower() == "buy" else "SELL"
-                self.add_log(f"🌙 [盘前/盘后限价单] 成功下发 [{symbol}] {action_type} {qty} 股 @ ${limit_price:.2f} (Extended-Hours Active)")
+                self.add_log(f"🌙 [Extended-Hours Order] Submitted [{symbol}] {action_type} {qty} shs @ ${limit_price:.2f} (Extended-Hours Active)")
                 self.add_trade_action(
                     action_type,
                     symbol,
                     qty,
                     limit_price,
-                    f"【盘前盘后限价交易】Limit Order @ ${limit_price:.2f}",
+                    f"Extended-Hours Limit Order @ ${limit_price:.2f}",
                     order_id=res.get("order_id") or res.get("id"),
                     order_status=res.get("status") or "submitted",
                 )
@@ -1631,22 +1628,21 @@ class LiveTradingRunner:
         if ny_time < 16.0:
             seconds_left = max(0.0, (16.0 - ny_time) * 3600.0)
             self.add_log(
-                f"🌇 [美东收盘倒计时终极清场 15:57:30] 距 16:00 仅剩 {seconds_left:.0f} 秒！"
-                f"执行终极全平撤单，确保 16:00 敲钟时零持仓现金过夜..."
+                f"🌇 [EOD Liquidation Countdown 15:57:30] Only {seconds_left:.0f}s until 16:00 close! "
+                f"Canceling all open orders and liquidating positions to ensure flat cash overnight..."
             )
         else:
             self.add_log(
-                f"🌙 [美东盘后 Extended-Hours 自动清仓] 盘中未完全成交的剩余 {len(positions_list)} 笔头寸，"
-                f"无缝切换为【盘后限价单】执行清场，确保持仓清零现金过夜..."
+                f"🌙 [After-Hours Liquidation] Liquidating remaining {len(positions_list)} positions via extended-hours orders to ensure flat cash overnight..."
             )
 
         try:
             if hasattr(self.adapter, "cancel_all_orders"):
                 c_res = self.adapter.cancel_all_orders()
-                self.add_log(f"🧹 [收盘/盘后清场 1/2] 撤单结果: {c_res.get('message', 'All pending orders canceled.')}")
+                self.add_log(f"🧹 [EOD Liquidation 1/2] Cancel orders: {c_res.get('message', 'All pending orders canceled.')}")
             if hasattr(self.adapter, "close_all_positions"):
                 res = self.adapter.close_all_positions()
-                self.add_log(f"✅ [收盘/盘后清场 2/2] 平仓结果: {res.get('message', 'All positions liquidated.')}")
+                self.add_log(f"✅ [EOD Liquidation 2/2] Close positions: {res.get('message', 'All positions liquidated.')}")
             
             for pos in positions_list:
                 sym = pos.get("ticker")
@@ -1657,11 +1653,11 @@ class LiveTradingRunner:
                         ticker=sym,
                         shares=abs(shares),
                         price=pos.get("current_price", 0.0),
-                        reason="EOD/After-Hours Bell Liquidation (收盘/盘后终极全平·零持仓过夜)"
+                        reason="EOD/After-Hours Bell Liquidation (Flat cash overnight)"
                     )
             return True
         except Exception as e:
-            self.add_log(f"⚠️ [收盘/盘后清仓异常，自动重试中]: {str(e)}")
+            self.add_log(f"⚠️ [EOD liquidation error, retrying]: {str(e)}")
             return False
 
     async def _run_loop(self):
@@ -1678,23 +1674,23 @@ class LiveTradingRunner:
                     self._afterhours_scan_logged = False
                     if is_market_opening_window:
                         if not getattr(self, "_opening_blitz_logged", False):
-                            self.add_log(f"⚡ [开盘黄金 Blitz 9:30-9:45 EST] 开启 3 秒极速高频秒开枪！监控池 [{len(self.active_tickers)} 支标的]...")
+                            self.add_log(f"⚡ [Opening Blitz 9:30-9:45 EST] Fast 3-second scanning across {len(self.active_tickers)} watchlist tickers...")
                             self._opening_blitz_logged = True
                     elif is_market_closing_window:
                         if not getattr(self, "_closing_blitz_logged", False):
-                            self.add_log(f"🔥 [尾盘黄金 15:45-16:00 冲刺] 开启 5 秒高频扫描捕捉大赚机会！(持续交易至 15:57，16:00 敲钟前零持仓)")
+                            self.add_log(f"🔥 [Late Session Sprint 15:45-16:00] Active trading until 15:57, flat cash before 16:00 close...")
                             self._closing_blitz_logged = True
                     else:
                         self._opening_blitz_logged = False
                         self._closing_blitz_logged = False
                         if not getattr(self, "_intraday_scan_logged", False):
-                            self.add_log(f"📡 [美股开盘交易中·全频段扫描发单] 正在研判监控池股票 [{len(self.active_tickers)} 支标的]...")
+                            self.add_log(f"📡 [Market Open Scanning Active] Evaluating watchlist tickers ({len(self.active_tickers)})...")
                             self._intraday_scan_logged = True
                 else:
                     self._opening_blitz_logged = False
                     self._closing_blitz_logged = False
                     if not getattr(self, "_afterhours_scan_logged", False):
-                        self.add_log(f"🌙 [美股盘后研判/休市监控中] 24/7 持续实时计算多因子与形态（休市期间仅研判记录，暂停实盘买卖发单）...")
+                        self.add_log(f"🌙 [Off-Hours / Market Closed] 24/7 scanning active (evaluating indicators; live order execution paused outside market hours)...")
                         self._afterhours_scan_logged = True
                 
                 # Pre-market Catalyst Pre-loader (9:15 - 9:30 EST)
@@ -1720,7 +1716,7 @@ class LiveTradingRunner:
                         await asyncio.sleep(10)
                         continue
                 except Exception as e:
-                    self.add_log(f"⚡ [Alpaca 持仓 Rate-Limit 避让生效] {str(e)} -> 自动使用上一轮已知持仓无缝继续执行！")
+                    self.add_log(f"⚡ [Alpaca Rate-Limit Backoff] {str(e)} -> Continuing seamlessly with cached positions.")
                     positions_list = getattr(self, "_last_known_positions_list", [])
                     positions_by_ticker = {pos['ticker']: pos for pos in positions_list if pos.get('ticker')}
                     active_pos_tickers = set(positions_by_ticker.keys())
@@ -1757,7 +1753,7 @@ class LiveTradingRunner:
                                 if "429" in str(fetch_err) or "rate limit" in str(fetch_err).lower():
                                     df = self._ticker_df_cache.get(ticker)
                                     if df is not None:
-                                        self.add_log(f"⚡ [{ticker}] Alpaca Rate-Limit 避让生效：已成功无缝使用缓存数据，持续监控！")
+                                        self.add_log(f"⚡ [{ticker}] Alpaca Rate-Limit Backoff: Using cached data seamlessly.")
 
                             if ticker in EXCLUDED_TICKERS:
                                 continue
@@ -1808,7 +1804,7 @@ class LiveTradingRunner:
                             allowed_entry_symbols = set(user_watchlist)
                             if ticker not in allowed_entry_symbols and action in ("BUY", "SHORT"):
                                 action = "HOLD"
-                                reason = f"[{ticker}] 不在 Watchlist/Alpaca 日内候选池，保持 Exit-Only。"
+                                reason = f"[{ticker}] Not in active entry watchlist, Exit-Only."
 
                             if self.is_eod_no_entry_window() and action in ("BUY", "SHORT", "PYRAMID_BUY"):
                                 action = "HOLD"
@@ -1835,7 +1831,7 @@ class LiveTradingRunner:
                                 pnl_pct = (avg_cost - close_price) / max(1e-5, avg_cost) * 100
                                 pos_label = f"SHORT {abs(current_shares)} shs @ ${avg_cost:.2f} | PnL: {'+' if pnl_pct>=0 else ''}{pnl_pct:.2f}%"
                             else:
-                                pos_label = "📡 [系统开盘中·空仓研判] 正在全频段扫描研判中"
+                                pos_label = "📡 [Market Open - Scanning] Real-time scanning & evaluating"
 
                             alerts = [
                                 f"🎯 {opportunity['direction']} Score:{live_score:.1f}",
@@ -1857,7 +1853,7 @@ class LiveTradingRunner:
                             elif action in ("BUY", "SHORT"):
                                 decision_icon = f"🚀 TRIGGER {action}"
                             elif action in ("PYRAMID_BUY", "PYRAMID_SHORT"):
-                                decision_icon = f"📈 {action} (浮盈加仓)"
+                                decision_icon = f"📈 {action} (Pyramid Add)"
                             elif action in ("PARTIAL_SELL", "PARTIAL_COVER"):
                                 decision_icon = f"🟢 PARTIAL EXIT {action}"
                             else:
@@ -1872,7 +1868,7 @@ class LiveTradingRunner:
 
                             if current_shares == 0 and action in ("BUY", "SHORT"):
                                 if not is_open:
-                                    self.add_log(f"🌙 [盘后研判/休市记录] [{ticker}] 触发 {action} 信号 (AI Score: {live_score:.1f}分, P_win: {opportunity.get('win_rate_pct')}%) | 非盘中时段，仅保留研判日志。")
+                                    self.add_log(f"🌙 [Off-Hours Analysis] [{ticker}] Triggered {action} signal (AI Score: {live_score:.1f}, P_win: {opportunity.get('win_rate_pct')}%) | Market closed, logged for review.")
                                 else:
                                     day_move = self._safe_float(opportunity.get("session_move_pct"), 0.0)
                                     rvol_val = self._safe_float(opportunity.get("rvol"), 1.0)
@@ -1949,11 +1945,11 @@ class LiveTradingRunner:
                                 pnl = (close_price - avg_cost) * sell_qty
                                 client_order_id = f"{ticker}-{int(datetime.datetime.now().timestamp())}-{uuid.uuid4().hex[:8]}-PARTIAL"
                                 self.lock_exit(ticker)
-                                self.add_log(f"🟢 [{ticker}] PARTIAL_SELL 触发分批止盈！市价平半仓 {sell_qty} 股 (预估锁利 ${pnl:.2f})...")
+                                self.add_log(f"🟢 [{ticker}] PARTIAL_SELL triggered scaled profit taking! Market selling half {sell_qty} shs (Est profit lock ${pnl:.2f})...")
                                 order_res = self.adapter.submit_market_order(ticker, sell_qty, "sell", client_order_id=client_order_id)
                                 if order_res.get("success"):
                                     self.partial_tp_done[ticker] = True
-                                    self.add_log(f"✅ [{ticker}] PARTIAL_SELL 订单已提交！ID: {order_res.get('order_id', order_res.get('id'))}")
+                                    self.add_log(f"✅ [{ticker}] PARTIAL_SELL order submitted! ID: {order_res.get('order_id', order_res.get('id'))}")
                                     self.add_trade_action(
                                         "PARTIAL_SELL", ticker, sell_qty, close_price, reason, pnl=pnl,
                                         order_id=order_res.get("order_id") or order_res.get("id"),
@@ -1962,18 +1958,18 @@ class LiveTradingRunner:
                                     )
                                 else:
                                     self.unlock_exit(ticker)
-                                    self.add_log(f"❌ [{ticker}] PARTIAL_SELL 订单失败. 原因: {order_res.get('error')}")
+                                    self.add_log(f"❌ [{ticker}] PARTIAL_SELL order failed. Reason: {order_res.get('error')}")
 
                             elif action == "PARTIAL_COVER" and current_shares < 0:
                                 cover_qty = max(1, abs(current_shares) // 2)
                                 pnl = (avg_cost - close_price) * cover_qty
                                 client_order_id = f"{ticker}-{int(datetime.datetime.now().timestamp())}-{uuid.uuid4().hex[:8]}-PARTIAL"
                                 self.lock_exit(ticker)
-                                self.add_log(f"🟢 [{ticker}] PARTIAL_COVER 触发分批止盈！市价买回半仓 {cover_qty} 股 (预估锁利 ${pnl:.2f})...")
+                                self.add_log(f"🟢 [{ticker}] PARTIAL_COVER triggered scaled profit taking! Market buying back half {cover_qty} shs (Est profit lock ${pnl:.2f})...")
                                 order_res = self.adapter.submit_market_order(ticker, cover_qty, "buy", client_order_id=client_order_id)
                                 if order_res.get("success"):
                                     self.partial_tp_done[ticker] = True
-                                    self.add_log(f"✅ [{ticker}] PARTIAL_COVER 订单已提交！ID: {order_res.get('order_id', order_res.get('id'))}")
+                                    self.add_log(f"✅ [{ticker}] PARTIAL_COVER order submitted! ID: {order_res.get('order_id', order_res.get('id'))}")
                                     self.add_trade_action(
                                         "PARTIAL_COVER", ticker, cover_qty, close_price, reason, pnl=pnl,
                                         order_id=order_res.get("order_id") or order_res.get("id"),
@@ -1982,27 +1978,27 @@ class LiveTradingRunner:
                                     )
                                 else:
                                     self.unlock_exit(ticker)
-                                    self.add_log(f"❌ [{ticker}] PARTIAL_COVER 订单失败. 原因: {order_res.get('error')}")
+                                    self.add_log(f"❌ [{ticker}] PARTIAL_COVER order failed. Reason: {order_res.get('error')}")
 
                             elif action == "PYRAMID_BUY" and current_shares > 0:
-                                # Pyramiding Buy (浮盈加仓): Add to a profitable long position
+                                # Pyramiding Buy: Add to a profitable long position
                                 if not is_open:
-                                    self.add_log(f"🌙 [盘后研判] [{ticker}] 浮盈加仓信号 (PYRAMID_BUY) | 非盘中，仅研判记录。")
+                                    self.add_log(f"🌙 [Off-Hours] [{ticker}] Pyramid Buy signal (PYRAMID_BUY) | Market closed, logged for review.")
                                 elif self.is_entry_locked(ticker):
-                                    self.add_log(f"⏳ [{ticker}] 浮盈加仓跳过：订单锁定中 (避免重复)")
+                                    self.add_log(f"⏳ [{ticker}] Pyramid Buy skipped: order lock active")
                                 else:
                                     account = self.adapter.get_account_summary()
                                     pyr_sizing = self._size_pyramid_entry(account, close_price, opportunity)
                                     pyr_shares = pyr_sizing["shares"]
                                     if pyr_shares <= 0:
-                                        self.add_log(f"⚠️ [{ticker}] Buying power 不足以执行浮盈加仓，跳过。")
+                                        self.add_log(f"⚠️ [{ticker}] Buying power insufficient for pyramid add, skipping.")
                                     else:
                                         pnl_float = (close_price - avg_cost) / avg_cost * 100.0 if avg_cost > 0 else 0.0
                                         client_order_id = f"{ticker}-{int(datetime.datetime.now().timestamp())}-{uuid.uuid4().hex[:8]}-PYRAMID"
                                         self.lock_entry(ticker)
                                         self.add_log(
-                                            f"📈 [{ticker}] 浮盈加仓 PYRAMID_BUY! 当前浮盈 +{pnl_float:.2f}% — 追加 {pyr_shares} 股 @ ${close_price:.2f}，"
-                                            f"名义 ${pyr_sizing['notional']:,.0f} | Score={live_score:.0f} E[R]={opportunity.get('expected_value_r', 0):+.2f}R"
+                                            f"📈 [{ticker}] PYRAMID_BUY add triggered! Current gain +{pnl_float:.2f}% — Adding {pyr_shares} shs @ ${close_price:.2f}, "
+                                            f"Notional ${pyr_sizing['notional']:,.0f} | Score={live_score:.0f} E[R]={opportunity.get('expected_value_r', 0):+.2f}R"
                                         )
                                         order_res = self.adapter.submit_market_order(ticker, pyr_shares, "buy", client_order_id=client_order_id)
                                         if order_res.get("success"):
@@ -2020,24 +2016,24 @@ class LiveTradingRunner:
                                             self.add_log(f"❌ [{ticker}] PYRAMID_BUY order failed. Reason: {order_res.get('error')}")
 
                             elif action == "PYRAMID_SHORT" and current_shares < 0:
-                                # Pyramiding Short (浮盈加空): Add to a profitable short position
+                                # Pyramiding Short: Add to a profitable short position
                                 if not is_open:
-                                    self.add_log(f"🌙 [盘后研判] [{ticker}] 浮盈加空信号 (PYRAMID_SHORT) | 非盘中，仅研判记录。")
+                                    self.add_log(f"🌙 [Off-Hours] [{ticker}] Pyramid Short signal (PYRAMID_SHORT) | Market closed, logged for review.")
                                 elif self.is_entry_locked(ticker):
-                                    self.add_log(f"⏳ [{ticker}] 浮盈加空跳过：订单锁定中 (避免重复)")
+                                    self.add_log(f"⏳ [{ticker}] Pyramid Short skipped: order lock active")
                                 else:
                                     account = self.adapter.get_account_summary()
                                     pyr_sizing = self._size_pyramid_entry(account, close_price, opportunity)
                                     pyr_shares = pyr_sizing["shares"]
                                     if pyr_shares <= 0:
-                                        self.add_log(f"⚠️ [{ticker}] Buying power 不足以执行浮盈加空，跳过。")
+                                        self.add_log(f"⚠️ [{ticker}] Buying power insufficient for pyramid short, skipping.")
                                     else:
                                         pnl_float = (avg_cost - close_price) / avg_cost * 100.0 if avg_cost > 0 else 0.0
                                         client_order_id = f"{ticker}-{int(datetime.datetime.now().timestamp())}-{uuid.uuid4().hex[:8]}-PYRAMID"
                                         self.lock_entry(ticker)
                                         self.add_log(
-                                            f"📉 [{ticker}] 浮盈加空 PYRAMID_SHORT! 当前浮盈 +{pnl_float:.2f}% — 追加卖空 {pyr_shares} 股 @ ${close_price:.2f}，"
-                                            f"名义 ${pyr_sizing['notional']:,.0f} | Score={live_score:.0f} E[R]={opportunity.get('expected_value_r', 0):+.2f}R"
+                                            f"📉 [{ticker}] PYRAMID_SHORT add triggered! Current gain +{pnl_float:.2f}% — Adding short {pyr_shares} shs @ ${close_price:.2f}, "
+                                            f"Notional ${pyr_sizing['notional']:,.0f} | Score={live_score:.0f} E[R]={opportunity.get('expected_value_r', 0):+.2f}R"
                                         )
                                         order_res = self.adapter.submit_market_order(ticker, pyr_shares, "sell", client_order_id=client_order_id)
                                         if order_res.get("success"):
@@ -2062,14 +2058,14 @@ class LiveTradingRunner:
                             else:
                                 self.add_log(f"⚠️ Error scanning {ticker}: {str(ex)}")
 
-                    # ─── Leader Selection Execution (全局龙头排序与优先全仓配置) ─────────
+                    # ─── Leader Selection Execution ──────────────────────────────────────
                     if candidate_entries and is_open:
                         candidate_entries.sort(key=lambda c: c["leader_score"], reverse=True)
                         rank_summary = " | ".join([
-                            f"#{i+1} {c['ticker']} (LeaderScore={c['leader_score']:.2f}, 日内={c['day_move']:+.2f}%, RVOL={c['rvol']:.1f}x, ML胜率={c['p_win']:.1f}%)"
+                            f"#{i+1} {c['ticker']} (LeaderScore={c['leader_score']:.2f}, Intraday={c['day_move']:+.2f}%, RVOL={c['rvol']:.1f}x, P_win={c['p_win']:.1f}%)"
                             for i, c in enumerate(candidate_entries)
                         ])
-                        self.add_log(f"🏆 [龙头全局优选] 扫描候选池排序完成: {rank_summary}")
+                        self.add_log(f"🏆 [Leader Selection] Candidate pool ranked: {rank_summary}")
 
                         for cand in candidate_entries:
                             if cycle_new_entries >= 1:
@@ -2084,14 +2080,14 @@ class LiveTradingRunner:
                             cur_positions = self.adapter.get_open_positions()
                             max_pos = int(self.strategy_params.get("max_concurrent_positions", 1))
                             if len(cur_positions) >= max_pos:
-                                self.add_log(f"⏸️ [{cand_ticker}] 当前持仓数 ({len(cur_positions)}) 已达上限 ({max_pos})，跳过建仓。")
+                                self.add_log(f"⏸️ [{cand_ticker}] Current positions ({len(cur_positions)}) reached max limit ({max_pos}), skipping entry.")
                                 break
 
                             account = self.adapter.get_account_summary()
                             sizing = self._size_aggressive_entry(account, cand_close, cand_opp, prob_eval=cand_opp)
                             shares = sizing["shares"]
                             if shares <= 0:
-                                self.add_log(f"⚠️ [{cand_ticker}] buying power 不足以购买 1 股，跳过本次信号。")
+                                self.add_log(f"⚠️ [{cand_ticker}] Buying power insufficient for 1 share, skipping signal.")
                                 continue
 
                             client_order_id = f"{cand_ticker}-{int(datetime.datetime.now().timestamp())}-{uuid.uuid4().hex[:8]}-ENTRY"
@@ -2102,9 +2098,8 @@ class LiveTradingRunner:
                             pos_dir = "LONG" if cand_action == "BUY" else "SHORT"
                             icon_str = "🛒" if cand_action == "BUY" else "📉"
                             self.add_log(
-                                f"{icon_str} 👑 [龙头领航重仓入场] [{cand_ticker}] {pos_dir} {cand_score:.1f}分 (P_win: {cand_opp.get('win_rate_pct')}%, E[R]: {cand_opp.get('expected_value_r'):+.2f}R)："
-                                f"下单 {shares} 股，预计名义金额 ${sizing['notional']:,.0f}，占当前实时 Buying Power "
-                                f"(${sizing['available_buying_power']:,.2f}) 的 {sizing['buying_power_fraction']*100:.0f}%，硬止损 {sizing['stop_pct']*100:.2f}%。"
+                                f"{icon_str} 👑 [Leader Entry Triggered] [{cand_ticker}] {pos_dir} Score:{cand_score:.1f} (P_win: {cand_opp.get('win_rate_pct')}%, E[R]: {cand_opp.get('expected_value_r'):+.2f}R): "
+                                f"Order {shares} shs, Est Notional ${sizing['notional']:,.0f} ({sizing['buying_power_fraction']*100:.0f}% of Buying Power ${sizing['available_buying_power']:,.2f}), Stop Loss {sizing['stop_pct']*100:.2f}%."
                             )
                             order_res = self.adapter.submit_market_order(cand_ticker, shares, side_str, client_order_id=client_order_id)
                             if order_res.get("success"):
@@ -2145,9 +2140,9 @@ class LiveTradingRunner:
         """Uploads full master trade_history.json and daily partitions to HuggingFace Dataset repository (Ypeng12/quant-ai-trade-history)."""
         try:
             from data.sync_full_history_to_hf import sync_full_history_to_hf
-            self.add_log("☁️ [HF Auto-Sync] 正在全量推送到 HuggingFace Dataset (Ypeng12/quant-ai-trade-history)...")
+            self.add_log("☁️ [HF Auto-Sync] Pushing master dataset to HuggingFace (Ypeng12/quant-ai-trade-history)...")
             sync_full_history_to_hf()
-            self.add_log("✅ [HF Auto-Sync] 远端 HuggingFace 数据集同步成功！")
+            self.add_log("✅ [HF Auto-Sync] Remote Hugging Face Dataset synchronized successfully!")
             return {"success": True, "message": "Synced to HuggingFace Dataset (Ypeng12/quant-ai-trade-history)"}
         except Exception as e:
             err_msg = f"⚠️ [HF Auto-Sync Error] {str(e)}"
