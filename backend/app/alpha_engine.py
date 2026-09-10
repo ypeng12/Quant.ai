@@ -18,6 +18,16 @@ from typing import Dict, Optional, Tuple
 class InstitutionalAlphaEngine:
     def __init__(self):
         self.history_buffer = {}  # {ticker: pd.DataFrame}
+        try:
+            from app.ml.lob_microstructure_ml import MicrostructureWaveAlphaEngine
+            self.wave_engine = MicrostructureWaveAlphaEngine.load()
+        except Exception:
+            try:
+                from backend.app.ml.lob_microstructure_ml import MicrostructureWaveAlphaEngine
+                self.wave_engine = MicrostructureWaveAlphaEngine.load()
+            except Exception:
+                self.wave_engine = None
+
 
     @staticmethod
     def _safe_float(val, default: float = 0.0) -> float:
@@ -225,4 +235,51 @@ class InstitutionalAlphaEngine:
             "trap_reason": trap_reason,
             "regime_type": "RANGE_STAT_ARB" if adx < 22.0 else "TREND_MOMENTUM",
         }
+
+    def evaluate_dataframe_alpha(
+        self,
+        df: pd.DataFrame,
+        row: Dict,
+        prev_row: Optional[Dict] = None,
+        sector_return_pct: float = 0.0,
+        adx: float = 18.0,
+        ml_p_win_long: float = 0.50,
+        ml_p_win_short: float = 0.50
+    ) -> Dict:
+        """
+        Full Saggese Microstructure Wave & Multi-Factor Alpha evaluation pipeline.
+        Predicts 15-30 minute forward wave probability from LOB dynamics, combining with
+        OFI aggressor pressure, micro-price drift, and stat-arb mean reversion.
+        """
+        wave_p_long = ml_p_win_long
+        wave_p_short = ml_p_win_short
+        wave_ev_ret = 0.0
+        wave_metrics = {}
+
+
+        if self.wave_engine is not None and df is not None and len(df) >= 3:
+            try:
+                wave_metrics = self.wave_engine.predict_wave_alpha(df)
+                wave_p_long = wave_metrics.get("p_win_long", ml_p_win_long)
+                wave_p_short = wave_metrics.get("p_win_short", ml_p_win_short)
+                wave_ev_ret = wave_metrics.get("expected_wave_return_pct", 0.0)
+            except Exception:
+                pass
+
+        res = self.evaluate_composite_alpha(
+            row=row,
+            prev_row=prev_row,
+            sector_return_pct=sector_return_pct,
+            adx=adx,
+            ml_p_win_long=wave_p_long,
+            ml_p_win_short=wave_p_short
+        )
+        res["wave_p_win_long"] = wave_p_long
+        res["wave_p_win_short"] = wave_p_short
+        res["expected_wave_return_pct"] = wave_ev_ret
+        for k, v in wave_metrics.items():
+            if k not in res:
+                res[k] = v
+        return res
+
 
