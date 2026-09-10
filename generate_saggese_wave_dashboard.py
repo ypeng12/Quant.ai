@@ -92,7 +92,7 @@ def generate_multi_day_dashboard():
             ema21_vals = [round(float(v), 2) for v in day_df['ema_21'].values]
             
             ofi = [round(float(v), 3) for v in day_feat['feature_ofi'].values]
-            micro = [round(float(v) * 100, 2) for v in day_feat['feature_micro_drift'].values]
+            micro = [round(float(v), 2) for v in (day_feat['feature_micro_drift_bps'].values if 'feature_micro_drift_bps' in day_feat.columns else day_feat['feature_micro_drift'].values * 100.0)]
             queue = [round(float(v), 3) for v in day_feat['feature_queue_imbalance'].values]
             sweep = [round(float(v), 3) for v in day_feat['feature_sweep_vel'].values]
             wave_p = [round(float(p) * 100, 1) for p in day_p_long]
@@ -563,9 +563,9 @@ def generate_multi_day_dashboard():
                                 <div>开: ${{k[0]}} | 高: ${{k[3]}} | 低: ${{k[2]}} | 收: ${{k[1]}}</div>
                                 <div style="margin-top: 4px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 4px;">
                                     <div>🌊 波浪胜率: <span style="color: ${{pLong >= 50 ? '#10b981' : '#f43f5e'}}; font-weight: 800;">${{pLong}}%</span></div>
-                                    <div>⚡ OFI 订单流: <span style="color: ${{ofi >= 0 ? '#10b981' : '#f43f5e'}};">${{ofi}}</span></div>
-                                    <div>🎯 微观价格漂移: ${{drift}} bps</div>
-                                    <div>📊 综合 Alpha 分: <span style="color: ${{alpha >= 0 ? '#38bdf8' : '#f43f5e'}};">${{alpha}}</span></div>
+                                    <div>⚡ OFI 订单流: <span style="color: ${{ofi >= 0 ? '#10b981' : '#f43f5e'}};">${{ofi >= 0 ? '+' : ''}}${{ofi}}</span></div>
+                                    <div>🎯 微观价格漂移: <span style="color: #a855f7; font-weight: 700;">${{drift >= 0 ? '+' : ''}}${{drift}} bps</span></div>
+                                    <div>📊 综合 Alpha 分: <span style="color: ${{alpha >= 0 ? '#38bdf8' : '#f43f5e'}};">${{alpha >= 0 ? '+' : ''}}${{alpha}}</span></div>
                                 </div>
                             </div>
                         `;
@@ -595,12 +595,14 @@ def generate_multi_day_dashboard():
                         type: 'candlestick',
                         data: dayData.kline,
                         itemStyle: {{
-                            color: '#10b981', color0: '#f43f5e',
-                            borderColor: '#10b981', borderColor0: '#f43f5e'
+                            color: '#10b981',
+                            color0: '#f43f5e',
+                            borderColor: '#10b981',
+                            borderColor0: '#f43f5e'
                         }},
                         markPoint: {{
-                            data: markPointData,
-                            silent: true
+                            data: markPoints,
+                            symbolSize: 45
                         }}
                     }},
                     {{
@@ -608,24 +610,24 @@ def generate_multi_day_dashboard():
                         type: 'line',
                         data: dayData.ema9,
                         smooth: true,
-                        showSymbol: false,
-                        lineStyle: {{ width: 1.2, color: '#f59e0b' }}
+                        lineStyle: {{ color: '#38bdf8', width: 1.5 }},
+                        showSymbol: false
                     }},
                     {{
                         name: 'EMA 21',
                         type: 'line',
                         data: dayData.ema21,
                         smooth: true,
-                        showSymbol: false,
-                        lineStyle: {{ width: 1.2, color: '#38bdf8' }}
+                        lineStyle: {{ color: '#f59e0b', width: 1.5 }},
+                        showSymbol: false
                     }},
                     {{
                         name: 'VWAP',
                         type: 'line',
                         data: dayData.vwap,
                         smooth: true,
-                        showSymbol: false,
-                        lineStyle: {{ width: 1.5, color: '#c084fc', type: 'dashed' }}
+                        lineStyle: {{ color: '#e2e8f0', width: 2, type: 'dashed' }},
+                        showSymbol: false
                     }}
                 ]
             }}, true);
@@ -633,13 +635,34 @@ def generate_multi_day_dashboard():
             // 2. OFI Chart
             oChart.setOption({{
                 backgroundColor: 'transparent',
-                tooltip: {{ trigger: 'axis', backgroundColor: 'rgba(15, 20, 34, 0.95)', borderColor: '#334155' }},
+                tooltip: {{
+                    trigger: 'axis',
+                    backgroundColor: 'rgba(15, 20, 34, 0.95)',
+                    borderColor: '#334155',
+                    formatter: function(params) {{
+                        if (!params || !params.length) return '';
+                        let t = params[0].name;
+                        let res = `<div style="font-family: JetBrains Mono; font-size: 0.8rem; color: #f8fafc;"><div style="color:#94a3b8; margin-bottom:4px;">⏰ ${{t}}</div>`;
+                        params.forEach(p => {{
+                            let val = Number(p.value);
+                            let sign = val > 0 ? '+' : '';
+                            if (p.seriesName.includes('OFI')) {{
+                                let col = val >= 0 ? '#10b981' : '#f43f5e';
+                                res += `<div><span style="color:${{col}}">●</span> ${{p.seriesName}}: <b style="color:${{col}}">${{sign}}${{val.toFixed(3)}}</b></div>`;
+                            }} else {{
+                                res += `<div><span style="color:#a855f7">●</span> 微观价格漂移 (bps): <b style="color:#a855f7">${{sign}}${{val.toFixed(2)}} bps</b></div>`;
+                            }}
+                        }});
+                        res += `</div>`;
+                        return res;
+                    }}
+                }},
                 legend: {{ data: ['OFI 订单流不平衡', '微观价格漂移 (bps)'], textStyle: {{ color: '#94a3b8' }} }},
                 grid: {{ left: '4%', right: '3%', bottom: '10%', top: '15%', containLabel: true }},
                 xAxis: {{ type: 'category', data: dayData.times, axisLine: {{ lineStyle: {{ color: '#334155' }} }}, axisLabel: {{ color: '#64748b' }} }},
                 yAxis: [
                     {{ type: 'value', name: 'OFI', splitLine: {{ lineStyle: {{ color: '#1e293b' }} }}, axisLabel: {{ color: '#64748b' }} }},
-                    {{ type: 'value', name: 'Micro Drift (bps)', splitLine: {{ show: false }}, axisLabel: {{ color: '#64748b' }} }}
+                    {{ type: 'value', name: 'Micro Drift (bps)', splitLine: {{ show: false }}, axisLabel: {{ color: '#a855f7', formatter: '{{value}} bps' }} }}
                 ],
                 series: [
                     {{
@@ -663,7 +686,27 @@ def generate_multi_day_dashboard():
             // 3. Queue & Sweep Chart
             qChart.setOption({{
                 backgroundColor: 'transparent',
-                tooltip: {{ trigger: 'axis', backgroundColor: 'rgba(15, 20, 34, 0.95)', borderColor: '#334155' }},
+                tooltip: {{
+                    trigger: 'axis',
+                    backgroundColor: 'rgba(15, 20, 34, 0.95)',
+                    borderColor: '#334155',
+                    formatter: function(params) {{
+                        if (!params || !params.length) return '';
+                        let t = params[0].name;
+                        let res = `<div style="font-family: JetBrains Mono; font-size: 0.8rem; color: #f8fafc;"><div style="color:#94a3b8; margin-bottom:4px;">⏰ ${{t}}</div>`;
+                        params.forEach(p => {{
+                            let val = Number(p.value);
+                            let sign = val > 0 ? '+' : '';
+                            if (p.seriesName.includes('Queue') || p.seriesName.includes('排队')) {{
+                                res += `<div><span style="color:#f59e0b">●</span> 排队失衡比率: <b style="color:#f59e0b">${{sign}}${{val.toFixed(3)}}</b></div>`;
+                            }} else {{
+                                res += `<div><span style="color:#38bdf8">●</span> 大单扫盘速度: <b style="color:#38bdf8">${{sign}}${{val.toFixed(3)}}</b></div>`;
+                            }}
+                        }});
+                        res += `</div>`;
+                        return res;
+                    }}
+                }},
                 legend: {{ data: ['排队失衡比率 (Queue Imbalance)', '大单扫盘速度 (Sweep Velocity)'], textStyle: {{ color: '#94a3b8' }} }},
                 grid: {{ left: '4%', right: '3%', bottom: '10%', top: '15%', containLabel: true }},
                 xAxis: {{ type: 'category', data: dayData.times, axisLine: {{ lineStyle: {{ color: '#334155' }} }}, axisLabel: {{ color: '#64748b' }} }},

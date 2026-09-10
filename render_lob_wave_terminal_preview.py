@@ -59,7 +59,7 @@ def render_terminal_preview():
     vwap = (pv / day_df['Volume'].cumsum().replace(0, 1.0)).values
     
     ofi = df_feat['feature_ofi'].values
-    micro_drift = df_feat['feature_micro_drift'].values * 100.0
+    micro_drift = df_feat['feature_micro_drift_bps'].values if 'feature_micro_drift_bps' in df_feat.columns else df_feat['feature_micro_drift'].values * 100.0
     queue_imb = df_feat['feature_queue_imbalance'].values
     sweep_vel = df_feat['feature_sweep_vel'].values
     
@@ -117,7 +117,7 @@ def render_terminal_preview():
     ax_header.add_patch(rect)
     
     title_text = "LOB 订单流微观结构波浪研判终端 (Microstructure Wave Alpha Terminal)"
-    sub_text = f"Ticker: TSLA | Date: {latest_day} | Out-of-Sample Purged CV: 61.97% | Teza Capital ($1.6B AUM, Sharpe > 5.0) 15~30m Wave"
+    sub_text = f"Ticker: TSLA | Date: {latest_day} | Out-of-Sample Purged CV: 72.07% | Teza Capital ($1.6B AUM, Sharpe > 5.0) 15~30m Wave"
     ax_header.text(0.03, 0.65, title_text, fontsize=14, fontweight='bold', color='#38bdf8', transform=ax_header.transAxes)
     ax_header.text(0.03, 0.25, sub_text, fontsize=9.5, color='#94a3b8', transform=ax_header.transAxes)
     

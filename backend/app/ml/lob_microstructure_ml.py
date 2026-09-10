@@ -82,26 +82,51 @@ class LOBMicrostructureMLEngine:
         return pd.Series(np.tanh(ofi_norm), index=df.index).fillna(0.0)
 
     @staticmethod
-    def calculate_microprice_drift(df: pd.DataFrame) -> pd.Series:
+    def calculate_microprice_drift(df: pd.DataFrame, return_bps: bool = False) -> pd.Series:
         """
         Calculates Microprice Drift:
         P_micro = (Ask_Size * Bid_Price + Bid_Size * Ask_Price) / (Bid_Size + Ask_Size)
         Drift = (P_micro - P_mid) / P_mid
+        
+        When L2 depth (bid_size, ask_size) is present and distinct, computes from book depth.
+        When absent (e.g. 5m OHLCV bars), uses institutional intra-bar microstructure estimator
+        (Wick absorption + body flow & dynamic spread) grounded in market microstructure theory.
         """
-        vol_col = "volume" if "volume" in df.columns else ("Volume" if "Volume" in df.columns else None)
-        vol_series = df[vol_col] if vol_col else pd.Series(np.ones(len(df)), index=df.index)
+        has_l2_depth = (
+            "bid_size" in df.columns and "ask_size" in df.columns and 
+            not df["bid_size"].equals(df["ask_size"])
+        )
+        if has_l2_depth:
+            bid_p = df["bid_price"] if "bid_price" in df.columns else df["Close"]
+            ask_p = df["ask_price"] if "ask_price" in df.columns else df["Close"] * 1.0005
+            bid_v = df["bid_size"]
+            ask_v = df["ask_size"]
+            tot_v = (bid_v + ask_v).replace(0, 1.0)
+            micro_price = (ask_v * bid_p + bid_v * ask_p) / tot_v
+            mid_price = (bid_p + ask_p) * 0.5
+            drift_relative = (micro_price - mid_price) / (mid_price + 1e-6)
+        else:
+            high = df["High"] if "High" in df.columns else df["Close"]
+            low = df["Low"] if "Low" in df.columns else df["Close"]
+            open_p = df["Open"] if "Open" in df.columns else df["Close"]
+            close = df["Close"]
+            candle_range = (high - low).replace(0, 1e-5)
+            upper_wick = (high - np.maximum(open_p, close)) / candle_range
+            lower_wick = (np.minimum(open_p, close) - low) / candle_range
+            body = (close - open_p) / candle_range
+            
+            # Buyer support (lower wick) vs seller pressure (upper wick) + body displacement
+            synthetic_queue_imb = np.clip((lower_wick - upper_wick) * 0.6 + body * 0.4, -1.0, 1.0)
+            
+            # Estimate institutional half-spread in relative terms (1 to 20 bps)
+            half_spread_rel = np.clip((candle_range / close.replace(0, 1.0)) * 0.08, 0.0001, 0.0020)
+            drift_relative = synthetic_queue_imb * half_spread_rel
 
-        bid_p = df["bid_price"] if "bid_price" in df.columns else df["Close"]
-        ask_p = df["ask_price"] if "ask_price" in df.columns else df["Close"] * 1.0005
-        bid_v = df["bid_size"] if "bid_size" in df.columns else vol_series * 0.5
-        ask_v = df["ask_size"] if "ask_size" in df.columns else vol_series * 0.5
-
-        tot_v = (bid_v + ask_v).replace(0, 1.0)
-        micro_price = (ask_v * bid_p + bid_v * ask_p) / tot_v
-        mid_price = (bid_p + ask_p) * 0.5
-
-        drift_pct = (micro_price - mid_price) / (mid_price + 1e-6) * 100.0
-        return pd.Series(np.tanh(drift_pct * 5.0), index=df.index).fillna(0.0)
+        # Drift in basis points (1 bps = 0.0001)
+        drift_bps = pd.Series(drift_relative * 10000.0, index=df.index).fillna(0.0)
+        if return_bps:
+            return drift_bps
+        return pd.Series(np.tanh(drift_bps / 2.5), index=df.index).fillna(0.0)
 
     @staticmethod
     def calculate_sweep_velocity(df: pd.DataFrame) -> pd.Series:
@@ -124,7 +149,8 @@ class LOBMicrostructureMLEngine:
         """
         df_feat = df.copy()
         df_feat["feature_ofi"] = self.calculate_order_flow_imbalance(df)
-        df_feat["feature_micro_drift"] = self.calculate_microprice_drift(df)
+        df_feat["feature_micro_drift"] = self.calculate_microprice_drift(df, return_bps=False)
+        df_feat["feature_micro_drift_bps"] = self.calculate_microprice_drift(df, return_bps=True)
         df_feat["feature_sweep_vel"] = self.calculate_sweep_velocity(df)
 
         vol_col = "volume" if "volume" in df.columns else ("Volume" if "Volume" in df.columns else None)
@@ -132,9 +158,25 @@ class LOBMicrostructureMLEngine:
         vol_mean = vol_series.rolling(20, min_periods=1).mean() + 1e-6
         df_feat["feature_vol_accel"] = pd.Series(np.clip((vol_series / vol_mean) - 1.0, -2.0, 5.0), index=df.index).fillna(0.0)
 
-        bid_v = df["bid_size"] if "bid_size" in df.columns else vol_series * 0.5
-        ask_v = df["ask_size"] if "ask_size" in df.columns else vol_series * 0.5
-        df_feat["feature_queue_imbalance"] = pd.Series((bid_v - ask_v) / (bid_v + ask_v + 1e-6), index=df.index).fillna(0.0)
+        has_l2_depth = (
+            "bid_size" in df.columns and "ask_size" in df.columns and 
+            not df["bid_size"].equals(df["ask_size"])
+        )
+        if has_l2_depth:
+            bid_v = df["bid_size"]
+            ask_v = df["ask_size"]
+            df_feat["feature_queue_imbalance"] = pd.Series((bid_v - ask_v) / (bid_v + ask_v + 1e-6), index=df.index).fillna(0.0)
+        else:
+            high = df["High"] if "High" in df.columns else df["Close"]
+            low = df["Low"] if "Low" in df.columns else df["Close"]
+            open_p = df["Open"] if "Open" in df.columns else df["Close"]
+            close = df["Close"]
+            candle_range = (high - low).replace(0, 1e-5)
+            upper_wick = (high - np.maximum(open_p, close)) / candle_range
+            lower_wick = (np.minimum(open_p, close) - low) / candle_range
+            body = (close - open_p) / candle_range
+            queue_imb = np.clip((lower_wick - upper_wick) * 0.6 + body * 0.4, -1.0, 1.0)
+            df_feat["feature_queue_imbalance"] = pd.Series(queue_imb, index=df.index).fillna(0.0)
 
         # Candlestick Wick Imbalance (Price Action Counterparty absorption)
         high = df["High"] if "High" in df.columns else df["Close"]
@@ -211,6 +253,27 @@ class LOBMicrostructureMLEngine:
         self.model.fit(X, y)
         self.is_fitted = True
         return self
+
+    def predict_microstructure_alpha(self, df: pd.DataFrame) -> List[float]:
+        """
+        Batch prediction interface returning win probabilities for all rows in dataframe.
+        """
+        if df is None or df.empty:
+            return []
+        df_feat = self.build_microstructure_features(df)
+        X = df_feat[self.FEATURE_COLS].fillna(0.0)
+        if self.model is None or not self.is_fitted:
+            ofi = X["feature_ofi"].values
+            micro = X["feature_micro_drift"].values
+            queue = X["feature_queue_imbalance"].values
+            sweep = X["feature_sweep_vel"].values
+            comp = ofi * 0.4 + micro * 0.3 + queue * 0.2 + sweep * 0.1
+            probs = np.clip(0.50 + comp * 0.25, 0.0, 1.0)
+            return [float(p) for p in probs]
+        probs = self.model.predict_proba(X)
+        if probs.shape[1] > 1:
+            return [float(p) for p in probs[:, 1]]
+        return [0.50] * len(df)
 
     def predict_wave_alpha(self, df: pd.DataFrame) -> Dict[str, float]:
         """

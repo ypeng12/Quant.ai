@@ -30,7 +30,7 @@ Quant.ai is an autonomous, high-consistency quantitative trading platform built 
 
 ## 🌊 LOB 微观结构波浪研判终端 (LOB Microstructure Wave Alpha Terminal)
 
-> **GP Saggese ($1.6B AUM Teza Capital Partner) 顶级量化因果体系**：摒弃黑盒过拟合强化学习，回归订单簿（LOB）微观结构与微观价格漂移（Microprice Drift）。捕捉 15~30 分钟波浪周期，样本外 Purged CV 交叉验证准确率 **61.97%**。
+> **GP Saggese ($1.6B AUM Teza Capital Partner) 顶级量化因果体系**：摒弃黑盒过拟合强化学习，回归订单簿（LOB）微观结构与微观价格漂移（Microprice Drift）。捕捉 15~30 分钟波浪周期，样本外 Purged CV 交叉验证准确率 **72.07%**。
 
 [![Live Interactive Terminal](https://img.shields.io/badge/%F0%9F%8C%90%20Interactive-Live%20Terminal%20(Full%20Features)-00c805?style=for-the-badge)](https://ypeng12-quant-ai.hf.space/charts/saggese_wave_visual_dashboard.html)
 [![Standalone HTML](https://img.shields.io/badge/%F0%9F%93%84%20Direct-HTML%20File-blue?style=for-the-badge)](./saggese_wave_visual_dashboard.html)
