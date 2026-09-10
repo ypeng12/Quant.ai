@@ -94,28 +94,35 @@ class RiskPositionSizer:
         available_bp = max(0.0, self._safe_float(account.get("buying_power"), cash * multiplier))
         
         # Big Position (大仓 / Max Profit) Sizing Core Rule:
-        # Dynamically scales to 60%~70% equity / buying power for high-conviction ML trades ($35k~$55k notional).
-        max_eq_pct = self._safe_float(strategy_params.get("max_single_position_equity_pct"), 0.70)
-        max_position_notional = equity * max_eq_pct
+        # If margin buying power is available (e.g. 4x day trading margin ~$200k),
+        # scale position size up to 35%~45% of available buying power (or up to 1.8x equity = ~$70k~$95k notional)
+        # to deliver multi-thousand dollar swings expected by aggressive quant trading.
+        max_bp_pct = self._safe_float(strategy_params.get("max_single_position_bp_pct"), 0.45)
+        max_eq_mult = self._safe_float(strategy_params.get("max_single_position_equity_multiplier"), 1.80)
+        
+        if available_bp > equity * 1.2:
+            max_position_notional = min(available_bp * max_bp_pct, equity * max_eq_mult)
+        else:
+            max_position_notional = equity * self._safe_float(strategy_params.get("max_single_position_equity_pct"), 0.70)
         
         # Kelly Criterion & ML Conviction Sizing
         score = self._safe_float(opportunity.get("score"), 50.0)
         p_win = self._safe_float(opportunity.get("win_probability", prob_eval.get("win_probability", 0.50) if prob_eval else 0.50), 0.50)
-        starter_bp_pct = self._safe_float(strategy_params.get("starter_buying_power_pct"), 0.60)
+        starter_bp_pct = self._safe_float(strategy_params.get("starter_buying_power_pct"), 0.65)
         
         # Dynamic allocation fraction: scales with P_win, starter_bp_pct, and ML Explosive Surge detection
-        eq_fraction = max(0.50, min(max_eq_pct, p_win * starter_bp_pct * 1.6))
-        if opportunity.get("is_explosive", False) or self._safe_float(opportunity.get("expected_mfe_pct"), 0.0) >= 1.8:
-            eq_fraction = max_eq_pct
-        target_notional = equity * eq_fraction
+        conviction_mult = max(0.60, min(1.0, (p_win - 0.45) * 3.0 + (score / 100.0) * 0.5))
+        if opportunity.get("is_explosive", False) or self._safe_float(opportunity.get("expected_mfe_pct"), 0.0) >= 1.5:
+            conviction_mult = 1.0
+        target_notional = max_position_notional * conviction_mult
         
         # Double Cap: Notional cannot exceed max_position_notional OR available_bp * 0.95
         utilization = self._safe_float(strategy_params.get("buying_power_utilization_pct"), 0.95)
         final_notional = min(target_notional, max_position_notional, available_bp * utilization)
         
-        # Risk Budget Cap (Max 3.5% portfolio risk per trade = ~$2,000 max loss)
+        # Risk Budget Cap (Max 4.0% portfolio risk per trade = ~$2,000+ max loss)
         stop_pct = max(0.005, self._safe_float(opportunity.get("_stop_pct"), 0.0100))
-        max_risk_dollars = equity * self._safe_float(strategy_params.get("max_trade_risk_pct"), 0.035)
+        max_risk_dollars = equity * self._safe_float(strategy_params.get("max_trade_risk_pct"), 0.040)
         risk_constrained_notional = (max_risk_dollars / stop_pct) if stop_pct > 0 else final_notional
         
         final_notional = min(final_notional, risk_constrained_notional)

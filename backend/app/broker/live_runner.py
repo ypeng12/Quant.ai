@@ -984,19 +984,20 @@ class LiveTradingRunner:
         entry_at = self.entry_times.setdefault(ticker, datetime.datetime.now())
         minutes_held = max(0.0, (datetime.datetime.now() - entry_at).total_seconds() / 60.0)
         pnl_pct = ((close - avg_cost) / avg_cost) if side == "LONG" and avg_cost > 0 else ((avg_cost - close) / avg_cost if avg_cost > 0 else 0.0)
+
+        # 🎯 0. Early Partial Take Profit (早点分批止盈：浮盈 >= +0.65% 立即平半仓锁利落袋为安，坚决杜绝利润回吐变亏损！)
+        partial_tp_pct = self._safe_float(self.strategy_params.get("partial_tp_trigger_pct"), 0.0065)
+        if not self.partial_tp_done.get(ticker, False) and pnl_pct >= partial_tp_pct:
+            action_type = "PARTIAL_SELL" if side == "LONG" else "PARTIAL_COVER"
+            return action_type, f"{base_reason} | 🎯 [早点分批止盈 (Scaled TP)] 浮盈达到 +{pnl_pct*100:.2f}%，市价平半仓落袋为安，余仓移至保本！"
+
         # Breakeven Stop: If partial TP has been taken, protect remaining shares at cost price (avg_cost)
-        if self.partial_tp_done.get(ticker, False) and pnl_pct <= 0.0:
-            return ("SELL" if side == "LONG" else "COVER"), f"{base_reason} | 🛡️ 半仓止盈后触及保本线 (${avg_cost:.2f})，平余仓保本离场"
+        if self.partial_tp_done.get(ticker, False) and pnl_pct <= 0.001:
+            return ("SELL" if side == "LONG" else "COVER"), f"{base_reason} | 🛡️ 半仓已锁利，剩余仓位触及保本线 (${avg_cost:.2f})，保本平仓离场！"
 
         # ─── Dynamic ATR Trailing Stop & Per-Ticker ML Expectancy Exit ────────────────────
-        # Strictly driven by:
-        # 1. Dynamic ATR Trailing Stop (移动追踪止盈：锁定利润，杜绝微利回吐与30秒假跌破被洗)
-        # 2. Per-Ticker ML Model Expectancy Decay (专有模型期望值衰竭退出)
-        # 3. Structural Trend Invalidation (中长均线与 VWAP 结构破位)
-        # 4. End-of-Day / Max Holding Invalidation
-        
-        trail_start_pct = self._safe_float(self.strategy_params.get("trail_start_pct"), 0.012)
-        trailing_atr_mult = self._safe_float(self.strategy_params.get("trailing_stop_atr_mult"), 2.0)
+        trail_start_pct = self._safe_float(self.strategy_params.get("trail_start_pct"), 0.0065)
+        trailing_atr_mult = self._safe_float(self.strategy_params.get("trailing_stop_atr_mult"), 1.8)
         atr_val = opportunity.get("_atr", close * 0.01)
         best_p = state.get("best_price", close)
 
@@ -1004,18 +1005,16 @@ class LiveTradingRunner:
         if side == "LONG":
             peak_pnl = (best_p - avg_cost) / max(1e-5, avg_cost)
             if peak_pnl >= trail_start_pct:
-                trail_buf = max(trailing_atr_mult * atr_val, best_p * self._safe_float(self.strategy_params.get("trailing_stop_min_pct"), 0.008))
-                trail_buf = min(trail_buf, best_p * self._safe_float(self.strategy_params.get("trailing_stop_max_pct"), 0.035))
+                trail_buf = max(trailing_atr_mult * atr_val, best_p * self._safe_float(self.strategy_params.get("trailing_stop_min_pct"), 0.006))
+                trail_buf = min(trail_buf, best_p * self._safe_float(self.strategy_params.get("trailing_stop_max_pct"), 0.025))
                 trail_stop_price = best_p - trail_buf
                 # Stepwise profit ratchet: guarantee minimum retained profit once stock runs
-                if peak_pnl >= 0.06:
-                    trail_stop_price = max(trail_stop_price, avg_cost * 1.040)  # 触及 +6% 至少保底 +4.0%
-                elif peak_pnl >= 0.04:
-                    trail_stop_price = max(trail_stop_price, avg_cost * 1.025)  # 触及 +4% 至少保底 +2.5%
+                if peak_pnl >= 0.04:
+                    trail_stop_price = max(trail_stop_price, avg_cost * 1.025)
                 elif peak_pnl >= 0.02:
-                    trail_stop_price = max(trail_stop_price, avg_cost * 1.010)  # 触及 +2% 至少保底 +1.0%
+                    trail_stop_price = max(trail_stop_price, avg_cost * 1.012)
                 elif peak_pnl >= trail_start_pct:
-                    trail_stop_price = max(trail_stop_price, avg_cost * 1.002)  # 触及 +1.2% 至少保本
+                    trail_stop_price = max(trail_stop_price, avg_cost * 1.002)  # 触及 +0.65% 至少保本
 
                 if close <= trail_stop_price:
                     return "SELL", (
@@ -1025,15 +1024,13 @@ class LiveTradingRunner:
         else:
             peak_pnl = (avg_cost - best_p) / max(1e-5, avg_cost)
             if peak_pnl >= trail_start_pct:
-                trail_buf = max(trailing_atr_mult * atr_val, best_p * self._safe_float(self.strategy_params.get("trailing_stop_min_pct"), 0.008))
-                trail_buf = min(trail_buf, best_p * self._safe_float(self.strategy_params.get("trailing_stop_max_pct"), 0.035))
+                trail_buf = max(trailing_atr_mult * atr_val, best_p * self._safe_float(self.strategy_params.get("trailing_stop_min_pct"), 0.006))
+                trail_buf = min(trail_buf, best_p * self._safe_float(self.strategy_params.get("trailing_stop_max_pct"), 0.025))
                 trail_stop_price = best_p + trail_buf
-                if peak_pnl >= 0.06:
-                    trail_stop_price = min(trail_stop_price, avg_cost * 0.960)
-                elif peak_pnl >= 0.04:
+                if peak_pnl >= 0.04:
                     trail_stop_price = min(trail_stop_price, avg_cost * 0.975)
                 elif peak_pnl >= 0.02:
-                    trail_stop_price = min(trail_stop_price, avg_cost * 0.990)
+                    trail_stop_price = min(trail_stop_price, avg_cost * 0.988)
                 elif peak_pnl >= trail_start_pct:
                     trail_stop_price = min(trail_stop_price, avg_cost * 0.998)
 
@@ -1071,18 +1068,16 @@ class LiveTradingRunner:
         if minutes_held >= max_hold and not is_pos_ev and pnl_pct <= 0.0:
             return ("SELL" if side == "LONG" else "COVER"), f"{base_reason} | 尾段趋势消失且未盈利"
 
-        # ─── Pyramiding Buy / Short (浮盈加仓/补仓) ─────────────────────────────
-        # Fires once per position when:
-        #   - Position is profitable >= 0.4% (configurable via pyramid_trigger_pct)
-        #   - Positive ML Expected Value EV >= +0.20R and win probability >= 55%
-        #   - RVOL >= 1.2 and trend structure still valid above VWAP + EMA21
-        #   - Not already pyramided for this trade (pyramid_done[ticker] == False)
-        pyramid_threshold_pct = self._safe_float(self.strategy_params.get("pyramid_trigger_pct"), 0.004)
+        # ─── Pyramiding Buy / Short (浮盈顺势加仓) ─────────────────────────────
+        # STRICT RULE: Only add to a position AFTER partial profits have been safely banked into cash!
+        # Prevents high-level double-downs that turn profitable trades into disasters.
+        pyramid_threshold_pct = self._safe_float(self.strategy_params.get("pyramid_trigger_pct"), 0.015)
         can_pyramid = (
-            pnl_pct >= pyramid_threshold_pct
+            self.partial_tp_done.get(ticker, False)
+            and pnl_pct >= pyramid_threshold_pct
             and (is_pos_ev or p_win_pct >= 55.0)
-            and ev_r >= 0.20
-            and self._safe_float(opportunity.get("rvol"), 1.0) >= 1.2
+            and ev_r >= 0.25
+            and self._safe_float(opportunity.get("rvol"), 1.0) >= 1.4
             and not self.pyramid_done.get(ticker, False)
             and self.pyramid_counts.get(ticker, 0) < 1
             and self._aggressive_orders_allowed()
@@ -1097,11 +1092,11 @@ class LiveTradingRunner:
                 action_str = "PYRAMID_BUY" if side == "LONG" else "PYRAMID_SHORT"
                 current_score = self._safe_float(opportunity.get("score"), 0.0)
                 return action_str, (
-                    f"{base_reason} | 📈 [浮盈加仓 +{pnl_pct*100:.2f}% PnL] 趋势强劲 Score={current_score:.0f} / "
-                    f"E[R]={ev_r:+.2f}R — 触发 {action_str}，顺势补强"
+                    f"{base_reason} | 📈 [半仓落袋后顺势加仓 +{pnl_pct*100:.2f}% PnL] 强趋势放量 Score={current_score:.0f} / "
+                    f"E[R]={ev_r:+.2f}R — 触发 {action_str}，保底止盈护航"
                 )
 
-        return "HOLD", f"{base_reason} | {side} 趋势仍有效，整仓持有，不做碎片止盈"
+        return "HOLD", f"{base_reason} | {side} 趋势有效，动态保本追踪持仓中"
 
     def _size_aggressive_entry(self, account: Dict, close_price: float, opportunity: Dict, prob_eval: Optional[Dict] = None) -> Dict:
         return self.risk_sizer.size_aggressive_entry(

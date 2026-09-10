@@ -482,56 +482,70 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
         const calcClosed = closedToday.length;
         const calcWinRate = calcClosed > 0 ? (calcWins / calcClosed) * 100 : 0.0;
 
-        const bestTradeVal = (todaySummary?.best_trade !== undefined && todaySummary.best_trade !== 0)
-          ? todaySummary.best_trade
-          : (closedToday.length > 0 ? Math.max(0, ...closedToday.map(t => t.pnl || 0)) : 0);
 
-        const worstTradeVal = (todaySummary?.worst_trade !== undefined && todaySummary.worst_trade !== 0)
-          ? todaySummary.worst_trade
-          : (closedToday.length > 0 ? Math.min(0, ...closedToday.map(t => t.pnl || 0)) : 0);
-
-        const winsVal = (todaySummary?.wins !== undefined && todaySummary.wins > 0) ? todaySummary.wins : calcWins;
-        const lossesVal = (todaySummary?.losses !== undefined && todaySummary.losses > 0) ? todaySummary.losses : calcLosses;
-        const winRateVal = (todaySummary?.win_rate !== undefined && todaySummary.win_rate > 0) ? todaySummary.win_rate : calcWinRate;
-        const netPnlVal = todaySummary?.alpaca_official_pnl ?? todaySummary?.total_pnl ?? closedToday.reduce((sum, t) => sum + (t.pnl || 0), 0);
+        const formatMoney = (val: number | undefined | null, forceSign = true): string => {
+          const num = typeof val === 'number' && isFinite(val) ? val : 0;
+          const absStr = Math.abs(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+          if (num > 0.0001) return forceSign ? `+$${absStr}` : `$${absStr}`;
+          if (num < -0.0001) return `-$${absStr}`;
+          return `$0.00`;
+        };
 
         const activePositionsCount = positions.length;
+        const closedCount = (todaySummary?.closed_trades !== undefined && todaySummary.closed_trades > 0) ? todaySummary.closed_trades : calcClosed;
+        const winsCount = (todaySummary?.wins !== undefined) ? todaySummary.wins : calcWins;
+        const lossesCount = (todaySummary?.losses !== undefined) ? todaySummary.losses : calcLosses;
+        const winRatePct = (todaySummary?.win_rate !== undefined) ? todaySummary.win_rate : calcWinRate;
+        const realizedPnl = todaySummary?.realized_pnl ?? closedToday.reduce((sum, t) => sum + (t.pnl || 0), 0);
+        const unrealizedPnl = todaySummary?.unrealized_pnl ?? positions.reduce((sum, p) => sum + (p.unrealized_pnl || 0), 0);
+        const netPnlVal = todaySummary?.alpaca_official_pnl ?? (realizedPnl + unrealizedPnl);
+
+        const bestTradeNum = (todaySummary?.best_trade !== undefined && todaySummary.best_trade !== 0)
+          ? todaySummary.best_trade
+          : (closedToday.length > 0 ? Math.max(...closedToday.map(t => t.pnl || 0)) : 0);
+
+        const worstTradeNum = (todaySummary?.worst_trade !== undefined && todaySummary.worst_trade !== 0)
+          ? todaySummary.worst_trade
+          : (closedToday.length > 0 ? Math.min(...closedToday.map(t => t.pnl || 0)) : 0);
 
         return (
           <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(5, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
+            {/* 1. Today Net PnL */}
             <div className="stat-card" style={{ background: '#09090b', border: `1px solid ${netPnlVal >= 0 ? 'rgba(0,200,5,0.3)' : 'rgba(255,59,48,0.3)'}`, padding: '1.25rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
                 <span className="stat-label">Today Net PnL</span>
                 <span style={{ fontSize: '0.68rem', padding: '1px 5px', borderRadius: '3px', background: netPnlVal >= 0 ? 'rgba(0,200,5,0.15)' : 'rgba(255,59,48,0.15)', color: netPnlVal >= 0 ? '#00c805' : '#ff3b30', fontWeight: 700 }}>
-                  {activePositionsCount > 0 ? '已平仓 + 浮动持仓' : '已结算'}
+                  {activePositionsCount > 0 ? '平仓 + 浮动持仓' : '已结算'}
                 </span>
               </div>
               <span className="stat-value" style={{ fontSize: '1.4rem', fontWeight: 900, color: netPnlVal >= 0 ? 'var(--color-green)' : 'var(--color-red)' }}>
-                {netPnlVal >= 0 ? '+' : ''}${netPnlVal.toFixed(2)}
+                {formatMoney(netPnlVal)}
               </span>
               <div style={{ fontSize: '0.72rem', color: '#888', marginTop: '4px' }}>
-                已平仓: <span style={{ color: (todaySummary?.realized_pnl || 0) >= 0 ? '#00c805' : '#ff3b30', fontWeight: 700 }}>{(todaySummary?.realized_pnl || 0) >= 0 ? '+' : ''}${(todaySummary?.realized_pnl || 0).toFixed(2)}</span> | 持仓浮动: <span style={{ color: (todaySummary?.unrealized_pnl || 0) >= 0 ? '#00c805' : '#ff3b30', fontWeight: 700 }}>{(todaySummary?.unrealized_pnl || 0) >= 0 ? '+' : ''}${(todaySummary?.unrealized_pnl || 0).toFixed(2)}</span>
+                已平仓: <span style={{ color: realizedPnl >= 0 ? '#00c805' : '#ff3b30', fontWeight: 700 }}>{formatMoney(realizedPnl)}</span> | 持仓浮动: <span style={{ color: unrealizedPnl >= 0 ? '#00c805' : '#ff3b30', fontWeight: 700 }}>{formatMoney(unrealizedPnl)}</span>
               </div>
             </div>
 
+            {/* 2. Win Rate */}
             <div className="stat-card" style={{ background: '#09090b', border: '1px solid var(--color-border)', padding: '1.25rem' }}>
               <span className="stat-label">Win Rate</span>
-              <span className="stat-value" style={{ fontSize: '1.4rem', fontWeight: 900, color: calcClosed > 0 ? (winRateVal >= 50 ? 'var(--color-green)' : 'var(--color-red)') : '#38bdf8' }}>
-                {calcClosed > 0 ? `${winRateVal.toFixed(1)}%` : '持仓博弈中 ⏱️'}
+              <span className="stat-value" style={{ fontSize: '1.4rem', fontWeight: 900, color: closedCount > 0 ? (winRatePct >= 50 ? 'var(--color-green)' : 'var(--color-red)') : '#38bdf8' }}>
+                {closedCount > 0 ? `${winRatePct.toFixed(1)}%` : '持仓博弈中 ⏱️'}
               </span>
               <div style={{ fontSize: '0.72rem', color: '#888', marginTop: '4px' }}>
-                {calcClosed > 0 ? `已平仓: ${calcClosed} 笔` : `活跃持仓: ${activePositionsCount} 笔待平仓`}
+                {closedCount > 0 ? `已平仓: ${closedCount} 笔 (${winsCount}胜/${lossesCount}负)` : `活跃持仓: ${activePositionsCount} 笔待平仓`}
               </div>
             </div>
 
+            {/* 3. Wins / Losses */}
             <div className="stat-card" style={{ background: '#09090b', border: '1px solid var(--color-border)', padding: '1.25rem' }}>
               <span className="stat-label">Wins / Losses</span>
               <span className="stat-value" style={{ fontSize: '1.4rem', fontWeight: 900 }}>
-                {calcClosed > 0 ? (
+                {closedCount > 0 ? (
                   <>
-                    <span style={{ color: 'var(--color-green)' }}>{winsVal}</span>
+                    <span style={{ color: 'var(--color-green)' }}>{winsCount}</span>
                     <span style={{ color: '#555', margin: '0 4px' }}>/</span>
-                    <span style={{ color: 'var(--color-red)' }}>{lossesVal}</span>
+                    <span style={{ color: 'var(--color-red)' }}>{lossesCount}</span>
                   </>
                 ) : (
                   <span style={{ color: '#94a3b8', fontSize: '1.1rem' }}>
@@ -540,27 +554,33 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
                 )}
               </span>
               <div style={{ fontSize: '0.72rem', color: '#888', marginTop: '4px' }}>
-                {calcClosed > 0 ? `结算完成率: 100%` : `平仓时自动统计胜负`}
+                {closedCount > 0 ? (activePositionsCount > 0 ? `另有 ${activePositionsCount} 笔持仓中` : '今日已全部结算') : '平仓时自动统计胜负'}
               </div>
             </div>
 
+            {/* 4. Best Trade */}
             <div className="stat-card" style={{ background: '#09090b', border: '1px solid rgba(0,200,5,0.2)', padding: '1.25rem' }}>
               <span className="stat-label">Best Trade</span>
-              <span className="stat-value" style={{ fontSize: '1.3rem', fontWeight: 900, color: 'var(--color-green)' }}>
-                {calcClosed > 0 ? `+$${bestTradeVal.toFixed(2)}` : (positions.length > 0 ? `浮盈最高: +$${Math.max(0, ...positions.map(p => p.unrealized_pnl || 0)).toFixed(2)}` : '+$0.00')}
+              <span className="stat-value" style={{ fontSize: '1.3rem', fontWeight: 900, color: (closedCount > 0 && winsCount > 0) ? 'var(--color-green)' : (bestTradeNum < 0 ? 'var(--color-red)' : '#94a3b8') }}>
+                {closedCount > 0
+                  ? (winsCount > 0 ? formatMoney(bestTradeNum) : (lossesCount > 0 ? `暂无盈利 (${formatMoney(bestTradeNum, false)})` : '$0.00'))
+                  : (positions.length > 0 ? `浮盈最高: ${formatMoney(Math.max(0, ...positions.map(p => p.unrealized_pnl || 0)))}` : '$0.00')}
               </span>
               <div style={{ fontSize: '0.72rem', color: '#888', marginTop: '4px' }}>
-                {calcClosed > 0 ? '历史最佳平仓' : '盘中最高浮盈'}
+                {closedCount > 0 ? (winsCount > 0 ? '今日最高已落袋盈利' : '今日尚无盈利平仓单') : '持仓浮动最高收益'}
               </div>
             </div>
 
+            {/* 5. Worst Trade */}
             <div className="stat-card" style={{ background: '#09090b', border: '1px solid rgba(255,59,48,0.2)', padding: '1.25rem' }}>
               <span className="stat-label">Worst Trade</span>
-              <span className="stat-value" style={{ fontSize: '1.3rem', fontWeight: 900, color: 'var(--color-red)' }}>
-                {calcClosed > 0 ? `$${worstTradeVal.toFixed(2)}` : (positions.length > 0 ? `浮亏最大: $${Math.min(0, ...positions.map(p => p.unrealized_pnl || 0)).toFixed(2)}` : '$0.00')}
+              <span className="stat-value" style={{ fontSize: '1.3rem', fontWeight: 900, color: worstTradeNum < 0 ? 'var(--color-red)' : '#94a3b8' }}>
+                {closedCount > 0
+                  ? formatMoney(worstTradeNum, false)
+                  : (positions.length > 0 ? `浮亏最大: ${formatMoney(Math.min(0, ...positions.map(p => p.unrealized_pnl || 0)), false)}` : '$0.00')}
               </span>
               <div style={{ fontSize: '0.72rem', color: '#888', marginTop: '4px' }}>
-                {calcClosed > 0 ? '历史最大亏损' : '盘中最大回撤'}
+                {closedCount > 0 ? '今日最大已平仓亏损' : '持仓最大盘中回撤'}
               </div>
             </div>
           </div>
