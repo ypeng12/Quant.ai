@@ -12,4 +12,6 @@ Always format git commit messages like:
 
 ## Strict Prohibitions & Operational Rules
 - **ABSOLUTELY NO FORCED-STOPPING THINKING (整个项目永久严禁任何强行停止交易的思维)**: NEVER add or introduce any forced-halt, lockout, or circuit breaker logic that blocks or pauses opening new trades (用户明确命令：整个项目永久禁止任何“强行停止交易、因亏损锁死标的、限制交易频率”的消极阻碍逻辑，无论任何时候都不允许加此类限制).
-- **MANDATORY PRIOR CONSULTATION BEFORE MODIFYING `live_runner.py` (修改 live_runner 前必须先咨询确认)**: Before modifying `live_runner.py`, ALWAYS explicitly explain what you want to do to the user and obtain explicit permission before writing or changing any code.
+- **STRICT PROHIBITION ON HARDCODED RESTRICTIONS (永久严禁任何未经同意的硬编码限制)**: NEVER add hardcoded restrictions, veto filters, or artificial roadblocks (如午间时间锁、静态硬门槛、单指标一刀切否决等)，除非用户明确要求并同意。
+- **MANDATORY PRIOR USER REVIEW BEFORE PUSHING `live_runner.py` (修改 live_runner 必须用户亲自审阅同意后方可 push)**: Before modifying and pushing any changes to `live_runner.py`, ALWAYS explicitly present the exact proposed logic changes to the user. You MUST wait for the user to review and explicitly approve before committing and pushing.
+
