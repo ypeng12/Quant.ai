@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <cstring>
 #include "../include/protocol/itch50_protocol.hpp"
 #include "../include/protocol/ouch_protocol.hpp"
 #include "../include/gateway/itch_ouch_simulator.hpp"

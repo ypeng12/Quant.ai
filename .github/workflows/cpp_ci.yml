@@ -46,7 +46,7 @@ jobs:
 
       - name: Build Engine, Gateway, Tests, and Benchmarks
         run: |
-          cmake --build build --parallel $(nproc 2>/dev/null || sysctl -n hw.logicalcpu)
+          cmake --build build --parallel $(nproc 2>/dev/null || sysctl -n hw.logicalcpu) || cmake --build build -v -j1
 
       - name: Run GoogleTest Suite
         run: |
@@ -81,7 +81,7 @@ jobs:
             -DENABLE_UBSAN=ON \
             -DBUILD_TESTS=ON \
             -DBUILD_BENCHMARKS=OFF
-          cmake --build build-asan --parallel $(nproc)
+          cmake --build build-asan --parallel $(nproc) || cmake --build build-asan -v -j1
           ./build-asan/engine_tests || echo "ASan/UBSan run completed with notice"
 
       - name: Configure & Test with TSan (ThreadSanitizer)
@@ -93,5 +93,5 @@ jobs:
             -DENABLE_ASAN=OFF \
             -DBUILD_TESTS=ON \
             -DBUILD_BENCHMARKS=OFF
-          cmake --build build-tsan --parallel $(nproc)
+          cmake --build build-tsan --parallel $(nproc) || cmake --build build-tsan -v -j1
           ./build-tsan/engine_tests || echo "TSan run completed with notice"
