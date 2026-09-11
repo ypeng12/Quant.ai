@@ -281,12 +281,22 @@ def calculate_win_rate_probability(
         if upper_wick >= 0.35 or (is_trap and ("Bull Trap" in trap_reason or "Upper Wick" in trap_reason)):
             prob_adj = min(0.38, prob_adj * 0.65)
 
-        # Pullback Support Boost: Healthy pullback to VWAP/EMA21 with buyer absorption -> Boost win rate
+        # Dynamic LOB Order Flow Adjustment (organic scaling governed by true microflow, no hardcoded floors)
         regime_str = str(regime) if regime else ""
+        lob_ofi = float(opportunity.get("alpha_ofi", opportunity.get("ofi", 0.0))) if opportunity else 0.0
         if "PULLBACK" in regime_str:
-            prob_adj = max(0.62, prob_adj * 1.15)
+            if lob_ofi >= -0.05:
+                prob_adj = prob_adj * 1.10
+            else:
+                prob_adj = prob_adj * 0.90
         elif "FADE" in regime_str:
-            prob_adj = max(0.64, prob_adj * 1.18)
+            if lob_ofi >= 0.05:
+                prob_adj = prob_adj * 1.12
+            elif lob_ofi <= -0.15:
+                # Severe penalty if fading against aggressive institutional selling sweeps
+                prob_adj = prob_adj * 0.72
+            else:
+                prob_adj = prob_adj * 1.02
 
         bounded_p_win = max(0.35, min(0.88, prob_adj))
         rank_score = round(bounded_p_win * 100.0, 1)

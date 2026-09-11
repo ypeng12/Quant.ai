@@ -843,7 +843,13 @@ class LiveTradingRunner:
                 direction = "NEUTRAL"
                 regime = "TRAP_REJECT"
                 short_confirmed = False
-        elif (is_trap and ("Bear Trap" in trap_reason or lower_wick_ratio >= 0.35)) and close >= min(vwap, ema_21) * 0.995:
+        elif (
+            is_trap
+            and ("Bear Trap" in trap_reason or lower_wick_ratio >= 0.35)
+            and alpha_eval.get("alpha_ofi", 0.0) >= -0.10
+            and alpha_eval.get("composite_alpha_score", 0.0) >= -30.0
+            and close >= min(vwap, ema_21) * 0.995
+        ):
             short_confirmed = False
             direction = "LONG"
             regime = "FADE_BEAR_TRAP"
@@ -933,7 +939,9 @@ class LiveTradingRunner:
             "wave_p_win_short": alpha_eval.get("wave_p_win_short", 0.50),
             "expected_wave_return_pct": alpha_eval.get("expected_wave_return_pct", 0.0),
             "alpha_ofi": alpha_eval.get("alpha_ofi", alpha_eval.get("feature_ofi", 0.0)),
+            "ofi": alpha_eval.get("alpha_ofi", alpha_eval.get("feature_ofi", 0.0)),
             "alpha_micro_drift": alpha_eval.get("alpha_micro_drift", alpha_eval.get("feature_micro_drift", 0.0)),
+            "microprice_drift": alpha_eval.get("alpha_micro_drift", alpha_eval.get("feature_micro_drift", 0.0)),
             "queue_imbalance": alpha_eval.get("queue_imbalance", alpha_eval.get("feature_queue_imbalance", 0.0)),
             "sweep_vel": alpha_eval.get("sweep_vel", alpha_eval.get("feature_sweep_vel", 0.0)),
             "toxic_flow": alpha_eval.get("toxic_flow", alpha_eval.get("feature_hrt_toxic_flow", 0.0)),
@@ -1001,7 +1009,7 @@ class LiveTradingRunner:
         p_win_pct = opportunity.get("win_rate_pct", 50.0)
         ev_r = opportunity.get("expected_value_r", 0.0)
         is_pos_ev = opportunity.get("is_positive_ev", False)
-        ofi = self._safe_float(opportunity.get("ofi"), 0.0)
+        ofi = self._safe_float(opportunity.get("alpha_ofi", opportunity.get("ofi", 0.0)), 0.0)
         rvol = self._safe_float(opportunity.get("rvol"), 1.0)
         atr_pct = self._safe_float(opportunity.get("atr_pct"), 1.5)
         mom_3 = self._safe_float(opportunity.get("momentum_3_pct"), 0.0)

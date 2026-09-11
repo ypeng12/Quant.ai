@@ -168,15 +168,20 @@ class InstitutionalAlphaEngine:
 
         bid_size = self._safe_float(row.get("bid_size"), 100.0)
         ask_size = self._safe_float(row.get("ask_size"), 100.0)
+        has_real_depth = ("bid_size" in row and "ask_size" in row and row.get("bid_size") is not None and row.get("ask_size") is not None)
         ask_to_bid = ask_size / max(1.0, bid_size)
         bid_to_ask = bid_size / max(1.0, ask_size)
 
         # Continuous Trap Intensity Metric: tanh scaling of wick & L2 depth imbalance
         wick_diff = lower_wick_ratio - upper_wick_ratio
-        depth_log = math.log(max(0.1, min(10.0, bid_to_ask)))
-        trap_intensity = math.tanh(wick_diff * 2.2 + depth_log * 0.4)
-
-        is_trap = abs(trap_intensity) >= 0.35
+        if has_real_depth:
+            depth_log = math.log(max(0.1, min(10.0, bid_to_ask)))
+            trap_intensity = math.tanh(wick_diff * 1.8 + depth_log * 0.5)
+            is_trap = abs(trap_intensity) >= 0.35
+        else:
+            # Synthetic candlestick wick estimator: require genuine wick rejection (wick_diff >= 0.28) to avoid single-bar noise
+            trap_intensity = math.tanh(wick_diff * 1.5)
+            is_trap = abs(wick_diff) >= 0.28 and abs(trap_intensity) >= 0.35
         penalty_score = float(np.clip(trap_intensity * 50.0, -50.0, 50.0))
 
         if is_trap and trap_intensity < 0:
