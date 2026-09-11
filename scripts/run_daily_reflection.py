@@ -10,7 +10,13 @@ import os
 import sys
 import argparse
 
-sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
+script_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(script_dir)
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+backend_dir = os.path.join(project_root, "backend")
+if backend_dir not in sys.path:
+    sys.path.insert(0, backend_dir)
 
 from backend.app.ml.auto_reflection_engine import AutoReflectionEngine
 

@@ -58,8 +58,9 @@ Quant.ai is an autonomous, high-consistency quantitative trading platform built 
 ---
 
 ## 📚 Documentation & History Logs
-- 📜 **Strategy Evolution & Dialogue History**: See [STRATEGY_EVOLUTION_HISTORY.md](file:///Users/yuliangpeng/Desktop/Quant/STRATEGY_EVOLUTION_HISTORY.md) for the complete narrative history of strategy discussions, user design directives, logic changes, and historical diagnostic reviews (7/31 ~ 8/22).
-- 📋 **System Walkthrough**: See [walkthrough.md](file:///Users/yuliangpeng/.gemini/antigravity-ide/brain/19a15ef7-89b5-47d8-9844-cc56772c8655/walkthrough.md) for verification results and unit test logs.
+- 📜 **Strategy Evolution & Dialogue History**: See [docs/STRATEGY_EVOLUTION_HISTORY.md](file:///Users/yuliangpeng/Desktop/Quant/docs/STRATEGY_EVOLUTION_HISTORY.md) for the complete narrative history of strategy discussions, user design directives, logic changes, and historical diagnostic reviews.
+- 📖 **Quantitative Research Handbook**: See [docs/QUANT_RESEARCH_HANDBOOK.md](file:///Users/yuliangpeng/Desktop/Quant/docs/QUANT_RESEARCH_HANDBOOK.md) for full mathematical specifications, continuous alpha formulations, and econometric proofs.
+- 🎓 **Academic Foundations & Papers**: See [docs/papers/](file:///Users/yuliangpeng/Desktop/Quant/docs/papers/) for references including Cont-Stoikov OFI, Bouchaud-Potters, and Lopez de Prado CV methods.
 
 ---
 
@@ -70,8 +71,11 @@ Quant.ai is an autonomous, high-consistency quantitative trading platform built 
 python3 -m pytest backend/tests/ -v
 
 # 2. Run Max-Profit Strategy Benchmark
-python3 run_max_profit_simulation.py --capital 500000
+python3 scripts/run_max_profit_simulation.py --capital 500000
 
 # 3. Run Daily EOD Auto-Reflection Engine
-python3 run_daily_reflection.py --date 2026-08-22
+python3 scripts/run_daily_reflection.py --date 2026-08-22
+
+# 4. Generate LOB Wave Alpha Visualization Terminal
+python3 scripts/generate_saggese_wave_dashboard.py
 ```

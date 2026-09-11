@@ -11,7 +11,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
-backend_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "backend")
+script_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(script_dir)
+backend_dir = os.path.join(project_root, "backend")
 if backend_dir not in sys.path:
     sys.path.insert(0, backend_dir)
 

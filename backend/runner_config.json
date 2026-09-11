@@ -6,6 +6,7 @@
     "paper_only_aggressive": true,
     "allow_aggressive_live": false,
     "allow_shorting": true,
+    "inverted_mode": false,
     "dynamic_screener_enabled": false,
     "screener_refresh_seconds": 120,
     "screener_top_actives": 6,
@@ -41,13 +42,12 @@
     "max_hold_minutes": 300,
     "time_stop_min_score": 52.0,
     "orders_sync_interval_seconds": 2.0,
+    "staged_entry_enabled": true,
+    "tier1_size_ratio": 0.4,
+    "tier2_size_ratio": 0.6,
     "pullback_entry_enabled": true,
     "pyramid_max_count": 1,
-    "bar_interval": "5m",
-    "inverted_mode": false,
-    "staged_entry_enabled": true,
-    "tier1_size_ratio": 0.40,
-    "tier2_size_ratio": 0.60
+    "bar_interval": "5m"
   },
-  "updated_at": "2026-09-10 16:20:00"
+  "updated_at": "2026-09-11 10:49:09"
 }

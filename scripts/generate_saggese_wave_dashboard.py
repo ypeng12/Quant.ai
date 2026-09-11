@@ -16,9 +16,13 @@ import json
 import numpy as np
 import pandas as pd
 
-backend_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "backend")
+script_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(script_dir)
+backend_dir = os.path.join(project_root, "backend")
 if backend_dir not in sys.path:
     sys.path.insert(0, backend_dir)
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
 
 from app.ml.lob_microstructure_ml import MicrostructureWaveAlphaEngine
 from app.alpha_engine import InstitutionalAlphaEngine
@@ -990,22 +994,15 @@ def generate_multi_day_dashboard():
 </html>
 """
 
-    root_out = os.path.join(os.path.dirname(os.path.abspath(__file__)), "saggese_wave_visual_dashboard.html")
     charts_out = os.path.join(backend_dir, "data", "charts", "saggese_wave_visual_dashboard.html")
-    
-    with open(root_out, "w", encoding="utf-8") as f:
-        f.write(html_content)
     with open(charts_out, "w", encoding="utf-8") as f:
         f.write(html_content)
         
     cache_charts_out = os.path.join(backend_dir, "data", "charts", "wave_history_cache.json")
-    cache_root_out = os.path.join(os.path.dirname(os.path.abspath(__file__)), "wave_history_cache.json")
     with open(cache_charts_out, "w", encoding="utf-8") as f:
         json.dump(all_data, f)
-    with open(cache_root_out, "w", encoding="utf-8") as f:
-        json.dump(all_data, f)
         
-    print(f"✅ Successfully regenerated hybrid wave dashboard & full history cache at:\n -> {root_out}\n -> {charts_out}\n -> {cache_charts_out}")
+    print(f"✅ Successfully regenerated hybrid wave dashboard & full history cache at:\n -> {charts_out}\n -> {cache_charts_out}")
 
 if __name__ == "__main__":
     generate_multi_day_dashboard()
