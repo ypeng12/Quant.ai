@@ -138,6 +138,53 @@ class LiveTradingRunner:
             "tier2_size_ratio": 0.60,  # 60% golden add sizing
         }
 
+    # 🌊 Saggese LOB Microstructure Ticker-Specific Wave Profiles
+    TICKER_WAVE_PROFILES = {
+        "MSTR": {
+            "min_wave_bps": 75.0,        # High-beta crypto-adjacent asset, target 75~150 bps waves
+            "trail_start_pct": 0.0120,   # Wide swings require breathing room before trailing
+            "trail_buf_min_pct": 0.0100, # 1.0% minimum buffer
+            "trail_buf_max_pct": 0.0350, # up to 3.5% buffer for multi-percent momentum
+            "trailing_stop_atr_mult": 2.20,
+            "p_win_threshold": 51.0,
+        },
+        "NVDA": {
+            "min_wave_bps": 25.0,        # Highly liquid mega-cap tech, 25~45 bps waves
+            "trail_start_pct": 0.0045,   # Fast profit locking on tighter moves
+            "trail_buf_min_pct": 0.0040, # 0.4% tight trail buffer
+            "trail_buf_max_pct": 0.0150, # 1.5% max buffer
+            "trailing_stop_atr_mult": 1.50,
+            "p_win_threshold": 53.0,
+        },
+        "TSLA": {
+            "min_wave_bps": 45.0,        # Growth tech momentum, 45~80 bps waves
+            "trail_start_pct": 0.0070,   # 0.7% trail trigger
+            "trail_buf_min_pct": 0.0060, # 0.6% buffer
+            "trail_buf_max_pct": 0.0220, # 2.2% max buffer
+            "trailing_stop_atr_mult": 1.80,
+            "p_win_threshold": 52.0,
+        },
+        "SNDK": {
+            "min_wave_bps": 50.0,        # High-beta semiconductor stock, 50~100 bps waves
+            "trail_start_pct": 0.0080,   # 0.8% trail trigger
+            "trail_buf_min_pct": 0.0070, # 0.7% buffer
+            "trail_buf_max_pct": 0.0250, # 2.5% max buffer
+            "trailing_stop_atr_mult": 2.00,
+            "p_win_threshold": 51.5,
+        },
+    }
+
+    def _get_ticker_wave_profile(self, ticker: str) -> Dict:
+        return self.TICKER_WAVE_PROFILES.get(ticker.upper(), {
+            "min_wave_bps": 40.0,
+            "trail_start_pct": self._safe_float(self.strategy_params.get("trail_start_pct"), 0.0080),
+            "trail_buf_min_pct": self._safe_float(self.strategy_params.get("trailing_stop_min_pct"), 0.006),
+            "trail_buf_max_pct": self._safe_float(self.strategy_params.get("trailing_stop_max_pct"), 0.025),
+            "trailing_stop_atr_mult": self._safe_float(self.strategy_params.get("trailing_stop_atr_mult"), 1.80),
+            "p_win_threshold": self._safe_float(self.strategy_params.get("min_p_win_pct"), 50.0),
+        })
+
+
 
     # Proxy properties for locks to maintain full backward compatibility
     @property
@@ -885,6 +932,12 @@ class LiveTradingRunner:
             "wave_p_win_long": alpha_eval.get("wave_p_win_long", 0.50),
             "wave_p_win_short": alpha_eval.get("wave_p_win_short", 0.50),
             "expected_wave_return_pct": alpha_eval.get("expected_wave_return_pct", 0.0),
+            "alpha_ofi": alpha_eval.get("alpha_ofi", alpha_eval.get("feature_ofi", 0.0)),
+            "alpha_micro_drift": alpha_eval.get("alpha_micro_drift", alpha_eval.get("feature_micro_drift", 0.0)),
+            "queue_imbalance": alpha_eval.get("queue_imbalance", alpha_eval.get("feature_queue_imbalance", 0.0)),
+            "sweep_vel": alpha_eval.get("sweep_vel", alpha_eval.get("feature_sweep_vel", 0.0)),
+            "toxic_flow": alpha_eval.get("toxic_flow", alpha_eval.get("feature_hrt_toxic_flow", 0.0)),
+            "is_trap": alpha_eval.get("is_trap", False),
         }
 
 
@@ -1040,20 +1093,47 @@ class LiveTradingRunner:
         if self.partial_tp_done.get(ticker, False) and pnl_pct <= 0.001:
             return ("SELL" if side == "LONG" else "COVER"), f"{base_reason} | 🛡️ Scaled profit secured, remainder hit breakeven (${avg_cost:.2f}), closing position!"
 
-        # ─── Dynamic ATR Trailing Stop & Per-Ticker ML Expectancy Exit ────────────────────
-        trail_start_pct = self._safe_float(self.strategy_params.get("trail_start_pct"), 0.0065)
-        trailing_atr_mult = self._safe_float(self.strategy_params.get("trailing_stop_atr_mult"), 1.8)
+        # ─── Dynamic LOB Microstructure Trailing Stop & Per-Ticker Wave Engine ─────────
+        ticker_prof = self._get_ticker_wave_profile(ticker)
+        trail_start_pct = ticker_prof["trail_start_pct"]
+        trailing_atr_mult = ticker_prof["trailing_stop_atr_mult"]
+        trail_buf_min = ticker_prof["trail_buf_min_pct"]
+        trail_buf_max = ticker_prof["trail_buf_max_pct"]
         atr_val = opportunity.get("_atr", close * 0.01)
         best_p = state.get("best_price", close)
 
-        # 1. Dynamic ATR Trailing Stop with Profit Ratchet
+        # LOB Microstructure features
+        lob_ofi = self._safe_float(opportunity.get("alpha_ofi"), 0.0)
+        lob_micro = self._safe_float(opportunity.get("alpha_micro_drift"), 0.0)
+        lob_toxic = self._safe_float(opportunity.get("toxic_flow"), 0.0)
+        is_trap = bool(opportunity.get("is_trap", False))
+
+        # 1. Dynamic LOB Microstructure Trailing Stop with Profit Ratchet
         if side == "LONG":
             peak_pnl = (best_p - avg_cost) / max(1e-5, avg_cost)
+            # A. LOB Microstructure Exhaustion / Toxic Outflow Trailing Stop (告别坐过山车)
+            if pnl_pct >= 0.0030:
+                is_exhausted = (lob_ofi <= -0.18 and lob_micro <= -0.12) or lob_toxic <= -0.30 or is_trap
+                if is_exhausted:
+                    # Ratchet stop tight to secure profit and prevent giving back gains
+                    lob_tight_stop = max(avg_cost * 1.0015, best_p * (1.0 - max(0.0025, trail_buf_min * 0.4)))
+                    if close <= lob_tight_stop:
+                        return "SELL", (
+                            f"{base_reason} | 🌊 [LOB Microstructure Trailing Stop] Peak ${best_p:.2f} (+{peak_pnl*100:.2f}%), "
+                            f"LOB OFI ({lob_ofi:+.2f}) / Micro-drift ({lob_micro:+.2f}) / Toxic ({lob_toxic:+.2f}) signaled buyer exhaustion, "
+                            f"locking profit at ${close:.2f} (+{pnl_pct*100:.2f}%)"
+                        )
+
+            # B. Dynamic Wave ATR Trailing Stop with Profit Ratchet
             if peak_pnl >= trail_start_pct:
-                trail_buf = max(trailing_atr_mult * atr_val, best_p * self._safe_float(self.strategy_params.get("trailing_stop_min_pct"), 0.006))
-                trail_buf = min(trail_buf, best_p * self._safe_float(self.strategy_params.get("trailing_stop_max_pct"), 0.025))
+                trail_buf = max(trailing_atr_mult * atr_val, best_p * trail_buf_min)
+                trail_buf = min(trail_buf, best_p * trail_buf_max)
+                # If LOB buy pressure is surging, grant breathing room to maximize wave run
+                if lob_ofi >= 0.20 and lob_micro >= 0.15:
+                    trail_buf *= 1.25
+
                 trail_stop_price = best_p - trail_buf
-                # Stepwise profit ratchet: guarantee minimum retained profit once stock runs
+                # Stepwise profit ratchet
                 if peak_pnl >= 0.04:
                     trail_stop_price = max(trail_stop_price, avg_cost * 1.025)
                 elif peak_pnl >= 0.02:
@@ -1068,9 +1148,25 @@ class LiveTradingRunner:
                     )
         else:
             peak_pnl = (avg_cost - best_p) / max(1e-5, avg_cost)
+            # A. LOB Microstructure Exhaustion / Toxic Inflow Trailing Stop
+            if pnl_pct >= 0.0030:
+                is_exhausted = (lob_ofi >= 0.18 and lob_micro >= 0.12) or lob_toxic >= 0.30 or is_trap
+                if is_exhausted:
+                    lob_tight_stop = min(avg_cost * 0.9985, best_p * (1.0 + max(0.0025, trail_buf_min * 0.4)))
+                    if close >= lob_tight_stop:
+                        return "COVER", (
+                            f"{base_reason} | 🌊 [LOB Microstructure Trailing Stop] Short low ${best_p:.2f} (+{peak_pnl*100:.2f}%), "
+                            f"LOB OFI ({lob_ofi:+.2f}) / Micro-drift ({lob_micro:+.2f}) / Toxic ({lob_toxic:+.2f}) signaled seller exhaustion, "
+                            f"locking profit at ${close:.2f} (+{pnl_pct*100:.2f}%)"
+                        )
+
+            # B. Dynamic Wave ATR Trailing Stop with Profit Ratchet
             if peak_pnl >= trail_start_pct:
-                trail_buf = max(trailing_atr_mult * atr_val, best_p * self._safe_float(self.strategy_params.get("trailing_stop_min_pct"), 0.006))
-                trail_buf = min(trail_buf, best_p * self._safe_float(self.strategy_params.get("trailing_stop_max_pct"), 0.025))
+                trail_buf = max(trailing_atr_mult * atr_val, best_p * trail_buf_min)
+                trail_buf = min(trail_buf, best_p * trail_buf_max)
+                if lob_ofi <= -0.20 and lob_micro <= -0.15:
+                    trail_buf *= 1.25
+
                 trail_stop_price = best_p + trail_buf
                 if peak_pnl >= 0.04:
                     trail_stop_price = min(trail_stop_price, avg_cost * 0.975)
@@ -1123,18 +1219,38 @@ class LiveTradingRunner:
         if minutes_held >= max_hold and not is_pos_ev and pnl_pct <= 0.0:
             return ("SELL" if side == "LONG" else "COVER"), f"{base_reason} | Flat trend at max hold duration with no profit"
 
-        # ─── Citadel / Two Sigma Tiered Staged Entry (第二枪：黄金补仓点) ──────────
+        # ─── Citadel / Two Sigma Tiered Staged Entry (第二枪：黄金补仓与微观确认加仓) ──────────
         staged_info = self.staged_entries.get(ticker)
         if not staged_info:
             staged_info = {"tier": 1, "entry_price": avg_cost, "shares": abs(current_shares), "notional": abs(current_shares) * avg_cost, "side": side}
             self.staged_entries[ticker] = staged_info
+
+        # 🛡️ Early Microstructure Fakeout Cut for Tier 1 Scout (假突破极速微损截断)
+        if staged_info.get("tier") == 1 and minutes_held >= 1.0 and pnl_pct <= -0.0025:
+            if side == "LONG" and ((lob_micro <= -0.25 and lob_ofi <= -0.20) or lob_toxic <= -0.35 or is_trap):
+                return "SELL", (
+                    f"{base_reason} | ⚠️ [LOB Fakeout Cut] Tier 1 scout detected institutional bull trap / toxic sell wave "
+                    f"(OFI={lob_ofi:+.2f}, Drift={lob_micro:+.2f}), cutting early with tiny loss (-{abs(pnl_pct)*100:.2f}%)"
+                )
+            elif side == "SHORT" and ((lob_micro >= 0.25 and lob_ofi >= 0.20) or lob_toxic >= 0.35 or is_trap):
+                return "COVER", (
+                    f"{base_reason} | ⚠️ [LOB Fakeout Cut] Tier 1 scout detected institutional bear trap / aggressive bid wave "
+                    f"(OFI={lob_ofi:+.2f}, Drift={lob_micro:+.2f}), cutting early with tiny loss (-{abs(pnl_pct)*100:.2f}%)"
+                )
 
         if self.strategy_params.get("staged_entry_enabled", True) and staged_info.get("tier") == 1 and not self.is_entry_locked(ticker):
             entry_p = staged_info.get("entry_price", avg_cost)
             if side == "LONG" and entry_p > 0:
                 dip_pct = (entry_p - close) / entry_p
                 atr_dip = (entry_p - close) / max(1e-5, atr_val)
-                # Golden oversold support: deeper dip (>= 0.5% or >= 0.9 ATR) + lower wick absorption / oversold RSI / bounce bar
+                # Path A: Microstructure Continuation Confirmation (右侧微观确认加仓 60%)
+                micro_confirm_long = (lob_micro >= 0.12 and lob_ofi >= 0.10 and not is_trap)
+                if micro_confirm_long and (close >= entry_p * 1.0005 or pnl_pct >= 0.001):
+                    return "TIER2_ADD_BUY", (
+                        f"{base_reason} | 🚀 [LOB Tier 2 Microstructure Add 60%] Order flow breakout confirmed (OFI={lob_ofi:+.2f}, Drift={lob_micro:+.2f}) — "
+                        f"Deploying remaining 60% golden add to ride primary wave!"
+                    )
+                # Path B: Golden oversold support: deeper dip (>= 0.5% or >= 0.9 ATR) + lower wick absorption / oversold RSI / bounce bar
                 lower_wick = self._safe_float(opportunity.get("lower_wick_ratio"), 0.0)
                 rsi_val = self._safe_float(opportunity.get("rsi"), 50.0)
                 is_bounce_bar = close > self._safe_float(opportunity.get("_open"), close)
@@ -1146,7 +1262,14 @@ class LiveTradingRunner:
             elif side == "SHORT" and entry_p > 0 and self.strategy_params.get("allow_shorting", True):
                 rally_pct = (close - entry_p) / entry_p
                 atr_rally = (close - entry_p) / max(1e-5, atr_val)
-                # Golden overbought resistance: deeper rally (>= 0.5% or >= 0.9 ATR) + upper wick rejection / overbought RSI / rejection bar
+                # Path A: Microstructure Breakdown Confirmation (右侧微观击穿确认加空 60%)
+                micro_confirm_short = (lob_micro <= -0.12 and lob_ofi <= -0.10 and not is_trap)
+                if micro_confirm_short and (close <= entry_p * 0.9995 or pnl_pct >= 0.001):
+                    return "TIER2_ADD_SHORT", (
+                        f"{base_reason} | ⚡ [LOB Tier 2 Microstructure Add 60%] Breakdown continuation confirmed (OFI={lob_ofi:+.2f}, Drift={lob_micro:+.2f}) — "
+                        f"Deploying remaining 60% short position to maximize breakdown gain!"
+                    )
+                # Path B: Golden overbought resistance: deeper rally (>= 0.5% or >= 0.9 ATR) + upper wick rejection / overbought RSI / rejection bar
                 upper_wick = self._safe_float(opportunity.get("upper_wick_ratio"), 0.0)
                 rsi_val = self._safe_float(opportunity.get("rsi"), 50.0)
                 is_reject_bar = close < self._safe_float(opportunity.get("_open"), close)

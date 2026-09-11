@@ -278,8 +278,18 @@ class InstitutionalAlphaEngine:
         res["wave_p_win_short"] = wave_p_short
         res["expected_wave_return_pct"] = wave_ev_ret
         for k, v in wave_metrics.items():
-            if k not in res:
-                res[k] = v
+            res[k] = v
+        # Ensure standard feature names are accessible for downstream execution engines
+        if "alpha_ofi" in wave_metrics:
+            res["feature_ofi"] = wave_metrics["alpha_ofi"]
+        if "alpha_micro_drift" in wave_metrics:
+            res["feature_micro_drift"] = wave_metrics["alpha_micro_drift"]
+        if "queue_imbalance" in wave_metrics:
+            res["feature_queue_imbalance"] = wave_metrics["queue_imbalance"]
+        if "sweep_vel" in wave_metrics:
+            res["feature_sweep_vel"] = wave_metrics["sweep_vel"]
+        if "toxic_flow" in wave_metrics:
+            res["feature_hrt_toxic_flow"] = wave_metrics["toxic_flow"]
         return res
 
 
