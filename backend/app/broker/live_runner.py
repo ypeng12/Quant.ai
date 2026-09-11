@@ -1134,10 +1134,13 @@ class LiveTradingRunner:
 
                 trail_stop_price = best_p - trail_buf
                 # Stepwise profit ratchet
+                # Stepwise profit ratchet - 阶梯硬锁定利润，杜绝浮盈坐过山车
                 if peak_pnl >= 0.04:
-                    trail_stop_price = max(trail_stop_price, avg_cost * 1.025)
+                    trail_stop_price = max(trail_stop_price, avg_cost * 1.028)
                 elif peak_pnl >= 0.02:
-                    trail_stop_price = max(trail_stop_price, avg_cost * 1.012)
+                    trail_stop_price = max(trail_stop_price, avg_cost * 1.014)
+                elif peak_pnl >= 0.012:
+                    trail_stop_price = max(trail_stop_price, avg_cost * 1.006)
                 elif peak_pnl >= trail_start_pct:
                     trail_stop_price = max(trail_stop_price, avg_cost * 1.002)
 
@@ -1169,9 +1172,11 @@ class LiveTradingRunner:
 
                 trail_stop_price = best_p + trail_buf
                 if peak_pnl >= 0.04:
-                    trail_stop_price = min(trail_stop_price, avg_cost * 0.975)
+                    trail_stop_price = min(trail_stop_price, avg_cost * 0.972)
                 elif peak_pnl >= 0.02:
-                    trail_stop_price = min(trail_stop_price, avg_cost * 0.988)
+                    trail_stop_price = min(trail_stop_price, avg_cost * 0.986)
+                elif peak_pnl >= 0.012:
+                    trail_stop_price = min(trail_stop_price, avg_cost * 0.994)
                 elif peak_pnl >= trail_start_pct:
                     trail_stop_price = min(trail_stop_price, avg_cost * 0.998)
 
@@ -1181,62 +1186,18 @@ class LiveTradingRunner:
                         f"rebounded to stop ${trail_stop_price:.2f}, locking profit"
                     )
 
-        # 🎯 Inverted Mean-Reversion Target Exit (VWAP Target Profit Taking)
-        if self.strategy_params.get("inverted_mode", True) and pnl_pct >= 0.003:
-            vwap_line = opportunity.get("_vwap", close)
-            if side == "LONG" and close >= vwap_line:
-                return "SELL", f"{base_reason} | 🎯 [Mean Reversion Target] Rebounded back to VWAP (${vwap_line:.2f}), locking profit (+{pnl_pct*100:.2f}%)"
-            elif side == "SHORT" and close <= vwap_line:
-                return "COVER", f"{base_reason} | 🎯 [Mean Reversion Target] Pulled back down to VWAP (${vwap_line:.2f}), locking profit (+{pnl_pct*100:.2f}%)"
+        # ─── 纯粹 LOB 订单流反转出场与大单吞没离场 (Pure LOB Microstructure Reversal Exit) ──────────
+        # 严格禁止任何非 LOB 杂质（如均线穿线、4分钟中性衰退、0.25%过敏斩仓）。
+        # 只有在持仓出现明确的真实对手盘机构扫盘反转时，才触发主动平仓：
+        if side == "LONG" and lob_ofi <= -0.30 and lob_micro <= -0.25:
+            return "SELL", f"{base_reason} | 🌊 [Pure LOB Reversal] Institutional selling sweep detected (OFI={lob_ofi:+.2f}, Drift={lob_micro:+.2f}), exiting long"
+        elif side == "SHORT" and lob_ofi >= 0.30 and lob_micro >= 0.25:
+            return "COVER", f"{base_reason} | 🌊 [Pure LOB Reversal] Institutional aggressive buying sweep detected (OFI={lob_ofi:+.2f}, Drift={lob_micro:+.2f}), exiting short"
 
-        # 2. Pure Alpha & Dedicated Per-Ticker ML Model Expectancy Decay Exit
-        min_hold = self._safe_float(self.strategy_params.get("minimum_hold_minutes"), 4.0)
-        alpha_score = self._safe_float(opportunity.get("score"), 50.0)
-        if minutes_held >= min_hold:
-            ema_9_val = opportunity.get("_ema_9", close)
-            if side == "LONG":
-                if (not is_pos_ev and ev_r <= -0.15 and p_win_pct < 42.0 and close < ema_9_val) or (alpha_score < 38.0 and p_win_pct < 40.0):
-                    return "SELL", f"{base_reason} | 📉 [Alpha Invalidation Exit] Alpha score ({alpha_score:.1f}) / Win rate ({p_win_pct:.1f}%) / E[R]={ev_r:+.2f}R decayed, exiting by pure Alpha logic"
-            if side == "SHORT":
-                if (not is_pos_ev and ev_r <= -0.15 and p_win_pct < 42.0 and close > ema_9_val) or (alpha_score < 38.0 and p_win_pct < 40.0):
-                    return "COVER", f"{base_reason} | 📉 [Alpha Invalidation Exit] Alpha score ({alpha_score:.1f}) / Win rate ({p_win_pct:.1f}%) / E[R]={ev_r:+.2f}R decayed, exiting by pure Alpha logic"
-
-        # 3. Structural Trend Invalidation (Active for trend-following mode)
-        if minutes_held >= min_hold and not self.strategy_params.get("inverted_mode", True):
-            prev_close = self._safe_float(opportunity.get("_prev_close"), close)
-            if side == "LONG":
-                invalid_now = close < opportunity.get("_ema_21", close) and close < opportunity.get("_vwap", close)
-                invalid_prev = prev_close < opportunity.get("_prev_ema_21", prev_close) and prev_close < opportunity.get("_prev_vwap", prev_close)
-                if invalid_now and invalid_prev and (direction == "SHORT" or p_win_pct < 45.0):
-                    return "SELL", f"{base_reason} | Broke EMA21/VWAP for 2 bars with bearish signal, trend invalidated"
-            else:
-                invalid_now = close > opportunity.get("_ema_21", close) and close > opportunity.get("_vwap", close)
-                invalid_prev = prev_close > opportunity.get("_prev_ema_21", prev_close) and prev_close > opportunity.get("_prev_vwap", prev_close)
-                if invalid_now and invalid_prev and (direction == "LONG" or p_win_pct > 55.0):
-                    return "COVER", f"{base_reason} | Reclaimed EMA21/VWAP for 2 bars with bullish signal, short invalidated"
-
-        max_hold = self._safe_float(self.strategy_params.get("max_hold_minutes"), 300.0)
-        if minutes_held >= max_hold and not is_pos_ev and pnl_pct <= 0.0:
-            return ("SELL" if side == "LONG" else "COVER"), f"{base_reason} | Flat trend at max hold duration with no profit"
-
-        # ─── Citadel / Two Sigma Tiered Staged Entry (第二枪：黄金补仓与微观确认加仓) ──────────
         staged_info = self.staged_entries.get(ticker)
         if not staged_info:
             staged_info = {"tier": 1, "entry_price": avg_cost, "shares": abs(current_shares), "notional": abs(current_shares) * avg_cost, "side": side}
             self.staged_entries[ticker] = staged_info
-
-        # 🛡️ Early Microstructure Fakeout Cut for Tier 1 Scout (假突破极速微损截断)
-        if staged_info.get("tier") == 1 and minutes_held >= 1.0 and pnl_pct <= -0.0025:
-            if side == "LONG" and ((lob_micro <= -0.25 and lob_ofi <= -0.20) or lob_toxic <= -0.35 or is_trap):
-                return "SELL", (
-                    f"{base_reason} | ⚠️ [LOB Fakeout Cut] Tier 1 scout detected institutional bull trap / toxic sell wave "
-                    f"(OFI={lob_ofi:+.2f}, Drift={lob_micro:+.2f}), cutting early with tiny loss (-{abs(pnl_pct)*100:.2f}%)"
-                )
-            elif side == "SHORT" and ((lob_micro >= 0.25 and lob_ofi >= 0.20) or lob_toxic >= 0.35 or is_trap):
-                return "COVER", (
-                    f"{base_reason} | ⚠️ [LOB Fakeout Cut] Tier 1 scout detected institutional bear trap / aggressive bid wave "
-                    f"(OFI={lob_ofi:+.2f}, Drift={lob_micro:+.2f}), cutting early with tiny loss (-{abs(pnl_pct)*100:.2f}%)"
-                )
 
         if self.strategy_params.get("staged_entry_enabled", True) and staged_info.get("tier") == 1 and not self.is_entry_locked(ticker):
             entry_p = staged_info.get("entry_price", avg_cost)
