@@ -9,7 +9,11 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 if(MSVC)
     add_compile_options(/O2 /W4 /std:c++20)
 else()
-    add_compile_options(-O3 -Wall -Wextra -pedantic -march=native -ffast-math)
+    add_compile_options(-O3 -Wall -Wextra -ffast-math)
+    option(USE_NATIVE_ARCH "Optimize for native host architecture" OFF)
+    if(USE_NATIVE_ARCH)
+        add_compile_options(-march=native)
+    endif()
 endif()
 
 # Sanitizers
