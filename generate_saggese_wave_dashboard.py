@@ -173,14 +173,34 @@ def generate_multi_day_dashboard():
                 }
             }
 
-    # Build inline store with recent 10 days for instant zero-latency start (< 200KB payload)
+        # Fetch & inline today's live data for this ticker directly
+        try:
+            from app.ml.lob_wave_realtime import compute_live_wave_day_data
+            live_res = compute_live_wave_day_data(ticker)
+            if live_res.get('success') and live_res.get('data'):
+                today_d = live_res.get('date', 'today')
+                today_payload = live_res['data']
+                all_data[ticker]['by_day'][today_d] = today_payload
+                all_data[ticker]['by_day']['today'] = today_payload
+                if today_d not in all_days:
+                    all_days.append(today_d)
+                    all_data[ticker]['days'].append(today_d)
+                    all_data[ticker]['all_available_days'].append(today_d)
+                print(f"   └─ 🌟 [{ticker}] 成功拉取并内嵌今日 ({today_d}) 盘中实时分时与微观波浪 ({len(today_payload['kline'])} 根 5m K线)")
+        except Exception as e:
+            print(f"   ⚠️ [{ticker}] 拉取今日实时数据异常: {e}")
+
+    # Build inline store with recent 10 days + today for instant zero-latency start (< 200KB payload)
     inline_store = {}
     for tk, val in all_data.items():
         recent_10 = val['days']
+        by_day_map = {d: val['by_day'][d] for d in recent_10 if d in val['by_day']}
+        if 'today' in val['by_day']:
+            by_day_map['today'] = val['by_day']['today']
         inline_store[tk] = {
             'days': recent_10,
             'all_available_days': val['all_available_days'],
-            'by_day': {d: val['by_day'][d] for d in recent_10 if d in val['by_day']}
+            'by_day': by_day_map
         }
 
     html_content = f"""<!DOCTYPE html>
@@ -463,6 +483,7 @@ def generate_multi_day_dashboard():
             tickerGroup.appendChild(btn);
         }});
 
+        const apiBase = (window.location.protocol === 'file:' || !window.location.port) ? 'http://127.0.0.1:8000' : '';
         const dateSelect = document.getElementById('dateSelector');
         const prevBtn = document.getElementById('prevDayBtn');
         const nextBtn = document.getElementById('nextDayBtn');
@@ -515,26 +536,32 @@ def generate_multi_day_dashboard():
 
             // 1. LIVE TODAY MODE
             if (d === 'today') {{
+                // Always render inlined/cached today data first if available
+                if (store[currentTicker] && store[currentTicker].by_day && store[currentTicker].by_day['today']) {{
+                    renderDashboard(true, '今日实时', '当前分时');
+                }}
+
                 const titleEl = document.getElementById('klineTitle');
-                if (!isAutoRefresh && titleEl) {{
-                    titleEl.textContent = `⚡ 正在实时调取 ${{currentTicker}} 盘中实时 K 线与 LOB 微观订单流...`;
+                if (!isAutoRefresh && titleEl && (!store[currentTicker] || !store[currentTicker].by_day || !store[currentTicker].by_day['today'])) {{
+                    titleEl.textContent = `⚡ 正在调取 ${{currentTicker}} 盘中实时 K 线与 LOB 微观订单流...`;
                 }}
 
                 try {{
-                    const resp = await fetch(`/api/wave/live_today?ticker=${{currentTicker}}`);
+                    const resp = await fetch(`${{apiBase}}/api/wave/live_today?ticker=${{currentTicker}}`);
                     const res = await resp.json();
                     if (res && res.success && res.data) {{
                         store[currentTicker].by_day['today'] = res.data;
                         renderDashboard(true, res.date, res.last_updated);
-                    }} else {{
-                        if (!isAutoRefresh) {{
-                            const days = store[currentTicker].all_available_days || store[currentTicker].days;
-                            const latestD = days[days.length - 1];
-                            selectDay(latestD);
-                        }}
                     }}
                 }} catch (err) {{
-                    console.error('Live wave error:', err);
+                    console.log('Live wave network polling note:', err);
+                    const liveBadgeEl = document.getElementById('liveBadge');
+                    if (liveBadgeEl && store[currentTicker] && store[currentTicker].by_day && store[currentTicker].by_day['today']) {{
+                        liveBadgeEl.style.display = 'inline-block';
+                        liveBadgeEl.style.background = 'rgba(16, 185, 129, 0.2)';
+                        liveBadgeEl.style.borderColor = '#10b981';
+                        liveBadgeEl.innerHTML = `🟢 TODAY 今日实时分时 (快照已呈现)`;
+                    }}
                 }}
 
                 // Keep auto-polling every 8 seconds when on TODAY
@@ -556,7 +583,7 @@ def generate_multi_day_dashboard():
             if (titleEl) titleEl.textContent = `⏳ 正在按需调取 ${{currentTicker}} (${{d}}) 历史高频波浪数据...`;
 
             try {{
-                const resp = await fetch(`/api/wave/day_data?ticker=${{currentTicker}}&date=${{d}}`);
+                const resp = await fetch(`${{apiBase}}/api/wave/day_data?ticker=${{currentTicker}}&date=${{d}}`);
                 const res = await resp.json();
                 if (res && res.success && res.data) {{
                     store[currentTicker].by_day[d] = res.data;

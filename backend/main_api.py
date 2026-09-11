@@ -1,4 +1,10 @@
 import os
+import sys
+
+_backend_dir = os.path.dirname(os.path.abspath(__file__))
+if _backend_dir not in sys.path:
+    sys.path.insert(0, _backend_dir)
+
 import json
 import asyncio
 from fastapi import FastAPI, Query, WebSocket, WebSocketDisconnect
@@ -2274,6 +2280,7 @@ async def get_trade_comparison_dashboard():
     return HTMLResponse(content=fallback_html)
 
 @app.get("/charts/saggese_wave_visual_dashboard.html")
+@app.get("/saggese_wave_visual_dashboard.html")
 async def get_saggese_wave_visual_dashboard():
     dash_file = os.path.join(_charts_dir, "saggese_wave_visual_dashboard.html")
     if os.path.exists(dash_file) and os.path.getsize(dash_file) > 0:
