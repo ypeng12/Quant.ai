@@ -154,6 +154,7 @@
             <p>基于 Teza Capital ($1.6B AUM, Sharpe > 5.0) 机构微观因果定价体系 (15~30m Wave) · 订单流不平衡 (OFI) & 微观价格漂移</p>
         </div>
         <div class="badge-bar">
+            <span id="liveBadge" class="badge" style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4); font-weight: 700;">● LIVE 当天实时推断已接入</span>
             <span class="badge badge-green">● 样本外 Purged CV 61.97%</span>
             <span class="badge badge-blue">● 零硬编码 · 纯连续 Alpha</span>
         </div>
@@ -280,42 +281,92 @@
         const dateSelect = document.getElementById('dateSelector');
         const prevBtn = document.getElementById('prevDayBtn');
         const nextBtn = document.getElementById('nextDayBtn');
+        let liveRefreshTimer = null;
 
         function populateDates(ticker) {
             const allDays = store[ticker].all_available_days || store[ticker].days;
             dateSelect.innerHTML = '';
+
+            // Add TODAY (Live 实时) as first option
+            const liveOpt = document.createElement('option');
+            liveOpt.value = 'today';
+            liveOpt.textContent = '🌟 TODAY (盘中实时 LOB)';
+            dateSelect.appendChild(liveOpt);
+
             allDays.forEach((d, idx) => {
                 const opt = document.createElement('option');
                 opt.value = d;
                 const isLatest = (idx === allDays.length - 1);
-                opt.textContent = isLatest ? `${d} (最新)` : d;
+                opt.textContent = isLatest ? `${d} (历史最新)` : d;
                 dateSelect.appendChild(opt);
             });
-            currentDate = allDays[allDays.length - 1];
+            currentDate = 'today';
             dateSelect.value = currentDate;
             updateNavButtons();
         }
 
         function updateNavButtons() {
             const days = store[currentTicker].all_available_days || store[currentTicker].days;
-            const idx = days.indexOf(currentDate);
-            prevBtn.disabled = (idx <= 0);
-            nextBtn.disabled = (idx >= days.length - 1);
+            if (currentDate === 'today') {
+                prevBtn.disabled = false;
+                nextBtn.disabled = true;
+            } else {
+                const idx = days.indexOf(currentDate);
+                prevBtn.disabled = (idx <= 0);
+                nextBtn.disabled = false;
+            }
         }
 
-        async function selectDay(d) {
+        async function selectDay(d, isAutoRefresh = false) {
             if (!d) return;
             currentDate = d;
             dateSelect.value = currentDate;
             updateNavButtons();
 
-            // 1. Instant hit from inline/cached store
-            if (store[currentTicker] && store[currentTicker].by_day && store[currentTicker].by_day[d]) {
-                renderDashboard();
+            if (liveRefreshTimer) {
+                clearTimeout(liveRefreshTimer);
+                liveRefreshTimer = null;
+            }
+
+            // 1. LIVE TODAY MODE
+            if (d === 'today') {
+                const titleEl = document.getElementById('klineTitle');
+                if (!isAutoRefresh && titleEl) {
+                    titleEl.textContent = `⚡ 正在实时调取 ${currentTicker} 盘中实时 K 线与 LOB 微观订单流...`;
+                }
+
+                try {
+                    const resp = await fetch(`/api/wave/live_today?ticker=${currentTicker}`);
+                    const res = await resp.json();
+                    if (res && res.success && res.data) {
+                        store[currentTicker].by_day['today'] = res.data;
+                        renderDashboard(true, res.date, res.last_updated);
+                    } else {
+                        if (!isAutoRefresh) {
+                            const days = store[currentTicker].all_available_days || store[currentTicker].days;
+                            const latestD = days[days.length - 1];
+                            selectDay(latestD);
+                        }
+                    }
+                } catch (err) {
+                    console.error('Live wave error:', err);
+                }
+
+                // Keep auto-polling every 8 seconds when on TODAY
+                liveRefreshTimer = setTimeout(() => {
+                    if (currentDate === 'today') {
+                        selectDay('today', true);
+                    }
+                }, 8000);
                 return;
             }
 
-            // 2. Otherwise fetch dynamically from API
+            // 2. HISTORICAL DAY CACHED / API MODE
+            if (store[currentTicker] && store[currentTicker].by_day && store[currentTicker].by_day[d]) {
+                renderDashboard(false, d);
+                return;
+            }
+
             const titleEl = document.getElementById('klineTitle');
             if (titleEl) titleEl.textContent = `⏳ 正在按需调取 ${currentTicker} (${d}) 历史高频波浪数据...`;
 
@@ -324,7 +375,7 @@
                 const res = await resp.json();
                 if (res && res.success && res.data) {
                     store[currentTicker].by_day[d] = res.data;
-                    renderDashboard();
+                    renderDashboard(false, d);
                 } else {
                     if (titleEl) titleEl.textContent = `⚠️ 未获取到 ${currentTicker} (${d}) 历史数据: ${res && res.error || '无记录'}`;
                 }
@@ -336,17 +387,25 @@
 
         prevBtn.onclick = () => {
             const days = store[currentTicker].all_available_days || store[currentTicker].days;
-            const idx = days.indexOf(currentDate);
-            if (idx > 0) {
-                selectDay(days[idx - 1]);
+            if (currentDate === 'today') {
+                selectDay(days[days.length - 1]);
+            } else {
+                const idx = days.indexOf(currentDate);
+                if (idx > 0) {
+                    selectDay(days[idx - 1]);
+                }
             }
         };
 
         nextBtn.onclick = () => {
             const days = store[currentTicker].all_available_days || store[currentTicker].days;
-            const idx = days.indexOf(currentDate);
-            if (idx < days.length - 1) {
-                selectDay(days[idx + 1]);
+            if (currentDate !== 'today') {
+                const idx = days.indexOf(currentDate);
+                if (idx < days.length - 1) {
+                    selectDay(days[idx + 1]);
+                } else {
+                    selectDay('today');
+                }
             }
         };
 
@@ -366,11 +425,28 @@
         // Chart instances
         let kChart = null, oChart = null, qChart = null, aChart = null;
 
-        function renderDashboard() {
+        function renderDashboard(isLive = false, actualDate = '', lastUpdated = '') {
             const dayData = store[currentTicker].by_day[currentDate];
             if (!dayData) return;
 
-            document.getElementById('klineTitle').textContent = `${currentTicker} - ${currentDate} 5分钟 K 线与 15~30m 波浪拐点信号`;
+            const dateStr = actualDate || currentDate;
+            const liveBadgeEl = document.getElementById('liveBadge');
+            if (liveBadgeEl) {
+                if (isLive) {
+                    liveBadgeEl.style.display = 'inline-block';
+                    liveBadgeEl.style.background = 'rgba(16, 185, 129, 0.2)';
+                    liveBadgeEl.style.borderColor = '#10b981';
+                    liveBadgeEl.innerHTML = `🟢 LIVE 盘中实时更新 (${lastUpdated || '当前分时'})`;
+                } else {
+                    liveBadgeEl.style.background = 'rgba(100, 116, 139, 0.2)';
+                    liveBadgeEl.style.borderColor = '#475569';
+                    liveBadgeEl.innerHTML = `📅 历史回放复盘模式 (${dateStr})`;
+                }
+            }
+
+            document.getElementById('klineTitle').textContent = isLive
+                ? `${currentTicker} - ${dateStr} 盘中实时 5分钟 K 线与 15~30m 波浪拐点信号 (秒级流式推断)`
+                : `${currentTicker} - ${dateStr} 5分钟 K 线与 15~30m 波浪拐点信号`;
 
             // Update Stats Banner
             const stats = dayData.stats;
@@ -679,7 +755,7 @@
                     aChart = echarts.init(document.getElementById('alphaChart'));
                 }
                 populateDates(currentTicker);
-                renderDashboard();
+                selectDay(currentDate);
             } catch (err) {
                 console.error('Fatal initialization error:', err);
             }
