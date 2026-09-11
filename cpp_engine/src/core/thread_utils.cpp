@@ -1,10 +1,16 @@
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+
 #include "../../include/core/thread_utils.hpp"
 #include <pthread.h>
 #include <unistd.h>
 #include <sys/mman.h>
 #include <iostream>
 
-#if defined(__APPLE__)
+#if defined(__linux__)
+#include <sched.h>
+#elif defined(__APPLE__)
 #include <mach/mach.h>
 #include <mach/thread_policy.h>
 #endif

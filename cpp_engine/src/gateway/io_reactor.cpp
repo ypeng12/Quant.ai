@@ -1,3 +1,7 @@
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+
 #include "../../include/gateway/io_reactor.hpp"
 #include <unistd.h>
 #include <fcntl.h>
