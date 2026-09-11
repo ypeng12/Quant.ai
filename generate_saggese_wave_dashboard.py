@@ -468,14 +468,12 @@ def generate_multi_day_dashboard():
 
         function populateDates(ticker) {{
             const allDays = store[ticker].all_available_days || store[ticker].days;
-            const cachedDays = new Set(Object.keys(store[ticker].by_day || {{}}));
             dateSelect.innerHTML = '';
             allDays.forEach((d, idx) => {{
                 const opt = document.createElement('option');
                 opt.value = d;
                 const isLatest = (idx === allDays.length - 1);
-                const isPreloaded = cachedDays.has(d);
-                opt.textContent = `${{d}} ${{isLatest ? '★ (最新实盘)' : (isPreloaded ? '⚡ (秒开)' : '☁ (历史按需)')}}`;
+                opt.textContent = isLatest ? `${{d}} (最新)` : d;
                 dateSelect.appendChild(opt);
             }});
             currentDate = allDays[allDays.length - 1];
