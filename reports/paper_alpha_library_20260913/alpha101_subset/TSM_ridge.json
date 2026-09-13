@@ -1,0 +1,149 @@
+{
+  "schema_version": 1,
+  "kind": "paper_forecast",
+  "feature_version": "paper_bar_alpha_v1",
+  "estimator": "ridge",
+  "input_features": [
+    "a101_002",
+    "a101_003",
+    "a101_004",
+    "a101_006",
+    "a101_012",
+    "a101_101"
+  ],
+  "features": [
+    "a101_002",
+    "a101_003",
+    "a101_004",
+    "a101_006",
+    "a101_012",
+    "a101_101"
+  ],
+  "unused_features": [],
+  "mean": [
+    -0.007646481296687504,
+    0.012032348932065506,
+    -0.5549788542868127,
+    -0.0047299494745914605,
+    -0.005495461856617647,
+    0.009149482860450852
+  ],
+  "scale": [
+    0.43086739274442487,
+    0.058234925547194685,
+    0.04786051129648993,
+    0.36709041312863333,
+    0.7493590377223843,
+    0.5307712853655702
+  ],
+  "state": {
+    "coefficient": [
+      4.84359600013486e-05,
+      -3.42810880829478e-06,
+      -1.3928994342056822e-05,
+      1.4154249612546722e-05,
+      -3.599771075454021e-05,
+      -1.777155828580209e-05
+    ],
+    "intercept": -8.983357625046891e-06
+  },
+  "parameters": {
+    "alpha": 10.0,
+    "copy_X": true,
+    "fit_intercept": true,
+    "max_iter": null,
+    "positive": false,
+    "random_state": null,
+    "solver": "svd",
+    "tol": 0.0001
+  },
+  "trained_before": "2026-09-12T00:00:00-04:00",
+  "last_label_end": "2026-09-11T15:55:00-04:00",
+  "rows": 2584,
+  "sessions": 34,
+  "feature_contract": {
+    "feature_version": "paper_bar_alpha_v1",
+    "spec": {
+      "family": "alpha101_subset",
+      "windows": [
+        5,
+        20
+      ],
+      "peer_window": 20,
+      "frequency": "5min"
+    },
+    "panel_symbols": [
+      "AAPL",
+      "AMD",
+      "AMZN",
+      "AVGO",
+      "CRM",
+      "GOOGL",
+      "INTC",
+      "JPM",
+      "META",
+      "MSFT",
+      "MU",
+      "NFLX",
+      "NVDA",
+      "ORCL",
+      "PLTR",
+      "QQQ",
+      "SMCI",
+      "SNDK",
+      "SOXX",
+      "SPY",
+      "TSLA",
+      "TSM",
+      "UBER"
+    ],
+    "rank_symbols": [
+      "AAPL",
+      "AMD",
+      "AMZN",
+      "AVGO",
+      "CRM",
+      "GOOGL",
+      "INTC",
+      "JPM",
+      "META",
+      "MSFT",
+      "MU",
+      "NFLX",
+      "NVDA",
+      "ORCL",
+      "PLTR",
+      "SMCI",
+      "SNDK",
+      "TSLA",
+      "TSM",
+      "UBER"
+    ],
+    "peer_groups": {
+      "NVDA": "semiconductors",
+      "AMD": "semiconductors",
+      "AVGO": "semiconductors",
+      "MU": "semiconductors",
+      "SNDK": "semiconductors",
+      "INTC": "semiconductors",
+      "TSM": "semiconductors",
+      "SMCI": "semiconductors",
+      "MSFT": "software",
+      "ORCL": "software",
+      "PLTR": "software",
+      "CRM": "software",
+      "META": "communication",
+      "GOOGL": "communication",
+      "NFLX": "communication",
+      "JPM": "banks",
+      "BAC": "banks"
+    },
+    "timestamp_convention": "bar_open_available_at_end",
+    "window_unit": "five_minute_bars_within_session"
+  },
+  "deployment": "research_only",
+  "performance_verified": false,
+  "symbol": "TSM",
+  "horizon_bars": 1,
+  "target": "next_open_to_horizon_close_return"
+}

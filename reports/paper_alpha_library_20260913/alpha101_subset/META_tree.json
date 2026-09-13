@@ -1,0 +1,198 @@
+{
+  "schema_version": 1,
+  "kind": "paper_forecast",
+  "feature_version": "paper_bar_alpha_v1",
+  "estimator": "tree",
+  "input_features": [
+    "a101_002",
+    "a101_003",
+    "a101_004",
+    "a101_006",
+    "a101_012",
+    "a101_101"
+  ],
+  "features": [
+    "a101_002",
+    "a101_004",
+    "a101_006",
+    "a101_012",
+    "a101_101"
+  ],
+  "unused_features": [
+    "a101_003"
+  ],
+  "mean": [
+    -0.04617834342085092,
+    -0.5555555555555555,
+    -0.030322203272566114,
+    -0.09841502470128677,
+    -0.010695764171067433
+  ],
+  "scale": [
+    0.438973211929143,
+    1.0501658464244971e-16,
+    0.37252233911051263,
+    1.2171879767680047,
+    0.5395072040539874
+  ],
+  "state": {
+    "left": [
+      1,
+      2,
+      3,
+      -1,
+      -1,
+      6,
+      -1,
+      -1,
+      -1
+    ],
+    "right": [
+      8,
+      5,
+      4,
+      -1,
+      -1,
+      7,
+      -1,
+      -1,
+      -1
+    ],
+    "feature": [
+      4,
+      2,
+      0,
+      -2,
+      -2,
+      3,
+      -2,
+      -2,
+      -2
+    ],
+    "threshold": [
+      1.7155259847640991,
+      -1.0563914775848389,
+      1.1422170400619507,
+      -2.0,
+      -2.0,
+      1.5921313166618347,
+      -2.0,
+      -2.0,
+      -2.0
+    ],
+    "value": [
+      -6.4846384640147285e-06,
+      -2.219523490303766e-05,
+      -0.0002969115886423105,
+      -0.00021142836906719938,
+      -0.0008743265435081554,
+      3.088817900708981e-05,
+      8.52060891607322e-06,
+      0.0006692959086881883,
+      0.0008603304433238158
+    ]
+  },
+  "parameters": {
+    "ccp_alpha": 0.0,
+    "criterion": "squared_error",
+    "max_depth": 3,
+    "max_features": null,
+    "max_leaf_nodes": null,
+    "min_impurity_decrease": 0.0,
+    "min_samples_leaf": 40,
+    "min_samples_split": 2,
+    "min_weight_fraction_leaf": 0.0,
+    "monotonic_cst": null,
+    "random_state": 42,
+    "splitter": "best"
+  },
+  "trained_before": "2026-09-12T00:00:00-04:00",
+  "last_label_end": "2026-09-11T15:55:00-04:00",
+  "rows": 2584,
+  "sessions": 34,
+  "feature_contract": {
+    "feature_version": "paper_bar_alpha_v1",
+    "spec": {
+      "family": "alpha101_subset",
+      "windows": [
+        5,
+        20
+      ],
+      "peer_window": 20,
+      "frequency": "5min"
+    },
+    "panel_symbols": [
+      "AAPL",
+      "AMD",
+      "AMZN",
+      "AVGO",
+      "CRM",
+      "GOOGL",
+      "INTC",
+      "JPM",
+      "META",
+      "MSFT",
+      "MU",
+      "NFLX",
+      "NVDA",
+      "ORCL",
+      "PLTR",
+      "QQQ",
+      "SMCI",
+      "SNDK",
+      "SOXX",
+      "SPY",
+      "TSLA",
+      "TSM",
+      "UBER"
+    ],
+    "rank_symbols": [
+      "AAPL",
+      "AMD",
+      "AMZN",
+      "AVGO",
+      "CRM",
+      "GOOGL",
+      "INTC",
+      "JPM",
+      "META",
+      "MSFT",
+      "MU",
+      "NFLX",
+      "NVDA",
+      "ORCL",
+      "PLTR",
+      "SMCI",
+      "SNDK",
+      "TSLA",
+      "TSM",
+      "UBER"
+    ],
+    "peer_groups": {
+      "NVDA": "semiconductors",
+      "AMD": "semiconductors",
+      "AVGO": "semiconductors",
+      "MU": "semiconductors",
+      "SNDK": "semiconductors",
+      "INTC": "semiconductors",
+      "TSM": "semiconductors",
+      "SMCI": "semiconductors",
+      "MSFT": "software",
+      "ORCL": "software",
+      "PLTR": "software",
+      "CRM": "software",
+      "META": "communication",
+      "GOOGL": "communication",
+      "NFLX": "communication",
+      "JPM": "banks",
+      "BAC": "banks"
+    },
+    "timestamp_convention": "bar_open_available_at_end",
+    "window_unit": "five_minute_bars_within_session"
+  },
+  "deployment": "research_only",
+  "performance_verified": false,
+  "symbol": "META",
+  "horizon_bars": 1,
+  "target": "next_open_to_horizon_close_return"
+}

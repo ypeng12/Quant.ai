@@ -1,0 +1,192 @@
+{
+  "schema_version": 1,
+  "kind": "paper_forecast",
+  "feature_version": "paper_bar_alpha_v1",
+  "estimator": "tree",
+  "input_features": [
+    "xs_return_rank",
+    "xs_peer_return",
+    "xs_peer_residual",
+    "xs_group_residual",
+    "xs_market_beta",
+    "xs_market_residual",
+    "xs_peer_count"
+  ],
+  "features": [
+    "xs_return_rank",
+    "xs_peer_return",
+    "xs_peer_residual",
+    "xs_market_beta",
+    "xs_market_residual",
+    "xs_peer_count"
+  ],
+  "unused_features": [
+    "xs_group_residual"
+  ],
+  "mean": [
+    0.5232941176470589,
+    2.8293162244647715e-05,
+    -2.85247984395052e-05,
+    1.1682505646068428,
+    -4.4950822988541255e-06,
+    18.75
+  ],
+  "scale": [
+    0.24633346867799066,
+    0.0013003456592576023,
+    0.0017283688531297252,
+    0.5383434517183298,
+    0.0008929907183083746,
+    2.165063509461097
+  ],
+  "state": {
+    "left": [
+      1,
+      2,
+      3,
+      -1,
+      -1,
+      -1,
+      -1
+    ],
+    "right": [
+      6,
+      5,
+      4,
+      -1,
+      -1,
+      -1,
+      -1
+    ],
+    "feature": [
+      2,
+      1,
+      2,
+      -2,
+      -2,
+      -2,
+      -2
+    ],
+    "threshold": [
+      2.284208655357361,
+      2.5625009536743164,
+      0.13542205095291138,
+      -2.0,
+      -2.0,
+      -2.0,
+      -2.0
+    ],
+    "value": [
+      -7.284811789386174e-06,
+      1.4416510350251966e-05,
+      -2.0185309235346665e-06,
+      9.14956236879764e-05,
+      -0.00013856574783414818,
+      0.001042428342025606,
+      -0.0013207314993836756
+    ]
+  },
+  "parameters": {
+    "ccp_alpha": 0.0,
+    "criterion": "squared_error",
+    "max_depth": 3,
+    "max_features": null,
+    "max_leaf_nodes": null,
+    "min_impurity_decrease": 0.0,
+    "min_samples_leaf": 40,
+    "min_samples_split": 2,
+    "min_weight_fraction_leaf": 0.0,
+    "monotonic_cst": null,
+    "random_state": 42,
+    "splitter": "best"
+  },
+  "trained_before": "2026-09-12T00:00:00-04:00",
+  "last_label_end": "2026-09-11T15:55:00-04:00",
+  "rows": 2584,
+  "sessions": 34,
+  "feature_contract": {
+    "feature_version": "paper_bar_alpha_v1",
+    "spec": {
+      "family": "cross_sectional",
+      "windows": [
+        5,
+        20
+      ],
+      "peer_window": 20,
+      "frequency": "5min"
+    },
+    "panel_symbols": [
+      "AAPL",
+      "AMD",
+      "AMZN",
+      "AVGO",
+      "CRM",
+      "GOOGL",
+      "INTC",
+      "JPM",
+      "META",
+      "MSFT",
+      "MU",
+      "NFLX",
+      "NVDA",
+      "ORCL",
+      "PLTR",
+      "QQQ",
+      "SMCI",
+      "SNDK",
+      "SOXX",
+      "SPY",
+      "TSLA",
+      "TSM",
+      "UBER"
+    ],
+    "rank_symbols": [
+      "AAPL",
+      "AMD",
+      "AMZN",
+      "AVGO",
+      "CRM",
+      "GOOGL",
+      "INTC",
+      "JPM",
+      "META",
+      "MSFT",
+      "MU",
+      "NFLX",
+      "NVDA",
+      "ORCL",
+      "PLTR",
+      "SMCI",
+      "SNDK",
+      "TSLA",
+      "TSM",
+      "UBER"
+    ],
+    "peer_groups": {
+      "NVDA": "semiconductors",
+      "AMD": "semiconductors",
+      "AVGO": "semiconductors",
+      "MU": "semiconductors",
+      "SNDK": "semiconductors",
+      "INTC": "semiconductors",
+      "TSM": "semiconductors",
+      "SMCI": "semiconductors",
+      "MSFT": "software",
+      "ORCL": "software",
+      "PLTR": "software",
+      "CRM": "software",
+      "META": "communication",
+      "GOOGL": "communication",
+      "NFLX": "communication",
+      "JPM": "banks",
+      "BAC": "banks"
+    },
+    "timestamp_convention": "bar_open_available_at_end",
+    "window_unit": "five_minute_bars_within_session"
+  },
+  "deployment": "research_only",
+  "performance_verified": false,
+  "symbol": "AMZN",
+  "horizon_bars": 1,
+  "target": "next_open_to_horizon_close_return"
+}

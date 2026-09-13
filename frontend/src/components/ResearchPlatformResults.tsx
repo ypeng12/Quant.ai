@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { API_BASE } from '../config';
+import { PaperAlphaLibrary } from './PaperAlphaLibrary';
 
 type Attribution = { symbol?: string; direction?: string; hour?: number; gross_pnl: number; costs: number; net_pnl: number };
 type Trial = {
@@ -73,8 +74,8 @@ export function ResearchPlatformResults() {
       <option value="direction_two_weeks">四股方向模型修改 · 大盘/行业与多期配仓</option>
     </select>
   </label>;
-  if (error) return <div>{datasetSelector}<p role="alert" className="p-5 text-amber-300">统一研究结果暂不可用：{error}</p></div>;
-  if (!research) return <div>{datasetSelector}<p role="status" className="p-5 text-slate-400">正在读取并校验研究记录…</p></div>;
+  if (error) return <div><PaperAlphaLibrary />{datasetSelector}<p role="alert" className="p-5 text-amber-300">统一研究结果暂不可用：{error}</p></div>;
+  if (!research) return <div><PaperAlphaLibrary />{datasetSelector}<p role="status" className="p-5 text-slate-400">正在读取并校验研究记录…</p></div>;
   const trials = research.trials.filter(t => t.cost_bps === cost);
   const selected = trials.find(t => t.candidate.name === chosen);
   const groups = selected?.attribution;
@@ -82,6 +83,7 @@ export function ResearchPlatformResults() {
     { symbol, net_pnl: row.net_pnl, costs: row.costs, gross_pnl: row.net_pnl + row.costs }
   ));
   return <section className="space-y-5 bg-slate-950/60 border border-slate-800 rounded-xl p-5 text-sm text-slate-300">
+    <PaperAlphaLibrary />
     {datasetSelector}
     <div>
       <h3 className="font-semibold text-amber-300">统一研究：预测、组合与成本</h3>

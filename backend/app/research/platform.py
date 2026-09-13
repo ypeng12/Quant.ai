@@ -33,6 +33,19 @@ CANDIDATES = (
 
 
 def features_for_panel(frames, family, events=None):
+    from ..alpha.paper_bar_alpha import FAMILIES, BarAlphaSpec, bar_alpha_panel
+    if family in FAMILIES:
+        return bar_alpha_panel(frames,BarAlphaSpec(family=family))
+    if family in ('paper_l1','paper_combined'):
+        from ..alpha.paper_l1_alpha import enhanced_l1_features
+        from .paper_models import combine_bar_l1
+        base = features_for_panel(frames,'paper_library') if family=='paper_combined' else {}
+        for symbol,frame in frames.items():
+            if not events or symbol not in events or events[symbol].empty:
+                raise ValueError(f'Real L1 unavailable for {symbol}')
+            base[symbol]=(combine_bar_l1(base[symbol],events[symbol]) if family=='paper_combined'
+                          else enhanced_l1_features(events[symbol]).reindex(normalize_bars(frame).index))
+        return base
     bars = {s:normalize_bars(f) for s,f in frames.items()}
     if family in ('price_volume','price_volume_peer'):
         return panel_feature_frames(bars, family)
@@ -75,6 +88,9 @@ class FittedForecast:
         mask=(features.index.strftime('%Y-%m-%d')<before) & labels.notna()
         if self.family in ('l1','combined'):
             mask &= features[list(REAL_L1_FEATURES)].notna().all(axis=1)
+        if self.family in ('paper_l1','paper_combined'):
+            from ..alpha.paper_l1_alpha import PAPER_L1_FEATURES
+            mask &= features[list(PAPER_L1_FEATURES)].notna().all(axis=1)
         x=features.loc[mask];y=labels.loc[mask]
         if len(x)<2:raise ValueError('Insufficient mature training labels')
         self.names=tuple(x.columns)
@@ -106,6 +122,10 @@ class FittedForecast:
         error=np.sqrt(np.maximum(0,np.einsum('ij,jk,ik->i',design,self.parameter_cov,design)))
         if self.family in ('l1','combined'):
             missing=features[list(REAL_L1_FEATURES)].isna().any(axis=1).to_numpy()
+            pred[missing]=np.nan;error[missing]=np.nan
+        if self.family in ('paper_l1','paper_combined'):
+            from ..alpha.paper_l1_alpha import PAPER_L1_FEATURES
+            missing=features[list(PAPER_L1_FEATURES)].isna().any(axis=1).to_numpy()
             pred[missing]=np.nan;error[missing]=np.nan
         return pred,error
 
