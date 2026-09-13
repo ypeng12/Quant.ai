@@ -84,15 +84,16 @@ No verified genuine L1 samples are included in this research snapshot.
 ## Implemented components
 
 The current Lab landing view is the **non-crypto stock comparison**:
-SNDK, TSLA and NVDA trade; SPY, QQQ and SOXX supply features. MSTR and IBIT
+SNDK, TSLA, PLTR and NVDA trade; SPY, QQQ and SOXX supply features. MSTR and IBIT
 are excluded from these fresh models and their risk inputs. Over August 31–
 September 11, 2026, at $100,000 initial equity and assumed 5 bps per side,
-the fixed per-stock market Ridge simulation returned **+$1,169.25**; selecting
+the fixed per-stock market Ridge simulation returned **+$3,567.08**; selecting
 each stock's model from the preceding five validation sessions returned
-**−$4,909.02**. Distinct models per stock did not improve this experiment.
+**−$3,714.98**. PLTR itself contributed **−$158.98** to the Ridge result.
+Distinct models per stock did not improve this experiment.
 These are retrospective results, not account profits or validated future Alpha.
-See [the full non-crypto report](reports/stock_report_20260913/REPORT.md),
-[daily model choices](reports/stock_report_20260913/stock_selections.csv), and
+See [the full non-crypto report](reports/stock_report_pltr_20260913/REPORT.md),
+[daily model choices](reports/stock_report_pltr_20260913/stock_selections.csv), and
 [the shared research/paper implementation](backend/app/research/stock_policy.py).
 The live runner and its default model have not been switched.
 

@@ -31,8 +31,8 @@ const names: Record<string, string> = {
   market_tree_h1: '大盘/行业输入 · 5分钟树模型', market_tree_h6: '大盘/行业输入 · 30分钟树模型',
   market_ridge_h6: '大盘/行业输入 · 30分钟 Ridge', market_tree_h12: '大盘/行业输入 · 60分钟树模型',
   market_curve_ridge: '收益期限结构 · 30分钟多期配仓',
-  noncrypto_context_tree: '非加密三股 · 量价与时段树模型', noncrypto_market_tree: '非加密三股 · 大盘/行业树模型',
-  noncrypto_market_ridge: '非加密三股 · 大盘/行业 Ridge', noncrypto_stock_selector: '非加密三股 · 按股票选择模型',
+  noncrypto_context_tree: '非加密四股 · 量价与时段树模型', noncrypto_market_tree: '非加密四股 · 大盘/行业树模型',
+  noncrypto_market_ridge: '非加密四股 · 大盘/行业 Ridge', noncrypto_stock_selector: '非加密四股 · 按股票选择模型',
   market_tree: '大盘/行业树模型', market_ridge: '大盘/行业 Ridge',
   conditional_equal: '不使用 ML · 日内等权', conditional_ridge_control: '当前 Ridge 对照',
   conditional_state_h1: '量能/波动状态交互 · 5分钟 Ridge', conditional_state_h6: '量能/波动状态交互 · 30分钟 Ridge',
@@ -62,7 +62,7 @@ export function ResearchPlatformResults() {
   }, [dataset]);
   const datasetSelector = <label className="flex items-center gap-3 text-sm text-slate-300 mb-4">研究样本
     <select aria-label="研究样本" value={dataset} onChange={e => { setResearch(null); setError(''); setDataset(e.target.value); }} className="bg-slate-900 border border-slate-700 rounded p-2">
-      <option value="noncrypto_two_weeks">非加密三股 · 逐股模型选择 · 两周</option>
+      <option value="noncrypto_two_weeks">非加密四股 · 逐股模型选择 · 两周</option>
       <option value="conditional_two_weeks">论文启发实验 · 条件动量与无 ML 对照</option>
       <option value="incremental_two_weeks">新增 Alpha 消融比较 · 8/31—9/11</option>
       <option value="incremental_earlier">新增 Alpha 较早区间检查 · 8/24—8/28</option>

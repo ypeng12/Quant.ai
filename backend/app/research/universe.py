@@ -13,7 +13,7 @@ LIQUID_US_IEX_30 = (
     "SPY", "QQQ", "IWM", "XLK", "SOXX",
     "AAPL", "MSFT", "NVDA", "AMD", "AVGO", "MU", "SNDK",
     "TSLA", "META", "AMZN", "GOOGL", "NFLX", "ORCL", "PLTR",
-    "COIN", "MSTR", "MARA", "HOOD", "SMCI", "INTC", "TSM",
+    "COIN", "BAC", "MARA", "HOOD", "SMCI", "INTC", "TSM",
     "CRM", "UBER", "JPM", "XLF",
 )
 

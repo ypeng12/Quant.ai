@@ -83,7 +83,7 @@ def _unavailable_provenance(reason=None):
     }
 
 
-def get_ml_lab_payload(ticker: str = "MSTR") -> dict:
+def get_ml_lab_payload(ticker: str = "PLTR") -> dict:
     payload = {
         "success": True,
         "status": "unavailable",

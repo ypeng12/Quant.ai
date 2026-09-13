@@ -10,7 +10,7 @@ interface MLFeature {
 
 export const MLDynamicVisualizationDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'two_stage' | 'overview'>('two_stage');
-  const [ticker, setTicker] = useState<string>('MSTR');
+  const [ticker, setTicker] = useState<string>('PLTR');
   const [pWin, setPWin] = useState<number>(0.744);
   const [pChop, setPChop] = useState<number>(0.684);
   const [pTrend, setPTrend] = useState<number>(0.316);
@@ -142,7 +142,7 @@ export const MLDynamicVisualizationDashboard: React.FC = () => {
           </div>
 
           <div style={{ display: 'flex', gap: '6px' }}>
-            {['MSTR', 'SNDK', 'TSLA', 'NVDA'].map((t) => (
+            {['PLTR', 'SNDK', 'TSLA', 'NVDA'].map((t) => (
               <button
                 key={t}
                 onClick={() => setTicker(t)}

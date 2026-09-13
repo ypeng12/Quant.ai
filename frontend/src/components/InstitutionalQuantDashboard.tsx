@@ -45,7 +45,7 @@ export const InstitutionalQuantDashboard: React.FC = () => {
         <h2 style={{ margin: 0, color: '#38bdf8', fontSize: '1.2rem' }}>真实 L1 报价与成交采集</h2>
         <p style={{ color: '#94a3b8', marginBottom: 0, fontSize: '.85rem' }}>仅显示已保存的 Alpaca WebSocket 数据；没有 L2 深度订阅时，不显示伪造多档盘口。</p>
       </div>
-      <div>{['TSLA', 'NVDA', 'MSTR', 'SNDK'].map(symbol => <button key={symbol} onClick={() => setTicker(symbol)} style={{ marginLeft: 6, padding: '7px 12px', border: 0, borderRadius: 6, cursor: 'pointer', background: ticker === symbol ? '#0369a1' : '#1e293b', color: '#fff' }}>{symbol}</button>)}</div>
+      <div>{['TSLA', 'NVDA', 'PLTR', 'SNDK'].map(symbol => <button key={symbol} onClick={() => setTicker(symbol)} style={{ marginLeft: 6, padding: '7px 12px', border: 0, borderRadius: 6, cursor: 'pointer', background: ticker === symbol ? '#0369a1' : '#1e293b', color: '#fff' }}>{symbol}</button>)}</div>
     </div>
     {data?.status === 'complete' && quote ? <div style={{ marginTop: 18, display: 'grid', gridTemplateColumns: 'repeat(4, minmax(130px, 1fr))', gap: 12 }}>
       <Metric label="真实买一" value={`$${quote.bid_price.toFixed(2)} × ${quote.bid_size}`} />
@@ -58,7 +58,7 @@ export const InstitutionalQuantDashboard: React.FC = () => {
       <Metric label="数据等级" value={`${data.market_depth} · ${data.source}`} />
     </div> : <div style={{ marginTop: 18, padding: 16, borderRadius: 8, background: '#1e293b', color: '#cbd5e1' }}>
       <strong>真实 L1 尚不可用</strong><p style={{ marginBottom: 0 }}>{data?.reason || '正在读取采集状态。'}</p>
-      <code style={{ display: 'block', marginTop: 12, whiteSpace: 'pre-wrap', color: '#7dd3fc' }}>python3 scripts/capture_alpaca_l1.py --symbols SNDK TSLA MSTR NVDA --feed iex</code>
+      <code style={{ display: 'block', marginTop: 12, whiteSpace: 'pre-wrap', color: '#7dd3fc' }}>python3 scripts/capture_alpaca_l1.py --symbols SNDK TSLA PLTR NVDA --feed iex</code>
     </div>}
     <p style={{ marginTop: 18, color: '#94a3b8', fontSize: '.8rem' }}>L1 是真实最优买卖价与数量，适合计算价差、微价格、OFI 和成交方向；它不是十档 L2，也还没有被验证为可盈利 Alpha。</p>
   </div>;

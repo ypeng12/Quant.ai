@@ -9,7 +9,7 @@ BUNDLES={
     'largecap_two_weeks':'liquid_research_20260913_v2',
     'active_two_weeks':'active_research_20260913',
     'direction_two_weeks':'direction_research_20260913',
-    'noncrypto_two_weeks':'stock_research_20260913',
+    'noncrypto_two_weeks':'stock_research_pltr_20260913',
     'conditional_two_weeks':'conditional_research_20260913',
     'incremental_two_weeks':'incremental_research_20260913_v2',
     'incremental_earlier':'incremental_earlier_20260913_v2',

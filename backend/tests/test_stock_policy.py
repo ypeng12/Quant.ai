@@ -31,7 +31,8 @@ def test_selector_really_selects_independently_and_rejects_leakage():
             for day in days:
                 folds.append(dict(symbol=s, model=model, validation_day=day, last_train='2026-08-26', rows=76, mse_bps2=abs(i-j)))
     selected = choose_models(folds, '2026-08-31', 2)['selections']
-    assert [selected[s]['model'] for s in STOCKS] == list(MODEL_MENU)
+    expected = [list(MODEL_MENU)[min(i, len(MODEL_MENU) - 1)] for i in range(len(STOCKS))]
+    assert [selected[s]['model'] for s in STOCKS] == expected
     with pytest.raises(ValueError, match='prior validation'):
         choose_models(folds, '2026-08-28', 2)
     bad = [dict(r) for r in folds]; bad[0]['last_train'] = bad[0]['validation_day']

@@ -18,7 +18,7 @@ from app.research.universe import RESEARCH_UNIVERSES, research_universe
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     selection = parser.add_mutually_exclusive_group(required=True)
-    selection.add_argument("--symbols", nargs="+", help="Explicit symbols, e.g. SNDK TSLA MSTR NVDA")
+    selection.add_argument("--symbols", nargs="+", help="Explicit symbols, e.g. SNDK TSLA PLTR NVDA")
     selection.add_argument("--universe", choices=tuple(RESEARCH_UNIVERSES), help="A versioned research-only symbol panel")
     parser.add_argument("--output-dir", type=Path, default=ROOT / "backend" / "data" / "l1_capture")
     parser.add_argument("--feed", choices=("iex", "sip"), default="iex")

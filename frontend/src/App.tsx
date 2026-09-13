@@ -151,7 +151,7 @@ const INTERVAL_LABELS: Record<string, string> = {
 type ActiveTab = 'dashboard' | 'research' | 'report' | 'walkforward' | 'experiments' | 'replay' | 'broker' | 'institutional' | 'portfolio' | 'ml_assistant' | 'trade_comparison' | 'live_dashboard' | 'saggese_wave';
 
 function App() {
-  const [watchlist, setWatchlist] = useState<string[]>(["SNDK", "TSLA", "MSTR", "NVDA"]);
+  const [watchlist, setWatchlist] = useState<string[]>(["SNDK", "TSLA", "PLTR", "NVDA"]);
   const [newTickerInput, setNewTickerInput] = useState<string>('');
   
   const [activeTicker, setActiveTicker] = useState<string>('TSLA');
@@ -579,7 +579,7 @@ function App() {
     } catch (err) {}
   };
 
-  const DEFAULT_WATCHLIST_STOCKS = ["SNDK", "TSLA", "MSTR", "NVDA"];
+  const DEFAULT_WATCHLIST_STOCKS = ["SNDK", "TSLA", "PLTR", "NVDA"];
 
   const handleResetDefaultWatchlist = () => {
     setWatchlist(DEFAULT_WATCHLIST_STOCKS);

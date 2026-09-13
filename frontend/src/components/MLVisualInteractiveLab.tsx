@@ -86,7 +86,7 @@ const MLCard: React.FC<MLCardProps> = ({ title, subtitle, tags, description, chi
 };
 
 export const MLVisualInteractiveLab: React.FC = () => {
-  const [selectedTicker, setSelectedTicker] = useState<string>('MSTR');
+  const [selectedTicker, setSelectedTicker] = useState<string>('PLTR');
   const [labData, setLabData] = useState<LabData | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -163,7 +163,7 @@ export const MLVisualInteractiveLab: React.FC = () => {
           <div>
             <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 700, marginBottom: '4px' }}>当前分析标的</div>
             <div style={{ display: 'flex', gap: '4px' }}>
-              {['MSTR', 'TSLA', 'NVDA', 'SNDK'].map((t) => (
+              {['PLTR', 'TSLA', 'NVDA', 'SNDK'].map((t) => (
                 <button
                   key={t}
                   onClick={() => setSelectedTicker(t)}

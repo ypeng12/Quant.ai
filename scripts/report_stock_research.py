@@ -44,7 +44,7 @@ def report(bundle, output):
     best = max(trials.values(), key=lambda t: t['summary']['net_pnl'])
     lines = ['# 非加密股票：独立模型选择与统一资金分配', '',
              '**全部数字为历史模拟，不是账户已赚金额。** 2026-08-31 至 2026-09-11，九个交易日，起始 $100,000，单边成本 5 bps。', '',
-             '交易池为 SNDK、TSLA、NVDA；SPY、QQQ、SOXX 仅提供参考输入。MSTR 与 IBIT 完全不进入本轮特征、训练和风险估计。', '',
+             '交易池为 SNDK、TSLA、PLTR、NVDA；SPY、QQQ、SOXX 仅提供参考输入。MSTR 与 IBIT 完全不进入本轮特征、训练和风险估计。', '',
              f'逐股模型选择净盈亏 ${pnl:,.2f}，相对同股票池基础树模型改善 ${pnl-baseline:+,.2f}。四组事后最高为 `{best["candidate"]["name"]}`，净盈亏 ${best["summary"]["net_pnl"]:,.2f}；排名不构成未来优势证明。', '',
              '| 方法 | 净盈亏 | 相对基础树模型 | 成本 | 最大回撤 | 成交笔数 |', '|---|---:|---:|---:|---:|---:|']
     for x in rows:
@@ -54,12 +54,12 @@ def report(bundle, output):
               '每个交易日开盘前，对此前五个完整交易日分别做一次过去训练、随后一天验证。每只股票独立选择日均平方预测误差最低的候选，再用当天以前的数据重新拟合。每个验证日的训练截止必须早于验证日；选择不使用当天标签或当天盈亏。候选和规则在本轮计算前已写入 preregistration.json。',
               '五日窗口、树深度3/叶子40、Ridge正则10属于明确的实验参数，并非已证实最优参数或量化公司的统一标准。五日验证统计量很不稳定；模型选择也可能增加过拟合。',
               '股票可以选中相同模型，并不强迫各股不同。没有按9月4日上涨编写SNDK强制做多，也没有按某股亏损添加锁仓。行业映射只是输入分类，不是指定买卖方向。',
-              '配仓统一优化三股预测收益、历史协方差与换手成本；沿用风险系数50、总目标敞口95%、单股目标上限70%。每股并不各自拿一份十万美元。实际股数按下一根开盘价与成本后的资金预算计算；市场波动可使持有中的比例偏离目标。',
+              '配仓统一优化四股预测收益、历史协方差与换手成本；沿用风险系数50、总目标敞口95%、单股目标上限70%。每股并不各自拿一份十万美元。实际股数按下一根开盘价与成本后的资金预算计算；市场波动可使持有中的比例偏离目标。',
               '将预测与组合优化分开的依据可参考 [Boyd 等的交易凸优化框架](https://arxiv.org/abs/1705.00109)；论文也明确不解决收益预测本身。独立模型、优化器和更多指标都不自动构成 Alpha。', '',
-              '## 逐股净贡献', '', '| 方法 | SNDK | TSLA | NVDA |', '|---|---:|---:|---:|']
+              '## 逐股净贡献', '', '| 方法 | '+' | '.join(r['traded_symbols'])+' |', '|---|'+'---:|'*len(r['traded_symbols'])]
     for name, t in trials.items():
         lines.append('| '+name+' | '+' | '.join(f'${t["per_symbol"][s]["net_pnl"]:,.2f}' for s in r['traded_symbols'])+' |')
-    lines += ['', '## 逐股选择模型的逐日模拟', '', '| 日期 | 三股净盈亏 | SNDK | TSLA | NVDA |', '|---|---:|---:|---:|---:|']
+    lines += ['', '## 逐股选择模型的逐日模拟', '', '| 日期 | 四股净盈亏 | '+' | '.join(r['traded_symbols'])+' |', '|---|---:|'+'---:|'*len(r['traded_symbols'])]
     for _, row in daily['noncrypto_stock_selector'].iterrows():
         lines.append(f'| {row["date"]} | ${row["net_pnl"]:,.2f} | '+' | '.join(f'${row[s+"_net_pnl"]:,.2f}' for s in r['traded_symbols'])+' |')
     lines += ['', '## 验证边界与接入状态', '',
@@ -72,8 +72,8 @@ def report(bundle, output):
               'OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 python3 scripts/run_stock_research.py --output reports/stock_research_NEW',
               'python3 scripts/report_stock_research.py --bundle reports/stock_research_NEW --output reports/stock_report_NEW',
               'python3 scripts/shadow_stock_policy.py register --bundle reports/stock_research_NEW --directory reports/stock_forward_NEW',
-              'python3 scripts/shadow_stock_policy.py record --directory reports/stock_forward_NEW --bars /path/to/six_asset_bars --instruments /path/to/instruments.json --account-snapshot /path/to/paper_account.json',
-              '```', '', '未来输入需包含六个标的的完整历史与同步已完成行情；账户快照必须明确simulation=true，并含带时区时间、equity及三股全部shares。证券属性须在决策前已知。']
+              'python3 scripts/shadow_stock_policy.py record --directory reports/stock_forward_NEW --bars /path/to/seven_asset_bars --instruments /path/to/instruments.json --account-snapshot /path/to/paper_account.json',
+              '```', '', '未来输入需包含七个标的的完整历史与同步已完成行情；账户快照必须明确simulation=true，并含带时区时间、equity及四股全部shares。证券属性须在决策前已知。']
     (output / 'REPORT.md').write_text('\n'.join(lines)+'\n')
     fig, ax = plt.subplots(figsize=(10, 5))
     for name, d in daily.items():

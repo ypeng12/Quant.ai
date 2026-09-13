@@ -482,7 +482,7 @@ export const IntradayKlineChart: React.FC<IntradayKlineChartProps> = ({ ticker: 
               { sym: 'SNDK', name: '💎 SNDK' },
               { sym: 'TSLA', name: '⚡ TSLA' },
               { sym: 'NVDA', name: '🤖 NVDA' },
-              { sym: 'MSTR', name: '₿ MSTR' }
+              { sym: 'PLTR', name: 'PLTR' }
             ].map(item => (
               <button
                 key={item.sym}
