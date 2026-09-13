@@ -688,7 +688,7 @@ function App() {
               transition: 'all 0.2s ease'
             }}
           >
-            🌊 LOB 微观结构波浪终端
+            🌊 代理指标 / L1 数据状态
           </button>
 
           <button
@@ -831,7 +831,7 @@ function App() {
             <div style={{ width: '100%', height: 'calc(100vh - 120px)', background: '#080a11', borderRadius: '8px', overflow: 'hidden' }}>
               <iframe
                 src="/charts/saggese_wave_visual_dashboard.html"
-                title="Saggese Microstructure Wave Alpha Dashboard"
+                title="历史代理指标与真实 L1 数据状态"
                 style={{ width: '100%', height: '100%', border: 'none' }}
               />
             </div>

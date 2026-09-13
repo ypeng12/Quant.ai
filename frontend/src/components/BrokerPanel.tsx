@@ -674,7 +674,7 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
           <div style={{ display: 'flex', gap: '8px', marginBottom: '1rem', borderBottom: '1px solid var(--color-border)', paddingBottom: '10px' }}>
             {([
               { id: 'analysis', label: '🧠 AI Live Analysis & Alerts' },
-              { id: 'wave', label: '🌊 LOB 微观结构波浪终端' },
+              { id: 'wave', label: '🌊 代理指标 / L1 数据状态' },
               { id: 'portfolio', label: '📈 Portfolio History' },
               { id: 'actions', label: '⚡ Execution Activity' },
               { id: 'history', label: '📅 Trade History' },
@@ -702,7 +702,7 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
             <div style={{ flex: 1, minHeight: '650px', height: '680px', borderRadius: '8px', overflow: 'hidden' }}>
               <iframe
                 src="/charts/saggese_wave_visual_dashboard.html"
-                title="Saggese Microstructure Wave Alpha Dashboard"
+                title="历史代理指标与真实 L1 数据状态"
                 style={{ width: '100%', height: '100%', border: 'none' }}
               />
             </div>

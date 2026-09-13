@@ -1945,11 +1945,7 @@ _wave_history_cache = None
 
 @app.get("/api/wave/live_today")
 async def get_wave_live_today(ticker: str = "TSLA"):
-    """
-    Dedicated real-time intraday endpoint for today's live LOB microstructure wave alpha.
-    Fetches real-time Alpaca 1m bars up to the current minute, resamples to 5m,
-    computes 7 LOB features, and executes Saggese wave inference in < 200ms.
-    """
+    """Report captured L1 availability; the retired wave model emits no signals."""
     try:
         from app.ml.lob_wave_realtime import compute_live_wave_day_data
         return compute_live_wave_day_data(ticker.upper().strip())
@@ -1976,11 +1972,9 @@ async def get_wave_day_data(ticker: str = "TSLA", date: str = ""):
     if is_today_request:
         try:
             from app.ml.lob_wave_realtime import compute_live_wave_day_data
-            live_res = compute_live_wave_day_data(tk)
-            if live_res.get("success"):
-                return live_res
+            return compute_live_wave_day_data(tk)
         except Exception as e:
-            print(f"⚠️ Error computing live wave day data for {tk}: {e}")
+            return {"success": False, "status": "unavailable", "error": str(e)}
     
     if _wave_history_cache is None:
         cache_paths = [
@@ -2000,20 +1994,11 @@ async def get_wave_day_data(ticker: str = "TSLA", date: str = ""):
     if _wave_history_cache and tk in _wave_history_cache:
         by_day = _wave_history_cache[tk].get("by_day", {})
         if dt in by_day:
-            return {"success": True, "ticker": tk, "date": dt, "data": by_day[dt]}
+            return {"success": True, "status": "historical_proxy", "ticker": tk, "date": dt, "data": by_day[dt]}
         if not dt and _wave_history_cache[tk].get("days"):
             latest_dt = _wave_history_cache[tk]["days"][-1]
-            return {"success": True, "ticker": tk, "date": latest_dt, "data": by_day.get(latest_dt)}
+            return {"success": True, "status": "historical_proxy", "ticker": tk, "date": latest_dt, "data": by_day.get(latest_dt)}
             
-    # Fallback to computing live data if date wasn't found in historical cache
-    try:
-        from app.ml.lob_wave_realtime import compute_live_wave_day_data
-        live_res = compute_live_wave_day_data(tk)
-        if live_res.get("success"):
-            return live_res
-    except Exception:
-        pass
-
     return {"success": False, "error": f"No wave data found for {tk} on {dt}"}
 
 

@@ -1,218 +1,23 @@
-# generate_saggese_wave_dashboard.py
-"""
-Generates an interactive, standalone HTML visualization dashboard for the
-Saggese Microstructure Wave Alpha Engine (Teza Quant Intraday Sharpe > 5.0 Methodology).
+#!/usr/bin/env python3
+"""Render retained OHLCV-proxy wave history with explicit provenance.
 
-Solves:
-1. Signal Label Overlapping (removes stacked markPoint clumping via wave state debouncing & compact arrow badges).
-2. Multi-Day & Multi-Ticker Navigation (provides day-by-day selection dropdown, Prev/Next day buttons, and ticker switcher for TSLA, MSTR, NVDA, SNDK across all recent trading days).
-3. Rich hover tooltips with 7 LOB microstructure causal features and wave expectation metrics.
-4. Interactive intraday wave signal table with instant click-to-highlight capability.
+This renderer does not train the retired wave model, fetch quotes, or start a
+broker. Legacy classification outputs are uncalibrated research illustrations.
 """
-
-import os
-import sys
+from pathlib import Path
+import argparse
 import json
-import numpy as np
-import pandas as pd
 
-script_dir = os.path.dirname(os.path.abspath(__file__))
-project_root = os.path.dirname(script_dir)
-backend_dir = os.path.join(project_root, "backend")
-if backend_dir not in sys.path:
-    sys.path.insert(0, backend_dir)
-if project_root not in sys.path:
-    sys.path.insert(0, project_root)
+ROOT = Path(__file__).resolve().parents[1]
 
-from app.ml.lob_microstructure_ml import MicrostructureWaveAlphaEngine
-from app.alpha_engine import InstitutionalAlphaEngine
 
-def generate_multi_day_dashboard():
-    print("🌊 Loading Microstructure Wave Alpha Engine & Institutional Multi-Factor Model...")
-    wave_engine = MicrostructureWaveAlphaEngine.load()
-    alpha_engine = InstitutionalAlphaEngine()
-
-    tickers = ['TSLA', 'MSTR', 'NVDA', 'SNDK']
-    all_data = {}
-
-    for ticker in tickers:
-        fpath = os.path.join(backend_dir, "data", "datasets", f"advanced_dataset_{ticker}.parquet")
-        if not os.path.exists(fpath):
-            print(f"⚠️ Dataset missing for {ticker} at {fpath}, skipping...")
-            continue
-        
-        print(f"📊 Processing {ticker} 5m resampled microstructure waves...")
-        df = pd.read_parquet(fpath)
-        for col in ['open', 'high', 'low', 'close', 'volume']:
-            if col in df.columns and col.capitalize() not in df.columns:
-                df[col.capitalize()] = df[col]
-        
-        # Resample 1m to 5m
-        df_5m = df.resample('5min').agg({
-            'Open': 'first', 'High': 'max', 'Low': 'min', 'Close': 'last', 'Volume': 'sum'
-        }).dropna()
-
-        # Filter regular market hours 9:30 - 16:00
-        df_5m['hour'] = df_5m.index.hour
-        df_5m['min'] = df_5m.index.minute
-        df_5m = df_5m[(df_5m['hour'] > 9) | ((df_5m['hour'] == 9) & (df_5m['min'] >= 30))]
-        df_5m = df_5m[(df_5m['hour'] < 16) | ((df_5m['hour'] == 16) & (df_5m['min'] == 0))]
-        
-        df_5m['day'] = df_5m.index.strftime('%Y-%m-%d')
-        all_days = sorted(df_5m['day'].unique().tolist())
-        # Hybrid Scheme C: Compute all historical days for full API cache, inline most recent 10 days for instant startup
-        days = all_days
-        df_recent = df_5m.copy()
-        
-        # Extract 7 microstructure features vectorially
-        df_feat = wave_engine.build_microstructure_features(df_recent)
-        X = df_feat[wave_engine.FEATURE_COLS].fillna(0.0)
-        p_long_all = wave_engine.model.predict_proba(X)[:, 1]
-
-        # Calculate EMA9, EMA21, VWAP
-        df_recent['ema_9'] = df_recent['Close'].ewm(span=9, adjust=False).mean()
-        df_recent['ema_21'] = df_recent['Close'].ewm(span=21, adjust=False).mean()
-        
-        all_data[ticker] = {'days': all_days[-10:], 'all_available_days': all_days, 'by_day': {}}
-
-        for d in days:
-            day_df = df_recent[df_recent['day'] == d]
-            if len(day_df) < 5:
-                continue
-
-            idx_mask = (df_recent['day'] == d)
-            day_p_long = p_long_all[idx_mask]
-            day_feat = df_feat[idx_mask]
-            
-            # Day cumulative VWAP
-            pv = (day_df['Close'] * day_df['Volume']).cumsum()
-            v_cum = day_df['Volume'].cumsum().replace(0, 1.0)
-            day_vwap = (pv / v_cum).round(2).tolist()
-
-            times = day_df.index.strftime('%H:%M').tolist()
-            day_records = day_df.to_dict(orient='records')
-            kline = [[round(float(r['Open']), 2), round(float(r['Close']), 2), round(float(r['Low']), 2), round(float(r['High']), 2)] for r in day_records]
-            vols = [int(v) for v in day_df['Volume'].values]
-            ema9_vals = [round(float(v), 2) for v in day_df['ema_9'].values]
-            ema21_vals = [round(float(v), 2) for v in day_df['ema_21'].values]
-            
-            ofi = [round(float(v), 3) for v in day_feat['feature_ofi'].values]
-            micro = [round(float(v), 2) for v in (day_feat['feature_micro_drift_bps'].values if 'feature_micro_drift_bps' in day_feat.columns else day_feat['feature_micro_drift'].values * 100.0)]
-            queue = [round(float(v), 3) for v in day_feat['feature_queue_imbalance'].values]
-            sweep = [round(float(v), 3) for v in day_feat['feature_sweep_vel'].values]
-            wave_p = [round(float(p) * 100, 1) for p in day_p_long]
-            
-            comp_scores = []
-            signals = []
-            last_sig_idx = -999
-            last_sig_dir = None
-            
-            for i in range(len(day_records)):
-                row = day_records[i]
-                prev_row = day_records[i-1] if i > 0 else None
-                p_l = float(day_p_long[i])
-                a_eval = alpha_engine.evaluate_composite_alpha(row, prev_row, ml_p_win_long=p_l)
-                score = float(a_eval.get('composite_alpha_score', 0.0))
-                comp_scores.append(round(score, 1))
-                
-                p_s = 1.0 - p_l
-                cur_dir = None
-                # Clean thresholds for institutional high conviction wave signals
-                if score > 15 and p_l >= 0.54:
-                    cur_dir = 'LONG'
-                elif score < -15 and p_s >= 0.54:
-                    cur_dir = 'SHORT'
-                    
-                if cur_dir is not None:
-                    # Debounce: only record if direction flipped, or at least 5 bars (25 mins) passed
-                    if cur_dir != last_sig_dir or (i - last_sig_idx >= 5):
-                        price = float(row['Close'])
-                        low_val = float(row['Low'])
-                        high_val = float(row['High'])
-                        # Place marker comfortably outside candle bounds to completely avoid visual clutter
-                        coord_y = low_val * 0.9985 if cur_dir == 'LONG' else high_val * 1.0015
-                        signals.append({
-                            'index': i,
-                            'time': times[i],
-                            'direction': cur_dir,
-                            'coord_x': times[i],
-                            'coord_y': round(coord_y, 2),
-                            'price': round(price, 2),
-                            'high': round(high_val, 2),
-                            'low': round(low_val, 2),
-                            'p_win': round(p_l * 100 if cur_dir == 'LONG' else p_s * 100, 1),
-                            'expected_ret': round((p_l - 0.5) * 1.8 if cur_dir == 'LONG' else (p_s - 0.5) * 1.8, 2),
-                            'ofi': ofi[i],
-                            'micro_drift': micro[i],
-                            'alpha': round(score, 1)
-                        })
-                        last_sig_idx = i
-                        last_sig_dir = cur_dir
-            
-            day_open = float(day_df['Open'].iloc[0])
-            day_close = float(day_df['Close'].iloc[-1])
-            day_pnl_pct = round(((day_close - day_open) / day_open) * 100, 2)
-            
-            all_data[ticker]['by_day'][d] = {
-                'times': times,
-                'kline': kline,
-                'volume': vols,
-                'ema9': ema9_vals,
-                'ema21': ema21_vals,
-                'vwap': day_vwap,
-                'ofi': ofi,
-                'micro_drift': micro,
-                'queue_imb': queue,
-                'sweep_vel': sweep,
-                'wave_p_win_long': wave_p,
-                'composite_alpha': comp_scores,
-                'signals': signals,
-                'stats': {
-                    'open': round(day_open, 2),
-                    'close': round(day_close, 2),
-                    'high': round(float(day_df['High'].max()), 2),
-                    'low': round(float(day_df['Low'].min()), 2),
-                    'pnl_pct': day_pnl_pct,
-                    'signal_count': len(signals)
-                }
-            }
-
-        # Fetch & inline today's live data for this ticker directly
-        try:
-            from app.ml.lob_wave_realtime import compute_live_wave_day_data
-            live_res = compute_live_wave_day_data(ticker)
-            if live_res.get('success') and live_res.get('data'):
-                today_d = live_res.get('date', 'today')
-                today_payload = live_res['data']
-                all_data[ticker]['by_day'][today_d] = today_payload
-                all_data[ticker]['by_day']['today'] = today_payload
-                if today_d not in all_days:
-                    all_days.append(today_d)
-                    all_data[ticker]['days'].append(today_d)
-                    all_data[ticker]['all_available_days'].append(today_d)
-                print(f"   └─ 🌟 [{ticker}] 成功拉取并内嵌今日 ({today_d}) 盘中实时分时与微观波浪 ({len(today_payload['kline'])} 根 5m K线)")
-        except Exception as e:
-            print(f"   ⚠️ [{ticker}] 拉取今日实时数据异常: {e}")
-
-    # Build inline store with recent 10 days + today for instant zero-latency start (< 200KB payload)
-    inline_store = {}
-    for tk, val in all_data.items():
-        recent_10 = val['days']
-        by_day_map = {d: val['by_day'][d] for d in recent_10 if d in val['by_day']}
-        if 'today' in val['by_day']:
-            by_day_map['today'] = val['by_day']['today']
-        inline_store[tk] = {
-            'days': recent_10,
-            'all_available_days': val['all_available_days'],
-            'by_day': by_day_map
-        }
-
-    html_content = f"""<!DOCTYPE html>
+def render_dashboard(inline_store):
+    return f"""<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LOB 订单流微观结构波浪研判终端 (Microstructure Wave Alpha Terminal)</title>
+    <title>K 线代理指标研究与 L1 数据状态</title>
     <!-- Multi-Tier Local & CDN ECharts Loader (Offline & Cross-Network Guaranteed) -->
     <script src="echarts.min.js"></script>
     <script>
@@ -359,15 +164,22 @@ def generate_multi_day_dashboard():
 <body>
     <div class="header">
         <div>
-            <h1>🌊 LOB 订单流微观结构波浪研判终端 (Wave Alpha Terminal)</h1>
-            <p>基于 Teza Capital ($1.6B AUM, Sharpe > 5.0) 机构微观因果定价体系 (15~30m Wave) · 订单流不平衡 (OFI) & 微观价格漂移</p>
+            <h1>🌊 K 线代理指标研究与 L1 数据状态</h1>
+            <p>历史图表使用 OHLCV 代理特征，不能还原真实订单簿；旧模型输出尚未验证为可交易优势。</p>
         </div>
         <div class="badge-bar">
-            <span id="liveBadge" class="badge" style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4); font-weight: 700;">● LIVE 当天实时推断已接入</span>
-            <span class="badge badge-green">● 样本外 Purged CV 61.97%</span>
-            <span class="badge badge-blue">● 零硬编码 · 纯连续 Alpha</span>
+            <span id="liveBadge" class="badge" style="color: #fbbf24; border: 1px solid #92400e; font-weight: 700;">L1 状态待查询 · 旧波浪推断已停用</span>
+            <span class="badge badge-blue">分类输出未校准为交易胜率</span>
+            <span class="badge badge-blue">历史规则评分 · 有效性未验证</span>
         </div>
     </div>
+
+    <div class="day-stats-bar" style="display:block; line-height:1.7; color:#fbbf24;" role="status" aria-live="polite">
+        <strong>数据依据：</strong><span id="dataStatus">正在查询真实 L1 留存状态；不使用缓存填充实时信号。</span>
+        <div>历史图：K 线代理指标。L1：仅买一、卖一及对应数量，不能提供完整挂单队列。旧波浪模型：已停用，分类输出未校准。</div>
+    </div>
+
+    <div id="realL1Snapshot" class="day-stats-bar" style="display:none; line-height:1.7;"></div>
 
     <!-- Top Navigation Controls -->
     <div class="controls-panel">
@@ -399,11 +211,11 @@ def generate_multi_day_dashboard():
             <div id="statRange" class="stat-chip-val">-</div>
         </div>
         <div class="stat-chip">
-            <div class="stat-chip-label">日内涨跌幅 (PnL)</div>
+            <div class="stat-chip-label">价格涨跌幅（不是策略盈亏）</div>
             <div id="statPnl" class="stat-chip-val">-</div>
         </div>
         <div class="stat-chip">
-            <div class="stat-chip-label">波浪买卖点数</div>
+            <div class="stat-chip-label">旧规则标记数</div>
             <div id="statSignals" class="stat-chip-val" style="color: var(--accent-blue);">-</div>
         </div>
     </div>
@@ -412,10 +224,10 @@ def generate_multi_day_dashboard():
     <div class="chart-box">
         <div class="chart-header">
             <div class="chart-title">
-                📈 <span id="klineTitle">TSLA 5分钟 K 线与 15~30m 波浪拐点信号</span>
+                📈 <span id="klineTitle">TSLA 5分钟 K 线与历史规则标记</span>
             </div>
             <div style="font-size: 0.8rem; color: var(--text-secondary);">
-                ▲ 绿色三角：Wave Long 拐点 | ▼ 红色倒三角：Wave Short 拐点 (防抖去重 · 绝不重叠堆叠)
+                ▲ 绿色：旧规则 LONG 标记 | ▼ 红色：旧规则 SHORT 标记；不代表实际订单或已验证的拐点。
             </div>
         </div>
         <div id="klineChart" class="chart-container"></div>
@@ -424,8 +236,8 @@ def generate_multi_day_dashboard():
     <!-- Chart 2: OFI & Microprice Drift -->
     <div class="chart-box">
         <div class="chart-header">
-            <div class="chart-title">⚡ 订单流不平衡 (OFI) 与 微观价格漂移 (Microprice Drift)</div>
-            <div style="font-size: 0.8rem; color: var(--text-secondary);">柱状图：OFI 净主动意愿 | 紫线：微观加权价格偏离 (bps)</div>
+            <div class="chart-title">⚡ K 线构造的 OFI 代理值与价格偏移估计</div>
+            <div style="font-size: 0.8rem; color: var(--text-secondary);">柱状图：OHLCV 代理值 | 紫线：影线与估算价差推导的偏移（bps）；均非真实报价观测。</div>
         </div>
         <div id="ofiChart" class="chart-container chart-small"></div>
     </div>
@@ -433,8 +245,8 @@ def generate_multi_day_dashboard():
     <!-- Chart 3: Queue Imbalance & Sweep Velocity -->
     <div class="chart-box">
         <div class="chart-header">
-            <div class="chart-title">🌊 盘口排队失衡比 (Queue Imbalance) & 主力扫盘速度 (Sweep Velocity)</div>
-            <div style="font-size: 0.8rem; color: var(--text-secondary);">黄线：Queue Imbalance (-1 到 +1) | 蓝线：主力扫盘力度</div>
+            <div class="chart-title">🌊 影线实体失衡与量价活跃度</div>
+            <div style="font-size: 0.8rem; color: var(--text-secondary);">黄线：K 线形态代理值（-1 到 +1）| 蓝线：涨跌方向与相对成交量；无法识别排队位置或交易者身份。</div>
         </div>
         <div id="queueChart" class="chart-container chart-small"></div>
     </div>
@@ -442,8 +254,8 @@ def generate_multi_day_dashboard():
     <!-- Chart 4: Continuous Composite Alpha & Wave Probability -->
     <div class="chart-box">
         <div class="chart-header">
-            <div class="chart-title">🎯 连续多因子 Composite Alpha 打分与 15~30m 波浪胜率</div>
-            <div style="font-size: 0.8rem; color: var(--text-secondary);">绿线：波浪胜率预测 (%) | 区域：多因子连续评分 (-100 到 +100)</div>
+            <div class="chart-title">🎯 历史规则评分与旧模型分类输出（未校准）</div>
+            <div style="font-size: 0.8rem; color: var(--text-secondary);">绿线：旧模型上涨分类输出（%）| 区域：规则加权分数；二者均不等于扣成本后的交易胜率或预期收益。</div>
         </div>
         <div id="alphaChart" class="chart-container chart-small"></div>
     </div>
@@ -451,8 +263,8 @@ def generate_multi_day_dashboard():
     <!-- Signal Details Table -->
     <div class="table-box">
         <div class="chart-header">
-            <div class="chart-title">📋 该交易日触发的 Saggese 波浪机会明细清单</div>
-            <div style="font-size: 0.78rem; color: var(--text-muted);">每波浪信号均受 25 分钟周期防抖过滤，杜绝高频噪声重叠</div>
+            <div class="chart-title">📋 该交易日的历史规则标记</div>
+            <div style="font-size: 0.78rem; color: var(--text-muted);">保留旧规则标记用于复查；不代表实际成交。</div>
         </div>
         <table>
             <thead>
@@ -460,12 +272,12 @@ def generate_multi_day_dashboard():
                     <th>时间</th>
                     <th>方向</th>
                     <th>价格</th>
-                    <th>波浪胜率 P_win</th>
-                    <th>预期回报 E[R]</th>
-                    <th>OFI 订单流</th>
-                    <th>微观漂移 (bps)</th>
-                    <th>综合 Alpha 分</th>
-                    <th>微观结构判定</th>
+                    <th>方向分类值（未校准）</th>
+                    <th>收益预测验证</th>
+                    <th>OFI 代理值</th>
+                    <th>偏移估计 (bps)</th>
+                    <th>规则评分</th>
+                    <th>数据与模型依据</th>
                 </tr>
             </thead>
             <tbody id="signalsTableBody"></tbody>
@@ -487,7 +299,7 @@ def generate_multi_day_dashboard():
             tickerGroup.appendChild(btn);
         }});
 
-        const apiBase = (window.location.protocol === 'file:' || !window.location.port) ? 'http://127.0.0.1:8000' : '';
+        const apiBase = window.location.protocol === 'file:' ? 'http://127.0.0.1:8000' : '';
         const dateSelect = document.getElementById('dateSelector');
         const prevBtn = document.getElementById('prevDayBtn');
         const nextBtn = document.getElementById('nextDayBtn');
@@ -500,7 +312,7 @@ def generate_multi_day_dashboard():
             // Add TODAY (Live 实时) as first option
             const liveOpt = document.createElement('option');
             liveOpt.value = 'today';
-            liveOpt.textContent = '🌟 TODAY (盘中实时 LOB)';
+            liveOpt.textContent = '今日 L1 数据状态';
             dateSelect.appendChild(liveOpt);
 
             allDays.forEach((d, idx) => {{
@@ -527,77 +339,105 @@ def generate_multi_day_dashboard():
             }}
         }}
 
+        let requestGeneration = 0;
+        let pendingRequest = null;
+
+        function setDataStatus(message) {{
+            document.getElementById('dataStatus').textContent = message;
+        }}
+
+        function clearDisplayedData(message) {{
+            [kChart, oChart, qChart, aChart].forEach(chart => {{ if (chart) chart.clear(); }});
+            ['statOpen', 'statClose', 'statRange', 'statPnl', 'statSignals'].forEach(id => {{
+                document.getElementById(id).textContent = '—';
+            }});
+            document.getElementById('signalsTableBody').innerHTML = '';
+            document.getElementById('klineTitle').textContent = `${{currentTicker}} · ${{message}}`;
+            document.getElementById('liveBadge').textContent = message;
+            setDataStatus(message);
+            document.getElementById('realL1Snapshot').style.display = 'none';
+            document.getElementById('realL1Snapshot').textContent = '';
+        }}
+
+        function legacyDirectionValue(dayData, signal) {{
+            const index = Number.isInteger(signal.index) ? signal.index : dayData.times.indexOf(signal.time);
+            const p = dayData.wave_p_win_long[index];
+            if (!Number.isFinite(p) || p < 0 || p > 100) return '未提供';
+            return `${{(signal.direction === 'LONG' ? p : 100 - p).toFixed(1)}}%（未校准）`;
+        }}
+
         async function selectDay(d, isAutoRefresh = false) {{
             if (!d) return;
+            const generation = ++requestGeneration;
+            if (pendingRequest) pendingRequest.abort();
+            pendingRequest = new AbortController();
+            const controller = pendingRequest;
+            const ticker = currentTicker;
             currentDate = d;
-            dateSelect.value = currentDate;
+            dateSelect.value = d;
             updateNavButtons();
-
-            if (liveRefreshTimer) {{
-                clearTimeout(liveRefreshTimer);
-                liveRefreshTimer = null;
-            }}
-
-            // 1. LIVE TODAY MODE
-            if (d === 'today') {{
-                // Always render inlined/cached today data first if available
-                if (store[currentTicker] && store[currentTicker].by_day && store[currentTicker].by_day['today']) {{
-                    renderDashboard(true, '今日实时', '当前分时');
-                }}
-
-                const titleEl = document.getElementById('klineTitle');
-                if (!isAutoRefresh && titleEl && (!store[currentTicker] || !store[currentTicker].by_day || !store[currentTicker].by_day['today'])) {{
-                    titleEl.textContent = `⚡ 正在调取 ${{currentTicker}} 盘中实时 K 线与 LOB 微观订单流...`;
-                }}
-
-                try {{
-                    const resp = await fetch(`${{apiBase}}/api/wave/live_today?ticker=${{currentTicker}}`);
-                    const res = await resp.json();
-                    if (res && res.success && res.data) {{
-                        store[currentTicker].by_day['today'] = res.data;
-                        renderDashboard(true, res.date, res.last_updated);
-                    }}
-                }} catch (err) {{
-                    console.log('Live wave network polling note:', err);
-                    const liveBadgeEl = document.getElementById('liveBadge');
-                    if (liveBadgeEl && store[currentTicker] && store[currentTicker].by_day && store[currentTicker].by_day['today']) {{
-                        liveBadgeEl.style.display = 'inline-block';
-                        liveBadgeEl.style.background = 'rgba(16, 185, 129, 0.2)';
-                        liveBadgeEl.style.borderColor = '#10b981';
-                        liveBadgeEl.innerHTML = `🟢 TODAY 今日实时分时 (快照已呈现)`;
-                    }}
-                }}
-
-                // Keep auto-polling every 8 seconds when on TODAY
-                liveRefreshTimer = setTimeout(() => {{
-                    if (currentDate === 'today') {{
-                        selectDay('today', true);
-                    }}
-                }}, 8000);
-                return;
-            }}
-
-            // 2. HISTORICAL DAY CACHED / API MODE
-            if (store[currentTicker] && store[currentTicker].by_day && store[currentTicker].by_day[d]) {{
-                renderDashboard(false, d);
-                return;
-            }}
-
-            const titleEl = document.getElementById('klineTitle');
-            if (titleEl) titleEl.textContent = `⏳ 正在按需调取 ${{currentTicker}} (${{d}}) 历史高频波浪数据...`;
-
+            clearTimeout(liveRefreshTimer);
+            liveRefreshTimer = null;
+            clearDisplayedData(d === 'today' ? '正在查询 L1 留存状态' : '正在读取历史代理指标');
+            const isCurrent = () => generation === requestGeneration && ticker === currentTicker && d === currentDate;
+            const timeout = setTimeout(() => controller.abort(), 15000);
             try {{
-                const resp = await fetch(`${{apiBase}}/api/wave/day_data?ticker=${{currentTicker}}&date=${{d}}`);
-                const res = await resp.json();
-                if (res && res.success && res.data) {{
-                    store[currentTicker].by_day[d] = res.data;
-                    renderDashboard(false, d);
+                if (d === 'today') {{
+                    const response = await fetch(`${{apiBase}}/api/orderbook/l1_status?ticker=${{encodeURIComponent(ticker)}}`, {{ signal: controller.signal }});
+                    if (!response.ok) throw new Error('L1 status request failed');
+                    const result = await response.json();
+                    if (!isCurrent()) return;
+                    // Retained quote snapshots never imply a connected live feed or
+                    // a calibrated wave model. Old success/data payloads are ignored.
+                    const quote = result.latest_quote;
+                    const captured = result.success === true && result.market_depth === 'L1'
+                        && result.quote_events > 0 && quote
+                        && [quote.bid_price, quote.ask_price, quote.bid_size, quote.ask_size].every(Number.isFinite)
+                        && quote.bid_price > 0 && quote.ask_price >= quote.bid_price
+                        && quote.bid_size >= 0 && quote.ask_size >= 0
+                        && Number.isFinite(Date.parse(quote.timestamp))
+                        && Array.isArray(result.source) && result.source.length > 0
+                        && result.source.every(source => ['alpaca_stock_websocket', 'alpaca_stock_historical'].includes(source));
+                    clearDisplayedData('旧波浪推断已停用 · 无实时买卖信号');
+                    setDataStatus(captured
+                        ? `已发现 ${{result.quote_events}} 条真实 L1 报价留存；最新报价 ${{quote.timestamp}}。这是留存快照，不代表当前连接正常或模型已验证。`
+                        : '本次查询未确认可用的真实 L1 报价。旧模型已停用；历史缓存不会显示为今日盘口或实时信号。');
+                    if (captured) {{
+                        const mid = (quote.bid_price + quote.ask_price) / 2;
+                        const depth = quote.bid_size + quote.ask_size;
+                        const imbalance = depth > 0 ? ((quote.bid_size - quote.ask_size) / depth).toFixed(3) : '未定义';
+                        const micro = depth > 0 ? (((quote.ask_size * quote.bid_price + quote.bid_size * quote.ask_price) / depth - mid) / mid * 10000).toFixed(3) : '未定义';
+                        const snapshot = document.getElementById('realL1Snapshot');
+                        const rows = [
+                            '真实 L1 留存快照 · 与下方历史代理图分开',
+                            `报价时间：${{quote.timestamp}} | 来源：${{result.source.join(', ')}} | Feed：${{(result.feed || []).join(', ') || '未提供'}}`,
+                            `买一 ${{quote.bid_price}} × ${{quote.bid_size}} | 卖一 ${{quote.ask_price}} × ${{quote.ask_size}} | 数量单位：${{result.quote_size_unit || '未提供'}}`,
+                            `报价价差 ${{( (quote.ask_price - quote.bid_price) / mid * 10000).toFixed(3)}} bps | 买卖一数量失衡 ${{imbalance}} | 微价格偏移 ${{micro}} bps`,
+                            '单个快照不能计算 OFI；没有完整队列、扫盘判定或交易胜率。'
+                        ];
+                        rows.forEach(text => {{ const line = document.createElement('div'); line.textContent = text; snapshot.appendChild(line); }});
+                        snapshot.style.display = 'block';
+                    }}
                 }} else {{
-                    if (titleEl) titleEl.textContent = `⚠️ 未获取到 ${{currentTicker}} (${{d}}) 历史数据: ${{res && res.error || '无记录'}}`;
+                    let dayData = store[ticker]?.by_day?.[d];
+                    if (!dayData) {{
+                        const response = await fetch(`${{apiBase}}/api/wave/day_data?ticker=${{encodeURIComponent(ticker)}}&date=${{encodeURIComponent(d)}}`, {{ signal: controller.signal }});
+                        if (!response.ok) throw new Error('History request failed');
+                        const result = await response.json();
+                        if (!isCurrent()) return;
+                        if (!result.success || !result.data) throw new Error('History unavailable');
+                        dayData = result.data;
+                        store[ticker].by_day[d] = dayData;
+                    }}
+                    if (isCurrent()) renderDashboard(false, d);
                 }}
-            }} catch (err) {{
-                console.error('Fetch error:', err);
-                if (titleEl) titleEl.textContent = `⚠️ 历史数据网络请求失败，请检查网络`;
+            }} catch (error) {{
+                if (isCurrent()) clearDisplayedData(d === 'today'
+                    ? 'L1 状态查询失败或超时 · 未展示实时数据'
+                    : '历史数据读取失败 · 未展示其他日期的缓存');
+            }} finally {{
+                clearTimeout(timeout);
+                if (isCurrent() && d === 'today') liveRefreshTimer = setTimeout(() => selectDay('today', true), 8000);
             }}
         }}
 
@@ -642,27 +482,14 @@ def generate_multi_day_dashboard():
         let kChart = null, oChart = null, qChart = null, aChart = null;
 
         function renderDashboard(isLive = false, actualDate = '', lastUpdated = '') {{
+            if (currentDate === 'today' || isLive) return;
             const dayData = store[currentTicker].by_day[currentDate];
             if (!dayData) return;
 
             const dateStr = actualDate || currentDate;
-            const liveBadgeEl = document.getElementById('liveBadge');
-            if (liveBadgeEl) {{
-                if (isLive) {{
-                    liveBadgeEl.style.display = 'inline-block';
-                    liveBadgeEl.style.background = 'rgba(16, 185, 129, 0.2)';
-                    liveBadgeEl.style.borderColor = '#10b981';
-                    liveBadgeEl.innerHTML = `🟢 LIVE 盘中实时更新 (${{lastUpdated || '当前分时'}})`;
-                }} else {{
-                    liveBadgeEl.style.background = 'rgba(100, 116, 139, 0.2)';
-                    liveBadgeEl.style.borderColor = '#475569';
-                    liveBadgeEl.innerHTML = `📅 历史回放复盘模式 (${{dateStr}})`;
-                }}
-            }}
-
-            document.getElementById('klineTitle').textContent = isLive
-                ? `${{currentTicker}} - ${{dateStr}} 盘中实时 5分钟 K 线与 15~30m 波浪拐点信号 (秒级流式推断)`
-                : `${{currentTicker}} - ${{dateStr}} 5分钟 K 线与 15~30m 波浪拐点信号`;
+            document.getElementById('liveBadge').textContent = `历史代理指标 · ${{dateStr}}`;
+            document.getElementById('klineTitle').textContent = `${{currentTicker}} · ${{dateStr}} · 5分钟 K 线与旧规则标记`;
+            setDataStatus(`当前显示 ${{dateStr}} 的历史快照；特征由 OHLCV 构造，未使用真实盘口。分类输出未校准为交易胜率。`);
 
             // Update Stats Banner
             const stats = dayData.stats;
@@ -672,7 +499,7 @@ def generate_multi_day_dashboard():
             const pnlEl = document.getElementById('statPnl');
             pnlEl.textContent = `${{stats.pnl_pct >= 0 ? '+' : ''}}${{stats.pnl_pct}}%`;
             pnlEl.style.color = stats.pnl_pct >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
-            document.getElementById('statSignals').textContent = `${{stats.signal_count}} 处拐点`;
+            document.getElementById('statSignals').textContent = `${{stats.signal_count}} 个旧标记`;
 
             // Clean, elegant markers that NEVER clump or stack
             const markPointData = dayData.signals.map(s => {{
@@ -680,7 +507,7 @@ def generate_multi_day_dashboard():
                 return {{
                     name: s.direction,
                     coord: [s.coord_x, s.coord_y],
-                    value: `${{isLong ? '▲' : '▼'}} ${{s.direction}} ${{s.p_win}}%`,
+                    value: `${{isLong ? 'L' : 'S'}} · 旧`,
                     symbol: 'triangle',
                     symbolRotate: isLong ? 0 : 180,
                     symbolSize: 12,
@@ -725,10 +552,10 @@ def generate_multi_day_dashboard():
                                 <div style="font-weight: 800; color: #38bdf8; margin-bottom: 4px;">⏰ ${{t}} (${{currentTicker}})</div>
                                 <div>开: ${{k[0]}} | 高: ${{k[3]}} | 低: ${{k[2]}} | 收: ${{k[1]}}</div>
                                 <div style="margin-top: 4px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 4px;">
-                                    <div>🌊 波浪胜率: <span style="color: ${{pLong >= 50 ? '#10b981' : '#f43f5e'}}; font-weight: 800;">${{pLong}}%</span></div>
-                                    <div>⚡ OFI 订单流: <span style="color: ${{ofi >= 0 ? '#10b981' : '#f43f5e'}};">${{ofi >= 0 ? '+' : ''}}${{ofi}}</span></div>
-                                    <div>🎯 微观价格漂移: <span style="color: #a855f7; font-weight: 700;">${{drift >= 0 ? '+' : ''}}${{drift}} bps</span></div>
-                                    <div>📊 综合 Alpha 分: <span style="color: ${{alpha >= 0 ? '#38bdf8' : '#f43f5e'}};">${{alpha >= 0 ? '+' : ''}}${{alpha}}</span></div>
+                                    <div>旧模型 P(上涨)，未校准: <span style="color: ${{pLong >= 50 ? '#10b981' : '#f43f5e'}}; font-weight: 800;">${{pLong}}%</span></div>
+                                    <div>⚡ OFI 代理值: <span style="color: ${{ofi >= 0 ? '#10b981' : '#f43f5e'}};">${{ofi >= 0 ? '+' : ''}}${{ofi}}</span></div>
+                                    <div>🎯 K 线偏移估计: <span style="color: #a855f7; font-weight: 700;">${{drift >= 0 ? '+' : ''}}${{drift}} bps</span></div>
+                                    <div>📊 规则评分: <span style="color: ${{alpha >= 0 ? '#38bdf8' : '#f43f5e'}};">${{alpha >= 0 ? '+' : ''}}${{alpha}}</span></div>
                                 </div>
                             </div>
                         `;
@@ -813,29 +640,29 @@ def generate_multi_day_dashboard():
                                 let col = val >= 0 ? '#10b981' : '#f43f5e';
                                 res += `<div><span style="color:${{col}}">●</span> ${{p.seriesName}}: <b style="color:${{col}}">${{sign}}${{val.toFixed(3)}}</b></div>`;
                             }} else {{
-                                res += `<div><span style="color:#a855f7">●</span> 微观价格漂移 (bps): <b style="color:#a855f7">${{sign}}${{val.toFixed(2)}} bps</b></div>`;
+                                res += `<div><span style="color:#a855f7">●</span> K 线偏移估计 (bps): <b style="color:#a855f7">${{sign}}${{val.toFixed(2)}} bps</b></div>`;
                             }}
                         }});
                         res += `</div>`;
                         return res;
                     }}
                 }},
-                legend: {{ data: ['OFI 订单流不平衡', '微观价格漂移 (bps)'], textStyle: {{ color: '#94a3b8' }} }},
+                legend: {{ data: ['OFI 代理值', 'K 线偏移估计 (bps)'], textStyle: {{ color: '#94a3b8' }} }},
                 grid: {{ left: '4%', right: '3%', bottom: '10%', top: '15%', containLabel: true }},
                 xAxis: {{ type: 'category', data: dayData.times, axisLine: {{ lineStyle: {{ color: '#334155' }} }}, axisLabel: {{ color: '#64748b' }} }},
                 yAxis: [
                     {{ type: 'value', name: 'OFI', splitLine: {{ lineStyle: {{ color: '#1e293b' }} }}, axisLabel: {{ color: '#64748b' }} }},
-                    {{ type: 'value', name: 'Micro Drift (bps)', splitLine: {{ show: false }}, axisLabel: {{ color: '#a855f7', formatter: '{{value}} bps' }} }}
+                    {{ type: 'value', name: '偏移估计 (bps)', splitLine: {{ show: false }}, axisLabel: {{ color: '#a855f7', formatter: '{{value}} bps' }} }}
                 ],
                 series: [
                     {{
-                        name: 'OFI 订单流不平衡',
+                        name: 'OFI 代理值',
                         type: 'bar',
                         data: dayData.ofi,
                         itemStyle: {{ color: (p) => p.value >= 0 ? '#10b981' : '#f43f5e' }}
                     }},
                     {{
-                        name: '微观价格漂移 (bps)',
+                        name: 'K 线偏移估计 (bps)',
                         type: 'line',
                         yAxisIndex: 1,
                         data: dayData.micro_drift,
@@ -860,23 +687,23 @@ def generate_multi_day_dashboard():
                         params.forEach(p => {{
                             let val = Number(p.value);
                             let sign = val > 0 ? '+' : '';
-                            if (p.seriesName.includes('Queue') || p.seriesName.includes('排队')) {{
-                                res += `<div><span style="color:#f59e0b">●</span> 排队失衡比率: <b style="color:#f59e0b">${{sign}}${{val.toFixed(3)}}</b></div>`;
+                            if (p.seriesName.includes('影线实体')) {{
+                                res += `<div><span style="color:#f59e0b">●</span> 影线实体失衡（代理）: <b style="color:#f59e0b">${{sign}}${{val.toFixed(3)}}</b></div>`;
                             }} else {{
-                                res += `<div><span style="color:#38bdf8">●</span> 大单扫盘速度: <b style="color:#38bdf8">${{sign}}${{val.toFixed(3)}}</b></div>`;
+                                res += `<div><span style="color:#38bdf8">●</span> 量价活跃度（代理）: <b style="color:#38bdf8">${{sign}}${{val.toFixed(3)}}</b></div>`;
                             }}
                         }});
                         res += `</div>`;
                         return res;
                     }}
                 }},
-                legend: {{ data: ['排队失衡比率 (Queue Imbalance)', '大单扫盘速度 (Sweep Velocity)'], textStyle: {{ color: '#94a3b8' }} }},
+                legend: {{ data: ['影线实体失衡（代理）', '量价活跃度（代理）'], textStyle: {{ color: '#94a3b8' }} }},
                 grid: {{ left: '4%', right: '3%', bottom: '10%', top: '15%', containLabel: true }},
                 xAxis: {{ type: 'category', data: dayData.times, axisLine: {{ lineStyle: {{ color: '#334155' }} }}, axisLabel: {{ color: '#64748b' }} }},
                 yAxis: {{ type: 'value', splitLine: {{ lineStyle: {{ color: '#1e293b' }} }}, axisLabel: {{ color: '#64748b' }} }},
                 series: [
                     {{
-                        name: '排队失衡比率 (Queue Imbalance)',
+                        name: '影线实体失衡（代理）',
                         type: 'line',
                         data: dayData.queue_imb,
                         smooth: true,
@@ -884,7 +711,7 @@ def generate_multi_day_dashboard():
                         showSymbol: false
                     }},
                     {{
-                        name: '大单扫盘速度 (Sweep Velocity)',
+                        name: '量价活跃度（代理）',
                         type: 'line',
                         data: dayData.sweep_vel,
                         smooth: true,
@@ -898,16 +725,16 @@ def generate_multi_day_dashboard():
             aChart.setOption({{
                 backgroundColor: 'transparent',
                 tooltip: {{ trigger: 'axis', backgroundColor: 'rgba(15, 20, 34, 0.95)', borderColor: '#334155' }},
-                legend: {{ data: ['Composite Alpha Score', 'Wave Long 胜率 (%)'], textStyle: {{ color: '#94a3b8' }} }},
+                legend: {{ data: ['历史规则评分', '旧模型上涨分类输出 (%)'], textStyle: {{ color: '#94a3b8' }} }},
                 grid: {{ left: '4%', right: '3%', bottom: '10%', top: '15%', containLabel: true }},
                 xAxis: {{ type: 'category', data: dayData.times, axisLine: {{ lineStyle: {{ color: '#334155' }} }}, axisLabel: {{ color: '#64748b' }} }},
                 yAxis: [
-                    {{ type: 'value', name: 'Alpha Score', min: -100, max: 100, splitLine: {{ lineStyle: {{ color: '#1e293b' }} }}, axisLabel: {{ color: '#64748b' }} }},
-                    {{ type: 'value', name: 'Win Rate %', min: 20, max: 80, splitLine: {{ show: false }}, axisLabel: {{ color: '#64748b' }} }}
+                    {{ type: 'value', name: '规则评分', min: -100, max: 100, splitLine: {{ lineStyle: {{ color: '#1e293b' }} }}, axisLabel: {{ color: '#64748b' }} }},
+                    {{ type: 'value', name: '分类输出 %', min: 0, max: 100, splitLine: {{ show: false }}, axisLabel: {{ color: '#64748b' }} }}
                 ],
                 series: [
                     {{
-                        name: 'Composite Alpha Score',
+                        name: '历史规则评分',
                         type: 'line',
                         data: dayData.composite_alpha,
                         smooth: true,
@@ -921,7 +748,7 @@ def generate_multi_day_dashboard():
                         showSymbol: false
                     }},
                     {{
-                        name: 'Wave Long 胜率 (%)',
+                        name: '旧模型上涨分类输出 (%)',
                         type: 'line',
                         yAxisIndex: 1,
                         data: dayData.wave_p_win_long,
@@ -936,7 +763,7 @@ def generate_multi_day_dashboard():
             const tbody = document.getElementById('signalsTableBody');
             tbody.innerHTML = '';
             if (dayData.signals.length === 0) {{
-                tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: var(--text-muted); padding: 20px;">该日盘面偏平稳，未触发高确定性波浪拐点</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: var(--text-muted); padding: 20px;">该历史快照没有旧规则标记；不能据此判断市场风险。</td></tr>';
             }} else {{
                 dayData.signals.forEach(s => {{
                     const tr = document.createElement('tr');
@@ -945,12 +772,12 @@ def generate_multi_day_dashboard():
                         <td style="color: #38bdf8; font-weight: 700;">${{s.time}}</td>
                         <td><span class="${{isLong ? 'badge-dir-long' : 'badge-dir-short'}}">${{s.direction}}</span></td>
                         <td>$${{s.price}}</td>
-                        <td style="color: ${{isLong ? '#10b981' : '#f43f5e'}}; font-weight: 800;">${{s.p_win}}%</td>
-                        <td>${{s.expected_ret >= 0 ? '+' : ''}}${{s.expected_ret}}%</td>
+                        <td style="color: ${{isLong ? '#10b981' : '#f43f5e'}}; font-weight: 800;">${{legacyDirectionValue(dayData, s)}}</td>
+                        <td>未验证</td>
                         <td style="color: ${{s.ofi >= 0 ? '#10b981' : '#f43f5e'}};">${{s.ofi}}</td>
                         <td>${{s.micro_drift}}</td>
                         <td style="color: ${{s.alpha >= 0 ? '#38bdf8' : '#f43f5e'}};">${{s.alpha}}</td>
-                        <td style="color: var(--text-secondary); font-size: 0.78rem;">${{isLong ? '主动买盘扫单驱动，微观价格向上漂移' : '盘口空头堆单吸收，微观价格向下漂移'}}</td>
+                        <td style="color: var(--text-secondary); font-size: 0.78rem;">OHLCV 代理特征；旧分类未校准</td>
                     `;
                     tbody.appendChild(tr);
                 }});
@@ -994,16 +821,25 @@ def generate_multi_day_dashboard():
 </html>
 """
 
-    charts_out = os.path.join(backend_dir, "data", "charts", "saggese_wave_visual_dashboard.html")
-    with open(charts_out, "w", encoding="utf-8") as f:
-        f.write(html_content)
-        
-    cache_charts_out = os.path.join(backend_dir, "data", "charts", "wave_history_cache.json")
-    with open(cache_charts_out, "w", encoding="utf-8") as f:
-        json.dump(all_data, f)
-        
-    print(f"✅ Successfully regenerated hybrid wave dashboard & full history cache at:\n -> {charts_out}\n -> {cache_charts_out}")
 
-if __name__ == "__main__":
-    generate_multi_day_dashboard()
+def generate_multi_day_dashboard(cache=None, output=None):
+    cache = Path(cache) if cache else ROOT / 'backend/data/charts/wave_history_cache.json'
+    output = Path(output) if output else ROOT / 'backend/data/charts/saggese_wave_visual_dashboard.html'
+    history = json.loads(cache.read_text())
+    inline = {}
+    for symbol, record in history.items():
+        days = [day for day in record.get('all_available_days', record.get('days', [])) if day != 'today']
+        recent = days[-10:]
+        inline[symbol] = dict(days=recent, all_available_days=days,
+                              by_day={day: record['by_day'][day] for day in recent if day in record.get('by_day', {})})
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(render_dashboard(inline), encoding='utf-8')
+    print(f'Rendered retained proxy history: {output}')
 
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--cache')
+    parser.add_argument('--output')
+    args = parser.parse_args()
+    generate_multi_day_dashboard(args.cache, args.output)

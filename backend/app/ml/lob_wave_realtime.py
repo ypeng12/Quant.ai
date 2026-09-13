@@ -1,12 +1,8 @@
 # backend/app/ml/lob_wave_realtime.py
 """
-Real-Time Limit Order Book (LOB) & Saggese Microstructure Wave Alpha Service.
-Provides on-demand, sub-second calculation of today's live intraday microstructure:
-1. Fetches real-time 1m bars up to the current minute from Alpaca IEX/SIP.
-2. Resamples into 5m microstructure wave bars.
-3. Computes 7 causal LOB microstructure features (OFI, Microprice Drift, Queue Imbalance, Sweep Velocity).
-4. Runs calibrated MicrostructureWaveAlphaEngine inference (Long/Short wave probability & Expected Return).
-5. Evaluates Institutional Multi-Factor Alpha to generate actionable, debounced wave reversal signals.
+Read-only availability of captured L1 quotes aligned with recent bars.
+The legacy OHLCV-proxy wave model is retired; this module returns no trading
+probability, synthetic order book, or live wave signal.
 """
 
 import os
@@ -21,7 +17,7 @@ backend_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__
 if backend_dir not in sys.path:
     sys.path.insert(0, backend_dir)
 
-from app.config import ALPACA_API_KEY, ALPACA_SECRET_KEY
+from app.market_data.history import credentials
 from app.market_data.alpaca_l1_capture import load_real_l1_quotes, real_l1_to_five_minute
 
 
@@ -38,7 +34,8 @@ def fetch_today_bars(ticker: str) -> pd.DataFrame:
         from alpaca.data.timeframe import TimeFrame
         from alpaca.data.enums import DataFeed
 
-        client = StockHistoricalDataClient(ALPACA_API_KEY, ALPACA_SECRET_KEY)
+        key, secret = credentials()
+        client = StockHistoricalDataClient(key, secret)
         ny_tz = pytz.timezone("America/New_York")
         end_dt = datetime.datetime.now(ny_tz)
         # Fetch 3 calendar days of 1-minute bars
@@ -118,7 +115,8 @@ def compute_live_wave_day_data(ticker: str) -> Dict[str, Any]:
 
     l1_dir = os.getenv("QUANT_L1_CAPTURE_DIR", os.path.join(backend_dir, "data", "l1_capture"))
     session_day = df_5m.index[-1].date().isoformat()
-    l1_quotes = real_l1_to_five_minute(load_real_l1_quotes(l1_dir, tk, session_day))
+    raw_quotes = load_real_l1_quotes(l1_dir, tk, session_day)
+    l1_quotes = real_l1_to_five_minute(raw_quotes)
     real_l1_rows = 0
     if not l1_quotes.empty:
         joined = df_5m.join(l1_quotes, how="left")
@@ -133,6 +131,8 @@ def compute_live_wave_day_data(ticker: str) -> Dict[str, Any]:
             "lob_source": "captured_alpaca_l1_quotes" if real_l1_rows else None,
             "market_depth": "L1" if real_l1_rows else None,
             "real_l1_five_minute_rows": real_l1_rows,
+            "l1_session_date": session_day if real_l1_rows else None,
+            "latest_quote_at": raw_quotes.index.max().isoformat() if not raw_quotes.empty else None,
         },
         "error": "The legacy wave model used OHLCV proxy-book features and is retired. Captured real L1 events are reserved for the new walk-forward research pipeline.",
     }
