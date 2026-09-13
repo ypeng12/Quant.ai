@@ -1,0 +1,1 @@
+This exploratory run was interrupted during four_tree_h12_cost2 to remove redundant label computation. Completed trials and preregistered sources are retained. No candidate or trading parameter changed. The full rerun is reports/extended_research_20260913_cached; cached risk equivalence is regression-tested. This directory is not a complete published bundle.

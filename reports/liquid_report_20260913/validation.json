@@ -1,0 +1,10 @@
+{
+  "bundle_hash": "8d178639c6794474e72be2d257ce07dc1d444aa3d248583e1382e3a8ebfd43a9",
+  "artifact_and_pnl_checks": "passed",
+  "admission_and_training_causality": "passed",
+  "trials": 7,
+  "orders_submitted": 0,
+  "targeted_tests_passed": 19,
+  "test_command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 python3 -m pytest backend/tests/test_liquid_policy.py backend/tests/test_active_policy.py tests/test_liquid_shadow.py backend/tests/test_research_catalog.py -q",
+  "frontend_build": "passed"
+}

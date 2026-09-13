@@ -1,0 +1,10 @@
+{
+  "net_pnl": 0.0,
+  "gross_pnl": 0.0,
+  "costs": 0.0,
+  "reconciled": true,
+  "by_symbol": [],
+  "by_direction": [],
+  "by_day": [],
+  "by_hour": []
+}

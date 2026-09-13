@@ -1,0 +1,119 @@
+{
+  "source_type": "local order mirrors; unverified completeness and opening inventory",
+  "method": "FIFO across the entire nine-session period without daily inventory reset",
+  "symbols": {
+    "SNDK": {
+      "fills": 277,
+      "duplicates_ignored": 0,
+      "recorded_pnl": -3493.45,
+      "fifo_realized_before_fees": -6622.654215,
+      "net_quantity_change": 20.0,
+      "cashflow": -39315.342451,
+      "net_flat_cashflow_before_fees": null,
+      "recorded_minus_fifo": 3129.204215,
+      "gross_traded_notional": 10281914.979513,
+      "matched_lots": 208,
+      "winning_matched_lots": 76,
+      "long_pnl_before_fees": -3630.2824280000013,
+      "short_pnl_before_fees": -2992.371787,
+      "assumption": "Opening inventory is zero; all source fills are complete; fees excluded."
+    },
+    "TSLA": {
+      "fills": 222,
+      "duplicates_ignored": 0,
+      "recorded_pnl": 636.98,
+      "fifo_realized_before_fees": -1011.569581,
+      "net_quantity_change": -105.0,
+      "cashflow": 37349.610419,
+      "net_flat_cashflow_before_fees": null,
+      "recorded_minus_fifo": 1648.549581,
+      "gross_traded_notional": 6978469.171261,
+      "matched_lots": 170,
+      "winning_matched_lots": 71,
+      "long_pnl_before_fees": 1474.6312870000013,
+      "short_pnl_before_fees": -2486.2008680000017,
+      "assumption": "Opening inventory is zero; all source fills are complete; fees excluded."
+    },
+    "MSTR": {
+      "fills": 287,
+      "duplicates_ignored": 0,
+      "recorded_pnl": -1132.5,
+      "fifo_realized_before_fees": 429.096261,
+      "net_quantity_change": 0.0,
+      "cashflow": 429.096261,
+      "net_flat_cashflow_before_fees": 429.096261,
+      "recorded_minus_fifo": -1561.596261,
+      "gross_traded_notional": 8544319.270231,
+      "matched_lots": 167,
+      "winning_matched_lots": 88,
+      "long_pnl_before_fees": 287.9349570000007,
+      "short_pnl_before_fees": 141.16130399999997,
+      "assumption": "Opening inventory is zero; all source fills are complete; fees excluded."
+    },
+    "NVDA": {
+      "fills": 166,
+      "duplicates_ignored": 0,
+      "recorded_pnl": -820.13,
+      "fifo_realized_before_fees": -1980.515624,
+      "net_quantity_change": 0.0,
+      "cashflow": -1980.515624,
+      "net_flat_cashflow_before_fees": -1980.515624,
+      "recorded_minus_fifo": 1160.385624,
+      "gross_traded_notional": 4304868.019646,
+      "matched_lots": 87,
+      "winning_matched_lots": 32,
+      "long_pnl_before_fees": -1442.078173,
+      "short_pnl_before_fees": -538.4374509999999,
+      "assumption": "Opening inventory is zero; all source fills are complete; fees excluded."
+    }
+  },
+  "sources": [
+    {
+      "path": "backend/data/datasets/daily_archives/trades_2026-08-31.json",
+      "sha256": "e3b62f69ffa4b69160a7d59c46fa1e1b00741eecb45b8eef037567f4e3ecf88f",
+      "rows": 43
+    },
+    {
+      "path": "backend/data/datasets/daily_archives/trades_2026-09-01.json",
+      "sha256": "087111698b917f9b164b81bae294985d132a7f6e8877f643a46905f87f9c1167",
+      "rows": 108
+    },
+    {
+      "path": "backend/data/datasets/daily_archives/trades_2026-09-02.json",
+      "sha256": "dd270dfb18ceefb2fb2c3c4b045afa0aa1afbb3464371a71ddd5feab3b9e84b4",
+      "rows": 148
+    },
+    {
+      "path": "backend/data/datasets/daily_archives/trades_2026-09-03.json",
+      "sha256": "d8ce8099a6c155bb6987d298ebc11d74a738abdda9834122af867547e875e95c",
+      "rows": 134
+    },
+    {
+      "path": "backend/data/datasets/daily_archives/trades_2026-09-04.json",
+      "sha256": "bf8fced28b91bacd0211786583cd7fe4ef3ccc706d4b6ccd6db4462144287710",
+      "rows": 37
+    },
+    {
+      "path": "backend/data/datasets/daily_archives/trades_2026-09-08.json",
+      "sha256": "a9ce285c6758360dd965f23cedfe6843ead815b930a49a4c722cb62f2c1e6103",
+      "rows": 34
+    },
+    {
+      "path": "backend/data/datasets/daily_archives/trades_2026-09-09.json",
+      "sha256": "ebd4d570bf54675532b79e1d38ded665b93c9da050102f4bee2d9de95f2d1c6e",
+      "rows": 34
+    },
+    {
+      "path": "backend/data/datasets/daily_archives/trades_2026-09-10.json",
+      "sha256": "38e23e70e138b72370448c60d677c6aca5641e84218eee199b513df23b0e450d",
+      "rows": 31
+    },
+    {
+      "path": "backend/data/datasets/daily_archives/trades_2026-09-11.json",
+      "sha256": "4cd0f18c5c14e9614b573451cdf3b130dd80520bc16cdd2151d0e2eb8045dfe8",
+      "rows": 383
+    }
+  ],
+  "fees_verified": false,
+  "account_equity_verified": false
+}

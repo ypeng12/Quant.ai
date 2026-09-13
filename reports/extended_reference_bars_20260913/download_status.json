@@ -1,0 +1,9 @@
+{
+  "status": "complete",
+  "requested_symbols": [
+    "IBIT"
+  ],
+  "failures": {},
+  "yfinance_version": "1.5.2",
+  "downloaded_at": "2026-09-13T14:28:40.930993+00:00"
+}

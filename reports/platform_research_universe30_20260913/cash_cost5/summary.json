@@ -1,0 +1,160 @@
+{
+  "candidate": {
+    "name": "cash",
+    "features": "price_volume",
+    "model": "ridge",
+    "portfolio": "cash"
+  },
+  "cost_bps": 5.0,
+  "status": "complete",
+  "summary": {
+    "start": "2026-08-31",
+    "end": "2026-09-11",
+    "sessions": 9,
+    "starting_equity": 100000.0,
+    "ending_equity": 100000.0,
+    "net_pnl": 0.0,
+    "net_return": 0.0,
+    "gross_pnl": 0.0,
+    "costs": 0.0,
+    "turnover_dollars": 0.0,
+    "fill_count": 0,
+    "max_drawdown": 0.0,
+    "max_gross_exposure": 0.0,
+    "max_symbol_exposure": 0.0,
+    "profitable_sessions": 0
+  },
+  "per_symbol": {
+    "SPY": {
+      "net_pnl": 0.0,
+      "costs": 0
+    },
+    "QQQ": {
+      "net_pnl": 0.0,
+      "costs": 0
+    },
+    "IWM": {
+      "net_pnl": 0.0,
+      "costs": 0
+    },
+    "XLK": {
+      "net_pnl": 0.0,
+      "costs": 0
+    },
+    "SOXX": {
+      "net_pnl": 0.0,
+      "costs": 0
+    },
+    "AAPL": {
+      "net_pnl": 0.0,
+      "costs": 0
+    },
+    "MSFT": {
+      "net_pnl": 0.0,
+      "costs": 0
+    },
+    "NVDA": {
+      "net_pnl": 0.0,
+      "costs": 0
+    },
+    "AMD": {
+      "net_pnl": 0.0,
+      "costs": 0
+    },
+    "AVGO": {
+      "net_pnl": 0.0,
+      "costs": 0
+    },
+    "MU": {
+      "net_pnl": 0.0,
+      "costs": 0
+    },
+    "SNDK": {
+      "net_pnl": 0.0,
+      "costs": 0
+    },
+    "TSLA": {
+      "net_pnl": 0.0,
+      "costs": 0
+    },
+    "META": {
+      "net_pnl": 0.0,
+      "costs": 0
+    },
+    "AMZN": {
+      "net_pnl": 0.0,
+      "costs": 0
+    },
+    "GOOGL": {
+      "net_pnl": 0.0,
+      "costs": 0
+    },
+    "NFLX": {
+      "net_pnl": 0.0,
+      "costs": 0
+    },
+    "ORCL": {
+      "net_pnl": 0.0,
+      "costs": 0
+    },
+    "PLTR": {
+      "net_pnl": 0.0,
+      "costs": 0
+    },
+    "COIN": {
+      "net_pnl": 0.0,
+      "costs": 0
+    },
+    "MSTR": {
+      "net_pnl": 0.0,
+      "costs": 0
+    },
+    "MARA": {
+      "net_pnl": 0.0,
+      "costs": 0
+    },
+    "HOOD": {
+      "net_pnl": 0.0,
+      "costs": 0
+    },
+    "SMCI": {
+      "net_pnl": 0.0,
+      "costs": 0
+    },
+    "INTC": {
+      "net_pnl": 0.0,
+      "costs": 0
+    },
+    "TSM": {
+      "net_pnl": 0.0,
+      "costs": 0
+    },
+    "CRM": {
+      "net_pnl": 0.0,
+      "costs": 0
+    },
+    "UBER": {
+      "net_pnl": 0.0,
+      "costs": 0
+    },
+    "JPM": {
+      "net_pnl": 0.0,
+      "costs": 0
+    },
+    "XLF": {
+      "net_pnl": 0.0,
+      "costs": 0
+    }
+  },
+  "attribution": {
+    "net_pnl": 0.0,
+    "gross_pnl": 0.0,
+    "costs": 0.0,
+    "reconciled": true,
+    "by_symbol": [],
+    "by_direction": [],
+    "by_day": [],
+    "by_hour": []
+  },
+  "fixed_order_stress_5bps": null
+}

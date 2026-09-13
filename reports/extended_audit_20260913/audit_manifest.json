@@ -1,0 +1,18 @@
+{
+  "verification": "local_only_not_broker_authenticated",
+  "unverified": [
+    "Broker commissions, regulatory fees, borrowing and financing",
+    "Opening inventory and complete fill history",
+    "Account equity and external flows"
+  ],
+  "files": {
+    "history_permissions.json": "d0312b007a5edf7cd39d9e482420b6cf10f90334f1786b940708c4082a3bac97",
+    "ledger/matched_lots.csv": "2e8d20f1eb8ffc640a3619ddf5fb32d9b72712f239225b149991897f3d1398e6",
+    "ledger/audit.json": "ab62a560a5ab2f9e01c6107573735470b9d1d606e6be5c911f148c9f983e0fd5",
+    "ledger/continuous_period_audit.json": "a04bd1481552a548a513cc080e3ffef7f647e6488a40875e31e6fe11ef4e6dac",
+    "ledger/continuous_period_matches.csv": "0a3b81aceaef159719a67deb0b0c289f3a5040f22ab5546d764b5884d655ba3e",
+    "ledger/daily_pnl.csv": "cbc90829e129b2246111bfc87a073715758844ec7aa0726ce2645cf34fdce43a",
+    "continuous_reproduced/continuous_period_audit.json": "1189443b9138856a63d82b36ac7583b2946db8ee25f6f328ba5e98b2d7ba7309",
+    "continuous_reproduced/continuous_period_matches.csv": "5c6f13804d1f5b3899654cc78a292c9c813291f8dfa9a5c33b95f3b8092c13da"
+  }
+}

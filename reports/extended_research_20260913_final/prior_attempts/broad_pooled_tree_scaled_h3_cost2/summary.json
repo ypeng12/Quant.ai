@@ -1,0 +1,18 @@
+{
+  "candidate": {
+    "name": "broad_pooled_tree_scaled_h3",
+    "universe": "broad",
+    "model": "tree",
+    "horizon": 3,
+    "pooled": true,
+    "family": "context",
+    "selector": "all",
+    "omit": "",
+    "pair": [],
+    "reference_risk": false,
+    "volatility_scaled": true
+  },
+  "cost_bps": 2,
+  "status": "failed",
+  "reason": "Portfolio QP failed: maximum iterations reached"
+}

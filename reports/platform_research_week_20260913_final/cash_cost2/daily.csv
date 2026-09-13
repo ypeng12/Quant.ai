@@ -1,0 +1,5 @@
+date,starting_equity,ending_equity,net_pnl,net_return,costs,gross_pnl,turnover_dollars,turnover_equity_multiple,fill_count,max_drawdown,max_gross_exposure,max_abs_net_exposure,max_symbol_exposure,min_cash,ending_cash,ending_gross_exposure,ending_net_exposure,SNDK_net_pnl,SNDK_costs,SNDK_fill_count,TSLA_net_pnl,TSLA_costs,TSLA_fill_count,MSTR_net_pnl,MSTR_costs,MSTR_fill_count,NVDA_net_pnl,NVDA_costs,NVDA_fill_count
+2026-09-08,100000.0,100000.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0.0,0.0,0.0,0.0,100000.0,100000.0,0.0,0.0,0.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0
+2026-09-09,100000.0,100000.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0.0,0.0,0.0,0.0,100000.0,100000.0,0.0,0.0,0.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0
+2026-09-10,100000.0,100000.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0.0,0.0,0.0,0.0,100000.0,100000.0,0.0,0.0,0.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0
+2026-09-11,100000.0,100000.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0.0,0.0,0.0,0.0,100000.0,100000.0,0.0,0.0,0.0,0,0,0.0,0,0,0.0,0,0,0.0,0,0

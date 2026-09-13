@@ -1,0 +1,5 @@
+{
+  "status": "failed",
+  "reason": "Reporting attempted summarize() on an empty subsequent period for a five-session run.",
+  "replacement": "reports/incremental_earlier_20260913_v2"
+}

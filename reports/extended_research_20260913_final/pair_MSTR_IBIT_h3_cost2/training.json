@@ -1,0 +1,146 @@
+[
+  {
+    "day": "2026-08-31",
+    "training": [
+      {
+        "beta": 1.3151024719814113,
+        "intercept": -0.15529396565617656,
+        "last_train": "2026-08-28",
+        "rows": 1850
+      }
+    ],
+    "selection": null,
+    "selected": [
+      "MSTR",
+      "IBIT"
+    ]
+  },
+  {
+    "day": "2026-09-01",
+    "training": [
+      {
+        "beta": 1.3356585988580436,
+        "intercept": -0.22918137021627483,
+        "last_train": "2026-08-31",
+        "rows": 1924
+      }
+    ],
+    "selection": null,
+    "selected": [
+      "MSTR",
+      "IBIT"
+    ]
+  },
+  {
+    "day": "2026-09-02",
+    "training": [
+      {
+        "beta": 1.34565242218403,
+        "intercept": -0.26504198535448814,
+        "last_train": "2026-09-01",
+        "rows": 1998
+      }
+    ],
+    "selection": null,
+    "selected": [
+      "MSTR",
+      "IBIT"
+    ]
+  },
+  {
+    "day": "2026-09-03",
+    "training": [
+      {
+        "beta": 1.3415619776683045,
+        "intercept": -0.2503763114803796,
+        "last_train": "2026-09-02",
+        "rows": 2072
+      }
+    ],
+    "selection": null,
+    "selected": [
+      "MSTR",
+      "IBIT"
+    ]
+  },
+  {
+    "day": "2026-09-04",
+    "training": [
+      {
+        "beta": 1.3754802988900714,
+        "intercept": -0.3727178570608408,
+        "last_train": "2026-09-03",
+        "rows": 2146
+      }
+    ],
+    "selection": null,
+    "selected": [
+      "MSTR",
+      "IBIT"
+    ]
+  },
+  {
+    "day": "2026-09-08",
+    "training": [
+      {
+        "beta": 1.4169757746371574,
+        "intercept": -0.5220927185905303,
+        "last_train": "2026-09-04",
+        "rows": 2220
+      }
+    ],
+    "selection": null,
+    "selected": [
+      "MSTR",
+      "IBIT"
+    ]
+  },
+  {
+    "day": "2026-09-09",
+    "training": [
+      {
+        "beta": 1.4438287953324247,
+        "intercept": -0.6185438919838261,
+        "last_train": "2026-09-08",
+        "rows": 2294
+      }
+    ],
+    "selection": null,
+    "selected": [
+      "MSTR",
+      "IBIT"
+    ]
+  },
+  {
+    "day": "2026-09-10",
+    "training": [
+      {
+        "beta": 1.4588326798631908,
+        "intercept": -0.6724704872649029,
+        "last_train": "2026-09-09",
+        "rows": 2368
+      }
+    ],
+    "selection": null,
+    "selected": [
+      "MSTR",
+      "IBIT"
+    ]
+  },
+  {
+    "day": "2026-09-11",
+    "training": [
+      {
+        "beta": 1.4674096771163356,
+        "intercept": -0.7031414312090817,
+        "last_train": "2026-09-10",
+        "rows": 2442
+      }
+    ],
+    "selection": null,
+    "selected": [
+      "MSTR",
+      "IBIT"
+    ]
+  }
+]

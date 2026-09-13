@@ -37,48 +37,27 @@ interface MLPredictionResult {
 export const MLAssistantPanel: React.FC<{ activeTicker: string }> = ({ activeTicker }) => {
   const [ticker, setTicker] = useState<string>(activeTicker || "TSLA");
   const [horizonMode, setHorizonMode] = useState<'daytrade' | 'swing'>('daytrade');
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState<boolean>(false);
   const [mlData, setMlData] = useState<MLPredictionResult | null>(null);
 
   const fetchMLInference = async (selectedTicker: string) => {
     setLoading(true);
+    setMlData(null);
+    setError('');
     try {
       const res = await fetch(`${API_BASE}/api/ml/predict?ticker=${selectedTicker}`);
       const json = await res.json();
       if (json.success) {
         setMlData(json.result);
       } else {
-        // Fallback default response
-        setMlData({
-          ticker: selectedTicker,
-          p_win: 0.654,
-          win_rate_pct: 65.4,
-          p_win_daytrade: 0.584,
-          win_rate_daytrade_pct: 58.4,
-          e_pnl_daytrade_r: 0.255,
-          p_std: 0.042,
-          rank_score: 0.852,
-          hmm_regime: "TREND_BULL",
-          volatility_penalty: 1.0,
-          expected_rr: 2.2,
-          expected_value_r: 0.458,
-          kelly_fraction: 0.21,
-          is_positive_ev: true,
-          ev_status: "POSITIVE_EV✅",
-          sor_decision: {
-            expected_return_bps: 1.85,
-            p_fill_500ms: 0.62,
-            p_adverse_selection: 0.21,
-            ev_maker_bps: 0.74,
-            ev_taker_bps: 0.88,
-            expected_net_edge_bps: 0.88,
-            recommended_order_type: "MARKET_TAKER",
-            decision_reason: "EV_taker (0.88 bps) > EV_maker (0.74 bps)"
-          }
-        });
+        setMlData(null);
+        setError('旧版指标胜率尚未通过真实数据与样本外校准验证。请查看 Lab 的历史模拟对照；这里不再显示默认胜率。');
       }
     } catch (e) {
       console.error("ML Inference error:", e);
+      setMlData(null);
+      setError('模型请求失败，暂无可验证预测。');
     } finally {
       setLoading(false);
     }
@@ -176,9 +155,10 @@ export const MLAssistantPanel: React.FC<{ activeTicker: string }> = ({ activeTic
         </div>
       </div>
 
+      {error && <p role="status" style={{ color: "#fbbf24" }}>{error}</p>}
       {loading ? (
         <div style={{ textAlign: 'center', padding: '40px', color: '#38bdf8' }}>
-          🔄 正在运行 QuantMLModelZoo & HMM 引擎为 [{ticker}] 进行全方位推理打分...
+          正在检查 [{ticker}] 是否有可验证的模型结果…
         </div>
       ) : mlData ? (
         <div>

@@ -1,0 +1,5 @@
+{
+  "status": "interrupted",
+  "reason": "Scalar PnL attribution was dominated by repeated timestamp conversions. Vectorized attribution matched all outputs of 20 completed prior trials. Restart preserves model, portfolio, cost and data specifications.",
+  "replacement": "reports/platform_research_universe30_20260913_qp_fast"
+}

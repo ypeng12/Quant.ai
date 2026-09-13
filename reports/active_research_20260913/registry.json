@@ -1,0 +1,4877 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "registered_at": "2026-09-13T20:15:52.182278+00:00",
+  "evaluation_dates": [
+    "2026-08-31",
+    "2026-09-01",
+    "2026-09-02",
+    "2026-09-03",
+    "2026-09-04",
+    "2026-09-08",
+    "2026-09-09",
+    "2026-09-10",
+    "2026-09-11"
+  ],
+  "symbols": [
+    "AMZN",
+    "XLK",
+    "NVDA",
+    "AAPL",
+    "SPY",
+    "META",
+    "JPM",
+    "CRM",
+    "MSTR",
+    "HOOD",
+    "AVGO",
+    "SMCI",
+    "QQQ",
+    "COIN",
+    "GOOGL",
+    "NFLX",
+    "MSFT",
+    "SNDK",
+    "ORCL",
+    "PLTR",
+    "TSM",
+    "TSLA",
+    "UBER",
+    "SOXX",
+    "MU",
+    "XLF",
+    "AMD",
+    "IWM",
+    "INTC",
+    "MARA",
+    "IBIT",
+    "XOM",
+    "XLV",
+    "V",
+    "XLP",
+    "XLE",
+    "PG",
+    "WMT",
+    "COST",
+    "JNJ",
+    "MA",
+    "UNH"
+  ],
+  "starting_equity": 100000,
+  "cost_bps_per_side": [
+    5
+  ],
+  "selected_for_live": null,
+  "interpretation": "retrospective_exploration_not_untouched_holdout",
+  "candidates": [
+    {
+      "name": "four_tree_control",
+      "universe": "four",
+      "calibration": false,
+      "integrated_risk": false,
+      "symbol_limit": 0.7,
+      "benchmark": false,
+      "control": true,
+      "risk_aversion": 50.0,
+      "single_stock": false
+    },
+    {
+      "name": "liquid_dynamic_70",
+      "universe": "broad",
+      "calibration": false,
+      "integrated_risk": false,
+      "symbol_limit": 0.7,
+      "benchmark": false,
+      "control": false,
+      "risk_aversion": 50.0,
+      "single_stock": false
+    },
+    {
+      "name": "four_concentrated_95",
+      "universe": "four",
+      "calibration": false,
+      "integrated_risk": false,
+      "symbol_limit": 0.95,
+      "benchmark": false,
+      "control": false,
+      "risk_aversion": 50.0,
+      "single_stock": false
+    },
+    {
+      "name": "liquid_single_95",
+      "universe": "broad",
+      "calibration": false,
+      "integrated_risk": false,
+      "symbol_limit": 0.95,
+      "benchmark": false,
+      "control": false,
+      "risk_aversion": 50.0,
+      "single_stock": true
+    },
+    {
+      "name": "liquid_dynamic_95_g25",
+      "universe": "broad",
+      "calibration": false,
+      "integrated_risk": false,
+      "symbol_limit": 0.95,
+      "benchmark": false,
+      "control": false,
+      "risk_aversion": 25.0,
+      "single_stock": false
+    }
+  ],
+  "liquidity_rules": {
+    "min_price": 10.0,
+    "min_adv": 50000000.0,
+    "min_market_cap": 0,
+    "lookback_sessions": 20
+  },
+  "instrument_metadata": {
+    "path": "reports/liquid_instrument_audit_20260913/instruments_largecap.json",
+    "sha256": "0c6d626baa840c31310c19ee76e9aef0b086d12c2a25471db4a11ea96e4be13c",
+    "historical_membership_verified": false
+  },
+  "calibration": "None: controlled comparison of raw tree forecasts under explicit universe and concentration choices",
+  "integrated_risk": "Prior covariance; risk aversion is specified per candidate, with no mandatory trades",
+  "risk_preferences": {
+    "risk_aversion_by_candidate": {
+      "four_tree_control": 50.0,
+      "liquid_dynamic_70": 50.0,
+      "four_concentrated_95": 50.0,
+      "liquid_single_95": 50.0,
+      "liquid_dynamic_95_g25": 25.0
+    },
+    "gross_limit": 0.95,
+    "single_stock_comparator": "Cash or a signed 95% target; includes closing existing positions"
+  },
+  "unverified_assumptions": [
+    "[未验证] 5 bps 为模拟成本，未核实实际价差、规费、冲击、借券和融资成本。",
+    "[未验证] $100,000 及每日平仓为模拟条件，实际期初库存、净值和出入金未对账。",
+    "[未验证] 当前挑选的股票池与当前证券属性不构成历史逐时点成分股证明；仅价格、量能筛选和模型输入采用当时可用数据。",
+    "本段历史已反复研究，不能作为未见过的最终测试集；风险偏好及阈值是实验配置，不是机构统一标准。",
+    "日均成交额采用五分钟收盘价乘成交量近似，缺少真实逐笔成交额；次根开盘成交未计实际延迟。"
+  ],
+  "data_audit": {
+    "AMZN": {
+      "rows": 2652,
+      "first": "2026-07-27T09:30:00-04:00",
+      "last": "2026-09-11T15:55:00-04:00",
+      "sessions": 34,
+      "expected_evaluation_sessions": 9
+    },
+    "XLK": {
+      "rows": 2652,
+      "first": "2026-07-27T09:30:00-04:00",
+      "last": "2026-09-11T15:55:00-04:00",
+      "sessions": 34,
+      "expected_evaluation_sessions": 9
+    },
+    "NVDA": {
+      "rows": 2652,
+      "first": "2026-07-27T09:30:00-04:00",
+      "last": "2026-09-11T15:55:00-04:00",
+      "sessions": 34,
+      "expected_evaluation_sessions": 9
+    },
+    "AAPL": {
+      "rows": 2652,
+      "first": "2026-07-27T09:30:00-04:00",
+      "last": "2026-09-11T15:55:00-04:00",
+      "sessions": 34,
+      "expected_evaluation_sessions": 9
+    },
+    "SPY": {
+      "rows": 2652,
+      "first": "2026-07-27T09:30:00-04:00",
+      "last": "2026-09-11T15:55:00-04:00",
+      "sessions": 34,
+      "expected_evaluation_sessions": 9
+    },
+    "META": {
+      "rows": 2652,
+      "first": "2026-07-27T09:30:00-04:00",
+      "last": "2026-09-11T15:55:00-04:00",
+      "sessions": 34,
+      "expected_evaluation_sessions": 9
+    },
+    "JPM": {
+      "rows": 2652,
+      "first": "2026-07-27T09:30:00-04:00",
+      "last": "2026-09-11T15:55:00-04:00",
+      "sessions": 34,
+      "expected_evaluation_sessions": 9
+    },
+    "CRM": {
+      "rows": 2652,
+      "first": "2026-07-27T09:30:00-04:00",
+      "last": "2026-09-11T15:55:00-04:00",
+      "sessions": 34,
+      "expected_evaluation_sessions": 9
+    },
+    "MSTR": {
+      "rows": 2652,
+      "first": "2026-07-27T09:30:00-04:00",
+      "last": "2026-09-11T15:55:00-04:00",
+      "sessions": 34,
+      "expected_evaluation_sessions": 9
+    },
+    "HOOD": {
+      "rows": 2652,
+      "first": "2026-07-27T09:30:00-04:00",
+      "last": "2026-09-11T15:55:00-04:00",
+      "sessions": 34,
+      "expected_evaluation_sessions": 9
+    },
+    "AVGO": {
+      "rows": 2652,
+      "first": "2026-07-27T09:30:00-04:00",
+      "last": "2026-09-11T15:55:00-04:00",
+      "sessions": 34,
+      "expected_evaluation_sessions": 9
+    },
+    "SMCI": {
+      "rows": 2652,
+      "first": "2026-07-27T09:30:00-04:00",
+      "last": "2026-09-11T15:55:00-04:00",
+      "sessions": 34,
+      "expected_evaluation_sessions": 9
+    },
+    "QQQ": {
+      "rows": 2652,
+      "first": "2026-07-27T09:30:00-04:00",
+      "last": "2026-09-11T15:55:00-04:00",
+      "sessions": 34,
+      "expected_evaluation_sessions": 9
+    },
+    "COIN": {
+      "rows": 2652,
+      "first": "2026-07-27T09:30:00-04:00",
+      "last": "2026-09-11T15:55:00-04:00",
+      "sessions": 34,
+      "expected_evaluation_sessions": 9
+    },
+    "GOOGL": {
+      "rows": 2652,
+      "first": "2026-07-27T09:30:00-04:00",
+      "last": "2026-09-11T15:55:00-04:00",
+      "sessions": 34,
+      "expected_evaluation_sessions": 9
+    },
+    "NFLX": {
+      "rows": 2652,
+      "first": "2026-07-27T09:30:00-04:00",
+      "last": "2026-09-11T15:55:00-04:00",
+      "sessions": 34,
+      "expected_evaluation_sessions": 9
+    },
+    "MSFT": {
+      "rows": 2652,
+      "first": "2026-07-27T09:30:00-04:00",
+      "last": "2026-09-11T15:55:00-04:00",
+      "sessions": 34,
+      "expected_evaluation_sessions": 9
+    },
+    "SNDK": {
+      "rows": 2652,
+      "first": "2026-07-27T09:30:00-04:00",
+      "last": "2026-09-11T15:55:00-04:00",
+      "sessions": 34,
+      "expected_evaluation_sessions": 9
+    },
+    "ORCL": {
+      "rows": 2652,
+      "first": "2026-07-27T09:30:00-04:00",
+      "last": "2026-09-11T15:55:00-04:00",
+      "sessions": 34,
+      "expected_evaluation_sessions": 9
+    },
+    "PLTR": {
+      "rows": 2652,
+      "first": "2026-07-27T09:30:00-04:00",
+      "last": "2026-09-11T15:55:00-04:00",
+      "sessions": 34,
+      "expected_evaluation_sessions": 9
+    },
+    "TSM": {
+      "rows": 2652,
+      "first": "2026-07-27T09:30:00-04:00",
+      "last": "2026-09-11T15:55:00-04:00",
+      "sessions": 34,
+      "expected_evaluation_sessions": 9
+    },
+    "TSLA": {
+      "rows": 2652,
+      "first": "2026-07-27T09:30:00-04:00",
+      "last": "2026-09-11T15:55:00-04:00",
+      "sessions": 34,
+      "expected_evaluation_sessions": 9
+    },
+    "UBER": {
+      "rows": 2652,
+      "first": "2026-07-27T09:30:00-04:00",
+      "last": "2026-09-11T15:55:00-04:00",
+      "sessions": 34,
+      "expected_evaluation_sessions": 9
+    },
+    "SOXX": {
+      "rows": 2652,
+      "first": "2026-07-27T09:30:00-04:00",
+      "last": "2026-09-11T15:55:00-04:00",
+      "sessions": 34,
+      "expected_evaluation_sessions": 9
+    },
+    "MU": {
+      "rows": 2652,
+      "first": "2026-07-27T09:30:00-04:00",
+      "last": "2026-09-11T15:55:00-04:00",
+      "sessions": 34,
+      "expected_evaluation_sessions": 9
+    },
+    "XLF": {
+      "rows": 2652,
+      "first": "2026-07-27T09:30:00-04:00",
+      "last": "2026-09-11T15:55:00-04:00",
+      "sessions": 34,
+      "expected_evaluation_sessions": 9
+    },
+    "AMD": {
+      "rows": 2652,
+      "first": "2026-07-27T09:30:00-04:00",
+      "last": "2026-09-11T15:55:00-04:00",
+      "sessions": 34,
+      "expected_evaluation_sessions": 9
+    },
+    "IWM": {
+      "rows": 2652,
+      "first": "2026-07-27T09:30:00-04:00",
+      "last": "2026-09-11T15:55:00-04:00",
+      "sessions": 34,
+      "expected_evaluation_sessions": 9
+    },
+    "INTC": {
+      "rows": 2652,
+      "first": "2026-07-27T09:30:00-04:00",
+      "last": "2026-09-11T15:55:00-04:00",
+      "sessions": 34,
+      "expected_evaluation_sessions": 9
+    },
+    "MARA": {
+      "rows": 2652,
+      "first": "2026-07-27T09:30:00-04:00",
+      "last": "2026-09-11T15:55:00-04:00",
+      "sessions": 34,
+      "expected_evaluation_sessions": 9
+    },
+    "IBIT": {
+      "rows": 2652,
+      "first": "2026-07-27T09:30:00-04:00",
+      "last": "2026-09-11T15:55:00-04:00",
+      "sessions": 34,
+      "expected_evaluation_sessions": 9
+    },
+    "XOM": {
+      "rows": 2652,
+      "first": "2026-07-27T09:30:00-04:00",
+      "last": "2026-09-11T15:55:00-04:00",
+      "sessions": 34,
+      "expected_evaluation_sessions": 9
+    },
+    "XLV": {
+      "rows": 2652,
+      "first": "2026-07-27T09:30:00-04:00",
+      "last": "2026-09-11T15:55:00-04:00",
+      "sessions": 34,
+      "expected_evaluation_sessions": 9
+    },
+    "V": {
+      "rows": 2652,
+      "first": "2026-07-27T09:30:00-04:00",
+      "last": "2026-09-11T15:55:00-04:00",
+      "sessions": 34,
+      "expected_evaluation_sessions": 9
+    },
+    "XLP": {
+      "rows": 2652,
+      "first": "2026-07-27T09:30:00-04:00",
+      "last": "2026-09-11T15:55:00-04:00",
+      "sessions": 34,
+      "expected_evaluation_sessions": 9
+    },
+    "XLE": {
+      "rows": 2652,
+      "first": "2026-07-27T09:30:00-04:00",
+      "last": "2026-09-11T15:55:00-04:00",
+      "sessions": 34,
+      "expected_evaluation_sessions": 9
+    },
+    "PG": {
+      "rows": 2652,
+      "first": "2026-07-27T09:30:00-04:00",
+      "last": "2026-09-11T15:55:00-04:00",
+      "sessions": 34,
+      "expected_evaluation_sessions": 9
+    },
+    "WMT": {
+      "rows": 2652,
+      "first": "2026-07-27T09:30:00-04:00",
+      "last": "2026-09-11T15:55:00-04:00",
+      "sessions": 34,
+      "expected_evaluation_sessions": 9
+    },
+    "COST": {
+      "rows": 2652,
+      "first": "2026-07-27T09:30:00-04:00",
+      "last": "2026-09-11T15:55:00-04:00",
+      "sessions": 34,
+      "expected_evaluation_sessions": 9
+    },
+    "JNJ": {
+      "rows": 2652,
+      "first": "2026-07-27T09:30:00-04:00",
+      "last": "2026-09-11T15:55:00-04:00",
+      "sessions": 34,
+      "expected_evaluation_sessions": 9
+    },
+    "MA": {
+      "rows": 2652,
+      "first": "2026-07-27T09:30:00-04:00",
+      "last": "2026-09-11T15:55:00-04:00",
+      "sessions": 34,
+      "expected_evaluation_sessions": 9
+    },
+    "UNH": {
+      "rows": 2652,
+      "first": "2026-07-27T09:30:00-04:00",
+      "last": "2026-09-11T15:55:00-04:00",
+      "sessions": 34,
+      "expected_evaluation_sessions": 9
+    }
+  },
+  "data_paths": {
+    "AMZN": "reports/platform_universe30_bars_20260913/AMZN.parquet",
+    "XLK": "reports/platform_universe30_bars_20260913/XLK.parquet",
+    "NVDA": "reports/quant_audit_20260912/bars/NVDA.parquet",
+    "AAPL": "reports/platform_universe30_bars_20260913/AAPL.parquet",
+    "SPY": "reports/platform_universe30_bars_20260913/SPY.parquet",
+    "META": "reports/platform_universe30_bars_20260913/META.parquet",
+    "JPM": "reports/platform_universe30_bars_20260913/JPM.parquet",
+    "CRM": "reports/platform_universe30_bars_20260913/CRM.parquet",
+    "MSTR": "reports/quant_audit_20260912/bars/MSTR.parquet",
+    "HOOD": "reports/platform_universe30_bars_20260913/HOOD.parquet",
+    "AVGO": "reports/platform_universe30_bars_20260913/AVGO.parquet",
+    "SMCI": "reports/platform_universe30_bars_20260913/SMCI.parquet",
+    "QQQ": "reports/platform_universe30_bars_20260913/QQQ.parquet",
+    "COIN": "reports/platform_universe30_bars_20260913/COIN.parquet",
+    "GOOGL": "reports/platform_universe30_bars_20260913/GOOGL.parquet",
+    "NFLX": "reports/platform_universe30_bars_20260913/NFLX.parquet",
+    "MSFT": "reports/platform_universe30_bars_20260913/MSFT.parquet",
+    "SNDK": "reports/quant_audit_20260912/bars/SNDK.parquet",
+    "ORCL": "reports/platform_universe30_bars_20260913/ORCL.parquet",
+    "PLTR": "reports/platform_universe30_bars_20260913/PLTR.parquet",
+    "TSM": "reports/platform_universe30_bars_20260913/TSM.parquet",
+    "TSLA": "reports/quant_audit_20260912/bars/TSLA.parquet",
+    "UBER": "reports/platform_universe30_bars_20260913/UBER.parquet",
+    "SOXX": "reports/platform_universe30_bars_20260913/SOXX.parquet",
+    "MU": "reports/platform_universe30_bars_20260913/MU.parquet",
+    "XLF": "reports/platform_universe30_bars_20260913/XLF.parquet",
+    "AMD": "reports/platform_universe30_bars_20260913/AMD.parquet",
+    "IWM": "reports/platform_universe30_bars_20260913/IWM.parquet",
+    "INTC": "reports/platform_universe30_bars_20260913/INTC.parquet",
+    "MARA": "reports/platform_universe30_bars_20260913/MARA.parquet",
+    "IBIT": "reports/extended_reference_bars_20260913/IBIT.parquet",
+    "XOM": "reports/liquid_universe_bars_20260913/XOM.parquet",
+    "XLV": "reports/liquid_universe_bars_20260913/XLV.parquet",
+    "V": "reports/liquid_universe_bars_20260913/V.parquet",
+    "XLP": "reports/liquid_universe_bars_20260913/XLP.parquet",
+    "XLE": "reports/liquid_universe_bars_20260913/XLE.parquet",
+    "PG": "reports/liquid_universe_bars_20260913/PG.parquet",
+    "WMT": "reports/liquid_universe_bars_20260913/WMT.parquet",
+    "COST": "reports/liquid_universe_bars_20260913/COST.parquet",
+    "JNJ": "reports/liquid_universe_bars_20260913/JNJ.parquet",
+    "MA": "reports/liquid_universe_bars_20260913/MA.parquet",
+    "UNH": "reports/liquid_universe_bars_20260913/UNH.parquet"
+  },
+  "data_hashes": {
+    "AMZN": "9a066fc817ca98d9a14ae3fb96cbaac28848c5796c7b1ce16d1773c6a5720d93",
+    "XLK": "1729278dc9bc10958c816241f9b79ee498d747cea4a11f5f0caf41a7728cd30e",
+    "NVDA": "f2fb1d7b857ff87494f0eb0995cb8d37ba5bb8cd1942d35519da8971d622b0f4",
+    "AAPL": "bb3d1a669a0ef969967784ea550a13d791c6a7322e63960d523d919d88c0b6e7",
+    "SPY": "8ad1dd265a71ca1350143428eaa57238a1474ae12c43a82ebc65910e7921df78",
+    "META": "d5dfc2409d8b78ebb125553b179f9f4d5c83e330e7c05937f05fbc95a86af470",
+    "JPM": "86fbdffbe01906dcf3a1ccca8df1c8ad48d2f8616b490478ea01f3fb4c556bba",
+    "CRM": "bb9baad1751c0cb8f6e5fe371824f0c9321d670449d3050f98fe42ab9ca654f4",
+    "MSTR": "960731e89bc4668b12ea49335d59e60b13dccef2304fce3017da88f034eb00ab",
+    "HOOD": "b270b60fe36e4ba416aa079a0a33fa2fd2b395df2376671123bb32cda898aece",
+    "AVGO": "4af8f59c9acce6e6dee66c9124299a2401fd82c1d3fdca48d37d9541ae4b8891",
+    "SMCI": "ab01f9b2130895e036a4bb35ed191217582adff50a542529df86fc110182a414",
+    "QQQ": "a77f9d6f4ca44f04c21e6533ea1cdc705b5a2d86e71120635b6e3d99c0bd1dbd",
+    "COIN": "54daa45ec28febab066c5eae99bfe3310e8cfb39cf07aa8599e26d9aa455ae93",
+    "GOOGL": "1cfdcebc05abc60a8fd2ce951fc087a419c714774ad91f1cd908a43b12ef951c",
+    "NFLX": "a3823c1bf791c773e46ee3c402defcb94ed84f01fe22b5f8e316fc2f369a81ac",
+    "MSFT": "a497a29ebe1329fc2de8b363ea5977fa21510378bdbf9abb76f204a23ee401cf",
+    "SNDK": "edc7503de4599a0d82563a7500f220b6b428d7feadb77826c6a5f74aea4b98f7",
+    "ORCL": "4d1c0398be616a804ab705ad23a4208db33ad654fa15bcb1962047e5d197ffe5",
+    "PLTR": "93f907425b2bfb48cf2557b21242fe29f8972d56d8274757111bec91edcb4044",
+    "TSM": "d0af09418d5503daca1835bdc32f24eb7b55382cde3a61d460d55c8d48ace215",
+    "TSLA": "d3a3a6349e39ff26953bf3d9dc2fdeef0d003f9b0d7993f2535a85109886a1c8",
+    "UBER": "7d1b4da8f5a10236784fc783573dcfe57651d110351c0df0ed04ceea5932a60f",
+    "SOXX": "a21e34441faf84dc3827fe9225ee6fece14df70bc60dad09dbc37e6f5acc6c6e",
+    "MU": "0430663ba5f0de38662f4508d045bfbe5684bc56ebd67e5c82317f4b8ed0461c",
+    "XLF": "7953a4d83ed9367c2900f831b7cb6f59439b2bfce57dafec69a8d4ef669d3219",
+    "AMD": "1b9740ace06f568be899c811f0ee522e8fd2187627f78dcb5fef19a8d7d169ca",
+    "IWM": "038055c75dcbb8850606c4faa3122bdf91891c5f3ac30f147cd54b9291fafea3",
+    "INTC": "89b647b95972299c13c515fd2f8e25fc22a40032f0e022c885b57a935f6d2a43",
+    "MARA": "b2934fabec3a9be334a0179074b2ce936762f9212870a26e25bb62947a9658a7",
+    "IBIT": "bd1d5098cf812a1db5be04769b23ac1a7067f6ca46e72c50e6baf3c4133479a1",
+    "XOM": "bb6b0c6fd406f60ca9fa84ac022a1471f5404794c28e55dbe20c84dac0493d78",
+    "XLV": "0239a7ebf91947a7bbb7a39ae581f90c04726383f2636479034e4a7471fa7d56",
+    "V": "cda0262066ff38d2437f838df15051cbaf7b3ac1f3d10acbef114371c4c32e62",
+    "XLP": "02e9f767dca60d9cb2e0685ad1219db65556ebf12a08f6dda4ce8004bc540a42",
+    "XLE": "179b51d25a85feeedf3d725ee3a99e3e709a30a0fca727711c8dbb8f5ab199c6",
+    "PG": "491a9dd823b0f5a4afcf1333f8a7c540ce004c4d5c70af753be78f98ad1f821c",
+    "WMT": "400e82d3aff868ca566bb4e04a6e4eff529f0be296e131692298558b1061f656",
+    "COST": "bc2a93f3704e5f95c119d09344d1d1f73d0d7a8c5cd0f6d20dfbbff5e36985c2",
+    "JNJ": "4af0924eb6f18ed5961c6e7d5305f3395ed4db045f8107854f2b035193c10009",
+    "MA": "4c51b47bd2bfdd0a57cb95a65a6f8638e8c117df5a6360908daeada758d4d15e",
+    "UNH": "7345ec33676b13d7a24f380cd566264c18591b5ada067f86ffdfb8e9019dbe4c"
+  },
+  "data_provenance": {
+    "reports/extended_reference_bars_20260913": {
+      "status": "retained_source_manifest_matches",
+      "manifest": {
+        "IBIT": {
+          "source": "Yahoo Finance via yfinance direct historical request",
+          "requested_start": "2026-07-27",
+          "requested_end_exclusive": "2026-09-12",
+          "interval": "5m",
+          "auto_adjust": false,
+          "raw_rows": 2652,
+          "regular_rows": 2652,
+          "first": "2026-07-27 09:30:00-04:00",
+          "last": "2026-09-11 15:55:00-04:00",
+          "sha256": "bd1d5098cf812a1db5be04769b23ac1a7067f6ca46e72c50e6baf3c4133479a1",
+          "corporate_actions": {
+            "Dividends": {},
+            "Stock Splits": {}
+          },
+          "sessions": {
+            "2026-07-27": 78,
+            "2026-07-28": 78,
+            "2026-07-29": 78,
+            "2026-07-30": 78,
+            "2026-07-31": 78,
+            "2026-08-03": 78,
+            "2026-08-04": 78,
+            "2026-08-05": 78,
+            "2026-08-06": 78,
+            "2026-08-07": 78,
+            "2026-08-10": 78,
+            "2026-08-11": 78,
+            "2026-08-12": 78,
+            "2026-08-13": 78,
+            "2026-08-14": 78,
+            "2026-08-17": 78,
+            "2026-08-18": 78,
+            "2026-08-19": 78,
+            "2026-08-20": 78,
+            "2026-08-21": 78,
+            "2026-08-24": 78,
+            "2026-08-25": 78,
+            "2026-08-26": 78,
+            "2026-08-27": 78,
+            "2026-08-28": 78,
+            "2026-08-31": 78,
+            "2026-09-01": 78,
+            "2026-09-02": 78,
+            "2026-09-03": 78,
+            "2026-09-04": 78,
+            "2026-09-08": 78,
+            "2026-09-09": 78,
+            "2026-09-10": 78,
+            "2026-09-11": 78
+          }
+        }
+      },
+      "limitation": "Local retained source metadata; vendor was not independently re-queried."
+    },
+    "reports/platform_universe30_bars_20260913": {
+      "status": "retained_source_manifest_matches",
+      "manifest": {
+        "SPY": {
+          "source": "Yahoo Finance via yfinance direct historical request",
+          "requested_start": "2026-07-27",
+          "requested_end_exclusive": "2026-09-12",
+          "interval": "5m",
+          "auto_adjust": false,
+          "raw_rows": 2652,
+          "regular_rows": 2652,
+          "first": "2026-07-27 09:30:00-04:00",
+          "last": "2026-09-11 15:55:00-04:00",
+          "sha256": "8ad1dd265a71ca1350143428eaa57238a1474ae12c43a82ebc65910e7921df78",
+          "corporate_actions": {
+            "Dividends": {},
+            "Stock Splits": {}
+          },
+          "sessions": {
+            "2026-07-27": 78,
+            "2026-07-28": 78,
+            "2026-07-29": 78,
+            "2026-07-30": 78,
+            "2026-07-31": 78,
+            "2026-08-03": 78,
+            "2026-08-04": 78,
+            "2026-08-05": 78,
+            "2026-08-06": 78,
+            "2026-08-07": 78,
+            "2026-08-10": 78,
+            "2026-08-11": 78,
+            "2026-08-12": 78,
+            "2026-08-13": 78,
+            "2026-08-14": 78,
+            "2026-08-17": 78,
+            "2026-08-18": 78,
+            "2026-08-19": 78,
+            "2026-08-20": 78,
+            "2026-08-21": 78,
+            "2026-08-24": 78,
+            "2026-08-25": 78,
+            "2026-08-26": 78,
+            "2026-08-27": 78,
+            "2026-08-28": 78,
+            "2026-08-31": 78,
+            "2026-09-01": 78,
+            "2026-09-02": 78,
+            "2026-09-03": 78,
+            "2026-09-04": 78,
+            "2026-09-08": 78,
+            "2026-09-09": 78,
+            "2026-09-10": 78,
+            "2026-09-11": 78
+          }
+        },
+        "QQQ": {
+          "source": "Yahoo Finance via yfinance direct historical request",
+          "requested_start": "2026-07-27",
+          "requested_end_exclusive": "2026-09-12",
+          "interval": "5m",
+          "auto_adjust": false,
+          "raw_rows": 2652,
+          "regular_rows": 2652,
+          "first": "2026-07-27 09:30:00-04:00",
+          "last": "2026-09-11 15:55:00-04:00",
+          "sha256": "a77f9d6f4ca44f04c21e6533ea1cdc705b5a2d86e71120635b6e3d99c0bd1dbd",
+          "corporate_actions": {
+            "Dividends": {},
+            "Stock Splits": {}
+          },
+          "sessions": {
+            "2026-07-27": 78,
+            "2026-07-28": 78,
+            "2026-07-29": 78,
+            "2026-07-30": 78,
+            "2026-07-31": 78,
+            "2026-08-03": 78,
+            "2026-08-04": 78,
+            "2026-08-05": 78,
+            "2026-08-06": 78,
+            "2026-08-07": 78,
+            "2026-08-10": 78,
+            "2026-08-11": 78,
+            "2026-08-12": 78,
+            "2026-08-13": 78,
+            "2026-08-14": 78,
+            "2026-08-17": 78,
+            "2026-08-18": 78,
+            "2026-08-19": 78,
+            "2026-08-20": 78,
+            "2026-08-21": 78,
+            "2026-08-24": 78,
+            "2026-08-25": 78,
+            "2026-08-26": 78,
+            "2026-08-27": 78,
+            "2026-08-28": 78,
+            "2026-08-31": 78,
+            "2026-09-01": 78,
+            "2026-09-02": 78,
+            "2026-09-03": 78,
+            "2026-09-04": 78,
+            "2026-09-08": 78,
+            "2026-09-09": 78,
+            "2026-09-10": 78,
+            "2026-09-11": 78
+          }
+        },
+        "IWM": {
+          "source": "Yahoo Finance via yfinance direct historical request",
+          "requested_start": "2026-07-27",
+          "requested_end_exclusive": "2026-09-12",
+          "interval": "5m",
+          "auto_adjust": false,
+          "raw_rows": 2652,
+          "regular_rows": 2652,
+          "first": "2026-07-27 09:30:00-04:00",
+          "last": "2026-09-11 15:55:00-04:00",
+          "sha256": "038055c75dcbb8850606c4faa3122bdf91891c5f3ac30f147cd54b9291fafea3",
+          "corporate_actions": {
+            "Dividends": {},
+            "Stock Splits": {}
+          },
+          "sessions": {
+            "2026-07-27": 78,
+            "2026-07-28": 78,
+            "2026-07-29": 78,
+            "2026-07-30": 78,
+            "2026-07-31": 78,
+            "2026-08-03": 78,
+            "2026-08-04": 78,
+            "2026-08-05": 78,
+            "2026-08-06": 78,
+            "2026-08-07": 78,
+            "2026-08-10": 78,
+            "2026-08-11": 78,
+            "2026-08-12": 78,
+            "2026-08-13": 78,
+            "2026-08-14": 78,
+            "2026-08-17": 78,
+            "2026-08-18": 78,
+            "2026-08-19": 78,
+            "2026-08-20": 78,
+            "2026-08-21": 78,
+            "2026-08-24": 78,
+            "2026-08-25": 78,
+            "2026-08-26": 78,
+            "2026-08-27": 78,
+            "2026-08-28": 78,
+            "2026-08-31": 78,
+            "2026-09-01": 78,
+            "2026-09-02": 78,
+            "2026-09-03": 78,
+            "2026-09-04": 78,
+            "2026-09-08": 78,
+            "2026-09-09": 78,
+            "2026-09-10": 78,
+            "2026-09-11": 78
+          }
+        },
+        "XLK": {
+          "source": "Yahoo Finance via yfinance direct historical request",
+          "requested_start": "2026-07-27",
+          "requested_end_exclusive": "2026-09-12",
+          "interval": "5m",
+          "auto_adjust": false,
+          "raw_rows": 2652,
+          "regular_rows": 2652,
+          "first": "2026-07-27 09:30:00-04:00",
+          "last": "2026-09-11 15:55:00-04:00",
+          "sha256": "1729278dc9bc10958c816241f9b79ee498d747cea4a11f5f0caf41a7728cd30e",
+          "corporate_actions": {
+            "Dividends": {},
+            "Stock Splits": {}
+          },
+          "sessions": {
+            "2026-07-27": 78,
+            "2026-07-28": 78,
+            "2026-07-29": 78,
+            "2026-07-30": 78,
+            "2026-07-31": 78,
+            "2026-08-03": 78,
+            "2026-08-04": 78,
+            "2026-08-05": 78,
+            "2026-08-06": 78,
+            "2026-08-07": 78,
+            "2026-08-10": 78,
+            "2026-08-11": 78,
+            "2026-08-12": 78,
+            "2026-08-13": 78,
+            "2026-08-14": 78,
+            "2026-08-17": 78,
+            "2026-08-18": 78,
+            "2026-08-19": 78,
+            "2026-08-20": 78,
+            "2026-08-21": 78,
+            "2026-08-24": 78,
+            "2026-08-25": 78,
+            "2026-08-26": 78,
+            "2026-08-27": 78,
+            "2026-08-28": 78,
+            "2026-08-31": 78,
+            "2026-09-01": 78,
+            "2026-09-02": 78,
+            "2026-09-03": 78,
+            "2026-09-04": 78,
+            "2026-09-08": 78,
+            "2026-09-09": 78,
+            "2026-09-10": 78,
+            "2026-09-11": 78
+          }
+        },
+        "SOXX": {
+          "source": "Yahoo Finance via yfinance direct historical request",
+          "requested_start": "2026-07-27",
+          "requested_end_exclusive": "2026-09-12",
+          "interval": "5m",
+          "auto_adjust": false,
+          "raw_rows": 2652,
+          "regular_rows": 2652,
+          "first": "2026-07-27 09:30:00-04:00",
+          "last": "2026-09-11 15:55:00-04:00",
+          "sha256": "a21e34441faf84dc3827fe9225ee6fece14df70bc60dad09dbc37e6f5acc6c6e",
+          "corporate_actions": {
+            "Dividends": {},
+            "Stock Splits": {}
+          },
+          "sessions": {
+            "2026-07-27": 78,
+            "2026-07-28": 78,
+            "2026-07-29": 78,
+            "2026-07-30": 78,
+            "2026-07-31": 78,
+            "2026-08-03": 78,
+            "2026-08-04": 78,
+            "2026-08-05": 78,
+            "2026-08-06": 78,
+            "2026-08-07": 78,
+            "2026-08-10": 78,
+            "2026-08-11": 78,
+            "2026-08-12": 78,
+            "2026-08-13": 78,
+            "2026-08-14": 78,
+            "2026-08-17": 78,
+            "2026-08-18": 78,
+            "2026-08-19": 78,
+            "2026-08-20": 78,
+            "2026-08-21": 78,
+            "2026-08-24": 78,
+            "2026-08-25": 78,
+            "2026-08-26": 78,
+            "2026-08-27": 78,
+            "2026-08-28": 78,
+            "2026-08-31": 78,
+            "2026-09-01": 78,
+            "2026-09-02": 78,
+            "2026-09-03": 78,
+            "2026-09-04": 78,
+            "2026-09-08": 78,
+            "2026-09-09": 78,
+            "2026-09-10": 78,
+            "2026-09-11": 78
+          }
+        },
+        "AAPL": {
+          "source": "Yahoo Finance via yfinance direct historical request",
+          "requested_start": "2026-07-27",
+          "requested_end_exclusive": "2026-09-12",
+          "interval": "5m",
+          "auto_adjust": false,
+          "raw_rows": 2652,
+          "regular_rows": 2652,
+          "first": "2026-07-27 09:30:00-04:00",
+          "last": "2026-09-11 15:55:00-04:00",
+          "sha256": "bb3d1a669a0ef969967784ea550a13d791c6a7322e63960d523d919d88c0b6e7",
+          "corporate_actions": {
+            "Dividends": {
+              "2026-08-10 09:30:00-04:00": 0.27
+            },
+            "Stock Splits": {}
+          },
+          "sessions": {
+            "2026-07-27": 78,
+            "2026-07-28": 78,
+            "2026-07-29": 78,
+            "2026-07-30": 78,
+            "2026-07-31": 78,
+            "2026-08-03": 78,
+            "2026-08-04": 78,
+            "2026-08-05": 78,
+            "2026-08-06": 78,
+            "2026-08-07": 78,
+            "2026-08-10": 78,
+            "2026-08-11": 78,
+            "2026-08-12": 78,
+            "2026-08-13": 78,
+            "2026-08-14": 78,
+            "2026-08-17": 78,
+            "2026-08-18": 78,
+            "2026-08-19": 78,
+            "2026-08-20": 78,
+            "2026-08-21": 78,
+            "2026-08-24": 78,
+            "2026-08-25": 78,
+            "2026-08-26": 78,
+            "2026-08-27": 78,
+            "2026-08-28": 78,
+            "2026-08-31": 78,
+            "2026-09-01": 78,
+            "2026-09-02": 78,
+            "2026-09-03": 78,
+            "2026-09-04": 78,
+            "2026-09-08": 78,
+            "2026-09-09": 78,
+            "2026-09-10": 78,
+            "2026-09-11": 78
+          }
+        },
+        "MSFT": {
+          "source": "Yahoo Finance via yfinance direct historical request",
+          "requested_start": "2026-07-27",
+          "requested_end_exclusive": "2026-09-12",
+          "interval": "5m",
+          "auto_adjust": false,
+          "raw_rows": 2652,
+          "regular_rows": 2652,
+          "first": "2026-07-27 09:30:00-04:00",
+          "last": "2026-09-11 15:55:00-04:00",
+          "sha256": "a497a29ebe1329fc2de8b363ea5977fa21510378bdbf9abb76f204a23ee401cf",
+          "corporate_actions": {
+            "Dividends": {
+              "2026-08-20 09:30:00-04:00": 0.91
+            },
+            "Stock Splits": {}
+          },
+          "sessions": {
+            "2026-07-27": 78,
+            "2026-07-28": 78,
+            "2026-07-29": 78,
+            "2026-07-30": 78,
+            "2026-07-31": 78,
+            "2026-08-03": 78,
+            "2026-08-04": 78,
+            "2026-08-05": 78,
+            "2026-08-06": 78,
+            "2026-08-07": 78,
+            "2026-08-10": 78,
+            "2026-08-11": 78,
+            "2026-08-12": 78,
+            "2026-08-13": 78,
+            "2026-08-14": 78,
+            "2026-08-17": 78,
+            "2026-08-18": 78,
+            "2026-08-19": 78,
+            "2026-08-20": 78,
+            "2026-08-21": 78,
+            "2026-08-24": 78,
+            "2026-08-25": 78,
+            "2026-08-26": 78,
+            "2026-08-27": 78,
+            "2026-08-28": 78,
+            "2026-08-31": 78,
+            "2026-09-01": 78,
+            "2026-09-02": 78,
+            "2026-09-03": 78,
+            "2026-09-04": 78,
+            "2026-09-08": 78,
+            "2026-09-09": 78,
+            "2026-09-10": 78,
+            "2026-09-11": 78
+          }
+        },
+        "NVDA": {
+          "source": "Yahoo Finance via yfinance direct historical request",
+          "requested_start": "2026-07-27",
+          "requested_end_exclusive": "2026-09-12",
+          "interval": "5m",
+          "auto_adjust": false,
+          "raw_rows": 2652,
+          "regular_rows": 2652,
+          "first": "2026-07-27 09:30:00-04:00",
+          "last": "2026-09-11 15:55:00-04:00",
+          "sha256": "5e38009f9860b19585c14fd3c305d7e26e47e68ad1f5c39b21c2e0720cdbc578",
+          "corporate_actions": {
+            "Dividends": {
+              "2026-09-10 09:30:00-04:00": 0.25
+            },
+            "Stock Splits": {}
+          },
+          "sessions": {
+            "2026-07-27": 78,
+            "2026-07-28": 78,
+            "2026-07-29": 78,
+            "2026-07-30": 78,
+            "2026-07-31": 78,
+            "2026-08-03": 78,
+            "2026-08-04": 78,
+            "2026-08-05": 78,
+            "2026-08-06": 78,
+            "2026-08-07": 78,
+            "2026-08-10": 78,
+            "2026-08-11": 78,
+            "2026-08-12": 78,
+            "2026-08-13": 78,
+            "2026-08-14": 78,
+            "2026-08-17": 78,
+            "2026-08-18": 78,
+            "2026-08-19": 78,
+            "2026-08-20": 78,
+            "2026-08-21": 78,
+            "2026-08-24": 78,
+            "2026-08-25": 78,
+            "2026-08-26": 78,
+            "2026-08-27": 78,
+            "2026-08-28": 78,
+            "2026-08-31": 78,
+            "2026-09-01": 78,
+            "2026-09-02": 78,
+            "2026-09-03": 78,
+            "2026-09-04": 78,
+            "2026-09-08": 78,
+            "2026-09-09": 78,
+            "2026-09-10": 78,
+            "2026-09-11": 78
+          }
+        },
+        "AMD": {
+          "source": "Yahoo Finance via yfinance direct historical request",
+          "requested_start": "2026-07-27",
+          "requested_end_exclusive": "2026-09-12",
+          "interval": "5m",
+          "auto_adjust": false,
+          "raw_rows": 2652,
+          "regular_rows": 2652,
+          "first": "2026-07-27 09:30:00-04:00",
+          "last": "2026-09-11 15:55:00-04:00",
+          "sha256": "1b9740ace06f568be899c811f0ee522e8fd2187627f78dcb5fef19a8d7d169ca",
+          "corporate_actions": {
+            "Dividends": {},
+            "Stock Splits": {}
+          },
+          "sessions": {
+            "2026-07-27": 78,
+            "2026-07-28": 78,
+            "2026-07-29": 78,
+            "2026-07-30": 78,
+            "2026-07-31": 78,
+            "2026-08-03": 78,
+            "2026-08-04": 78,
+            "2026-08-05": 78,
+            "2026-08-06": 78,
+            "2026-08-07": 78,
+            "2026-08-10": 78,
+            "2026-08-11": 78,
+            "2026-08-12": 78,
+            "2026-08-13": 78,
+            "2026-08-14": 78,
+            "2026-08-17": 78,
+            "2026-08-18": 78,
+            "2026-08-19": 78,
+            "2026-08-20": 78,
+            "2026-08-21": 78,
+            "2026-08-24": 78,
+            "2026-08-25": 78,
+            "2026-08-26": 78,
+            "2026-08-27": 78,
+            "2026-08-28": 78,
+            "2026-08-31": 78,
+            "2026-09-01": 78,
+            "2026-09-02": 78,
+            "2026-09-03": 78,
+            "2026-09-04": 78,
+            "2026-09-08": 78,
+            "2026-09-09": 78,
+            "2026-09-10": 78,
+            "2026-09-11": 78
+          }
+        },
+        "AVGO": {
+          "source": "Yahoo Finance via yfinance direct historical request",
+          "requested_start": "2026-07-27",
+          "requested_end_exclusive": "2026-09-12",
+          "interval": "5m",
+          "auto_adjust": false,
+          "raw_rows": 2652,
+          "regular_rows": 2652,
+          "first": "2026-07-27 09:30:00-04:00",
+          "last": "2026-09-11 15:55:00-04:00",
+          "sha256": "4af8f59c9acce6e6dee66c9124299a2401fd82c1d3fdca48d37d9541ae4b8891",
+          "corporate_actions": {
+            "Dividends": {},
+            "Stock Splits": {}
+          },
+          "sessions": {
+            "2026-07-27": 78,
+            "2026-07-28": 78,
+            "2026-07-29": 78,
+            "2026-07-30": 78,
+            "2026-07-31": 78,
+            "2026-08-03": 78,
+            "2026-08-04": 78,
+            "2026-08-05": 78,
+            "2026-08-06": 78,
+            "2026-08-07": 78,
+            "2026-08-10": 78,
+            "2026-08-11": 78,
+            "2026-08-12": 78,
+            "2026-08-13": 78,
+            "2026-08-14": 78,
+            "2026-08-17": 78,
+            "2026-08-18": 78,
+            "2026-08-19": 78,
+            "2026-08-20": 78,
+            "2026-08-21": 78,
+            "2026-08-24": 78,
+            "2026-08-25": 78,
+            "2026-08-26": 78,
+            "2026-08-27": 78,
+            "2026-08-28": 78,
+            "2026-08-31": 78,
+            "2026-09-01": 78,
+            "2026-09-02": 78,
+            "2026-09-03": 78,
+            "2026-09-04": 78,
+            "2026-09-08": 78,
+            "2026-09-09": 78,
+            "2026-09-10": 78,
+            "2026-09-11": 78
+          }
+        },
+        "MU": {
+          "source": "Yahoo Finance via yfinance direct historical request",
+          "requested_start": "2026-07-27",
+          "requested_end_exclusive": "2026-09-12",
+          "interval": "5m",
+          "auto_adjust": false,
+          "raw_rows": 2652,
+          "regular_rows": 2652,
+          "first": "2026-07-27 09:30:00-04:00",
+          "last": "2026-09-11 15:55:00-04:00",
+          "sha256": "0430663ba5f0de38662f4508d045bfbe5684bc56ebd67e5c82317f4b8ed0461c",
+          "corporate_actions": {
+            "Dividends": {},
+            "Stock Splits": {}
+          },
+          "sessions": {
+            "2026-07-27": 78,
+            "2026-07-28": 78,
+            "2026-07-29": 78,
+            "2026-07-30": 78,
+            "2026-07-31": 78,
+            "2026-08-03": 78,
+            "2026-08-04": 78,
+            "2026-08-05": 78,
+            "2026-08-06": 78,
+            "2026-08-07": 78,
+            "2026-08-10": 78,
+            "2026-08-11": 78,
+            "2026-08-12": 78,
+            "2026-08-13": 78,
+            "2026-08-14": 78,
+            "2026-08-17": 78,
+            "2026-08-18": 78,
+            "2026-08-19": 78,
+            "2026-08-20": 78,
+            "2026-08-21": 78,
+            "2026-08-24": 78,
+            "2026-08-25": 78,
+            "2026-08-26": 78,
+            "2026-08-27": 78,
+            "2026-08-28": 78,
+            "2026-08-31": 78,
+            "2026-09-01": 78,
+            "2026-09-02": 78,
+            "2026-09-03": 78,
+            "2026-09-04": 78,
+            "2026-09-08": 78,
+            "2026-09-09": 78,
+            "2026-09-10": 78,
+            "2026-09-11": 78
+          }
+        },
+        "SNDK": {
+          "source": "Yahoo Finance via yfinance direct historical request",
+          "requested_start": "2026-07-27",
+          "requested_end_exclusive": "2026-09-12",
+          "interval": "5m",
+          "auto_adjust": false,
+          "raw_rows": 2652,
+          "regular_rows": 2652,
+          "first": "2026-07-27 09:30:00-04:00",
+          "last": "2026-09-11 15:55:00-04:00",
+          "sha256": "b98f630b3a84129e2437680d786f05ad7b3724e6634b83030df42147a7329597",
+          "corporate_actions": {
+            "Dividends": {},
+            "Stock Splits": {}
+          },
+          "sessions": {
+            "2026-07-27": 78,
+            "2026-07-28": 78,
+            "2026-07-29": 78,
+            "2026-07-30": 78,
+            "2026-07-31": 78,
+            "2026-08-03": 78,
+            "2026-08-04": 78,
+            "2026-08-05": 78,
+            "2026-08-06": 78,
+            "2026-08-07": 78,
+            "2026-08-10": 78,
+            "2026-08-11": 78,
+            "2026-08-12": 78,
+            "2026-08-13": 78,
+            "2026-08-14": 78,
+            "2026-08-17": 78,
+            "2026-08-18": 78,
+            "2026-08-19": 78,
+            "2026-08-20": 78,
+            "2026-08-21": 78,
+            "2026-08-24": 78,
+            "2026-08-25": 78,
+            "2026-08-26": 78,
+            "2026-08-27": 78,
+            "2026-08-28": 78,
+            "2026-08-31": 78,
+            "2026-09-01": 78,
+            "2026-09-02": 78,
+            "2026-09-03": 78,
+            "2026-09-04": 78,
+            "2026-09-08": 78,
+            "2026-09-09": 78,
+            "2026-09-10": 78,
+            "2026-09-11": 78
+          }
+        },
+        "TSLA": {
+          "source": "Yahoo Finance via yfinance direct historical request",
+          "requested_start": "2026-07-27",
+          "requested_end_exclusive": "2026-09-12",
+          "interval": "5m",
+          "auto_adjust": false,
+          "raw_rows": 2652,
+          "regular_rows": 2652,
+          "first": "2026-07-27 09:30:00-04:00",
+          "last": "2026-09-11 15:55:00-04:00",
+          "sha256": "725dc54f8ac8bca3e8c5df39be0af341fc31715b43e557c5b06a1dd9012fec25",
+          "corporate_actions": {
+            "Dividends": {},
+            "Stock Splits": {}
+          },
+          "sessions": {
+            "2026-07-27": 78,
+            "2026-07-28": 78,
+            "2026-07-29": 78,
+            "2026-07-30": 78,
+            "2026-07-31": 78,
+            "2026-08-03": 78,
+            "2026-08-04": 78,
+            "2026-08-05": 78,
+            "2026-08-06": 78,
+            "2026-08-07": 78,
+            "2026-08-10": 78,
+            "2026-08-11": 78,
+            "2026-08-12": 78,
+            "2026-08-13": 78,
+            "2026-08-14": 78,
+            "2026-08-17": 78,
+            "2026-08-18": 78,
+            "2026-08-19": 78,
+            "2026-08-20": 78,
+            "2026-08-21": 78,
+            "2026-08-24": 78,
+            "2026-08-25": 78,
+            "2026-08-26": 78,
+            "2026-08-27": 78,
+            "2026-08-28": 78,
+            "2026-08-31": 78,
+            "2026-09-01": 78,
+            "2026-09-02": 78,
+            "2026-09-03": 78,
+            "2026-09-04": 78,
+            "2026-09-08": 78,
+            "2026-09-09": 78,
+            "2026-09-10": 78,
+            "2026-09-11": 78
+          }
+        },
+        "META": {
+          "source": "Yahoo Finance via yfinance direct historical request",
+          "requested_start": "2026-07-27",
+          "requested_end_exclusive": "2026-09-12",
+          "interval": "5m",
+          "auto_adjust": false,
+          "raw_rows": 2652,
+          "regular_rows": 2652,
+          "first": "2026-07-27 09:30:00-04:00",
+          "last": "2026-09-11 15:55:00-04:00",
+          "sha256": "d5dfc2409d8b78ebb125553b179f9f4d5c83e330e7c05937f05fbc95a86af470",
+          "corporate_actions": {
+            "Dividends": {},
+            "Stock Splits": {}
+          },
+          "sessions": {
+            "2026-07-27": 78,
+            "2026-07-28": 78,
+            "2026-07-29": 78,
+            "2026-07-30": 78,
+            "2026-07-31": 78,
+            "2026-08-03": 78,
+            "2026-08-04": 78,
+            "2026-08-05": 78,
+            "2026-08-06": 78,
+            "2026-08-07": 78,
+            "2026-08-10": 78,
+            "2026-08-11": 78,
+            "2026-08-12": 78,
+            "2026-08-13": 78,
+            "2026-08-14": 78,
+            "2026-08-17": 78,
+            "2026-08-18": 78,
+            "2026-08-19": 78,
+            "2026-08-20": 78,
+            "2026-08-21": 78,
+            "2026-08-24": 78,
+            "2026-08-25": 78,
+            "2026-08-26": 78,
+            "2026-08-27": 78,
+            "2026-08-28": 78,
+            "2026-08-31": 78,
+            "2026-09-01": 78,
+            "2026-09-02": 78,
+            "2026-09-03": 78,
+            "2026-09-04": 78,
+            "2026-09-08": 78,
+            "2026-09-09": 78,
+            "2026-09-10": 78,
+            "2026-09-11": 78
+          }
+        },
+        "AMZN": {
+          "source": "Yahoo Finance via yfinance direct historical request",
+          "requested_start": "2026-07-27",
+          "requested_end_exclusive": "2026-09-12",
+          "interval": "5m",
+          "auto_adjust": false,
+          "raw_rows": 2652,
+          "regular_rows": 2652,
+          "first": "2026-07-27 09:30:00-04:00",
+          "last": "2026-09-11 15:55:00-04:00",
+          "sha256": "9a066fc817ca98d9a14ae3fb96cbaac28848c5796c7b1ce16d1773c6a5720d93",
+          "corporate_actions": {
+            "Dividends": {},
+            "Stock Splits": {}
+          },
+          "sessions": {
+            "2026-07-27": 78,
+            "2026-07-28": 78,
+            "2026-07-29": 78,
+            "2026-07-30": 78,
+            "2026-07-31": 78,
+            "2026-08-03": 78,
+            "2026-08-04": 78,
+            "2026-08-05": 78,
+            "2026-08-06": 78,
+            "2026-08-07": 78,
+            "2026-08-10": 78,
+            "2026-08-11": 78,
+            "2026-08-12": 78,
+            "2026-08-13": 78,
+            "2026-08-14": 78,
+            "2026-08-17": 78,
+            "2026-08-18": 78,
+            "2026-08-19": 78,
+            "2026-08-20": 78,
+            "2026-08-21": 78,
+            "2026-08-24": 78,
+            "2026-08-25": 78,
+            "2026-08-26": 78,
+            "2026-08-27": 78,
+            "2026-08-28": 78,
+            "2026-08-31": 78,
+            "2026-09-01": 78,
+            "2026-09-02": 78,
+            "2026-09-03": 78,
+            "2026-09-04": 78,
+            "2026-09-08": 78,
+            "2026-09-09": 78,
+            "2026-09-10": 78,
+            "2026-09-11": 78
+          }
+        },
+        "GOOGL": {
+          "source": "Yahoo Finance via yfinance direct historical request",
+          "requested_start": "2026-07-27",
+          "requested_end_exclusive": "2026-09-12",
+          "interval": "5m",
+          "auto_adjust": false,
+          "raw_rows": 2652,
+          "regular_rows": 2652,
+          "first": "2026-07-27 09:30:00-04:00",
+          "last": "2026-09-11 15:55:00-04:00",
+          "sha256": "1cfdcebc05abc60a8fd2ce951fc087a419c714774ad91f1cd908a43b12ef951c",
+          "corporate_actions": {
+            "Dividends": {
+              "2026-09-04 09:30:00-04:00": 0.22
+            },
+            "Stock Splits": {}
+          },
+          "sessions": {
+            "2026-07-27": 78,
+            "2026-07-28": 78,
+            "2026-07-29": 78,
+            "2026-07-30": 78,
+            "2026-07-31": 78,
+            "2026-08-03": 78,
+            "2026-08-04": 78,
+            "2026-08-05": 78,
+            "2026-08-06": 78,
+            "2026-08-07": 78,
+            "2026-08-10": 78,
+            "2026-08-11": 78,
+            "2026-08-12": 78,
+            "2026-08-13": 78,
+            "2026-08-14": 78,
+            "2026-08-17": 78,
+            "2026-08-18": 78,
+            "2026-08-19": 78,
+            "2026-08-20": 78,
+            "2026-08-21": 78,
+            "2026-08-24": 78,
+            "2026-08-25": 78,
+            "2026-08-26": 78,
+            "2026-08-27": 78,
+            "2026-08-28": 78,
+            "2026-08-31": 78,
+            "2026-09-01": 78,
+            "2026-09-02": 78,
+            "2026-09-03": 78,
+            "2026-09-04": 78,
+            "2026-09-08": 78,
+            "2026-09-09": 78,
+            "2026-09-10": 78,
+            "2026-09-11": 78
+          }
+        },
+        "NFLX": {
+          "source": "Yahoo Finance via yfinance direct historical request",
+          "requested_start": "2026-07-27",
+          "requested_end_exclusive": "2026-09-12",
+          "interval": "5m",
+          "auto_adjust": false,
+          "raw_rows": 2652,
+          "regular_rows": 2652,
+          "first": "2026-07-27 09:30:00-04:00",
+          "last": "2026-09-11 15:55:00-04:00",
+          "sha256": "a3823c1bf791c773e46ee3c402defcb94ed84f01fe22b5f8e316fc2f369a81ac",
+          "corporate_actions": {
+            "Dividends": {},
+            "Stock Splits": {}
+          },
+          "sessions": {
+            "2026-07-27": 78,
+            "2026-07-28": 78,
+            "2026-07-29": 78,
+            "2026-07-30": 78,
+            "2026-07-31": 78,
+            "2026-08-03": 78,
+            "2026-08-04": 78,
+            "2026-08-05": 78,
+            "2026-08-06": 78,
+            "2026-08-07": 78,
+            "2026-08-10": 78,
+            "2026-08-11": 78,
+            "2026-08-12": 78,
+            "2026-08-13": 78,
+            "2026-08-14": 78,
+            "2026-08-17": 78,
+            "2026-08-18": 78,
+            "2026-08-19": 78,
+            "2026-08-20": 78,
+            "2026-08-21": 78,
+            "2026-08-24": 78,
+            "2026-08-25": 78,
+            "2026-08-26": 78,
+            "2026-08-27": 78,
+            "2026-08-28": 78,
+            "2026-08-31": 78,
+            "2026-09-01": 78,
+            "2026-09-02": 78,
+            "2026-09-03": 78,
+            "2026-09-04": 78,
+            "2026-09-08": 78,
+            "2026-09-09": 78,
+            "2026-09-10": 78,
+            "2026-09-11": 78
+          }
+        },
+        "ORCL": {
+          "source": "Yahoo Finance via yfinance direct historical request",
+          "requested_start": "2026-07-27",
+          "requested_end_exclusive": "2026-09-12",
+          "interval": "5m",
+          "auto_adjust": false,
+          "raw_rows": 2652,
+          "regular_rows": 2652,
+          "first": "2026-07-27 09:30:00-04:00",
+          "last": "2026-09-11 15:55:00-04:00",
+          "sha256": "4d1c0398be616a804ab705ad23a4208db33ad654fa15bcb1962047e5d197ffe5",
+          "corporate_actions": {
+            "Dividends": {},
+            "Stock Splits": {}
+          },
+          "sessions": {
+            "2026-07-27": 78,
+            "2026-07-28": 78,
+            "2026-07-29": 78,
+            "2026-07-30": 78,
+            "2026-07-31": 78,
+            "2026-08-03": 78,
+            "2026-08-04": 78,
+            "2026-08-05": 78,
+            "2026-08-06": 78,
+            "2026-08-07": 78,
+            "2026-08-10": 78,
+            "2026-08-11": 78,
+            "2026-08-12": 78,
+            "2026-08-13": 78,
+            "2026-08-14": 78,
+            "2026-08-17": 78,
+            "2026-08-18": 78,
+            "2026-08-19": 78,
+            "2026-08-20": 78,
+            "2026-08-21": 78,
+            "2026-08-24": 78,
+            "2026-08-25": 78,
+            "2026-08-26": 78,
+            "2026-08-27": 78,
+            "2026-08-28": 78,
+            "2026-08-31": 78,
+            "2026-09-01": 78,
+            "2026-09-02": 78,
+            "2026-09-03": 78,
+            "2026-09-04": 78,
+            "2026-09-08": 78,
+            "2026-09-09": 78,
+            "2026-09-10": 78,
+            "2026-09-11": 78
+          }
+        },
+        "PLTR": {
+          "source": "Yahoo Finance via yfinance direct historical request",
+          "requested_start": "2026-07-27",
+          "requested_end_exclusive": "2026-09-12",
+          "interval": "5m",
+          "auto_adjust": false,
+          "raw_rows": 2652,
+          "regular_rows": 2652,
+          "first": "2026-07-27 09:30:00-04:00",
+          "last": "2026-09-11 15:55:00-04:00",
+          "sha256": "93f907425b2bfb48cf2557b21242fe29f8972d56d8274757111bec91edcb4044",
+          "corporate_actions": {
+            "Dividends": {},
+            "Stock Splits": {}
+          },
+          "sessions": {
+            "2026-07-27": 78,
+            "2026-07-28": 78,
+            "2026-07-29": 78,
+            "2026-07-30": 78,
+            "2026-07-31": 78,
+            "2026-08-03": 78,
+            "2026-08-04": 78,
+            "2026-08-05": 78,
+            "2026-08-06": 78,
+            "2026-08-07": 78,
+            "2026-08-10": 78,
+            "2026-08-11": 78,
+            "2026-08-12": 78,
+            "2026-08-13": 78,
+            "2026-08-14": 78,
+            "2026-08-17": 78,
+            "2026-08-18": 78,
+            "2026-08-19": 78,
+            "2026-08-20": 78,
+            "2026-08-21": 78,
+            "2026-08-24": 78,
+            "2026-08-25": 78,
+            "2026-08-26": 78,
+            "2026-08-27": 78,
+            "2026-08-28": 78,
+            "2026-08-31": 78,
+            "2026-09-01": 78,
+            "2026-09-02": 78,
+            "2026-09-03": 78,
+            "2026-09-04": 78,
+            "2026-09-08": 78,
+            "2026-09-09": 78,
+            "2026-09-10": 78,
+            "2026-09-11": 78
+          }
+        },
+        "COIN": {
+          "source": "Yahoo Finance via yfinance direct historical request",
+          "requested_start": "2026-07-27",
+          "requested_end_exclusive": "2026-09-12",
+          "interval": "5m",
+          "auto_adjust": false,
+          "raw_rows": 2652,
+          "regular_rows": 2652,
+          "first": "2026-07-27 09:30:00-04:00",
+          "last": "2026-09-11 15:55:00-04:00",
+          "sha256": "54daa45ec28febab066c5eae99bfe3310e8cfb39cf07aa8599e26d9aa455ae93",
+          "corporate_actions": {
+            "Dividends": {},
+            "Stock Splits": {}
+          },
+          "sessions": {
+            "2026-07-27": 78,
+            "2026-07-28": 78,
+            "2026-07-29": 78,
+            "2026-07-30": 78,
+            "2026-07-31": 78,
+            "2026-08-03": 78,
+            "2026-08-04": 78,
+            "2026-08-05": 78,
+            "2026-08-06": 78,
+            "2026-08-07": 78,
+            "2026-08-10": 78,
+            "2026-08-11": 78,
+            "2026-08-12": 78,
+            "2026-08-13": 78,
+            "2026-08-14": 78,
+            "2026-08-17": 78,
+            "2026-08-18": 78,
+            "2026-08-19": 78,
+            "2026-08-20": 78,
+            "2026-08-21": 78,
+            "2026-08-24": 78,
+            "2026-08-25": 78,
+            "2026-08-26": 78,
+            "2026-08-27": 78,
+            "2026-08-28": 78,
+            "2026-08-31": 78,
+            "2026-09-01": 78,
+            "2026-09-02": 78,
+            "2026-09-03": 78,
+            "2026-09-04": 78,
+            "2026-09-08": 78,
+            "2026-09-09": 78,
+            "2026-09-10": 78,
+            "2026-09-11": 78
+          }
+        },
+        "MSTR": {
+          "source": "Yahoo Finance via yfinance direct historical request",
+          "requested_start": "2026-07-27",
+          "requested_end_exclusive": "2026-09-12",
+          "interval": "5m",
+          "auto_adjust": false,
+          "raw_rows": 2652,
+          "regular_rows": 2652,
+          "first": "2026-07-27 09:30:00-04:00",
+          "last": "2026-09-11 15:55:00-04:00",
+          "sha256": "c86d862116f24f1856ac0127d77bd612eaa5f85f255de70795f636892a25016f",
+          "corporate_actions": {
+            "Dividends": {},
+            "Stock Splits": {}
+          },
+          "sessions": {
+            "2026-07-27": 78,
+            "2026-07-28": 78,
+            "2026-07-29": 78,
+            "2026-07-30": 78,
+            "2026-07-31": 78,
+            "2026-08-03": 78,
+            "2026-08-04": 78,
+            "2026-08-05": 78,
+            "2026-08-06": 78,
+            "2026-08-07": 78,
+            "2026-08-10": 78,
+            "2026-08-11": 78,
+            "2026-08-12": 78,
+            "2026-08-13": 78,
+            "2026-08-14": 78,
+            "2026-08-17": 78,
+            "2026-08-18": 78,
+            "2026-08-19": 78,
+            "2026-08-20": 78,
+            "2026-08-21": 78,
+            "2026-08-24": 78,
+            "2026-08-25": 78,
+            "2026-08-26": 78,
+            "2026-08-27": 78,
+            "2026-08-28": 78,
+            "2026-08-31": 78,
+            "2026-09-01": 78,
+            "2026-09-02": 78,
+            "2026-09-03": 78,
+            "2026-09-04": 78,
+            "2026-09-08": 78,
+            "2026-09-09": 78,
+            "2026-09-10": 78,
+            "2026-09-11": 78
+          }
+        },
+        "MARA": {
+          "source": "Yahoo Finance via yfinance direct historical request",
+          "requested_start": "2026-07-27",
+          "requested_end_exclusive": "2026-09-12",
+          "interval": "5m",
+          "auto_adjust": false,
+          "raw_rows": 2652,
+          "regular_rows": 2652,
+          "first": "2026-07-27 09:30:00-04:00",
+          "last": "2026-09-11 15:55:00-04:00",
+          "sha256": "b2934fabec3a9be334a0179074b2ce936762f9212870a26e25bb62947a9658a7",
+          "corporate_actions": {
+            "Dividends": {},
+            "Stock Splits": {}
+          },
+          "sessions": {
+            "2026-07-27": 78,
+            "2026-07-28": 78,
+            "2026-07-29": 78,
+            "2026-07-30": 78,
+            "2026-07-31": 78,
+            "2026-08-03": 78,
+            "2026-08-04": 78,
+            "2026-08-05": 78,
+            "2026-08-06": 78,
+            "2026-08-07": 78,
+            "2026-08-10": 78,
+            "2026-08-11": 78,
+            "2026-08-12": 78,
+            "2026-08-13": 78,
+            "2026-08-14": 78,
+            "2026-08-17": 78,
+            "2026-08-18": 78,
+            "2026-08-19": 78,
+            "2026-08-20": 78,
+            "2026-08-21": 78,
+            "2026-08-24": 78,
+            "2026-08-25": 78,
+            "2026-08-26": 78,
+            "2026-08-27": 78,
+            "2026-08-28": 78,
+            "2026-08-31": 78,
+            "2026-09-01": 78,
+            "2026-09-02": 78,
+            "2026-09-03": 78,
+            "2026-09-04": 78,
+            "2026-09-08": 78,
+            "2026-09-09": 78,
+            "2026-09-10": 78,
+            "2026-09-11": 78
+          }
+        },
+        "HOOD": {
+          "source": "Yahoo Finance via yfinance direct historical request",
+          "requested_start": "2026-07-27",
+          "requested_end_exclusive": "2026-09-12",
+          "interval": "5m",
+          "auto_adjust": false,
+          "raw_rows": 2652,
+          "regular_rows": 2652,
+          "first": "2026-07-27 09:30:00-04:00",
+          "last": "2026-09-11 15:55:00-04:00",
+          "sha256": "b270b60fe36e4ba416aa079a0a33fa2fd2b395df2376671123bb32cda898aece",
+          "corporate_actions": {
+            "Dividends": {},
+            "Stock Splits": {}
+          },
+          "sessions": {
+            "2026-07-27": 78,
+            "2026-07-28": 78,
+            "2026-07-29": 78,
+            "2026-07-30": 78,
+            "2026-07-31": 78,
+            "2026-08-03": 78,
+            "2026-08-04": 78,
+            "2026-08-05": 78,
+            "2026-08-06": 78,
+            "2026-08-07": 78,
+            "2026-08-10": 78,
+            "2026-08-11": 78,
+            "2026-08-12": 78,
+            "2026-08-13": 78,
+            "2026-08-14": 78,
+            "2026-08-17": 78,
+            "2026-08-18": 78,
+            "2026-08-19": 78,
+            "2026-08-20": 78,
+            "2026-08-21": 78,
+            "2026-08-24": 78,
+            "2026-08-25": 78,
+            "2026-08-26": 78,
+            "2026-08-27": 78,
+            "2026-08-28": 78,
+            "2026-08-31": 78,
+            "2026-09-01": 78,
+            "2026-09-02": 78,
+            "2026-09-03": 78,
+            "2026-09-04": 78,
+            "2026-09-08": 78,
+            "2026-09-09": 78,
+            "2026-09-10": 78,
+            "2026-09-11": 78
+          }
+        },
+        "SMCI": {
+          "source": "Yahoo Finance via yfinance direct historical request",
+          "requested_start": "2026-07-27",
+          "requested_end_exclusive": "2026-09-12",
+          "interval": "5m",
+          "auto_adjust": false,
+          "raw_rows": 2652,
+          "regular_rows": 2652,
+          "first": "2026-07-27 09:30:00-04:00",
+          "last": "2026-09-11 15:55:00-04:00",
+          "sha256": "ab01f9b2130895e036a4bb35ed191217582adff50a542529df86fc110182a414",
+          "corporate_actions": {
+            "Dividends": {},
+            "Stock Splits": {}
+          },
+          "sessions": {
+            "2026-07-27": 78,
+            "2026-07-28": 78,
+            "2026-07-29": 78,
+            "2026-07-30": 78,
+            "2026-07-31": 78,
+            "2026-08-03": 78,
+            "2026-08-04": 78,
+            "2026-08-05": 78,
+            "2026-08-06": 78,
+            "2026-08-07": 78,
+            "2026-08-10": 78,
+            "2026-08-11": 78,
+            "2026-08-12": 78,
+            "2026-08-13": 78,
+            "2026-08-14": 78,
+            "2026-08-17": 78,
+            "2026-08-18": 78,
+            "2026-08-19": 78,
+            "2026-08-20": 78,
+            "2026-08-21": 78,
+            "2026-08-24": 78,
+            "2026-08-25": 78,
+            "2026-08-26": 78,
+            "2026-08-27": 78,
+            "2026-08-28": 78,
+            "2026-08-31": 78,
+            "2026-09-01": 78,
+            "2026-09-02": 78,
+            "2026-09-03": 78,
+            "2026-09-04": 78,
+            "2026-09-08": 78,
+            "2026-09-09": 78,
+            "2026-09-10": 78,
+            "2026-09-11": 78
+          }
+        },
+        "INTC": {
+          "source": "Yahoo Finance via yfinance direct historical request",
+          "requested_start": "2026-07-27",
+          "requested_end_exclusive": "2026-09-12",
+          "interval": "5m",
+          "auto_adjust": false,
+          "raw_rows": 2652,
+          "regular_rows": 2652,
+          "first": "2026-07-27 09:30:00-04:00",
+          "last": "2026-09-11 15:55:00-04:00",
+          "sha256": "89b647b95972299c13c515fd2f8e25fc22a40032f0e022c885b57a935f6d2a43",
+          "corporate_actions": {
+            "Dividends": {},
+            "Stock Splits": {}
+          },
+          "sessions": {
+            "2026-07-27": 78,
+            "2026-07-28": 78,
+            "2026-07-29": 78,
+            "2026-07-30": 78,
+            "2026-07-31": 78,
+            "2026-08-03": 78,
+            "2026-08-04": 78,
+            "2026-08-05": 78,
+            "2026-08-06": 78,
+            "2026-08-07": 78,
+            "2026-08-10": 78,
+            "2026-08-11": 78,
+            "2026-08-12": 78,
+            "2026-08-13": 78,
+            "2026-08-14": 78,
+            "2026-08-17": 78,
+            "2026-08-18": 78,
+            "2026-08-19": 78,
+            "2026-08-20": 78,
+            "2026-08-21": 78,
+            "2026-08-24": 78,
+            "2026-08-25": 78,
+            "2026-08-26": 78,
+            "2026-08-27": 78,
+            "2026-08-28": 78,
+            "2026-08-31": 78,
+            "2026-09-01": 78,
+            "2026-09-02": 78,
+            "2026-09-03": 78,
+            "2026-09-04": 78,
+            "2026-09-08": 78,
+            "2026-09-09": 78,
+            "2026-09-10": 78,
+            "2026-09-11": 78
+          }
+        },
+        "TSM": {
+          "source": "Yahoo Finance via yfinance direct historical request",
+          "requested_start": "2026-07-27",
+          "requested_end_exclusive": "2026-09-12",
+          "interval": "5m",
+          "auto_adjust": false,
+          "raw_rows": 2652,
+          "regular_rows": 2652,
+          "first": "2026-07-27 09:30:00-04:00",
+          "last": "2026-09-11 15:55:00-04:00",
+          "sha256": "d0af09418d5503daca1835bdc32f24eb7b55382cde3a61d460d55c8d48ace215",
+          "corporate_actions": {
+            "Dividends": {},
+            "Stock Splits": {}
+          },
+          "sessions": {
+            "2026-07-27": 78,
+            "2026-07-28": 78,
+            "2026-07-29": 78,
+            "2026-07-30": 78,
+            "2026-07-31": 78,
+            "2026-08-03": 78,
+            "2026-08-04": 78,
+            "2026-08-05": 78,
+            "2026-08-06": 78,
+            "2026-08-07": 78,
+            "2026-08-10": 78,
+            "2026-08-11": 78,
+            "2026-08-12": 78,
+            "2026-08-13": 78,
+            "2026-08-14": 78,
+            "2026-08-17": 78,
+            "2026-08-18": 78,
+            "2026-08-19": 78,
+            "2026-08-20": 78,
+            "2026-08-21": 78,
+            "2026-08-24": 78,
+            "2026-08-25": 78,
+            "2026-08-26": 78,
+            "2026-08-27": 78,
+            "2026-08-28": 78,
+            "2026-08-31": 78,
+            "2026-09-01": 78,
+            "2026-09-02": 78,
+            "2026-09-03": 78,
+            "2026-09-04": 78,
+            "2026-09-08": 78,
+            "2026-09-09": 78,
+            "2026-09-10": 78,
+            "2026-09-11": 78
+          }
+        },
+        "CRM": {
+          "source": "Yahoo Finance via yfinance direct historical request",
+          "requested_start": "2026-07-27",
+          "requested_end_exclusive": "2026-09-12",
+          "interval": "5m",
+          "auto_adjust": false,
+          "raw_rows": 2652,
+          "regular_rows": 2652,
+          "first": "2026-07-27 09:30:00-04:00",
+          "last": "2026-09-11 15:55:00-04:00",
+          "sha256": "bb9baad1751c0cb8f6e5fe371824f0c9321d670449d3050f98fe42ab9ca654f4",
+          "corporate_actions": {
+            "Dividends": {},
+            "Stock Splits": {}
+          },
+          "sessions": {
+            "2026-07-27": 78,
+            "2026-07-28": 78,
+            "2026-07-29": 78,
+            "2026-07-30": 78,
+            "2026-07-31": 78,
+            "2026-08-03": 78,
+            "2026-08-04": 78,
+            "2026-08-05": 78,
+            "2026-08-06": 78,
+            "2026-08-07": 78,
+            "2026-08-10": 78,
+            "2026-08-11": 78,
+            "2026-08-12": 78,
+            "2026-08-13": 78,
+            "2026-08-14": 78,
+            "2026-08-17": 78,
+            "2026-08-18": 78,
+            "2026-08-19": 78,
+            "2026-08-20": 78,
+            "2026-08-21": 78,
+            "2026-08-24": 78,
+            "2026-08-25": 78,
+            "2026-08-26": 78,
+            "2026-08-27": 78,
+            "2026-08-28": 78,
+            "2026-08-31": 78,
+            "2026-09-01": 78,
+            "2026-09-02": 78,
+            "2026-09-03": 78,
+            "2026-09-04": 78,
+            "2026-09-08": 78,
+            "2026-09-09": 78,
+            "2026-09-10": 78,
+            "2026-09-11": 78
+          }
+        },
+        "UBER": {
+          "source": "Yahoo Finance via yfinance direct historical request",
+          "requested_start": "2026-07-27",
+          "requested_end_exclusive": "2026-09-12",
+          "interval": "5m",
+          "auto_adjust": false,
+          "raw_rows": 2652,
+          "regular_rows": 2652,
+          "first": "2026-07-27 09:30:00-04:00",
+          "last": "2026-09-11 15:55:00-04:00",
+          "sha256": "7d1b4da8f5a10236784fc783573dcfe57651d110351c0df0ed04ceea5932a60f",
+          "corporate_actions": {
+            "Dividends": {},
+            "Stock Splits": {}
+          },
+          "sessions": {
+            "2026-07-27": 78,
+            "2026-07-28": 78,
+            "2026-07-29": 78,
+            "2026-07-30": 78,
+            "2026-07-31": 78,
+            "2026-08-03": 78,
+            "2026-08-04": 78,
+            "2026-08-05": 78,
+            "2026-08-06": 78,
+            "2026-08-07": 78,
+            "2026-08-10": 78,
+            "2026-08-11": 78,
+            "2026-08-12": 78,
+            "2026-08-13": 78,
+            "2026-08-14": 78,
+            "2026-08-17": 78,
+            "2026-08-18": 78,
+            "2026-08-19": 78,
+            "2026-08-20": 78,
+            "2026-08-21": 78,
+            "2026-08-24": 78,
+            "2026-08-25": 78,
+            "2026-08-26": 78,
+            "2026-08-27": 78,
+            "2026-08-28": 78,
+            "2026-08-31": 78,
+            "2026-09-01": 78,
+            "2026-09-02": 78,
+            "2026-09-03": 78,
+            "2026-09-04": 78,
+            "2026-09-08": 78,
+            "2026-09-09": 78,
+            "2026-09-10": 78,
+            "2026-09-11": 78
+          }
+        },
+        "JPM": {
+          "source": "Yahoo Finance via yfinance direct historical request",
+          "requested_start": "2026-07-27",
+          "requested_end_exclusive": "2026-09-12",
+          "interval": "5m",
+          "auto_adjust": false,
+          "raw_rows": 2652,
+          "regular_rows": 2652,
+          "first": "2026-07-27 09:30:00-04:00",
+          "last": "2026-09-11 15:55:00-04:00",
+          "sha256": "86fbdffbe01906dcf3a1ccca8df1c8ad48d2f8616b490478ea01f3fb4c556bba",
+          "corporate_actions": {
+            "Dividends": {},
+            "Stock Splits": {}
+          },
+          "sessions": {
+            "2026-07-27": 78,
+            "2026-07-28": 78,
+            "2026-07-29": 78,
+            "2026-07-30": 78,
+            "2026-07-31": 78,
+            "2026-08-03": 78,
+            "2026-08-04": 78,
+            "2026-08-05": 78,
+            "2026-08-06": 78,
+            "2026-08-07": 78,
+            "2026-08-10": 78,
+            "2026-08-11": 78,
+            "2026-08-12": 78,
+            "2026-08-13": 78,
+            "2026-08-14": 78,
+            "2026-08-17": 78,
+            "2026-08-18": 78,
+            "2026-08-19": 78,
+            "2026-08-20": 78,
+            "2026-08-21": 78,
+            "2026-08-24": 78,
+            "2026-08-25": 78,
+            "2026-08-26": 78,
+            "2026-08-27": 78,
+            "2026-08-28": 78,
+            "2026-08-31": 78,
+            "2026-09-01": 78,
+            "2026-09-02": 78,
+            "2026-09-03": 78,
+            "2026-09-04": 78,
+            "2026-09-08": 78,
+            "2026-09-09": 78,
+            "2026-09-10": 78,
+            "2026-09-11": 78
+          }
+        },
+        "XLF": {
+          "source": "Yahoo Finance via yfinance direct historical request",
+          "requested_start": "2026-07-27",
+          "requested_end_exclusive": "2026-09-12",
+          "interval": "5m",
+          "auto_adjust": false,
+          "raw_rows": 2652,
+          "regular_rows": 2652,
+          "first": "2026-07-27 09:30:00-04:00",
+          "last": "2026-09-11 15:55:00-04:00",
+          "sha256": "7953a4d83ed9367c2900f831b7cb6f59439b2bfce57dafec69a8d4ef669d3219",
+          "corporate_actions": {
+            "Dividends": {},
+            "Stock Splits": {}
+          },
+          "sessions": {
+            "2026-07-27": 78,
+            "2026-07-28": 78,
+            "2026-07-29": 78,
+            "2026-07-30": 78,
+            "2026-07-31": 78,
+            "2026-08-03": 78,
+            "2026-08-04": 78,
+            "2026-08-05": 78,
+            "2026-08-06": 78,
+            "2026-08-07": 78,
+            "2026-08-10": 78,
+            "2026-08-11": 78,
+            "2026-08-12": 78,
+            "2026-08-13": 78,
+            "2026-08-14": 78,
+            "2026-08-17": 78,
+            "2026-08-18": 78,
+            "2026-08-19": 78,
+            "2026-08-20": 78,
+            "2026-08-21": 78,
+            "2026-08-24": 78,
+            "2026-08-25": 78,
+            "2026-08-26": 78,
+            "2026-08-27": 78,
+            "2026-08-28": 78,
+            "2026-08-31": 78,
+            "2026-09-01": 78,
+            "2026-09-02": 78,
+            "2026-09-03": 78,
+            "2026-09-04": 78,
+            "2026-09-08": 78,
+            "2026-09-09": 78,
+            "2026-09-10": 78,
+            "2026-09-11": 78
+          }
+        }
+      },
+      "limitation": "Local retained source metadata; vendor was not independently re-queried."
+    },
+    "reports/liquid_universe_bars_20260913": {
+      "status": "retained_source_manifest_matches",
+      "manifest": {
+        "JNJ": {
+          "source": "Yahoo Finance via yfinance direct historical request",
+          "requested_start": "2026-07-27",
+          "requested_end_exclusive": "2026-09-12",
+          "interval": "5m",
+          "auto_adjust": false,
+          "raw_rows": 2652,
+          "regular_rows": 2652,
+          "first": "2026-07-27 09:30:00-04:00",
+          "last": "2026-09-11 15:55:00-04:00",
+          "sha256": "4af0924eb6f18ed5961c6e7d5305f3395ed4db045f8107854f2b035193c10009",
+          "corporate_actions": {
+            "Dividends": {
+              "2026-08-25 09:30:00-04:00": 1.34
+            },
+            "Stock Splits": {}
+          },
+          "sessions": {
+            "2026-07-27": 78,
+            "2026-07-28": 78,
+            "2026-07-29": 78,
+            "2026-07-30": 78,
+            "2026-07-31": 78,
+            "2026-08-03": 78,
+            "2026-08-04": 78,
+            "2026-08-05": 78,
+            "2026-08-06": 78,
+            "2026-08-07": 78,
+            "2026-08-10": 78,
+            "2026-08-11": 78,
+            "2026-08-12": 78,
+            "2026-08-13": 78,
+            "2026-08-14": 78,
+            "2026-08-17": 78,
+            "2026-08-18": 78,
+            "2026-08-19": 78,
+            "2026-08-20": 78,
+            "2026-08-21": 78,
+            "2026-08-24": 78,
+            "2026-08-25": 78,
+            "2026-08-26": 78,
+            "2026-08-27": 78,
+            "2026-08-28": 78,
+            "2026-08-31": 78,
+            "2026-09-01": 78,
+            "2026-09-02": 78,
+            "2026-09-03": 78,
+            "2026-09-04": 78,
+            "2026-09-08": 78,
+            "2026-09-09": 78,
+            "2026-09-10": 78,
+            "2026-09-11": 78
+          }
+        },
+        "XOM": {
+          "source": "Yahoo Finance via yfinance direct historical request",
+          "requested_start": "2026-07-27",
+          "requested_end_exclusive": "2026-09-12",
+          "interval": "5m",
+          "auto_adjust": false,
+          "raw_rows": 2652,
+          "regular_rows": 2652,
+          "first": "2026-07-27 09:30:00-04:00",
+          "last": "2026-09-11 15:55:00-04:00",
+          "sha256": "bb6b0c6fd406f60ca9fa84ac022a1471f5404794c28e55dbe20c84dac0493d78",
+          "corporate_actions": {
+            "Dividends": {
+              "2026-08-17 09:30:00-04:00": 1.03
+            },
+            "Stock Splits": {}
+          },
+          "sessions": {
+            "2026-07-27": 78,
+            "2026-07-28": 78,
+            "2026-07-29": 78,
+            "2026-07-30": 78,
+            "2026-07-31": 78,
+            "2026-08-03": 78,
+            "2026-08-04": 78,
+            "2026-08-05": 78,
+            "2026-08-06": 78,
+            "2026-08-07": 78,
+            "2026-08-10": 78,
+            "2026-08-11": 78,
+            "2026-08-12": 78,
+            "2026-08-13": 78,
+            "2026-08-14": 78,
+            "2026-08-17": 78,
+            "2026-08-18": 78,
+            "2026-08-19": 78,
+            "2026-08-20": 78,
+            "2026-08-21": 78,
+            "2026-08-24": 78,
+            "2026-08-25": 78,
+            "2026-08-26": 78,
+            "2026-08-27": 78,
+            "2026-08-28": 78,
+            "2026-08-31": 78,
+            "2026-09-01": 78,
+            "2026-09-02": 78,
+            "2026-09-03": 78,
+            "2026-09-04": 78,
+            "2026-09-08": 78,
+            "2026-09-09": 78,
+            "2026-09-10": 78,
+            "2026-09-11": 78
+          }
+        },
+        "PG": {
+          "source": "Yahoo Finance via yfinance direct historical request",
+          "requested_start": "2026-07-27",
+          "requested_end_exclusive": "2026-09-12",
+          "interval": "5m",
+          "auto_adjust": false,
+          "raw_rows": 2652,
+          "regular_rows": 2652,
+          "first": "2026-07-27 09:30:00-04:00",
+          "last": "2026-09-11 15:55:00-04:00",
+          "sha256": "491a9dd823b0f5a4afcf1333f8a7c540ce004c4d5c70af753be78f98ad1f821c",
+          "corporate_actions": {
+            "Dividends": {},
+            "Stock Splits": {}
+          },
+          "sessions": {
+            "2026-07-27": 78,
+            "2026-07-28": 78,
+            "2026-07-29": 78,
+            "2026-07-30": 78,
+            "2026-07-31": 78,
+            "2026-08-03": 78,
+            "2026-08-04": 78,
+            "2026-08-05": 78,
+            "2026-08-06": 78,
+            "2026-08-07": 78,
+            "2026-08-10": 78,
+            "2026-08-11": 78,
+            "2026-08-12": 78,
+            "2026-08-13": 78,
+            "2026-08-14": 78,
+            "2026-08-17": 78,
+            "2026-08-18": 78,
+            "2026-08-19": 78,
+            "2026-08-20": 78,
+            "2026-08-21": 78,
+            "2026-08-24": 78,
+            "2026-08-25": 78,
+            "2026-08-26": 78,
+            "2026-08-27": 78,
+            "2026-08-28": 78,
+            "2026-08-31": 78,
+            "2026-09-01": 78,
+            "2026-09-02": 78,
+            "2026-09-03": 78,
+            "2026-09-04": 78,
+            "2026-09-08": 78,
+            "2026-09-09": 78,
+            "2026-09-10": 78,
+            "2026-09-11": 78
+          }
+        },
+        "COST": {
+          "source": "Yahoo Finance via yfinance direct historical request",
+          "requested_start": "2026-07-27",
+          "requested_end_exclusive": "2026-09-12",
+          "interval": "5m",
+          "auto_adjust": false,
+          "raw_rows": 2652,
+          "regular_rows": 2652,
+          "first": "2026-07-27 09:30:00-04:00",
+          "last": "2026-09-11 15:55:00-04:00",
+          "sha256": "bc2a93f3704e5f95c119d09344d1d1f73d0d7a8c5cd0f6d20dfbbff5e36985c2",
+          "corporate_actions": {
+            "Dividends": {},
+            "Stock Splits": {}
+          },
+          "sessions": {
+            "2026-07-27": 78,
+            "2026-07-28": 78,
+            "2026-07-29": 78,
+            "2026-07-30": 78,
+            "2026-07-31": 78,
+            "2026-08-03": 78,
+            "2026-08-04": 78,
+            "2026-08-05": 78,
+            "2026-08-06": 78,
+            "2026-08-07": 78,
+            "2026-08-10": 78,
+            "2026-08-11": 78,
+            "2026-08-12": 78,
+            "2026-08-13": 78,
+            "2026-08-14": 78,
+            "2026-08-17": 78,
+            "2026-08-18": 78,
+            "2026-08-19": 78,
+            "2026-08-20": 78,
+            "2026-08-21": 78,
+            "2026-08-24": 78,
+            "2026-08-25": 78,
+            "2026-08-26": 78,
+            "2026-08-27": 78,
+            "2026-08-28": 78,
+            "2026-08-31": 78,
+            "2026-09-01": 78,
+            "2026-09-02": 78,
+            "2026-09-03": 78,
+            "2026-09-04": 78,
+            "2026-09-08": 78,
+            "2026-09-09": 78,
+            "2026-09-10": 78,
+            "2026-09-11": 78
+          }
+        },
+        "WMT": {
+          "source": "Yahoo Finance via yfinance direct historical request",
+          "requested_start": "2026-07-27",
+          "requested_end_exclusive": "2026-09-12",
+          "interval": "5m",
+          "auto_adjust": false,
+          "raw_rows": 2652,
+          "regular_rows": 2652,
+          "first": "2026-07-27 09:30:00-04:00",
+          "last": "2026-09-11 15:55:00-04:00",
+          "sha256": "400e82d3aff868ca566bb4e04a6e4eff529f0be296e131692298558b1061f656",
+          "corporate_actions": {
+            "Dividends": {
+              "2026-08-21 09:30:00-04:00": 0.248
+            },
+            "Stock Splits": {}
+          },
+          "sessions": {
+            "2026-07-27": 78,
+            "2026-07-28": 78,
+            "2026-07-29": 78,
+            "2026-07-30": 78,
+            "2026-07-31": 78,
+            "2026-08-03": 78,
+            "2026-08-04": 78,
+            "2026-08-05": 78,
+            "2026-08-06": 78,
+            "2026-08-07": 78,
+            "2026-08-10": 78,
+            "2026-08-11": 78,
+            "2026-08-12": 78,
+            "2026-08-13": 78,
+            "2026-08-14": 78,
+            "2026-08-17": 78,
+            "2026-08-18": 78,
+            "2026-08-19": 78,
+            "2026-08-20": 78,
+            "2026-08-21": 78,
+            "2026-08-24": 78,
+            "2026-08-25": 78,
+            "2026-08-26": 78,
+            "2026-08-27": 78,
+            "2026-08-28": 78,
+            "2026-08-31": 78,
+            "2026-09-01": 78,
+            "2026-09-02": 78,
+            "2026-09-03": 78,
+            "2026-09-04": 78,
+            "2026-09-08": 78,
+            "2026-09-09": 78,
+            "2026-09-10": 78,
+            "2026-09-11": 78
+          }
+        },
+        "UNH": {
+          "source": "Yahoo Finance via yfinance direct historical request",
+          "requested_start": "2026-07-27",
+          "requested_end_exclusive": "2026-09-12",
+          "interval": "5m",
+          "auto_adjust": false,
+          "raw_rows": 2652,
+          "regular_rows": 2652,
+          "first": "2026-07-27 09:30:00-04:00",
+          "last": "2026-09-11 15:55:00-04:00",
+          "sha256": "7345ec33676b13d7a24f380cd566264c18591b5ada067f86ffdfb8e9019dbe4c",
+          "corporate_actions": {
+            "Dividends": {},
+            "Stock Splits": {}
+          },
+          "sessions": {
+            "2026-07-27": 78,
+            "2026-07-28": 78,
+            "2026-07-29": 78,
+            "2026-07-30": 78,
+            "2026-07-31": 78,
+            "2026-08-03": 78,
+            "2026-08-04": 78,
+            "2026-08-05": 78,
+            "2026-08-06": 78,
+            "2026-08-07": 78,
+            "2026-08-10": 78,
+            "2026-08-11": 78,
+            "2026-08-12": 78,
+            "2026-08-13": 78,
+            "2026-08-14": 78,
+            "2026-08-17": 78,
+            "2026-08-18": 78,
+            "2026-08-19": 78,
+            "2026-08-20": 78,
+            "2026-08-21": 78,
+            "2026-08-24": 78,
+            "2026-08-25": 78,
+            "2026-08-26": 78,
+            "2026-08-27": 78,
+            "2026-08-28": 78,
+            "2026-08-31": 78,
+            "2026-09-01": 78,
+            "2026-09-02": 78,
+            "2026-09-03": 78,
+            "2026-09-04": 78,
+            "2026-09-08": 78,
+            "2026-09-09": 78,
+            "2026-09-10": 78,
+            "2026-09-11": 78
+          }
+        },
+        "V": {
+          "source": "Yahoo Finance via yfinance direct historical request",
+          "requested_start": "2026-07-27",
+          "requested_end_exclusive": "2026-09-12",
+          "interval": "5m",
+          "auto_adjust": false,
+          "raw_rows": 2652,
+          "regular_rows": 2652,
+          "first": "2026-07-27 09:30:00-04:00",
+          "last": "2026-09-11 15:55:00-04:00",
+          "sha256": "cda0262066ff38d2437f838df15051cbaf7b3ac1f3d10acbef114371c4c32e62",
+          "corporate_actions": {
+            "Dividends": {
+              "2026-08-11 09:30:00-04:00": 0.67
+            },
+            "Stock Splits": {}
+          },
+          "sessions": {
+            "2026-07-27": 78,
+            "2026-07-28": 78,
+            "2026-07-29": 78,
+            "2026-07-30": 78,
+            "2026-07-31": 78,
+            "2026-08-03": 78,
+            "2026-08-04": 78,
+            "2026-08-05": 78,
+            "2026-08-06": 78,
+            "2026-08-07": 78,
+            "2026-08-10": 78,
+            "2026-08-11": 78,
+            "2026-08-12": 78,
+            "2026-08-13": 78,
+            "2026-08-14": 78,
+            "2026-08-17": 78,
+            "2026-08-18": 78,
+            "2026-08-19": 78,
+            "2026-08-20": 78,
+            "2026-08-21": 78,
+            "2026-08-24": 78,
+            "2026-08-25": 78,
+            "2026-08-26": 78,
+            "2026-08-27": 78,
+            "2026-08-28": 78,
+            "2026-08-31": 78,
+            "2026-09-01": 78,
+            "2026-09-02": 78,
+            "2026-09-03": 78,
+            "2026-09-04": 78,
+            "2026-09-08": 78,
+            "2026-09-09": 78,
+            "2026-09-10": 78,
+            "2026-09-11": 78
+          }
+        },
+        "MA": {
+          "source": "Yahoo Finance via yfinance direct historical request",
+          "requested_start": "2026-07-27",
+          "requested_end_exclusive": "2026-09-12",
+          "interval": "5m",
+          "auto_adjust": false,
+          "raw_rows": 2652,
+          "regular_rows": 2652,
+          "first": "2026-07-27 09:30:00-04:00",
+          "last": "2026-09-11 15:55:00-04:00",
+          "sha256": "4c51b47bd2bfdd0a57cb95a65a6f8638e8c117df5a6360908daeada758d4d15e",
+          "corporate_actions": {
+            "Dividends": {},
+            "Stock Splits": {}
+          },
+          "sessions": {
+            "2026-07-27": 78,
+            "2026-07-28": 78,
+            "2026-07-29": 78,
+            "2026-07-30": 78,
+            "2026-07-31": 78,
+            "2026-08-03": 78,
+            "2026-08-04": 78,
+            "2026-08-05": 78,
+            "2026-08-06": 78,
+            "2026-08-07": 78,
+            "2026-08-10": 78,
+            "2026-08-11": 78,
+            "2026-08-12": 78,
+            "2026-08-13": 78,
+            "2026-08-14": 78,
+            "2026-08-17": 78,
+            "2026-08-18": 78,
+            "2026-08-19": 78,
+            "2026-08-20": 78,
+            "2026-08-21": 78,
+            "2026-08-24": 78,
+            "2026-08-25": 78,
+            "2026-08-26": 78,
+            "2026-08-27": 78,
+            "2026-08-28": 78,
+            "2026-08-31": 78,
+            "2026-09-01": 78,
+            "2026-09-02": 78,
+            "2026-09-03": 78,
+            "2026-09-04": 78,
+            "2026-09-08": 78,
+            "2026-09-09": 78,
+            "2026-09-10": 78,
+            "2026-09-11": 78
+          }
+        },
+        "XLV": {
+          "source": "Yahoo Finance via yfinance direct historical request",
+          "requested_start": "2026-07-27",
+          "requested_end_exclusive": "2026-09-12",
+          "interval": "5m",
+          "auto_adjust": false,
+          "raw_rows": 2652,
+          "regular_rows": 2652,
+          "first": "2026-07-27 09:30:00-04:00",
+          "last": "2026-09-11 15:55:00-04:00",
+          "sha256": "0239a7ebf91947a7bbb7a39ae581f90c04726383f2636479034e4a7471fa7d56",
+          "corporate_actions": {
+            "Dividends": {},
+            "Stock Splits": {}
+          },
+          "sessions": {
+            "2026-07-27": 78,
+            "2026-07-28": 78,
+            "2026-07-29": 78,
+            "2026-07-30": 78,
+            "2026-07-31": 78,
+            "2026-08-03": 78,
+            "2026-08-04": 78,
+            "2026-08-05": 78,
+            "2026-08-06": 78,
+            "2026-08-07": 78,
+            "2026-08-10": 78,
+            "2026-08-11": 78,
+            "2026-08-12": 78,
+            "2026-08-13": 78,
+            "2026-08-14": 78,
+            "2026-08-17": 78,
+            "2026-08-18": 78,
+            "2026-08-19": 78,
+            "2026-08-20": 78,
+            "2026-08-21": 78,
+            "2026-08-24": 78,
+            "2026-08-25": 78,
+            "2026-08-26": 78,
+            "2026-08-27": 78,
+            "2026-08-28": 78,
+            "2026-08-31": 78,
+            "2026-09-01": 78,
+            "2026-09-02": 78,
+            "2026-09-03": 78,
+            "2026-09-04": 78,
+            "2026-09-08": 78,
+            "2026-09-09": 78,
+            "2026-09-10": 78,
+            "2026-09-11": 78
+          }
+        },
+        "XLP": {
+          "source": "Yahoo Finance via yfinance direct historical request",
+          "requested_start": "2026-07-27",
+          "requested_end_exclusive": "2026-09-12",
+          "interval": "5m",
+          "auto_adjust": false,
+          "raw_rows": 2652,
+          "regular_rows": 2652,
+          "first": "2026-07-27 09:30:00-04:00",
+          "last": "2026-09-11 15:55:00-04:00",
+          "sha256": "02e9f767dca60d9cb2e0685ad1219db65556ebf12a08f6dda4ce8004bc540a42",
+          "corporate_actions": {
+            "Dividends": {},
+            "Stock Splits": {}
+          },
+          "sessions": {
+            "2026-07-27": 78,
+            "2026-07-28": 78,
+            "2026-07-29": 78,
+            "2026-07-30": 78,
+            "2026-07-31": 78,
+            "2026-08-03": 78,
+            "2026-08-04": 78,
+            "2026-08-05": 78,
+            "2026-08-06": 78,
+            "2026-08-07": 78,
+            "2026-08-10": 78,
+            "2026-08-11": 78,
+            "2026-08-12": 78,
+            "2026-08-13": 78,
+            "2026-08-14": 78,
+            "2026-08-17": 78,
+            "2026-08-18": 78,
+            "2026-08-19": 78,
+            "2026-08-20": 78,
+            "2026-08-21": 78,
+            "2026-08-24": 78,
+            "2026-08-25": 78,
+            "2026-08-26": 78,
+            "2026-08-27": 78,
+            "2026-08-28": 78,
+            "2026-08-31": 78,
+            "2026-09-01": 78,
+            "2026-09-02": 78,
+            "2026-09-03": 78,
+            "2026-09-04": 78,
+            "2026-09-08": 78,
+            "2026-09-09": 78,
+            "2026-09-10": 78,
+            "2026-09-11": 78
+          }
+        },
+        "XLE": {
+          "source": "Yahoo Finance via yfinance direct historical request",
+          "requested_start": "2026-07-27",
+          "requested_end_exclusive": "2026-09-12",
+          "interval": "5m",
+          "auto_adjust": false,
+          "raw_rows": 2652,
+          "regular_rows": 2652,
+          "first": "2026-07-27 09:30:00-04:00",
+          "last": "2026-09-11 15:55:00-04:00",
+          "sha256": "179b51d25a85feeedf3d725ee3a99e3e709a30a0fca727711c8dbb8f5ab199c6",
+          "corporate_actions": {
+            "Dividends": {},
+            "Stock Splits": {}
+          },
+          "sessions": {
+            "2026-07-27": 78,
+            "2026-07-28": 78,
+            "2026-07-29": 78,
+            "2026-07-30": 78,
+            "2026-07-31": 78,
+            "2026-08-03": 78,
+            "2026-08-04": 78,
+            "2026-08-05": 78,
+            "2026-08-06": 78,
+            "2026-08-07": 78,
+            "2026-08-10": 78,
+            "2026-08-11": 78,
+            "2026-08-12": 78,
+            "2026-08-13": 78,
+            "2026-08-14": 78,
+            "2026-08-17": 78,
+            "2026-08-18": 78,
+            "2026-08-19": 78,
+            "2026-08-20": 78,
+            "2026-08-21": 78,
+            "2026-08-24": 78,
+            "2026-08-25": 78,
+            "2026-08-26": 78,
+            "2026-08-27": 78,
+            "2026-08-28": 78,
+            "2026-08-31": 78,
+            "2026-09-01": 78,
+            "2026-09-02": 78,
+            "2026-09-03": 78,
+            "2026-09-04": 78,
+            "2026-09-08": 78,
+            "2026-09-09": 78,
+            "2026-09-10": 78,
+            "2026-09-11": 78
+          }
+        }
+      },
+      "limitation": "Local retained source metadata; vendor was not independently re-queried."
+    },
+    "reports/quant_audit_20260912/bars": {
+      "status": "retained_source_manifest_matches",
+      "manifest": {
+        "SNDK": {
+          "source": "Yahoo Finance via yfinance direct historical request",
+          "requested_start": "2026-07-27",
+          "requested_end_exclusive": "2026-09-12",
+          "interval": "5m",
+          "auto_adjust": false,
+          "raw_rows": 2652,
+          "regular_rows": 2652,
+          "first": "2026-07-27 09:30:00-04:00",
+          "last": "2026-09-11 15:55:00-04:00",
+          "sha256": "edc7503de4599a0d82563a7500f220b6b428d7feadb77826c6a5f74aea4b98f7",
+          "sessions": {
+            "2026-07-27": 78,
+            "2026-07-28": 78,
+            "2026-07-29": 78,
+            "2026-07-30": 78,
+            "2026-07-31": 78,
+            "2026-08-03": 78,
+            "2026-08-04": 78,
+            "2026-08-05": 78,
+            "2026-08-06": 78,
+            "2026-08-07": 78,
+            "2026-08-10": 78,
+            "2026-08-11": 78,
+            "2026-08-12": 78,
+            "2026-08-13": 78,
+            "2026-08-14": 78,
+            "2026-08-17": 78,
+            "2026-08-18": 78,
+            "2026-08-19": 78,
+            "2026-08-20": 78,
+            "2026-08-21": 78,
+            "2026-08-24": 78,
+            "2026-08-25": 78,
+            "2026-08-26": 78,
+            "2026-08-27": 78,
+            "2026-08-28": 78,
+            "2026-08-31": 78,
+            "2026-09-01": 78,
+            "2026-09-02": 78,
+            "2026-09-03": 78,
+            "2026-09-04": 78,
+            "2026-09-08": 78,
+            "2026-09-09": 78,
+            "2026-09-10": 78,
+            "2026-09-11": 78
+          }
+        },
+        "TSLA": {
+          "source": "Yahoo Finance via yfinance direct historical request",
+          "requested_start": "2026-07-27",
+          "requested_end_exclusive": "2026-09-12",
+          "interval": "5m",
+          "auto_adjust": false,
+          "raw_rows": 2652,
+          "regular_rows": 2652,
+          "first": "2026-07-27 09:30:00-04:00",
+          "last": "2026-09-11 15:55:00-04:00",
+          "sha256": "d3a3a6349e39ff26953bf3d9dc2fdeef0d003f9b0d7993f2535a85109886a1c8",
+          "sessions": {
+            "2026-07-27": 78,
+            "2026-07-28": 78,
+            "2026-07-29": 78,
+            "2026-07-30": 78,
+            "2026-07-31": 78,
+            "2026-08-03": 78,
+            "2026-08-04": 78,
+            "2026-08-05": 78,
+            "2026-08-06": 78,
+            "2026-08-07": 78,
+            "2026-08-10": 78,
+            "2026-08-11": 78,
+            "2026-08-12": 78,
+            "2026-08-13": 78,
+            "2026-08-14": 78,
+            "2026-08-17": 78,
+            "2026-08-18": 78,
+            "2026-08-19": 78,
+            "2026-08-20": 78,
+            "2026-08-21": 78,
+            "2026-08-24": 78,
+            "2026-08-25": 78,
+            "2026-08-26": 78,
+            "2026-08-27": 78,
+            "2026-08-28": 78,
+            "2026-08-31": 78,
+            "2026-09-01": 78,
+            "2026-09-02": 78,
+            "2026-09-03": 78,
+            "2026-09-04": 78,
+            "2026-09-08": 78,
+            "2026-09-09": 78,
+            "2026-09-10": 78,
+            "2026-09-11": 78
+          }
+        },
+        "MSTR": {
+          "source": "Yahoo Finance via yfinance direct historical request",
+          "requested_start": "2026-07-27",
+          "requested_end_exclusive": "2026-09-12",
+          "interval": "5m",
+          "auto_adjust": false,
+          "raw_rows": 2652,
+          "regular_rows": 2652,
+          "first": "2026-07-27 09:30:00-04:00",
+          "last": "2026-09-11 15:55:00-04:00",
+          "sha256": "960731e89bc4668b12ea49335d59e60b13dccef2304fce3017da88f034eb00ab",
+          "sessions": {
+            "2026-07-27": 78,
+            "2026-07-28": 78,
+            "2026-07-29": 78,
+            "2026-07-30": 78,
+            "2026-07-31": 78,
+            "2026-08-03": 78,
+            "2026-08-04": 78,
+            "2026-08-05": 78,
+            "2026-08-06": 78,
+            "2026-08-07": 78,
+            "2026-08-10": 78,
+            "2026-08-11": 78,
+            "2026-08-12": 78,
+            "2026-08-13": 78,
+            "2026-08-14": 78,
+            "2026-08-17": 78,
+            "2026-08-18": 78,
+            "2026-08-19": 78,
+            "2026-08-20": 78,
+            "2026-08-21": 78,
+            "2026-08-24": 78,
+            "2026-08-25": 78,
+            "2026-08-26": 78,
+            "2026-08-27": 78,
+            "2026-08-28": 78,
+            "2026-08-31": 78,
+            "2026-09-01": 78,
+            "2026-09-02": 78,
+            "2026-09-03": 78,
+            "2026-09-04": 78,
+            "2026-09-08": 78,
+            "2026-09-09": 78,
+            "2026-09-10": 78,
+            "2026-09-11": 78
+          }
+        },
+        "NVDA": {
+          "source": "Yahoo Finance via yfinance direct historical request",
+          "requested_start": "2026-07-27",
+          "requested_end_exclusive": "2026-09-12",
+          "interval": "5m",
+          "auto_adjust": false,
+          "raw_rows": 2652,
+          "regular_rows": 2652,
+          "first": "2026-07-27 09:30:00-04:00",
+          "last": "2026-09-11 15:55:00-04:00",
+          "sha256": "f2fb1d7b857ff87494f0eb0995cb8d37ba5bb8cd1942d35519da8971d622b0f4",
+          "sessions": {
+            "2026-07-27": 78,
+            "2026-07-28": 78,
+            "2026-07-29": 78,
+            "2026-07-30": 78,
+            "2026-07-31": 78,
+            "2026-08-03": 78,
+            "2026-08-04": 78,
+            "2026-08-05": 78,
+            "2026-08-06": 78,
+            "2026-08-07": 78,
+            "2026-08-10": 78,
+            "2026-08-11": 78,
+            "2026-08-12": 78,
+            "2026-08-13": 78,
+            "2026-08-14": 78,
+            "2026-08-17": 78,
+            "2026-08-18": 78,
+            "2026-08-19": 78,
+            "2026-08-20": 78,
+            "2026-08-21": 78,
+            "2026-08-24": 78,
+            "2026-08-25": 78,
+            "2026-08-26": 78,
+            "2026-08-27": 78,
+            "2026-08-28": 78,
+            "2026-08-31": 78,
+            "2026-09-01": 78,
+            "2026-09-02": 78,
+            "2026-09-03": 78,
+            "2026-09-04": 78,
+            "2026-09-08": 78,
+            "2026-09-09": 78,
+            "2026-09-10": 78,
+            "2026-09-11": 78
+          }
+        }
+      },
+      "limitation": "Local retained source metadata; vendor was not independently re-queried."
+    }
+  },
+  "sources": {
+    "scripts/run_active_research.py": "74544057a007a4ea207ea7d6e64cc479ef7f3614916d0aeebc4cec78f8705e27",
+    "backend/app/research/active_policy.py": "ebd2a1b108f450a8ad214e304bf4ddca0ccb0c1159983fab688e37683031892c",
+    "backend/app/research/liquid_policy.py": "e0a22e880e1d182cc9cbc2395ba7536730e06f5bdf28c0c2f8c2da4ed17f5365",
+    "backend/app/research/strategy_extensions.py": "705657b7d78525ce2153a8f3ed1c9bbebb187a738a0c701a6affb81f452d5338",
+    "backend/app/research/platform.py": "f2a02f8a40166992e05b43ac46a1b0019204d9827cecada3ddf9cc36de9a8b69",
+    "backend/app/research/data_audit.py": "003cab38c9c0a8396bc5ec5f36d7e54a7b3a6bd1c9bcf82a1c4d2027e29a0be5",
+    "backend/app/research/policy_replay.py": "787f5149f3fd69fdaf70ff45508d3da0620b8c19319fb5edbf246a9df6184135",
+    "backend/app/research/causal_week_replay.py": "b96264a34e9675bcf242a5dbe6881a475176015f34362c1553963b4dd8729011",
+    "backend/app/research/attribution.py": "8af334cbbccf65e508c1e27553ac0ee3c4ffa8580d64280b41cc2aee4146878b",
+    "backend/app/research/artifacts.py": "8157e943d9f49abb4c6fa7fa6f0b2fc0eb0453850f62fcb8989b87ae1b96ce08",
+    "backend/app/quant_policy.py": "c62509a5f8151558b0d9b339a72956cc02684723a646d88924b9cd019aadc5fd"
+  },
+  "library_versions": {
+    "numpy": "1.26.4",
+    "pandas": "2.3.3",
+    "scipy": "1.16.2",
+    "scikit-learn": "1.7.2",
+    "osqp": "1.1.3",
+    "exchange-calendars": "4.13.2"
+  },
+  "trials": [
+    {
+      "candidate": {
+        "name": "four_tree_control",
+        "universe": "four",
+        "calibration": false,
+        "integrated_risk": false,
+        "symbol_limit": 0.7,
+        "benchmark": false,
+        "control": true,
+        "risk_aversion": 50.0,
+        "single_stock": false
+      },
+      "cost_bps": 5,
+      "status": "complete",
+      "summary": {
+        "start": "2026-08-31",
+        "end": "2026-09-11",
+        "sessions": 9,
+        "starting_equity": 100000.0,
+        "ending_equity": 111758.86043419303,
+        "net_pnl": 11758.860434193033,
+        "net_return": 0.1175886043419303,
+        "gross_pnl": 15917.425544739146,
+        "costs": 4158.565110546111,
+        "turnover_dollars": 8317130.221092224,
+        "fill_count": 900,
+        "max_drawdown": -0.02529975746090607,
+        "max_gross_exposure": 0.9585273074213467,
+        "max_symbol_exposure": 0.7078581312019243,
+        "profitable_sessions": 6
+      },
+      "attribution": {
+        "net_pnl": 11758.860434193033,
+        "gross_pnl": 15917.42554473877,
+        "costs": 4158.565110546112,
+        "reconciled": true,
+        "by_symbol": [
+          {
+            "symbol": "MSTR",
+            "gross_pnl": 12407.288719177246,
+            "costs": 1245.4717944526672,
+            "net_pnl": 11161.816924724579
+          },
+          {
+            "symbol": "NVDA",
+            "gross_pnl": -67.77110290527344,
+            "costs": 960.1349124832153,
+            "net_pnl": -1027.9060153884889
+          },
+          {
+            "symbol": "SNDK",
+            "gross_pnl": 325.907958984375,
+            "costs": 715.7749418945313,
+            "net_pnl": -389.86698291015625
+          },
+          {
+            "symbol": "TSLA",
+            "gross_pnl": 3251.999969482422,
+            "costs": 1237.1834617156983,
+            "net_pnl": 2014.8165077667236
+          }
+        ],
+        "by_direction": [
+          {
+            "direction": "long",
+            "gross_pnl": 16070.462425231934,
+            "costs": 2560.660954257965,
+            "net_pnl": 13509.80147097397
+          },
+          {
+            "direction": "short",
+            "gross_pnl": -153.03688049316406,
+            "costs": 1597.904156288147,
+            "net_pnl": -1750.9410367813111
+          }
+        ],
+        "by_day": [
+          {
+            "date": "2026-08-31",
+            "gross_pnl": 2939.360580444336,
+            "costs": 484.39272303009034,
+            "net_pnl": 2454.9678574142454
+          },
+          {
+            "date": "2026-09-01",
+            "gross_pnl": 847.5438079833984,
+            "costs": 232.7669939651489,
+            "net_pnl": 614.7768140182495
+          },
+          {
+            "date": "2026-09-02",
+            "gross_pnl": -334.77860260009766,
+            "costs": 497.18754484939575,
+            "net_pnl": -831.9661474494934
+          },
+          {
+            "date": "2026-09-03",
+            "gross_pnl": 5685.6500244140625,
+            "costs": 394.0654474487305,
+            "net_pnl": 5291.584576965332
+          },
+          {
+            "date": "2026-09-04",
+            "gross_pnl": 540.3088073730469,
+            "costs": 652.3164281768799,
+            "net_pnl": -112.007620803833
+          },
+          {
+            "date": "2026-09-08",
+            "gross_pnl": 1643.3829498291016,
+            "costs": 513.6081391220093,
+            "net_pnl": 1129.7748107070922
+          },
+          {
+            "date": "2026-09-09",
+            "gross_pnl": -1423.229751586914,
+            "costs": 615.1847632675172,
+            "net_pnl": -2038.4145148544312
+          },
+          {
+            "date": "2026-09-10",
+            "gross_pnl": 1114.3249816894531,
+            "costs": 243.1985004425049,
+            "net_pnl": 871.1264812469483
+          },
+          {
+            "date": "2026-09-11",
+            "gross_pnl": 4904.862747192383,
+            "costs": 525.8445702438354,
+            "net_pnl": 4379.018176948547
+          }
+        ],
+        "by_hour": [
+          {
+            "hour": 9,
+            "gross_pnl": 5939.815093994141,
+            "costs": 1225.618994468689,
+            "net_pnl": 4714.196099525451
+          },
+          {
+            "hour": 10,
+            "gross_pnl": 2332.657112121582,
+            "costs": 1368.3089905662537,
+            "net_pnl": 964.3481215553284
+          },
+          {
+            "hour": 11,
+            "gross_pnl": 1123.8264465332031,
+            "costs": 716.9024519958497,
+            "net_pnl": 406.9239945373535
+          },
+          {
+            "hour": 12,
+            "gross_pnl": 267.93196868896484,
+            "costs": 184.05097203445433,
+            "net_pnl": 83.8809966545105
+          },
+          {
+            "hour": 13,
+            "gross_pnl": 1214.112403869629,
+            "costs": 9.87850177001953,
+            "net_pnl": 1204.2339020996094
+          },
+          {
+            "hour": 14,
+            "gross_pnl": 1466.6060485839844,
+            "costs": 106.62544487762452,
+            "net_pnl": 1359.98060370636
+          },
+          {
+            "hour": 15,
+            "gross_pnl": 3572.4764709472656,
+            "costs": 547.1797548332214,
+            "net_pnl": 3025.296716114044
+          }
+        ]
+      },
+      "per_symbol": {
+        "SNDK": {
+          "net_pnl": -389.86698291005723,
+          "costs": 715.7749418945311
+        },
+        "TSLA": {
+          "net_pnl": 2014.8165077668673,
+          "costs": 1237.183461715698
+        },
+        "MSTR": {
+          "net_pnl": 11161.816924724742,
+          "costs": 1245.4717944526672
+        },
+        "NVDA": {
+          "net_pnl": -1027.906015388391,
+          "costs": 960.1349124832152
+        }
+      },
+      "subsequent_period": {
+        "start": "2026-09-08",
+        "end": "2026-09-11",
+        "sessions": 4,
+        "starting_equity": 107417.35548014476,
+        "ending_equity": 111758.86043419303,
+        "net_pnl": 4341.504954048272,
+        "net_return": 0.04041716475556667,
+        "gross_pnl": 6239.340927124137,
+        "costs": 1897.8359730758648,
+        "turnover_dollars": 3795671.9461517334,
+        "fill_count": 458,
+        "max_drawdown": -0.025105784229874195,
+        "max_gross_exposure": 0.9585273074213467,
+        "max_symbol_exposure": 0.7078581312019243,
+        "profitable_sessions": 3
+      }
+    },
+    {
+      "candidate": {
+        "name": "liquid_dynamic_70",
+        "universe": "broad",
+        "calibration": false,
+        "integrated_risk": false,
+        "symbol_limit": 0.7,
+        "benchmark": false,
+        "control": false,
+        "risk_aversion": 50.0,
+        "single_stock": false
+      },
+      "cost_bps": 5,
+      "status": "complete",
+      "summary": {
+        "start": "2026-08-31",
+        "end": "2026-09-11",
+        "sessions": 9,
+        "starting_equity": 100000.0,
+        "ending_equity": 92913.34656779763,
+        "net_pnl": -7086.653432202365,
+        "net_return": -0.07086653432202361,
+        "gross_pnl": 5491.547013284171,
+        "costs": 12578.200445486536,
+        "turnover_dollars": 25156400.89097309,
+        "fill_count": 1811,
+        "max_drawdown": -0.07636214034947486,
+        "max_gross_exposure": 0.9543266775885718,
+        "max_symbol_exposure": 0.7091272848801486,
+        "profitable_sessions": 2
+      },
+      "attribution": {
+        "net_pnl": -7086.653432202365,
+        "gross_pnl": 5491.547013282776,
+        "costs": 12578.200445486546,
+        "reconciled": true,
+        "by_symbol": [
+          {
+            "symbol": "AAPL",
+            "gross_pnl": 386.0348205566406,
+            "costs": 332.2034785308838,
+            "net_pnl": 53.83134202575683
+          },
+          {
+            "symbol": "AMD",
+            "gross_pnl": 36.5758056640625,
+            "costs": 176.1053060913086,
+            "net_pnl": -139.5295004272461
+          },
+          {
+            "symbol": "AMZN",
+            "gross_pnl": 5.277099609375,
+            "costs": 68.38128112792968,
+            "net_pnl": -63.10418151855468
+          },
+          {
+            "symbol": "AVGO",
+            "gross_pnl": -57.296173095703125,
+            "costs": 654.9876648406982,
+            "net_pnl": -712.2838379364014
+          },
+          {
+            "symbol": "COIN",
+            "gross_pnl": 237.17218017578125,
+            "costs": 579.3599723815918,
+            "net_pnl": -342.1877922058105
+          },
+          {
+            "symbol": "CRM",
+            "gross_pnl": 206.05126953125,
+            "costs": 910.4062782440185,
+            "net_pnl": -704.3550087127685
+          },
+          {
+            "symbol": "GOOGL",
+            "gross_pnl": -436.8188171386719,
+            "costs": 326.31662190246584,
+            "net_pnl": -763.1354390411377
+          },
+          {
+            "symbol": "HOOD",
+            "gross_pnl": 2055.187629699707,
+            "costs": 834.5268987236022,
+            "net_pnl": 1220.6607309761048
+          },
+          {
+            "symbol": "INTC",
+            "gross_pnl": 958.3256454467773,
+            "costs": 1042.5510245628357,
+            "net_pnl": -84.22537911605835
+          },
+          {
+            "symbol": "JNJ",
+            "gross_pnl": -31.22119140625,
+            "costs": 123.47264111328124,
+            "net_pnl": -154.69383251953124
+          },
+          {
+            "symbol": "JPM",
+            "gross_pnl": -207.03707885742188,
+            "costs": 434.21727186584474,
+            "net_pnl": -641.2543507232666
+          },
+          {
+            "symbol": "MA",
+            "gross_pnl": -180.5472412109375,
+            "costs": 101.57362506103516,
+            "net_pnl": -282.12086627197266
+          },
+          {
+            "symbol": "MARA",
+            "gross_pnl": 2269.2681245803833,
+            "costs": 1208.4772700009346,
+            "net_pnl": 1060.7908545794487
+          },
+          {
+            "symbol": "META",
+            "gross_pnl": 187.5657958984375,
+            "costs": 723.7139700317383,
+            "net_pnl": -536.1481741333008
+          },
+          {
+            "symbol": "MSFT",
+            "gross_pnl": -32.390716552734375,
+            "costs": 80.03798109436036,
+            "net_pnl": -112.42869764709474
+          },
+          {
+            "symbol": "MSTR",
+            "gross_pnl": 174.94610595703125,
+            "costs": 360.0734313964844,
+            "net_pnl": -185.12732543945313
+          },
+          {
+            "symbol": "MU",
+            "gross_pnl": -45.0977783203125,
+            "costs": 432.5592241821289,
+            "net_pnl": -477.6570025024414
+          },
+          {
+            "symbol": "NFLX",
+            "gross_pnl": -99.8183364868164,
+            "costs": 608.0264310951233,
+            "net_pnl": -707.8447675819397
+          },
+          {
+            "symbol": "NVDA",
+            "gross_pnl": 714.5295257568359,
+            "costs": 154.88704009246825,
+            "net_pnl": 559.6424856643677
+          },
+          {
+            "symbol": "ORCL",
+            "gross_pnl": -105.20083618164062,
+            "costs": 792.1260762023926,
+            "net_pnl": -897.3269123840332
+          },
+          {
+            "symbol": "PG",
+            "gross_pnl": -0.029998779296875,
+            "costs": 0.14717500305175782,
+            "net_pnl": -0.17717378234863282
+          },
+          {
+            "symbol": "PLTR",
+            "gross_pnl": -962.6383666992188,
+            "costs": 588.7696600494385,
+            "net_pnl": -1551.4080267486572
+          },
+          {
+            "symbol": "SMCI",
+            "gross_pnl": -366.31299209594727,
+            "costs": 359.9597643642426,
+            "net_pnl": -726.2727564601898
+          },
+          {
+            "symbol": "SNDK",
+            "gross_pnl": -127.3765869140625,
+            "costs": 287.2785838012695,
+            "net_pnl": -414.655170715332
+          },
+          {
+            "symbol": "TSLA",
+            "gross_pnl": -266.1464538574219,
+            "costs": 415.6944405670166,
+            "net_pnl": -681.8408944244385
+          },
+          {
+            "symbol": "TSM",
+            "gross_pnl": -30.44964599609375,
+            "costs": 24.479045318603514,
+            "net_pnl": -54.92869131469726
+          },
+          {
+            "symbol": "UBER",
+            "gross_pnl": 809.3866958618164,
+            "costs": 531.3710566215515,
+            "net_pnl": 278.0156392402649
+          },
+          {
+            "symbol": "UNH",
+            "gross_pnl": -112.326904296875,
+            "costs": 69.88433697509765,
+            "net_pnl": -182.21124127197265
+          },
+          {
+            "symbol": "WMT",
+            "gross_pnl": 13.538749694824219,
+            "costs": 45.446099300384525,
+            "net_pnl": -31.907349605560302
+          },
+          {
+            "symbol": "XOM",
+            "gross_pnl": 498.3966827392578,
+            "costs": 311.1667949447632,
+            "net_pnl": 187.22988779449463
+          }
+        ],
+        "by_direction": [
+          {
+            "direction": "long",
+            "gross_pnl": 7475.298006057739,
+            "costs": 7841.362925678253,
+            "net_pnl": -366.06491962051393
+          },
+          {
+            "direction": "short",
+            "gross_pnl": -1983.7509927749634,
+            "costs": 4736.837519808292,
+            "net_pnl": -6720.588512583256
+          }
+        ],
+        "by_day": [
+          {
+            "date": "2026-08-31",
+            "gross_pnl": -511.16656494140625,
+            "costs": 842.7338271026612,
+            "net_pnl": -1353.9003920440673
+          },
+          {
+            "date": "2026-09-01",
+            "gross_pnl": 917.0906772613525,
+            "costs": 1382.6479633140564,
+            "net_pnl": -465.55728605270383
+          },
+          {
+            "date": "2026-09-02",
+            "gross_pnl": -601.4652843475342,
+            "costs": 1429.8964625749588,
+            "net_pnl": -2031.361746922493
+          },
+          {
+            "date": "2026-09-03",
+            "gross_pnl": 4492.806567192078,
+            "costs": 1689.2734374203683,
+            "net_pnl": 2803.5331297717094
+          },
+          {
+            "date": "2026-09-04",
+            "gross_pnl": 296.8813724517822,
+            "costs": 1228.885707681656,
+            "net_pnl": -932.0043352298736
+          },
+          {
+            "date": "2026-09-08",
+            "gross_pnl": -1524.663028717041,
+            "costs": 1302.5328574466705,
+            "net_pnl": -2827.1958861637117
+          },
+          {
+            "date": "2026-09-09",
+            "gross_pnl": 892.9298944473267,
+            "costs": 1955.5950365176202,
+            "net_pnl": -1062.6651420702935
+          },
+          {
+            "date": "2026-09-10",
+            "gross_pnl": 1912.5988998413086,
+            "costs": 1334.1790104789734,
+            "net_pnl": 578.4198893623352
+          },
+          {
+            "date": "2026-09-11",
+            "gross_pnl": -383.46551990509033,
+            "costs": 1412.4561429495811,
+            "net_pnl": -1795.9216628546715
+          }
+        ],
+        "by_hour": [
+          {
+            "hour": 9,
+            "gross_pnl": 1833.6919164657593,
+            "costs": 2467.2600663971903,
+            "net_pnl": -633.5681499314308
+          },
+          {
+            "hour": 10,
+            "gross_pnl": 2210.7112340927124,
+            "costs": 4883.04452261734,
+            "net_pnl": -2672.3332885246277
+          },
+          {
+            "hour": 11,
+            "gross_pnl": 1885.2399463653564,
+            "costs": 1652.3008301348686,
+            "net_pnl": 232.93911623048785
+          },
+          {
+            "hour": 12,
+            "gross_pnl": 1457.0229530334473,
+            "costs": 1119.9036765584947,
+            "net_pnl": 337.1192764749527
+          },
+          {
+            "hour": 13,
+            "gross_pnl": 1352.3402786254883,
+            "costs": 739.3346465110778,
+            "net_pnl": 613.0056321144104
+          },
+          {
+            "hour": 14,
+            "gross_pnl": -549.9402236938477,
+            "costs": 696.7468216667176,
+            "net_pnl": -1246.6870453605652
+          },
+          {
+            "hour": 15,
+            "gross_pnl": -2697.51909160614,
+            "costs": 1019.6098816008567,
+            "net_pnl": -3717.1289732069968
+          }
+        ]
+      },
+      "per_symbol": {
+        "AAPL": {
+          "net_pnl": 53.83134202575002,
+          "costs": 332.2034785308838
+        },
+        "AMD": {
+          "net_pnl": -139.5295004272259,
+          "costs": 176.1053060913086
+        },
+        "AMZN": {
+          "net_pnl": -63.104181518545374,
+          "costs": 68.38128112792968
+        },
+        "AVGO": {
+          "net_pnl": -712.2838379363566,
+          "costs": 654.9876648406981
+        },
+        "COIN": {
+          "net_pnl": -342.1877922057174,
+          "costs": 579.3599723815919
+        },
+        "COST": {
+          "net_pnl": 0.0,
+          "costs": 0
+        },
+        "CRM": {
+          "net_pnl": -704.355008712635,
+          "costs": 910.4062782440187
+        },
+        "GOOGL": {
+          "net_pnl": -763.1354390411179,
+          "costs": 326.31662190246584
+        },
+        "HOOD": {
+          "net_pnl": 1220.6607309762076,
+          "costs": 834.5268987236024
+        },
+        "INTC": {
+          "net_pnl": -84.22537911588734,
+          "costs": 1042.5510245628357
+        },
+        "JNJ": {
+          "net_pnl": -154.69383251952968,
+          "costs": 123.47264111328127
+        },
+        "JPM": {
+          "net_pnl": -641.2543507231967,
+          "costs": 434.21727186584474
+        },
+        "MA": {
+          "net_pnl": -282.12086627195094,
+          "costs": 101.57362506103516
+        },
+        "MARA": {
+          "net_pnl": 1060.7908545795908,
+          "costs": 1208.4772700009346
+        },
+        "META": {
+          "net_pnl": -536.1481741332318,
+          "costs": 723.7139700317383
+        },
+        "MSFT": {
+          "net_pnl": -112.42869764710167,
+          "costs": 80.03798109436035
+        },
+        "MSTR": {
+          "net_pnl": -185.1273254393709,
+          "costs": 360.07343139648435
+        },
+        "MU": {
+          "net_pnl": -477.65700250240116,
+          "costs": 432.5592241821289
+        },
+        "NFLX": {
+          "net_pnl": -707.8447675818679,
+          "costs": 608.0264310951234
+        },
+        "NVDA": {
+          "net_pnl": 559.6424856643898,
+          "costs": 154.88704009246828
+        },
+        "ORCL": {
+          "net_pnl": -897.3269123839636,
+          "costs": 792.1260762023926
+        },
+        "PG": {
+          "net_pnl": -0.17717378234860348,
+          "costs": 0.14717500305175782
+        },
+        "PLTR": {
+          "net_pnl": -1551.408026748566,
+          "costs": 588.7696600494385
+        },
+        "SMCI": {
+          "net_pnl": -726.2727564601519,
+          "costs": 359.9597643642426
+        },
+        "SNDK": {
+          "net_pnl": -414.6551707152885,
+          "costs": 287.2785838012695
+        },
+        "TSLA": {
+          "net_pnl": -681.8408944243929,
+          "costs": 415.6944405670166
+        },
+        "TSM": {
+          "net_pnl": -54.92869131469706,
+          "costs": 24.479045318603514
+        },
+        "UBER": {
+          "net_pnl": 278.0156392402994,
+          "costs": 531.3710566215516
+        },
+        "UNH": {
+          "net_pnl": -182.21124127195435,
+          "costs": 69.88433697509767
+        },
+        "V": {
+          "net_pnl": 0.0,
+          "costs": 0
+        },
+        "WMT": {
+          "net_pnl": -31.907349605558665,
+          "costs": 45.44609930038452
+        },
+        "XOM": {
+          "net_pnl": 187.2298877945076,
+          "costs": 311.1667949447632
+        }
+      },
+      "subsequent_period": {
+        "start": "2026-09-08",
+        "end": "2026-09-11",
+        "sessions": 4,
+        "starting_equity": 98020.7093695238,
+        "ending_equity": 92913.34656779763,
+        "net_pnl": -5107.362801726165,
+        "net_return": -0.05210493613622147,
+        "gross_pnl": 897.4002456666649,
+        "costs": 6004.76304739283,
+        "turnover_dollars": 12009526.09478569,
+        "fill_count": 806,
+        "max_drawdown": -0.05553547960754779,
+        "max_gross_exposure": 0.9538161713917017,
+        "max_symbol_exposure": 0.7091272848801486,
+        "profitable_sessions": 1
+      }
+    },
+    {
+      "candidate": {
+        "name": "four_concentrated_95",
+        "universe": "four",
+        "calibration": false,
+        "integrated_risk": false,
+        "symbol_limit": 0.95,
+        "benchmark": false,
+        "control": false,
+        "risk_aversion": 50.0,
+        "single_stock": false
+      },
+      "cost_bps": 5,
+      "status": "complete",
+      "summary": {
+        "start": "2026-08-31",
+        "end": "2026-09-11",
+        "sessions": 9,
+        "starting_equity": 100000.0,
+        "ending_equity": 110212.31750586373,
+        "net_pnl": 10212.317505863728,
+        "net_return": 0.10212317505863733,
+        "gross_pnl": 15335.198616028374,
+        "costs": 5122.881110164648,
+        "turnover_dollars": 10245762.220329285,
+        "fill_count": 708,
+        "max_drawdown": -0.03518349266545073,
+        "max_gross_exposure": 0.9613171702240487,
+        "max_symbol_exposure": 0.9613171702240487,
+        "profitable_sessions": 7
+      },
+      "attribution": {
+        "net_pnl": 10212.317505863728,
+        "gross_pnl": 15335.198616027832,
+        "costs": 5122.881110164642,
+        "reconciled": true,
+        "by_symbol": [
+          {
+            "symbol": "MSTR",
+            "gross_pnl": 12114.411445617676,
+            "costs": 1707.6590284996032,
+            "net_pnl": 10406.752417118072
+          },
+          {
+            "symbol": "NVDA",
+            "gross_pnl": 149.16732788085938,
+            "costs": 952.2648027496338,
+            "net_pnl": -803.0974748687744
+          },
+          {
+            "symbol": "SNDK",
+            "gross_pnl": 155.0223388671875,
+            "costs": 913.0412200317382,
+            "net_pnl": -758.0188811645507
+          },
+          {
+            "symbol": "TSLA",
+            "gross_pnl": 2916.5975036621094,
+            "costs": 1549.916058883667,
+            "net_pnl": 1366.6814447784425
+          }
+        ],
+        "by_direction": [
+          {
+            "direction": "long",
+            "gross_pnl": 15746.292671203613,
+            "costs": 3366.0633088645936,
+            "net_pnl": 12380.22936233902
+          },
+          {
+            "direction": "short",
+            "gross_pnl": -411.09405517578125,
+            "costs": 1756.8178013000488,
+            "net_pnl": -2167.91185647583
+          }
+        ],
+        "by_day": [
+          {
+            "date": "2026-08-31",
+            "gross_pnl": 2480.3248291015625,
+            "costs": 531.4570310745239,
+            "net_pnl": 1948.8677980270386
+          },
+          {
+            "date": "2026-09-01",
+            "gross_pnl": 818.6248626708984,
+            "costs": 265.81139851379396,
+            "net_pnl": 552.8134641571045
+          },
+          {
+            "date": "2026-09-02",
+            "gross_pnl": -1159.3115921020508,
+            "costs": 597.4414049263,
+            "net_pnl": -1756.7529970283508
+          },
+          {
+            "date": "2026-09-03",
+            "gross_pnl": 5560.915222167969,
+            "costs": 443.90212677001955,
+            "net_pnl": 5117.01309539795
+          },
+          {
+            "date": "2026-09-04",
+            "gross_pnl": 1401.4806365966797,
+            "costs": 839.4955350723267,
+            "net_pnl": 561.985101524353
+          },
+          {
+            "date": "2026-09-08",
+            "gross_pnl": 1250.1517333984375,
+            "costs": 616.45075340271,
+            "net_pnl": 633.7009799957275
+          },
+          {
+            "date": "2026-09-09",
+            "gross_pnl": -1436.9713134765625,
+            "costs": 786.5605551147461,
+            "net_pnl": -2223.5318685913085
+          },
+          {
+            "date": "2026-09-10",
+            "gross_pnl": 671.3963470458984,
+            "costs": 346.19420471954345,
+            "net_pnl": 325.202142326355
+          },
+          {
+            "date": "2026-09-11",
+            "gross_pnl": 5748.587890625,
+            "costs": 695.5681005706787,
+            "net_pnl": 5053.019790054322
+          }
+        ],
+        "by_hour": [
+          {
+            "hour": 9,
+            "gross_pnl": 5263.516937255859,
+            "costs": 1415.1864490318299,
+            "net_pnl": 3848.3304882240295
+          },
+          {
+            "hour": 10,
+            "gross_pnl": 2250.529052734375,
+            "costs": 1805.309531894684,
+            "net_pnl": 445.21952083969114
+          },
+          {
+            "hour": 11,
+            "gross_pnl": 981.5854873657227,
+            "costs": 934.8071707649231,
+            "net_pnl": 46.77831660079957
+          },
+          {
+            "hour": 12,
+            "gross_pnl": -46.50172424316406,
+            "costs": 240.768834274292,
+            "net_pnl": -287.27055851745604
+          },
+          {
+            "hour": 13,
+            "gross_pnl": 1611.1898880004883,
+            "costs": 11.666462535858154,
+            "net_pnl": 1599.5234254646302
+          },
+          {
+            "hour": 14,
+            "gross_pnl": 1944.2958755493164,
+            "costs": 152.7769551086426,
+            "net_pnl": 1791.5189204406738
+          },
+          {
+            "hour": 15,
+            "gross_pnl": 3330.5830993652344,
+            "costs": 562.3657065544128,
+            "net_pnl": 2768.2173928108214
+          }
+        ]
+      },
+      "per_symbol": {
+        "SNDK": {
+          "net_pnl": -758.0188811644475,
+          "costs": 913.0412200317382
+        },
+        "TSLA": {
+          "net_pnl": 1366.6814447786346,
+          "costs": 1549.9160588836671
+        },
+        "MSTR": {
+          "net_pnl": 10406.752417118318,
+          "costs": 1707.6590284996037
+        },
+        "NVDA": {
+          "net_pnl": -803.0974748686349,
+          "costs": 952.2648027496338
+        }
+      },
+      "subsequent_period": {
+        "start": "2026-09-08",
+        "end": "2026-09-11",
+        "sessions": 4,
+        "starting_equity": 106423.92646207838,
+        "ending_equity": 110212.31750586373,
+        "net_pnl": 3788.3910437853483,
+        "net_return": 0.03559717414800745,
+        "gross_pnl": 6233.164657593032,
+        "costs": 2444.773613807683,
+        "turnover_dollars": 4889547.227615356,
+        "fill_count": 329,
+        "max_drawdown": -0.029929150236118085,
+        "max_gross_exposure": 0.9613171702240487,
+        "max_symbol_exposure": 0.9613171702240487,
+        "profitable_sessions": 3
+      }
+    },
+    {
+      "candidate": {
+        "name": "liquid_single_95",
+        "universe": "broad",
+        "calibration": false,
+        "integrated_risk": false,
+        "symbol_limit": 0.95,
+        "benchmark": false,
+        "control": false,
+        "risk_aversion": 50.0,
+        "single_stock": true
+      },
+      "cost_bps": 5,
+      "status": "complete",
+      "summary": {
+        "start": "2026-08-31",
+        "end": "2026-09-11",
+        "sessions": 9,
+        "starting_equity": 100000.0,
+        "ending_equity": 90996.62725976158,
+        "net_pnl": -9003.372740238425,
+        "net_return": -0.09003372740238424,
+        "gross_pnl": 5264.623338701021,
+        "costs": 14267.996078939446,
+        "turnover_dollars": 28535992.157878876,
+        "fill_count": 474,
+        "max_drawdown": -0.104073845720559,
+        "max_gross_exposure": 0.9643833581692437,
+        "max_symbol_exposure": 0.9643833581692437,
+        "profitable_sessions": 2
+      },
+      "attribution": {
+        "net_pnl": -9003.372740238425,
+        "gross_pnl": 5264.623338699341,
+        "costs": 14267.996078939437,
+        "reconciled": true,
+        "by_symbol": [
+          {
+            "symbol": "AAPL",
+            "gross_pnl": 87.1683349609375,
+            "costs": 445.33818127441407,
+            "net_pnl": -358.16984631347657
+          },
+          {
+            "symbol": "AMD",
+            "gross_pnl": -570.2579650878906,
+            "costs": 187.50688822937013,
+            "net_pnl": -757.7648533172608
+          },
+          {
+            "symbol": "AMZN",
+            "gross_pnl": 7.176055908203125,
+            "costs": 92.98818153381347,
+            "net_pnl": -85.81212562561035
+          },
+          {
+            "symbol": "AVGO",
+            "gross_pnl": -1120.7798767089844,
+            "costs": 458.9820350494385,
+            "net_pnl": -1579.761911758423
+          },
+          {
+            "symbol": "COIN",
+            "gross_pnl": 839.0085144042969,
+            "costs": 621.4908074798584,
+            "net_pnl": 217.5177069244385
+          },
+          {
+            "symbol": "CRM",
+            "gross_pnl": -30.449111938476562,
+            "costs": 999.682843421936,
+            "net_pnl": -1030.1319553604126
+          },
+          {
+            "symbol": "GOOGL",
+            "gross_pnl": -797.0928955078125,
+            "costs": 452.90360934448245,
+            "net_pnl": -1249.996504852295
+          },
+          {
+            "symbol": "HOOD",
+            "gross_pnl": 2984.0347061157227,
+            "costs": 927.4564919471741,
+            "net_pnl": 2056.5782141685486
+          },
+          {
+            "symbol": "INTC",
+            "gross_pnl": 974.6495742797852,
+            "costs": 1174.4433445777893,
+            "net_pnl": -199.79377029800412
+          },
+          {
+            "symbol": "JNJ",
+            "gross_pnl": -169.46044921875,
+            "costs": 179.184392578125,
+            "net_pnl": -348.644841796875
+          },
+          {
+            "symbol": "JPM",
+            "gross_pnl": -236.02313232421875,
+            "costs": 653.9989859619141,
+            "net_pnl": -890.0221182861328
+          },
+          {
+            "symbol": "MA",
+            "gross_pnl": -48.36907958984375,
+            "costs": 88.15856997680663,
+            "net_pnl": -136.52764956665038
+          },
+          {
+            "symbol": "MARA",
+            "gross_pnl": 3663.09934425354,
+            "costs": 1535.563118883133,
+            "net_pnl": 2127.536225370407
+          },
+          {
+            "symbol": "META",
+            "gross_pnl": 511.534912109375,
+            "costs": 913.6389796142578,
+            "net_pnl": -402.10406750488283
+          },
+          {
+            "symbol": "MSFT",
+            "gross_pnl": -92.46826171875,
+            "costs": 88.67794467163085,
+            "net_pnl": -181.14620639038085
+          },
+          {
+            "symbol": "MSTR",
+            "gross_pnl": -1256.395736694336,
+            "costs": 268.7276300582886,
+            "net_pnl": -1525.1233667526244
+          },
+          {
+            "symbol": "MU",
+            "gross_pnl": -130.4691162109375,
+            "costs": 449.4941781616211,
+            "net_pnl": -579.9632943725586
+          },
+          {
+            "symbol": "NFLX",
+            "gross_pnl": 201.14640045166016,
+            "costs": 649.5321444587707,
+            "net_pnl": -448.3857440071106
+          },
+          {
+            "symbol": "NVDA",
+            "gross_pnl": 868.164306640625,
+            "costs": 184.6502977294922,
+            "net_pnl": 683.5140089111328
+          },
+          {
+            "symbol": "ORCL",
+            "gross_pnl": -324.1715393066406,
+            "costs": 891.2024176177979,
+            "net_pnl": -1215.3739569244385
+          },
+          {
+            "symbol": "PLTR",
+            "gross_pnl": -1870.274398803711,
+            "costs": 832.4544811172485,
+            "net_pnl": -2702.7288799209596
+          },
+          {
+            "symbol": "SMCI",
+            "gross_pnl": -63.75517272949219,
+            "costs": 267.24395303344727,
+            "net_pnl": -330.99912576293946
+          },
+          {
+            "symbol": "SNDK",
+            "gross_pnl": 21.24462890625,
+            "costs": 271.79340161132814,
+            "net_pnl": -250.54877270507814
+          },
+          {
+            "symbol": "TSLA",
+            "gross_pnl": 17.47113037109375,
+            "costs": 643.1013147277832,
+            "net_pnl": -625.6301843566895
+          },
+          {
+            "symbol": "UBER",
+            "gross_pnl": 1168.9836730957031,
+            "costs": 535.2396976852417,
+            "net_pnl": 633.7439754104614
+          },
+          {
+            "symbol": "UNH",
+            "gross_pnl": 12.943756103515625,
+            "costs": 87.28856620788575,
+            "net_pnl": -74.34481010437013
+          },
+          {
+            "symbol": "XOM",
+            "gross_pnl": 617.9647369384766,
+            "costs": 367.25362198638913,
+            "net_pnl": 250.7111149520874
+          }
+        ],
+        "by_direction": [
+          {
+            "direction": "long",
+            "gross_pnl": 6686.746335983276,
+            "costs": 9426.24706003189,
+            "net_pnl": -2739.5007240486143
+          },
+          {
+            "direction": "short",
+            "gross_pnl": -1422.1229972839355,
+            "costs": 4841.749018907547,
+            "net_pnl": -6263.8720161914825
+          }
+        ],
+        "by_day": [
+          {
+            "date": "2026-08-31",
+            "gross_pnl": -366.2990417480469,
+            "costs": 942.4597307739258,
+            "net_pnl": -1308.7587725219726
+          },
+          {
+            "date": "2026-09-01",
+            "gross_pnl": 1538.2958555221558,
+            "costs": 1599.2515228104592,
+            "net_pnl": -60.95566728830338
+          },
+          {
+            "date": "2026-09-02",
+            "gross_pnl": -2148.1936569213867,
+            "costs": 1453.575379940033,
+            "net_pnl": -3601.76903686142
+          },
+          {
+            "date": "2026-09-03",
+            "gross_pnl": 6576.9423360824585,
+            "costs": 1979.2545456852913,
+            "net_pnl": 4597.687790397167
+          },
+          {
+            "date": "2026-09-04",
+            "gross_pnl": -4.948879241943359,
+            "costs": 1503.3461780443192,
+            "net_pnl": -1508.2950572862626
+          },
+          {
+            "date": "2026-09-08",
+            "gross_pnl": -3131.210371017456,
+            "costs": 1465.0156162023545,
+            "net_pnl": -4596.22598721981
+          },
+          {
+            "date": "2026-09-09",
+            "gross_pnl": 87.5918436050415,
+            "costs": 2357.801627479076,
+            "net_pnl": -2270.2097838740347
+          },
+          {
+            "date": "2026-09-10",
+            "gross_pnl": 2651.1317529678345,
+            "costs": 1489.7017580275535,
+            "net_pnl": 1161.429994940281
+          },
+          {
+            "date": "2026-09-11",
+            "gross_pnl": 61.313499450683594,
+            "costs": 1477.5897199764252,
+            "net_pnl": -1416.2762205257416
+          }
+        ],
+        "by_hour": [
+          {
+            "hour": 9,
+            "gross_pnl": -40.28385066986084,
+            "costs": 2407.303879573345,
+            "net_pnl": -2447.587730243206
+          },
+          {
+            "hour": 10,
+            "gross_pnl": 2273.4436464309692,
+            "costs": 5567.44959614563,
+            "net_pnl": -3294.005949714661
+          },
+          {
+            "hour": 11,
+            "gross_pnl": 3456.7855157852173,
+            "costs": 2040.036870194435,
+            "net_pnl": 1416.7486455907822
+          },
+          {
+            "hour": 12,
+            "gross_pnl": 1831.0466766357422,
+            "costs": 1287.3139767227174,
+            "net_pnl": 543.7326999130249
+          },
+          {
+            "hour": 13,
+            "gross_pnl": 2026.9168548583984,
+            "costs": 904.4077751846313,
+            "net_pnl": 1122.509079673767
+          },
+          {
+            "hour": 14,
+            "gross_pnl": -489.35323333740234,
+            "costs": 824.0267754364014,
+            "net_pnl": -1313.3800087738036
+          },
+          {
+            "hour": 15,
+            "gross_pnl": -3793.932271003723,
+            "costs": 1237.4572056822776,
+            "net_pnl": -5031.389476686001
+          }
+        ]
+      },
+      "per_symbol": {
+        "AAPL": {
+          "net_pnl": -358.1698463134235,
+          "costs": 445.33818127441407
+        },
+        "AMD": {
+          "net_pnl": -757.7648533172469,
+          "costs": 187.50688822937013
+        },
+        "AMZN": {
+          "net_pnl": -85.81212562561268,
+          "costs": 92.98818153381347
+        },
+        "AVGO": {
+          "net_pnl": -1579.7619117583672,
+          "costs": 458.9820350494385
+        },
+        "COIN": {
+          "net_pnl": 217.517706924511,
+          "costs": 621.4908074798584
+        },
+        "COST": {
+          "net_pnl": 0.0,
+          "costs": 0
+        },
+        "CRM": {
+          "net_pnl": -1030.1319553603098,
+          "costs": 999.6828434219359
+        },
+        "GOOGL": {
+          "net_pnl": -1249.9965048522572,
+          "costs": 452.9036093444824
+        },
+        "HOOD": {
+          "net_pnl": 2056.5782141686796,
+          "costs": 927.4564919471742
+        },
+        "INTC": {
+          "net_pnl": -199.79377029791067,
+          "costs": 1174.4433445777895
+        },
+        "JNJ": {
+          "net_pnl": -348.6448417968495,
+          "costs": 179.184392578125
+        },
+        "JPM": {
+          "net_pnl": -890.0221182861133,
+          "costs": 653.9989859619141
+        },
+        "MA": {
+          "net_pnl": -136.5276495666476,
+          "costs": 88.15856997680663
+        },
+        "MARA": {
+          "net_pnl": 2127.536225370626,
+          "costs": 1535.563118883133
+        },
+        "META": {
+          "net_pnl": -402.10406750474067,
+          "costs": 913.6389796142578
+        },
+        "MSFT": {
+          "net_pnl": -181.14620639037457,
+          "costs": 88.67794467163087
+        },
+        "MSTR": {
+          "net_pnl": -1525.1233667525667,
+          "costs": 268.7276300582886
+        },
+        "MU": {
+          "net_pnl": -579.9632943725155,
+          "costs": 449.4941781616211
+        },
+        "NFLX": {
+          "net_pnl": -448.3857440070569,
+          "costs": 649.5321444587707
+        },
+        "NVDA": {
+          "net_pnl": 683.5140089111665,
+          "costs": 184.65029772949217
+        },
+        "ORCL": {
+          "net_pnl": -1215.3739569243626,
+          "costs": 891.2024176177977
+        },
+        "PG": {
+          "net_pnl": 0.0,
+          "costs": 0
+        },
+        "PLTR": {
+          "net_pnl": -2702.7288799208764,
+          "costs": 832.4544811172485
+        },
+        "SMCI": {
+          "net_pnl": -330.9991257629008,
+          "costs": 267.24395303344727
+        },
+        "SNDK": {
+          "net_pnl": -250.5487727050495,
+          "costs": 271.79340161132814
+        },
+        "TSLA": {
+          "net_pnl": -625.6301843566034,
+          "costs": 643.1013147277832
+        },
+        "TSM": {
+          "net_pnl": 0.0,
+          "costs": 0
+        },
+        "UBER": {
+          "net_pnl": 633.743975410529,
+          "costs": 535.2396976852417
+        },
+        "UNH": {
+          "net_pnl": -74.34481010436139,
+          "costs": 87.28856620788575
+        },
+        "V": {
+          "net_pnl": 0.0,
+          "costs": 0
+        },
+        "WMT": {
+          "net_pnl": 0.0,
+          "costs": 0
+        },
+        "XOM": {
+          "net_pnl": 250.7111149521079,
+          "costs": 367.25362198638913
+        }
+      },
+      "subsequent_period": {
+        "start": "2026-09-08",
+        "end": "2026-09-11",
+        "sessions": 4,
+        "starting_equity": 98117.90925644024,
+        "ending_equity": 90996.62725976158,
+        "net_pnl": -7121.281996678663,
+        "net_return": -0.07257881920482567,
+        "gross_pnl": -331.1732749932471,
+        "costs": 6790.108721685416,
+        "turnover_dollars": 13580217.44337082,
+        "fill_count": 201,
+        "max_drawdown": -0.07791074220328864,
+        "max_gross_exposure": 0.9643833581692437,
+        "max_symbol_exposure": 0.9643833581692437,
+        "profitable_sessions": 1
+      }
+    },
+    {
+      "candidate": {
+        "name": "liquid_dynamic_95_g25",
+        "universe": "broad",
+        "calibration": false,
+        "integrated_risk": false,
+        "symbol_limit": 0.95,
+        "benchmark": false,
+        "control": false,
+        "risk_aversion": 25.0,
+        "single_stock": false
+      },
+      "cost_bps": 5,
+      "status": "complete",
+      "summary": {
+        "start": "2026-08-31",
+        "end": "2026-09-11",
+        "sessions": 9,
+        "starting_equity": 100000.0,
+        "ending_equity": 90300.82256440347,
+        "net_pnl": -9699.177435596532,
+        "net_return": -0.09699177435596529,
+        "gross_pnl": 4541.467758180545,
+        "costs": 14240.645193777076,
+        "turnover_dollars": 28481290.38755417,
+        "fill_count": 1032,
+        "max_drawdown": -0.10467621612981359,
+        "max_gross_exposure": 0.9640865622483878,
+        "max_symbol_exposure": 0.9640865622483878,
+        "profitable_sessions": 2
+      },
+      "attribution": {
+        "net_pnl": -9699.177435596532,
+        "gross_pnl": 4541.467758178711,
+        "costs": 14240.645193777085,
+        "reconciled": true,
+        "by_symbol": [
+          {
+            "symbol": "AAPL",
+            "gross_pnl": 0.873504638671875,
+            "costs": 364.3743025970459,
+            "net_pnl": -363.50079795837405
+          },
+          {
+            "symbol": "AMD",
+            "gross_pnl": -318.4731140136719,
+            "costs": 162.05124644470214,
+            "net_pnl": -480.524360458374
+          },
+          {
+            "symbol": "AMZN",
+            "gross_pnl": 7.15606689453125,
+            "costs": 92.72916152954102,
+            "net_pnl": -85.57309463500977
+          },
+          {
+            "symbol": "AVGO",
+            "gross_pnl": -797.742431640625,
+            "costs": 595.9413851013184,
+            "net_pnl": -1393.6838167419435
+          },
+          {
+            "symbol": "COIN",
+            "gross_pnl": 471.644287109375,
+            "costs": 610.5901291656494,
+            "net_pnl": -138.94584205627442
+          },
+          {
+            "symbol": "CRM",
+            "gross_pnl": 252.10804748535156,
+            "costs": 1033.6791809921265,
+            "net_pnl": -781.5711335067749
+          },
+          {
+            "symbol": "GOOGL",
+            "gross_pnl": -713.7877502441406,
+            "costs": 421.6600868988037,
+            "net_pnl": -1135.4478371429443
+          },
+          {
+            "symbol": "HOOD",
+            "gross_pnl": 2981.3624877929688,
+            "costs": 1013.4403143539429,
+            "net_pnl": 1967.922173439026
+          },
+          {
+            "symbol": "INTC",
+            "gross_pnl": 795.4063034057617,
+            "costs": 1202.973665775299,
+            "net_pnl": -407.56736236953736
+          },
+          {
+            "symbol": "JNJ",
+            "gross_pnl": -191.05047607421875,
+            "costs": 83.23538568115235,
+            "net_pnl": -274.2858617553711
+          },
+          {
+            "symbol": "JPM",
+            "gross_pnl": -472.3399963378906,
+            "costs": 588.1872736053467,
+            "net_pnl": -1060.5272699432373
+          },
+          {
+            "symbol": "MA",
+            "gross_pnl": -108.2623291015625,
+            "costs": 89.47805273437498,
+            "net_pnl": -197.74038183593748
+          },
+          {
+            "symbol": "MARA",
+            "gross_pnl": 2816.727436065674,
+            "costs": 1659.7880538787842,
+            "net_pnl": 1156.9393821868896
+          },
+          {
+            "symbol": "META",
+            "gross_pnl": 59.7845458984375,
+            "costs": 849.5717378540039,
+            "net_pnl": -789.7871919555664
+          },
+          {
+            "symbol": "MSFT",
+            "gross_pnl": -82.67788696289062,
+            "costs": 87.1979095916748,
+            "net_pnl": -169.87579655456543
+          },
+          {
+            "symbol": "MSTR",
+            "gross_pnl": -736.7724075317383,
+            "costs": 342.82655599594113,
+            "net_pnl": -1079.5989635276794
+          },
+          {
+            "symbol": "MU",
+            "gross_pnl": -219.57525634765625,
+            "costs": 458.0721053161621,
+            "net_pnl": -677.6473616638184
+          },
+          {
+            "symbol": "NFLX",
+            "gross_pnl": 202.55780029296875,
+            "costs": 627.3934889450073,
+            "net_pnl": -424.8356886520386
+          },
+          {
+            "symbol": "NVDA",
+            "gross_pnl": 829.5616302490234,
+            "costs": 177.99294629669188,
+            "net_pnl": 651.5686839523315
+          },
+          {
+            "symbol": "ORCL",
+            "gross_pnl": -43.62080383300781,
+            "costs": 930.0512275924682,
+            "net_pnl": -973.672031425476
+          },
+          {
+            "symbol": "PLTR",
+            "gross_pnl": -1661.1246948242188,
+            "costs": 794.9830101623535,
+            "net_pnl": -2456.107704986572
+          },
+          {
+            "symbol": "SMCI",
+            "gross_pnl": -357.7821235656738,
+            "costs": 303.01550235557556,
+            "net_pnl": -660.7976259212494
+          },
+          {
+            "symbol": "SNDK",
+            "gross_pnl": 34.3841552734375,
+            "costs": 336.6545426635742,
+            "net_pnl": -302.2703873901367
+          },
+          {
+            "symbol": "TSLA",
+            "gross_pnl": -147.91604614257812,
+            "costs": 477.7724319000244,
+            "net_pnl": -625.6884780426026
+          },
+          {
+            "symbol": "UBER",
+            "gross_pnl": 1294.740219116211,
+            "costs": 495.3770933532715,
+            "net_pnl": 799.3631257629395
+          },
+          {
+            "symbol": "UNH",
+            "gross_pnl": 13.9837646484375,
+            "costs": 87.67251620483398,
+            "net_pnl": -73.68875155639648
+          },
+          {
+            "symbol": "V",
+            "gross_pnl": 0.8575439453125,
+            "costs": 1.9023912048339844,
+            "net_pnl": -1.0448472595214844
+          },
+          {
+            "symbol": "WMT",
+            "gross_pnl": 9.548934936523438,
+            "costs": 27.031484603881836,
+            "net_pnl": -17.4825496673584
+          },
+          {
+            "symbol": "XOM",
+            "gross_pnl": 621.8963470458984,
+            "costs": 325.0020109786987,
+            "net_pnl": 296.89433606719973
+          }
+        ],
+        "by_direction": [
+          {
+            "direction": "long",
+            "gross_pnl": 7094.946740150452,
+            "costs": 9179.691102616787,
+            "net_pnl": -2084.744362466335
+          },
+          {
+            "direction": "short",
+            "gross_pnl": -2553.4789819717407,
+            "costs": 5060.954091160297,
+            "net_pnl": -7614.433073132038
+          }
+        ],
+        "by_day": [
+          {
+            "date": "2026-08-31",
+            "gross_pnl": -835.6434555053711,
+            "costs": 981.6882780265809,
+            "net_pnl": -1817.3317335319518
+          },
+          {
+            "date": "2026-09-01",
+            "gross_pnl": 1082.9094257354736,
+            "costs": 1504.1446106948854,
+            "net_pnl": -421.23518495941164
+          },
+          {
+            "date": "2026-09-02",
+            "gross_pnl": -1198.506799697876,
+            "costs": 1610.357174015999,
+            "net_pnl": -2808.8639737138747
+          },
+          {
+            "date": "2026-09-03",
+            "gross_pnl": 6152.331789016724,
+            "costs": 2018.226030650139,
+            "net_pnl": 4134.105758366585
+          },
+          {
+            "date": "2026-09-04",
+            "gross_pnl": 173.34633350372314,
+            "costs": 1457.798561923504,
+            "net_pnl": -1284.4522284197808
+          },
+          {
+            "date": "2026-09-08",
+            "gross_pnl": -3262.7292490005493,
+            "costs": 1444.7674337887763,
+            "net_pnl": -4707.496682789326
+          },
+          {
+            "date": "2026-09-09",
+            "gross_pnl": 954.44615650177,
+            "costs": 2185.7991439471243,
+            "net_pnl": -1231.3529874453545
+          },
+          {
+            "date": "2026-09-10",
+            "gross_pnl": 2257.931915283203,
+            "costs": 1522.7980013275146,
+            "net_pnl": 735.1339139556885
+          },
+          {
+            "date": "2026-09-11",
+            "gross_pnl": -782.6183576583862,
+            "costs": 1515.0659594025612,
+            "net_pnl": -2297.6843170609473
+          }
+        ],
+        "by_hour": [
+          {
+            "hour": 9,
+            "gross_pnl": 1309.5221996307373,
+            "costs": 2409.454520698547,
+            "net_pnl": -1099.93232106781
+          },
+          {
+            "hour": 10,
+            "gross_pnl": 1602.6125411987305,
+            "costs": 5546.174464519024,
+            "net_pnl": -3943.5619233202933
+          },
+          {
+            "hour": 11,
+            "gross_pnl": 3107.7609338760376,
+            "costs": 1958.9857174053193,
+            "net_pnl": 1148.7752164707183
+          },
+          {
+            "hour": 12,
+            "gross_pnl": 1561.1974411010742,
+            "costs": 1354.111576968193,
+            "net_pnl": 207.08586413288117
+          },
+          {
+            "hour": 13,
+            "gross_pnl": 1803.5568161010742,
+            "costs": 888.2541227569579,
+            "net_pnl": 915.3026933441163
+          },
+          {
+            "hour": 14,
+            "gross_pnl": -872.0675392150879,
+            "costs": 848.7286804218293,
+            "net_pnl": -1720.7962196369172
+          },
+          {
+            "hour": 15,
+            "gross_pnl": -3971.114634513855,
+            "costs": 1234.9361110072136,
+            "net_pnl": -5206.050745521068
+          }
+        ]
+      },
+      "per_symbol": {
+        "AAPL": {
+          "net_pnl": -363.50079795834245,
+          "costs": 364.37430259704587
+        },
+        "AMD": {
+          "net_pnl": -480.52436045833474,
+          "costs": 162.05124644470214
+        },
+        "AMZN": {
+          "net_pnl": -85.57309463499405,
+          "costs": 92.72916152954102
+        },
+        "AVGO": {
+          "net_pnl": -1393.68381674189,
+          "costs": 595.9413851013184
+        },
+        "COIN": {
+          "net_pnl": -138.9458420562005,
+          "costs": 610.5901291656494
+        },
+        "COST": {
+          "net_pnl": 0.0,
+          "costs": 0
+        },
+        "CRM": {
+          "net_pnl": -781.571133506659,
+          "costs": 1033.6791809921265
+        },
+        "GOOGL": {
+          "net_pnl": -1135.447837142914,
+          "costs": 421.6600868988037
+        },
+        "HOOD": {
+          "net_pnl": 1967.922173439165,
+          "costs": 1013.4403143539429
+        },
+        "INTC": {
+          "net_pnl": -407.56736236940446,
+          "costs": 1202.9736657752992
+        },
+        "JNJ": {
+          "net_pnl": -274.28586175536475,
+          "costs": 83.23538568115234
+        },
+        "JPM": {
+          "net_pnl": -1060.5272699431953,
+          "costs": 588.1872736053467
+        },
+        "MA": {
+          "net_pnl": -197.74038183593075,
+          "costs": 89.47805273437498
+        },
+        "MARA": {
+          "net_pnl": 1156.9393821870844,
+          "costs": 1659.788053878784
+        },
+        "META": {
+          "net_pnl": -789.7871919554964,
+          "costs": 849.5717378540038
+        },
+        "MSFT": {
+          "net_pnl": -169.87579655455193,
+          "costs": 87.19790959167482
+        },
+        "MSTR": {
+          "net_pnl": -1079.5989635276055,
+          "costs": 342.82655599594113
+        },
+        "MU": {
+          "net_pnl": -677.6473616637377,
+          "costs": 458.0721053161621
+        },
+        "NFLX": {
+          "net_pnl": -424.83568865194684,
+          "costs": 627.3934889450073
+        },
+        "NVDA": {
+          "net_pnl": 651.5686839523696,
+          "costs": 177.99294629669188
+        },
+        "ORCL": {
+          "net_pnl": -973.6720314253471,
+          "costs": 930.0512275924684
+        },
+        "PG": {
+          "net_pnl": 0.0,
+          "costs": 0
+        },
+        "PLTR": {
+          "net_pnl": -2456.1077049864834,
+          "costs": 794.9830101623536
+        },
+        "SMCI": {
+          "net_pnl": -660.7976259212155,
+          "costs": 303.01550235557556
+        },
+        "SNDK": {
+          "net_pnl": -302.2703873901046,
+          "costs": 336.6545426635742
+        },
+        "TSLA": {
+          "net_pnl": -625.6884780425753,
+          "costs": 477.7724319000244
+        },
+        "TSM": {
+          "net_pnl": 0.0,
+          "costs": 0
+        },
+        "UBER": {
+          "net_pnl": 799.3631257629786,
+          "costs": 495.37709335327156
+        },
+        "UNH": {
+          "net_pnl": -73.6887515563867,
+          "costs": 87.672516204834
+        },
+        "V": {
+          "net_pnl": -1.044847259521248,
+          "costs": 1.9023912048339846
+        },
+        "WMT": {
+          "net_pnl": -17.482549667353524,
+          "costs": 27.031484603881836
+        },
+        "XOM": {
+          "net_pnl": 296.8943360672065,
+          "costs": 325.00201097869876
+        }
+      },
+      "subsequent_period": {
+        "start": "2026-09-08",
+        "end": "2026-09-11",
+        "sessions": 4,
+        "starting_equity": 97802.22263774274,
+        "ending_equity": 90300.82256440347,
+        "net_pnl": -7501.400073339275,
+        "net_return": -0.0766996891381937,
+        "gross_pnl": -832.9695348733076,
+        "costs": 6668.430538465967,
+        "turnover_dollars": 13336861.076931953,
+        "fill_count": 398,
+        "max_drawdown": -0.07916564126306835,
+        "max_gross_exposure": 0.9640865622483878,
+        "max_symbol_exposure": 0.9640865622483878,
+        "profitable_sessions": 1
+      }
+    }
+  ],
+  "finished_at": "2026-09-13T20:24:50.464007+00:00",
+  "retrospective_best": "four_tree_control",
+  "artifact_hashes": {
+    "coverage.csv": "e22401f9c84befad8b5c08b834e864b2eba882d56ceee106e7d8835ad41108cc",
+    "instrument_snapshot.json": "0c6d626baa840c31310c19ee76e9aef0b086d12c2a25471db4a11ea96e4be13c",
+    "preregistration.json": "2e088bb173a59b1aa3fa3d306a81d1c26812a2de822b189a30449003c1016225",
+    "four_tree_control_cost5/summary.json": "343e9c86e7f356ec9e67834ea56b2fe255a4c1a62a667ed60add99262cfa7a3c",
+    "four_tree_control_cost5/fills.csv": "efb8430b609ec9bc4824f9b5768770ab536fd3d2657b471bc7ac6836e09fbf60",
+    "four_tree_control_cost5/training.json": "e92a6c70c610fbc4a157863fdb02bc8c8c25ffec86d5c9518f16aff0b1b1eded",
+    "four_tree_control_cost5/decisions.json.gz": "8d2634992598e196cab5291d100a972ce36ea4f96d733ea7d80f99b63db899b5",
+    "four_tree_control_cost5/marks.csv.gz": "560b71c5f17a3f30bbc7a8d383145317ca940e6e6ea441aefedfb1d1c67d8f78",
+    "four_tree_control_cost5/attribution.csv.gz": "1d8e75277c939f2bef913f274c4b858e83ff1094cdfe25184df17548896792ff",
+    "four_tree_control_cost5/daily.csv": "c2b8dbb4880d5fedee1e8dedc80a632217e21a0068870057d691ea3a2c1eb548",
+    "source/backend/app/quant_policy.py": "c62509a5f8151558b0d9b339a72956cc02684723a646d88924b9cd019aadc5fd",
+    "source/backend/app/research/data_audit.py": "003cab38c9c0a8396bc5ec5f36d7e54a7b3a6bd1c9bcf82a1c4d2027e29a0be5",
+    "source/backend/app/research/policy_replay.py": "787f5149f3fd69fdaf70ff45508d3da0620b8c19319fb5edbf246a9df6184135",
+    "source/backend/app/research/causal_week_replay.py": "b96264a34e9675bcf242a5dbe6881a475176015f34362c1553963b4dd8729011",
+    "source/backend/app/research/platform.py": "f2a02f8a40166992e05b43ac46a1b0019204d9827cecada3ddf9cc36de9a8b69",
+    "source/backend/app/research/active_policy.py": "ebd2a1b108f450a8ad214e304bf4ddca0ccb0c1159983fab688e37683031892c",
+    "source/backend/app/research/attribution.py": "8af334cbbccf65e508c1e27553ac0ee3c4ffa8580d64280b41cc2aee4146878b",
+    "source/backend/app/research/artifacts.py": "8157e943d9f49abb4c6fa7fa6f0b2fc0eb0453850f62fcb8989b87ae1b96ce08",
+    "source/backend/app/research/liquid_policy.py": "e0a22e880e1d182cc9cbc2395ba7536730e06f5bdf28c0c2f8c2da4ed17f5365",
+    "source/backend/app/research/strategy_extensions.py": "705657b7d78525ce2153a8f3ed1c9bbebb187a738a0c701a6affb81f452d5338",
+    "source/scripts/run_active_research.py": "74544057a007a4ea207ea7d6e64cc479ef7f3614916d0aeebc4cec78f8705e27",
+    "liquid_single_95_cost5/summary.json": "e934562a9d31fe25391b489e3f655919281b5aa30f2506caa43a929db395064d",
+    "liquid_single_95_cost5/fills.csv": "e21db431d0830752a9868ae161329b7dcf77bcb899c1cdfd4bbe17f9c16872d7",
+    "liquid_single_95_cost5/training.json": "ea6dd6e13e613f3aa8c94b64ffdc3f6db97cceb4d6b7e173d4485f6a23a452fe",
+    "liquid_single_95_cost5/decisions.json.gz": "aed5b38c3ea353f36be21cc4ae83f0cf0b4ae92f104e795c889ea410daa5bdc3",
+    "liquid_single_95_cost5/marks.csv.gz": "c19d319d2a75de9f11bc720af32b88301891d043582a838841d904854a9d5713",
+    "liquid_single_95_cost5/attribution.csv.gz": "1ecdad086bdb62d84630042eec29cc65ca9d63fc320cdb5f1522f3af17e30843",
+    "liquid_single_95_cost5/daily.csv": "ea11eb12b57e8bb2dcd41707d9fec61176747b81b9eb079609b25c2c5e6a93d3",
+    "liquid_dynamic_70_cost5/summary.json": "2f2b493069c50ff87009c4605f8367c0f393d4d062bb7d8e92aec05f9ea0629c",
+    "liquid_dynamic_70_cost5/fills.csv": "7c096862a48f3838b3a0ce6cf7c3c2171029ef8e914aa1c1c60d6d4fb574101a",
+    "liquid_dynamic_70_cost5/training.json": "ea6dd6e13e613f3aa8c94b64ffdc3f6db97cceb4d6b7e173d4485f6a23a452fe",
+    "liquid_dynamic_70_cost5/decisions.json.gz": "053be073296f922d09d0030368572ad2657e8a69cfd991a1347355fb91f553dc",
+    "liquid_dynamic_70_cost5/marks.csv.gz": "00b82472122486683c64b9bd61e9c92d9e90bee5cb3e1f2007c9956e248a09e2",
+    "liquid_dynamic_70_cost5/attribution.csv.gz": "551cbb747d9c4c26813cb17ddce162f1003ba7bc8abd21e56b7a835685273b6d",
+    "liquid_dynamic_70_cost5/daily.csv": "c36cb99b4b51db97144250d8946ccc20c0ffc219f7f35594fdc9159078333e66",
+    "liquid_dynamic_95_g25_cost5/summary.json": "eae79600adfbb0eaa01d96e1fdcdc398f405338d7dc482c15760152e48124e8b",
+    "liquid_dynamic_95_g25_cost5/fills.csv": "86ce3babf2fb0feb757e9c4a3899dac28d2999d8542fa3061a90325d5dc975a1",
+    "liquid_dynamic_95_g25_cost5/training.json": "ea6dd6e13e613f3aa8c94b64ffdc3f6db97cceb4d6b7e173d4485f6a23a452fe",
+    "liquid_dynamic_95_g25_cost5/decisions.json.gz": "12eae93c97c71c71436d173fe12acef829252207acae248333e745d731f15551",
+    "liquid_dynamic_95_g25_cost5/marks.csv.gz": "583a5b168b62d7e00c86b491d40f8a0365a0f9303648f7d8db97dc8f798fb626",
+    "liquid_dynamic_95_g25_cost5/attribution.csv.gz": "4d118ec36bd6929d79c4b5dc1ee878af3bbb91721ece4bde15849a42a86ca871",
+    "liquid_dynamic_95_g25_cost5/daily.csv": "1fcd120c0038d251982b10bb2a3d062e9d2edd3893ec65fb9ef8e9281b7575a9",
+    "four_concentrated_95_cost5/summary.json": "993b570789903adf6c803805d391c123a100f9347012398230bc81147d0a26f8",
+    "four_concentrated_95_cost5/fills.csv": "82fbf9779d715f3f896e06e690f3ed96b10002ffa087ebdf21dcc20cb39b4a21",
+    "four_concentrated_95_cost5/training.json": "e92a6c70c610fbc4a157863fdb02bc8c8c25ffec86d5c9518f16aff0b1b1eded",
+    "four_concentrated_95_cost5/decisions.json.gz": "d514240013a619b6e51cdf02f03f4b4053ccbefabccb38711e796d366f010795",
+    "four_concentrated_95_cost5/marks.csv.gz": "3f7a23070de2efd2631341647e6caa48e7e80ae3c9b66618ba3d725eb6d06ddc",
+    "four_concentrated_95_cost5/attribution.csv.gz": "1f063e92e718c62dedecf3cad4054bff9c1f83f7210afd6f45de0c41a408e3c4",
+    "four_concentrated_95_cost5/daily.csv": "d754ef620732862034d8f3a6982c16b3229994ff5aa1fc03b58b4b0be6937bb4"
+  }
+}

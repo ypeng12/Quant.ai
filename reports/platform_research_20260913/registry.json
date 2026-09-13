@@ -1,0 +1,2582 @@
+{
+  "schema_version": 1,
+  "registered_at": "2026-09-13T11:49:09.175038+00:00",
+  "status": "complete",
+  "interpretation": "retrospective_exploration_not_untouched_holdout",
+  "evaluation_dates": [
+    "2026-08-31",
+    "2026-09-01",
+    "2026-09-02",
+    "2026-09-03",
+    "2026-09-04",
+    "2026-09-08",
+    "2026-09-09",
+    "2026-09-10",
+    "2026-09-11"
+  ],
+  "symbols": [
+    "SNDK",
+    "TSLA",
+    "MSTR",
+    "NVDA"
+  ],
+  "starting_equity": 100000,
+  "cost_bps_per_side": [
+    2,
+    5
+  ],
+  "candidates": [
+    {
+      "name": "cash",
+      "features": "price_volume",
+      "model": "ridge",
+      "portfolio": "cash"
+    },
+    {
+      "name": "equal_weight",
+      "features": "price_volume",
+      "model": "ridge",
+      "portfolio": "equal"
+    },
+    {
+      "name": "price_ridge",
+      "features": "price_volume",
+      "model": "ridge",
+      "portfolio": "joint"
+    },
+    {
+      "name": "peer_ridge",
+      "features": "price_volume_peer",
+      "model": "ridge",
+      "portfolio": "joint"
+    },
+    {
+      "name": "context_ridge",
+      "features": "context",
+      "model": "ridge",
+      "portfolio": "joint"
+    },
+    {
+      "name": "context_tree",
+      "features": "context",
+      "model": "tree",
+      "portfolio": "joint"
+    },
+    {
+      "name": "context_lightgbm",
+      "features": "context",
+      "model": "lightgbm",
+      "portfolio": "joint"
+    },
+    {
+      "name": "context_robust",
+      "features": "context",
+      "model": "ridge",
+      "portfolio": "robust"
+    },
+    {
+      "name": "l1_ridge",
+      "features": "l1",
+      "model": "ridge",
+      "portfolio": "joint"
+    },
+    {
+      "name": "combined_robust",
+      "features": "combined",
+      "model": "ridge",
+      "portfolio": "robust"
+    }
+  ],
+  "ridge_alpha": 10,
+  "horizon_bars": 1,
+  "risk_aversion": 50,
+  "gross_limit": 0.95,
+  "symbol_limit": 0.7,
+  "uncertainty_aversion": 1,
+  "common_risk_aversion": 1,
+  "selected_for_live": null,
+  "data_paths": {
+    "SNDK": "/Users/yuliangpeng/Desktop/Quant/reports/quant_audit_20260912/bars/SNDK.parquet",
+    "TSLA": "/Users/yuliangpeng/Desktop/Quant/reports/quant_audit_20260912/bars/TSLA.parquet",
+    "MSTR": "/Users/yuliangpeng/Desktop/Quant/reports/quant_audit_20260912/bars/MSTR.parquet",
+    "NVDA": "/Users/yuliangpeng/Desktop/Quant/reports/quant_audit_20260912/bars/NVDA.parquet"
+  },
+  "data_hashes": {
+    "SNDK": "edc7503de4599a0d82563a7500f220b6b428d7feadb77826c6a5f74aea4b98f7",
+    "TSLA": "d3a3a6349e39ff26953bf3d9dc2fdeef0d003f9b0d7993f2535a85109886a1c8",
+    "MSTR": "960731e89bc4668b12ea49335d59e60b13dccef2304fce3017da88f034eb00ab",
+    "NVDA": "f2fb1d7b857ff87494f0eb0995cb8d37ba5bb8cd1942d35519da8971d622b0f4"
+  },
+  "sources": {
+    "scripts/run_unified_research.py": "cd040fc2d95952c9f50302165259f1969850c76df4e2b7c0863f6c0bd3ea738e",
+    "backend/app/research/platform.py": "033a6ab0242a209ec0df054eb898f21b3c01c4d9ea3729c73fcfe391fa9537c6",
+    "backend/app/quant_policy.py": "533bf56fb9fa8e2c5fdbb87563602c3ca24a4f6a8f4a6754a0df4b7fa7fff5fc",
+    "backend/app/research/policy_replay.py": "787f5149f3fd69fdaf70ff45508d3da0620b8c19319fb5edbf246a9df6184135",
+    "backend/app/alpha/real_l1_alpha.py": "618d9780e50e30c49291e9b4f9fe8d1b8000661a0e63f70ea75c257cad36a2ac"
+  },
+  "limitations": [
+    "Same prior-session model fit / next-open fills / intraday flat for all candidates.",
+    "Costs assumed, not broker-measured; no latency, intrabar drawdown, impact, financing or historical borrow constraints.",
+    "Four-stock data is a selected retrospective sample; 30-symbol configurations do not establish historical coverage.",
+    "Ridge uncertainty is an approximate session-clustered parameter error; not a calibrated probability.",
+    "PCA common factor is statistical, not verified industry exposure."
+  ],
+  "finished_at": "2026-09-13T11:50:20.827294+00:00",
+  "trials": [
+    {
+      "candidate": {
+        "name": "cash",
+        "features": "price_volume",
+        "model": "ridge",
+        "portfolio": "cash"
+      },
+      "cost_bps": 2,
+      "status": "complete",
+      "summary": {
+        "start": "2026-08-31",
+        "end": "2026-09-11",
+        "sessions": 9,
+        "starting_equity": 100000.0,
+        "ending_equity": 100000.0,
+        "net_pnl": 0.0,
+        "net_return": 0.0,
+        "gross_pnl": 0.0,
+        "costs": 0.0,
+        "turnover_dollars": 0.0,
+        "fill_count": 0,
+        "max_drawdown": 0.0,
+        "max_gross_exposure": 0.0,
+        "max_symbol_exposure": 0.0,
+        "profitable_sessions": 0
+      },
+      "per_symbol": {
+        "SNDK": {
+          "net_pnl": 0.0,
+          "costs": 0
+        },
+        "TSLA": {
+          "net_pnl": 0.0,
+          "costs": 0
+        },
+        "MSTR": {
+          "net_pnl": 0.0,
+          "costs": 0
+        },
+        "NVDA": {
+          "net_pnl": 0.0,
+          "costs": 0
+        }
+      },
+      "fixed_order_stress_5bps": null,
+      "paired_baseline": {
+        "mean_daily_return_difference": -0.0049316229460347,
+        "daily_difference_se": 0.0044309840154217964,
+        "sessions": 9
+      }
+    },
+    {
+      "candidate": {
+        "name": "cash",
+        "features": "price_volume",
+        "model": "ridge",
+        "portfolio": "cash"
+      },
+      "cost_bps": 5,
+      "status": "complete",
+      "summary": {
+        "start": "2026-08-31",
+        "end": "2026-09-11",
+        "sessions": 9,
+        "starting_equity": 100000.0,
+        "ending_equity": 100000.0,
+        "net_pnl": 0.0,
+        "net_return": 0.0,
+        "gross_pnl": 0.0,
+        "costs": 0.0,
+        "turnover_dollars": 0.0,
+        "fill_count": 0,
+        "max_drawdown": 0.0,
+        "max_gross_exposure": 0.0,
+        "max_symbol_exposure": 0.0,
+        "profitable_sessions": 0
+      },
+      "per_symbol": {
+        "SNDK": {
+          "net_pnl": 0.0,
+          "costs": 0
+        },
+        "TSLA": {
+          "net_pnl": 0.0,
+          "costs": 0
+        },
+        "MSTR": {
+          "net_pnl": 0.0,
+          "costs": 0
+        },
+        "NVDA": {
+          "net_pnl": 0.0,
+          "costs": 0
+        }
+      },
+      "fixed_order_stress_5bps": null,
+      "paired_baseline": {
+        "mean_daily_return_difference": -0.002928270406022289,
+        "daily_difference_se": 0.005106246883209876,
+        "sessions": 9
+      }
+    },
+    {
+      "candidate": {
+        "name": "equal_weight",
+        "features": "price_volume",
+        "model": "ridge",
+        "portfolio": "equal"
+      },
+      "cost_bps": 2,
+      "status": "complete",
+      "summary": {
+        "start": "2026-08-31",
+        "end": "2026-09-11",
+        "sessions": 9,
+        "starting_equity": 100000.0,
+        "ending_equity": 106211.31720424653,
+        "net_pnl": 6211.31720424653,
+        "net_return": 0.06211317204246525,
+        "gross_pnl": 6568.867027282724,
+        "costs": 357.5498230361938,
+        "turnover_dollars": 1787749.1151809692,
+        "fill_count": 72,
+        "max_drawdown": -0.04353598973422734,
+        "max_gross_exposure": 0.9472022540348423,
+        "max_symbol_exposure": 0.2570929166512808,
+        "profitable_sessions": 4
+      },
+      "per_symbol": {
+        "SNDK": {
+          "net_pnl": 1999.2513290527459,
+          "costs": 86.66200102539062
+        },
+        "TSLA": {
+          "net_pnl": 2119.510997247333,
+          "costs": 90.19838385620118
+        },
+        "MSTR": {
+          "net_pnl": 2675.542033702095,
+          "costs": 90.67582365875245
+        },
+        "NVDA": {
+          "net_pnl": -582.9871557556144,
+          "costs": 90.01361449584961
+        }
+      },
+      "fixed_order_stress_5bps": {
+        "kind": "fixed_recorded_integer_orderflow_cost_sensitivity",
+        "slippage_bps_per_side": 5,
+        "commission_bps_per_side": 0.0,
+        "starting_equity": 100000,
+        "ending_equity": 105674.99246969224,
+        "net_pnl": 5674.992469692239,
+        "net_return": 0.056749924696922305,
+        "extra_cost": 536.3247345542909,
+        "costs": 893.8745575904846,
+        "max_drawdown": -0.04531068946989669,
+        "constraint_breach_marks_including_market_drift": 0,
+        "requires_feasibility_review": false,
+        "same_quantities_and_reference_prices": true,
+        "daily": [
+          {
+            "date": "2026-08-31",
+            "extra_cost": 56.91585250854493,
+            "new_cost": 94.8597541809082,
+            "SNDK_extra_cost": 13.644112060546874,
+            "TSLA_extra_cost": 14.603543701171876,
+            "MSTR_extra_cost": 14.42541610107422,
+            "NVDA_extra_cost": 14.242780645751953
+          },
+          {
+            "date": "2026-09-01",
+            "extra_cost": 58.29807178115845,
+            "new_cost": 97.16345296859741,
+            "SNDK_extra_cost": 14.693855859375,
+            "TSLA_extra_cost": 14.406976794433593,
+            "MSTR_extra_cost": 14.500910982513428,
+            "NVDA_extra_cost": 14.696328144836425
+          },
+          {
+            "date": "2026-09-02",
+            "extra_cost": 57.6114041015625,
+            "new_cost": 96.01900683593749,
+            "SNDK_extra_cost": 13.89806982421875,
+            "TSLA_extra_cost": 14.40828273010254,
+            "MSTR_extra_cost": 14.54332810821533,
+            "NVDA_extra_cost": 14.761723439025879
+          },
+          {
+            "date": "2026-09-03",
+            "extra_cost": 58.99894393157958,
+            "new_cost": 98.33157321929932,
+            "SNDK_extra_cost": 13.927545043945312,
+            "TSLA_extra_cost": 14.72219126586914,
+            "MSTR_extra_cost": 15.618547325134275,
+            "NVDA_extra_cost": 14.730660296630859
+          },
+          {
+            "date": "2026-09-04",
+            "extra_cost": 61.771892582702634,
+            "new_cost": 102.95315430450441,
+            "SNDK_extra_cost": 15.909191601562501,
+            "TSLA_extra_cost": 15.068235076904298,
+            "MSTR_extra_cost": 15.544440101623534,
+            "NVDA_extra_cost": 15.250025802612305
+          },
+          {
+            "date": "2026-09-08",
+            "extra_cost": 61.65771103820801,
+            "new_cost": 102.76285173034668,
+            "SNDK_extra_cost": 14.740362451171876,
+            "TSLA_extra_cost": 15.887685424804689,
+            "MSTR_extra_cost": 15.634814895629884,
+            "NVDA_extra_cost": 15.394848266601562
+          },
+          {
+            "date": "2026-09-09",
+            "extra_cost": 60.82525359191894,
+            "new_cost": 101.37542265319824,
+            "SNDK_extra_cost": 14.758673876953125,
+            "TSLA_extra_cost": 15.46303546142578,
+            "MSTR_extra_cost": 15.111663958740234,
+            "NVDA_extra_cost": 15.491880294799806
+          },
+          {
+            "date": "2026-09-10",
+            "extra_cost": 60.3821311477661,
+            "new_cost": 100.63688524627686,
+            "SNDK_extra_cost": 14.362572143554686,
+            "TSLA_extra_cost": 15.411614739990235,
+            "MSTR_extra_cost": 15.333354158020018,
+            "NVDA_extra_cost": 15.274590106201172
+          },
+          {
+            "date": "2026-09-11",
+            "extra_cost": 59.8634738708496,
+            "new_cost": 99.77245645141602,
+            "SNDK_extra_cost": 14.058618676757813,
+            "TSLA_extra_cost": 15.32601058959961,
+            "MSTR_extra_cost": 15.301259857177733,
+            "NVDA_extra_cost": 15.177584747314452
+          }
+        ]
+      },
+      "paired_baseline": {
+        "mean_daily_return_difference": 0.0019810736712530344,
+        "daily_difference_se": 0.0077236237816333585,
+        "sessions": 9
+      }
+    },
+    {
+      "candidate": {
+        "name": "equal_weight",
+        "features": "price_volume",
+        "model": "ridge",
+        "portfolio": "equal"
+      },
+      "cost_bps": 5,
+      "status": "complete",
+      "summary": {
+        "start": "2026-08-31",
+        "end": "2026-09-11",
+        "sessions": 9,
+        "starting_equity": 100000.0,
+        "ending_equity": 105679.85706464777,
+        "net_pnl": 5679.857064647775,
+        "net_return": 0.05679857064647775,
+        "gross_pnl": 6571.570060730081,
+        "costs": 891.7129960823057,
+        "turnover_dollars": 1783425.9921646118,
+        "fill_count": 72,
+        "max_drawdown": -0.04515794017753072,
+        "max_gross_exposure": 0.9496036337008827,
+        "max_symbol_exposure": 0.2563019975960199,
+        "profitable_sessions": 4
+      },
+      "per_symbol": {
+        "SNDK": {
+          "net_pnl": 1869.2583275146753,
+          "costs": 216.6550025634766
+        },
+        "TSLA": {
+          "net_pnl": 1980.6601026916796,
+          "costs": 224.76927963256836
+        },
+        "MSTR": {
+          "net_pnl": 2532.69816344836,
+          "costs": 226.14771515274043
+        },
+        "NVDA": {
+          "net_pnl": -702.7595290069257,
+          "costs": 224.1409987335205
+        }
+      },
+      "fixed_order_stress_5bps": {
+        "kind": "fixed_recorded_integer_orderflow_cost_sensitivity",
+        "slippage_bps_per_side": 5,
+        "commission_bps_per_side": 0.0,
+        "starting_equity": 100000,
+        "ending_equity": 105679.85706464777,
+        "net_pnl": 5679.857064647775,
+        "net_return": 0.05679857064647775,
+        "extra_cost": 0.0,
+        "costs": 891.712996082306,
+        "max_drawdown": -0.04515794017753072,
+        "constraint_breach_marks_including_market_drift": 0,
+        "requires_feasibility_review": false,
+        "same_quantities_and_reference_prices": true,
+        "daily": [
+          {
+            "date": "2026-08-31",
+            "extra_cost": 0.0,
+            "new_cost": 94.8597541809082,
+            "SNDK_extra_cost": 0.0,
+            "TSLA_extra_cost": 0.0,
+            "MSTR_extra_cost": 0.0,
+            "NVDA_extra_cost": 0.0
+          },
+          {
+            "date": "2026-09-01",
+            "extra_cost": 0.0,
+            "new_cost": 97.16345296859741,
+            "SNDK_extra_cost": 0.0,
+            "TSLA_extra_cost": 0.0,
+            "MSTR_extra_cost": 0.0,
+            "NVDA_extra_cost": 0.0
+          },
+          {
+            "date": "2026-09-02",
+            "extra_cost": 0.0,
+            "new_cost": 96.01900683593749,
+            "SNDK_extra_cost": 0.0,
+            "TSLA_extra_cost": 0.0,
+            "MSTR_extra_cost": 0.0,
+            "NVDA_extra_cost": 0.0
+          },
+          {
+            "date": "2026-09-03",
+            "extra_cost": 0.0,
+            "new_cost": 98.19528572082521,
+            "SNDK_extra_cost": 0.0,
+            "TSLA_extra_cost": 0.0,
+            "MSTR_extra_cost": 0.0,
+            "NVDA_extra_cost": 0.0
+          },
+          {
+            "date": "2026-09-04",
+            "extra_cost": 0.0,
+            "new_cost": 102.95315430450441,
+            "SNDK_extra_cost": 0.0,
+            "TSLA_extra_cost": 0.0,
+            "MSTR_extra_cost": 0.0,
+            "NVDA_extra_cost": 0.0
+          },
+          {
+            "date": "2026-09-08",
+            "extra_cost": 0.0,
+            "new_cost": 102.39661422729492,
+            "SNDK_extra_cost": 0.0,
+            "TSLA_extra_cost": 0.0,
+            "MSTR_extra_cost": 0.0,
+            "NVDA_extra_cost": 0.0
+          },
+          {
+            "date": "2026-09-09",
+            "extra_cost": 0.0,
+            "new_cost": 101.01327365112304,
+            "SNDK_extra_cost": 0.0,
+            "TSLA_extra_cost": 0.0,
+            "MSTR_extra_cost": 0.0,
+            "NVDA_extra_cost": 0.0
+          },
+          {
+            "date": "2026-09-10",
+            "extra_cost": 0.0,
+            "new_cost": 100.05564775085449,
+            "SNDK_extra_cost": 0.0,
+            "TSLA_extra_cost": 0.0,
+            "MSTR_extra_cost": 0.0,
+            "NVDA_extra_cost": 0.0
+          },
+          {
+            "date": "2026-09-11",
+            "extra_cost": 0.0,
+            "new_cost": 99.05680644226074,
+            "SNDK_extra_cost": 0.0,
+            "TSLA_extra_cost": 0.0,
+            "MSTR_extra_cost": 0.0,
+            "NVDA_extra_cost": 0.0
+          }
+        ]
+      },
+      "paired_baseline": {
+        "mean_daily_return_difference": 0.003423146076715489,
+        "daily_difference_se": 0.004414587795243814,
+        "sessions": 9
+      }
+    },
+    {
+      "candidate": {
+        "name": "price_ridge",
+        "features": "price_volume",
+        "model": "ridge",
+        "portfolio": "joint"
+      },
+      "cost_bps": 2,
+      "status": "complete",
+      "summary": {
+        "start": "2026-08-31",
+        "end": "2026-09-11",
+        "sessions": 9,
+        "starting_equity": 100000.0,
+        "ending_equity": 104454.3714935962,
+        "net_pnl": 4454.371493596205,
+        "net_return": 0.04454371493596199,
+        "gross_pnl": 7903.778678894361,
+        "costs": 3449.407185298156,
+        "turnover_dollars": 17247035.926490784,
+        "fill_count": 1329,
+        "max_drawdown": -0.02852972787435959,
+        "max_gross_exposure": 0.9535078872726356,
+        "max_symbol_exposure": 0.7052296314983034,
+        "profitable_sessions": 4
+      },
+      "per_symbol": {
+        "SNDK": {
+          "net_pnl": 762.4103140626266,
+          "costs": 1000.290613671875
+        },
+        "TSLA": {
+          "net_pnl": 1536.609622772332,
+          "costs": 1197.4961206359862
+        },
+        "MSTR": {
+          "net_pnl": 3141.9820875321166,
+          "costs": 710.2649293746948
+        },
+        "NVDA": {
+          "net_pnl": -986.630530770788,
+          "costs": 541.3555216156005
+        }
+      },
+      "fixed_order_stress_5bps": {
+        "kind": "fixed_recorded_integer_orderflow_cost_sensitivity",
+        "slippage_bps_per_side": 5,
+        "commission_bps_per_side": 0.0,
+        "starting_equity": 100000,
+        "ending_equity": 99280.26071564897,
+        "net_pnl": -719.7392843510315,
+        "net_return": -0.007197392843510286,
+        "extra_cost": 5174.110777947238,
+        "costs": 8623.517963245391,
+        "max_drawdown": -0.05818218607566339,
+        "constraint_breach_marks_including_market_drift": 985,
+        "requires_feasibility_review": true,
+        "same_quantities_and_reference_prices": true,
+        "daily": [
+          {
+            "date": "2026-08-31",
+            "extra_cost": 672.1577377578736,
+            "new_cost": 1120.2628962631222,
+            "SNDK_extra_cost": 190.1222787597656,
+            "MSTR_extra_cost": 178.97249043273922,
+            "NVDA_extra_cost": 97.43607774810789,
+            "TSLA_extra_cost": 205.62689081726066
+          },
+          {
+            "date": "2026-09-01",
+            "extra_cost": 481.69983522033675,
+            "new_cost": 802.8330587005617,
+            "SNDK_extra_cost": 175.07098088378908,
+            "MSTR_extra_cost": 102.21125336151124,
+            "NVDA_extra_cost": 101.34602313995362,
+            "TSLA_extra_cost": 103.07157783508299
+          },
+          {
+            "date": "2026-09-02",
+            "extra_cost": 613.9306903678895,
+            "new_cost": 1023.2178172798158,
+            "SNDK_extra_cost": 170.27300211181642,
+            "TSLA_extra_cost": 212.09641838378906,
+            "MSTR_extra_cost": 64.47773831863402,
+            "NVDA_extra_cost": 167.08353155364986
+          },
+          {
+            "date": "2026-09-03",
+            "extra_cost": 632.2676414886469,
+            "new_cost": 1053.7794024810794,
+            "SNDK_extra_cost": 209.16064259033203,
+            "TSLA_extra_cost": 183.09675156555173,
+            "MSTR_extra_cost": 134.18194095153805,
+            "NVDA_extra_cost": 105.8283063812256
+          },
+          {
+            "date": "2026-09-04",
+            "extra_cost": 537.2636283233644,
+            "new_cost": 895.4393805389406,
+            "SNDK_extra_cost": 150.64544589843746,
+            "MSTR_extra_cost": 104.31747680511474,
+            "TSLA_extra_cost": 188.78536088562007,
+            "NVDA_extra_cost": 93.51534473419187
+          },
+          {
+            "date": "2026-09-08",
+            "extra_cost": 544.7278887496949,
+            "new_cost": 907.879814582825,
+            "TSLA_extra_cost": 177.19985484008788,
+            "MSTR_extra_cost": 95.16106286315922,
+            "NVDA_extra_cost": 100.34810999908449,
+            "SNDK_extra_cost": 172.01886104736323
+          },
+          {
+            "date": "2026-09-09",
+            "extra_cost": 589.1711993637086,
+            "new_cost": 981.9519989395143,
+            "SNDK_extra_cost": 175.02819580078125,
+            "MSTR_extra_cost": 117.97455346069337,
+            "TSLA_extra_cost": 246.05849291381833,
+            "NVDA_extra_cost": 50.10995718841551
+          },
+          {
+            "date": "2026-09-10",
+            "extra_cost": 566.1499049926759,
+            "new_cost": 943.5831749877927,
+            "SNDK_extra_cost": 88.72436927490233,
+            "MSTR_extra_cost": 96.82730909271238,
+            "TSLA_extra_cost": 284.49641458740234,
+            "NVDA_extra_cost": 96.1018120376587
+          },
+          {
+            "date": "2026-09-11",
+            "extra_cost": 536.7422516830442,
+            "new_cost": 894.5704194717401,
+            "SNDK_extra_cost": 169.39214414062505,
+            "TSLA_extra_cost": 195.81241912536623,
+            "MSTR_extra_cost": 171.27356877593994,
+            "NVDA_extra_cost": 0.26411964111328123
+          }
+        ]
+      },
+      "paired_baseline": {
+        "mean_daily_return_difference": 0.0,
+        "daily_difference_se": 0.0,
+        "sessions": 9
+      }
+    },
+    {
+      "candidate": {
+        "name": "price_ridge",
+        "features": "price_volume",
+        "model": "ridge",
+        "portfolio": "joint"
+      },
+      "cost_bps": 5,
+      "status": "complete",
+      "summary": {
+        "start": "2026-08-31",
+        "end": "2026-09-11",
+        "sessions": 9,
+        "starting_equity": 100000.0,
+        "ending_equity": 102570.4631313326,
+        "net_pnl": 2570.4631313325954,
+        "net_return": 0.02570463131332601,
+        "gross_pnl": 4954.126831054884,
+        "costs": 2383.66369972229,
+        "turnover_dollars": 4767327.39944458,
+        "fill_count": 424,
+        "max_drawdown": -0.04463014931373244,
+        "max_gross_exposure": 0.955187895650358,
+        "max_symbol_exposure": 0.7033015734925563,
+        "profitable_sessions": 5
+      },
+      "per_symbol": {
+        "SNDK": {
+          "net_pnl": 331.8197542115122,
+          "costs": 1052.7140592651367
+        },
+        "TSLA": {
+          "net_pnl": -286.3396787719066,
+          "costs": 508.14454937744136
+        },
+        "MSTR": {
+          "net_pnl": 2097.326962104875,
+          "costs": 696.1105836715699
+        },
+        "NVDA": {
+          "net_pnl": 427.65609378817646,
+          "costs": 126.69450740814209
+        }
+      },
+      "fixed_order_stress_5bps": {
+        "kind": "fixed_recorded_integer_orderflow_cost_sensitivity",
+        "slippage_bps_per_side": 5,
+        "commission_bps_per_side": 0.0,
+        "starting_equity": 100000,
+        "ending_equity": 102570.4631313326,
+        "net_pnl": 2570.4631313325954,
+        "net_return": 0.02570463131332601,
+        "extra_cost": 0.0,
+        "costs": 2383.66369972229,
+        "max_drawdown": -0.04463014931373244,
+        "constraint_breach_marks_including_market_drift": 42,
+        "requires_feasibility_review": true,
+        "same_quantities_and_reference_prices": true,
+        "daily": [
+          {
+            "date": "2026-08-31",
+            "extra_cost": 0.0,
+            "new_cost": 263.61501732635503,
+            "SNDK_extra_cost": 0.0,
+            "MSTR_extra_cost": 0.0,
+            "NVDA_extra_cost": 0.0,
+            "TSLA_extra_cost": 0.0
+          },
+          {
+            "date": "2026-09-01",
+            "extra_cost": 0.0,
+            "new_cost": 259.3610652809143,
+            "SNDK_extra_cost": 0.0,
+            "MSTR_extra_cost": 0.0,
+            "TSLA_extra_cost": 0.0
+          },
+          {
+            "date": "2026-09-02",
+            "extra_cost": 0.0,
+            "new_cost": 361.0805067634583,
+            "SNDK_extra_cost": 0.0,
+            "TSLA_extra_cost": 0.0,
+            "MSTR_extra_cost": 0.0,
+            "NVDA_extra_cost": 0.0
+          },
+          {
+            "date": "2026-09-03",
+            "extra_cost": 0.0,
+            "new_cost": 364.78428106689455,
+            "SNDK_extra_cost": 0.0,
+            "TSLA_extra_cost": 0.0,
+            "MSTR_extra_cost": 0.0,
+            "NVDA_extra_cost": 0.0
+          },
+          {
+            "date": "2026-09-04",
+            "extra_cost": 0.0,
+            "new_cost": 211.8029719085693,
+            "SNDK_extra_cost": 0.0,
+            "MSTR_extra_cost": 0.0,
+            "TSLA_extra_cost": 0.0,
+            "NVDA_extra_cost": 0.0
+          },
+          {
+            "date": "2026-09-08",
+            "extra_cost": 0.0,
+            "new_cost": 222.33749422454835,
+            "TSLA_extra_cost": 0.0,
+            "MSTR_extra_cost": 0.0,
+            "NVDA_extra_cost": 0.0,
+            "SNDK_extra_cost": 0.0
+          },
+          {
+            "date": "2026-09-09",
+            "extra_cost": 0.0,
+            "new_cost": 236.0632445831299,
+            "SNDK_extra_cost": 0.0,
+            "MSTR_extra_cost": 0.0,
+            "TSLA_extra_cost": 0.0
+          },
+          {
+            "date": "2026-09-10",
+            "extra_cost": 0.0,
+            "new_cost": 191.49596339416502,
+            "SNDK_extra_cost": 0.0,
+            "MSTR_extra_cost": 0.0,
+            "TSLA_extra_cost": 0.0
+          },
+          {
+            "date": "2026-09-11",
+            "extra_cost": 0.0,
+            "new_cost": 273.1231551742554,
+            "SNDK_extra_cost": 0.0,
+            "TSLA_extra_cost": 0.0,
+            "MSTR_extra_cost": 0.0,
+            "NVDA_extra_cost": 0.0
+          }
+        ]
+      },
+      "paired_baseline": {
+        "mean_daily_return_difference": 0.0,
+        "daily_difference_se": 0.0,
+        "sessions": 9
+      }
+    },
+    {
+      "candidate": {
+        "name": "peer_ridge",
+        "features": "price_volume_peer",
+        "model": "ridge",
+        "portfolio": "joint"
+      },
+      "cost_bps": 2,
+      "status": "complete",
+      "summary": {
+        "start": "2026-08-31",
+        "end": "2026-09-11",
+        "sessions": 9,
+        "starting_equity": 100000.0,
+        "ending_equity": 105625.25106239672,
+        "net_pnl": 5625.251062396725,
+        "net_return": 0.0562525106239673,
+        "gross_pnl": 9368.900405884273,
+        "costs": 3743.64934348755,
+        "turnover_dollars": 18718246.717437744,
+        "fill_count": 1385,
+        "max_drawdown": -0.03355372133039536,
+        "max_gross_exposure": 0.9599330265008844,
+        "max_symbol_exposure": 0.7020072835983378,
+        "profitable_sessions": 5
+      },
+      "per_symbol": {
+        "SNDK": {
+          "net_pnl": -173.22919841296607,
+          "costs": 1177.9851798583982
+        },
+        "TSLA": {
+          "net_pnl": 2162.424727691854,
+          "costs": 1427.534592376709
+        },
+        "MSTR": {
+          "net_pnl": 4659.52661300054,
+          "costs": 689.0344374145509
+        },
+        "NVDA": {
+          "net_pnl": -1023.4710798827805,
+          "costs": 449.09513383789067
+        }
+      },
+      "fixed_order_stress_5bps": {
+        "kind": "fixed_recorded_integer_orderflow_cost_sensitivity",
+        "slippage_bps_per_side": 5,
+        "commission_bps_per_side": 0.0,
+        "starting_equity": 100000,
+        "ending_equity": 100009.7770471654,
+        "net_pnl": 9.777047165393014,
+        "net_return": 9.777047165382413e-05,
+        "extra_cost": 5615.474015231327,
+        "costs": 9359.123358718873,
+        "max_drawdown": -0.06964637707463961,
+        "constraint_breach_marks_including_market_drift": 1070,
+        "requires_feasibility_review": true,
+        "same_quantities_and_reference_prices": true,
+        "daily": [
+          {
+            "date": "2026-08-31",
+            "extra_cost": 680.9950878479005,
+            "new_cost": 1134.9918130798349,
+            "SNDK_extra_cost": 247.99036937255863,
+            "MSTR_extra_cost": 166.60888159332274,
+            "NVDA_extra_cost": 79.6264575027466,
+            "TSLA_extra_cost": 186.7693793792724
+          },
+          {
+            "date": "2026-09-01",
+            "extra_cost": 491.20943276138314,
+            "new_cost": 818.6823879356381,
+            "SNDK_extra_cost": 217.63348714599618,
+            "MSTR_extra_cost": 102.18092986221312,
+            "NVDA_extra_cost": 67.3121068359375,
+            "TSLA_extra_cost": 104.08290891723632
+          },
+          {
+            "date": "2026-09-02",
+            "extra_cost": 631.8725758918762,
+            "new_cost": 1053.1209598197936,
+            "SNDK_extra_cost": 209.1052664794921,
+            "TSLA_extra_cost": 236.66932052307135,
+            "MSTR_extra_cost": 65.72212899398804,
+            "NVDA_extra_cost": 120.37585989532471
+          },
+          {
+            "date": "2026-09-03",
+            "extra_cost": 652.0912556625364,
+            "new_cost": 1086.8187594375613,
+            "SNDK_extra_cost": 204.3687125976563,
+            "TSLA_extra_cost": 198.2178345703125,
+            "MSTR_extra_cost": 139.10958133850096,
+            "NVDA_extra_cost": 110.39512715606686
+          },
+          {
+            "date": "2026-09-04",
+            "extra_cost": 556.2622175125119,
+            "new_cost": 927.1036958541868,
+            "SNDK_extra_cost": 148.70959445800779,
+            "MSTR_extra_cost": 101.48266880493163,
+            "TSLA_extra_cost": 221.1604961700439,
+            "NVDA_extra_cost": 84.90945807952882
+          },
+          {
+            "date": "2026-09-08",
+            "extra_cost": 622.7775804611209,
+            "new_cost": 1037.9626341018675,
+            "TSLA_extra_cost": 258.1366605102538,
+            "MSTR_extra_cost": 78.74911903381347,
+            "NVDA_extra_cost": 79.63848330230714,
+            "SNDK_extra_cost": 206.25331761474612
+          },
+          {
+            "date": "2026-09-09",
+            "extra_cost": 620.8224227142332,
+            "new_cost": 1034.7040378570555,
+            "SNDK_extra_cost": 203.7517712036132,
+            "MSTR_extra_cost": 115.92819479370118,
+            "TSLA_extra_cost": 274.50101174926766,
+            "NVDA_extra_cost": 26.641444967651374
+          },
+          {
+            "date": "2026-09-10",
+            "extra_cost": 572.4404825317383,
+            "new_cost": 954.0674708862307,
+            "SNDK_extra_cost": 97.88908608398437,
+            "MSTR_extra_cost": 95.16315531921386,
+            "TSLA_extra_cost": 293.1147736541748,
+            "NVDA_extra_cost": 86.27346747436522
+          },
+          {
+            "date": "2026-09-11",
+            "extra_cost": 787.0029598480228,
+            "new_cost": 1311.6715997467054,
+            "SNDK_extra_cost": 231.27616483154287,
+            "TSLA_extra_cost": 368.64950309143074,
+            "MSTR_extra_cost": 168.6069963821411,
+            "NVDA_extra_cost": 18.470295542907714
+          }
+        ]
+      },
+      "paired_baseline": {
+        "mean_daily_return_difference": 0.0013109886670726555,
+        "daily_difference_se": 0.0020241586755464502,
+        "sessions": 9
+      }
+    },
+    {
+      "candidate": {
+        "name": "peer_ridge",
+        "features": "price_volume_peer",
+        "model": "ridge",
+        "portfolio": "joint"
+      },
+      "cost_bps": 5,
+      "status": "complete",
+      "summary": {
+        "start": "2026-08-31",
+        "end": "2026-09-11",
+        "sessions": 9,
+        "starting_equity": 100000.0,
+        "ending_equity": 104082.92614806388,
+        "net_pnl": 4082.9261480638816,
+        "net_return": 0.04082926148063892,
+        "gross_pnl": 6778.417541504125,
+        "costs": 2695.491393440244,
+        "turnover_dollars": 5390982.786880493,
+        "fill_count": 447,
+        "max_drawdown": -0.0451943703649722,
+        "max_gross_exposure": 0.9523272296147172,
+        "max_symbol_exposure": 0.7029551359136256,
+        "profitable_sessions": 5
+      },
+      "per_symbol": {
+        "SNDK": {
+          "net_pnl": -652.3425381468551,
+          "costs": 1209.9544766235351
+        },
+        "TSLA": {
+          "net_pnl": 1051.6268442993733,
+          "costs": 635.5568104858398
+        },
+        "MSTR": {
+          "net_pnl": 3277.525060653752,
+          "costs": 744.70481300354
+        },
+        "NVDA": {
+          "net_pnl": 406.1167812576365,
+          "costs": 105.27529332733155
+        }
+      },
+      "fixed_order_stress_5bps": {
+        "kind": "fixed_recorded_integer_orderflow_cost_sensitivity",
+        "slippage_bps_per_side": 5,
+        "commission_bps_per_side": 0.0,
+        "starting_equity": 100000,
+        "ending_equity": 104082.92614806388,
+        "net_pnl": 4082.9261480638816,
+        "net_return": 0.04082926148063892,
+        "extra_cost": 0.0,
+        "costs": 2695.4913934402466,
+        "max_drawdown": -0.0451943703649722,
+        "constraint_breach_marks_including_market_drift": 36,
+        "requires_feasibility_review": true,
+        "same_quantities_and_reference_prices": true,
+        "daily": [
+          {
+            "date": "2026-08-31",
+            "extra_cost": 0.0,
+            "new_cost": 279.062337486267,
+            "SNDK_extra_cost": 0.0,
+            "MSTR_extra_cost": 0.0,
+            "NVDA_extra_cost": 0.0,
+            "TSLA_extra_cost": 0.0
+          },
+          {
+            "date": "2026-09-01",
+            "extra_cost": 0.0,
+            "new_cost": 298.7093442306519,
+            "SNDK_extra_cost": 0.0,
+            "MSTR_extra_cost": 0.0,
+            "TSLA_extra_cost": 0.0
+          },
+          {
+            "date": "2026-09-02",
+            "extra_cost": 0.0,
+            "new_cost": 458.061456138611,
+            "SNDK_extra_cost": 0.0,
+            "TSLA_extra_cost": 0.0,
+            "MSTR_extra_cost": 0.0,
+            "NVDA_extra_cost": 0.0
+          },
+          {
+            "date": "2026-09-03",
+            "extra_cost": 0.0,
+            "new_cost": 374.6122280578614,
+            "SNDK_extra_cost": 0.0,
+            "TSLA_extra_cost": 0.0,
+            "MSTR_extra_cost": 0.0,
+            "NVDA_extra_cost": 0.0
+          },
+          {
+            "date": "2026-09-04",
+            "extra_cost": 0.0,
+            "new_cost": 218.93608792877194,
+            "SNDK_extra_cost": 0.0,
+            "MSTR_extra_cost": 0.0,
+            "TSLA_extra_cost": 0.0
+          },
+          {
+            "date": "2026-09-08",
+            "extra_cost": 0.0,
+            "new_cost": 224.88323418426518,
+            "TSLA_extra_cost": 0.0,
+            "MSTR_extra_cost": 0.0,
+            "NVDA_extra_cost": 0.0,
+            "SNDK_extra_cost": 0.0
+          },
+          {
+            "date": "2026-09-09",
+            "extra_cost": 0.0,
+            "new_cost": 322.22189084625245,
+            "SNDK_extra_cost": 0.0,
+            "MSTR_extra_cost": 0.0,
+            "TSLA_extra_cost": 0.0
+          },
+          {
+            "date": "2026-09-10",
+            "extra_cost": 0.0,
+            "new_cost": 178.68292356872556,
+            "SNDK_extra_cost": 0.0,
+            "MSTR_extra_cost": 0.0,
+            "TSLA_extra_cost": 0.0
+          },
+          {
+            "date": "2026-09-11",
+            "extra_cost": 0.0,
+            "new_cost": 340.3218909988403,
+            "SNDK_extra_cost": 0.0,
+            "TSLA_extra_cost": 0.0,
+            "MSTR_extra_cost": 0.0,
+            "NVDA_extra_cost": 0.0
+          }
+        ]
+      },
+      "paired_baseline": {
+        "mean_daily_return_difference": 0.0016471038355835668,
+        "daily_difference_se": 0.0010213040357228522,
+        "sessions": 9
+      }
+    },
+    {
+      "candidate": {
+        "name": "context_ridge",
+        "features": "context",
+        "model": "ridge",
+        "portfolio": "joint"
+      },
+      "cost_bps": 2,
+      "status": "complete",
+      "summary": {
+        "start": "2026-08-31",
+        "end": "2026-09-11",
+        "sessions": 9,
+        "starting_equity": 100000.0,
+        "ending_equity": 107255.71687227658,
+        "net_pnl": 7255.716872276578,
+        "net_return": 0.07255716872276574,
+        "gross_pnl": 11055.589195251738,
+        "costs": 3799.8723229751577,
+        "turnover_dollars": 18999361.614875793,
+        "fill_count": 1367,
+        "max_drawdown": -0.03612907347269945,
+        "max_gross_exposure": 0.9545052702418428,
+        "max_symbol_exposure": 0.702958918167739,
+        "profitable_sessions": 6
+      },
+      "per_symbol": {
+        "SNDK": {
+          "net_pnl": 1766.0705411866438,
+          "costs": 1219.2110750244142
+        },
+        "TSLA": {
+          "net_pnl": 2600.514055591062,
+          "costs": 1423.3527656982424
+        },
+        "MSTR": {
+          "net_pnl": 3701.2296601699854,
+          "costs": 670.4790876937866
+        },
+        "NVDA": {
+          "net_pnl": -812.0973846710026,
+          "costs": 486.82939455871576
+        }
+      },
+      "fixed_order_stress_5bps": {
+        "kind": "fixed_recorded_integer_orderflow_cost_sensitivity",
+        "slippage_bps_per_side": 5,
+        "commission_bps_per_side": 0.0,
+        "starting_equity": 100000,
+        "ending_equity": 101555.90838781383,
+        "net_pnl": 1555.9083878138335,
+        "net_return": 0.015559083878138313,
+        "extra_cost": 5699.808484462748,
+        "costs": 9499.680807437897,
+        "max_drawdown": -0.05872761218408773,
+        "constraint_breach_marks_including_market_drift": 1384,
+        "requires_feasibility_review": true,
+        "same_quantities_and_reference_prices": true,
+        "daily": [
+          {
+            "date": "2026-08-31",
+            "extra_cost": 665.427301254272,
+            "new_cost": 1109.0455020904546,
+            "SNDK_extra_cost": 239.97307928466802,
+            "MSTR_extra_cost": 159.00742064666747,
+            "TSLA_extra_cost": 151.95319046630863,
+            "NVDA_extra_cost": 114.49361085662844
+          },
+          {
+            "date": "2026-09-01",
+            "extra_cost": 475.4787742973329,
+            "new_cost": 792.4646238288881,
+            "SNDK_extra_cost": 188.63978210449227,
+            "MSTR_extra_cost": 63.17203879623413,
+            "NVDA_extra_cost": 107.25818647155764,
+            "TSLA_extra_cost": 116.40876692504881
+          },
+          {
+            "date": "2026-09-02",
+            "extra_cost": 540.1950230255126,
+            "new_cost": 900.3250383758549,
+            "SNDK_extra_cost": 186.8783443359375,
+            "TSLA_extra_cost": 184.57182210388186,
+            "MSTR_extra_cost": 57.96106414031983,
+            "NVDA_extra_cost": 110.78379244537355
+          },
+          {
+            "date": "2026-09-03",
+            "extra_cost": 684.2836212432861,
+            "new_cost": 1140.4727020721434,
+            "SNDK_extra_cost": 226.63861208496084,
+            "MSTR_extra_cost": 129.50967730865477,
+            "TSLA_extra_cost": 246.36696091003412,
+            "NVDA_extra_cost": 81.76837093963623
+          },
+          {
+            "date": "2026-09-04",
+            "extra_cost": 686.7058011657716,
+            "new_cost": 1144.509668609619,
+            "SNDK_extra_cost": 180.46067947998043,
+            "TSLA_extra_cost": 287.5750933868408,
+            "MSTR_extra_cost": 120.14356215820317,
+            "NVDA_extra_cost": 98.5264661407471
+          },
+          {
+            "date": "2026-09-08",
+            "extra_cost": 700.8852872222901,
+            "new_cost": 1168.1421453704827,
+            "TSLA_extra_cost": 300.422983190918,
+            "MSTR_extra_cost": 87.801058392334,
+            "NVDA_extra_cost": 62.48286563415528,
+            "SNDK_extra_cost": 250.1783800048828
+          },
+          {
+            "date": "2026-09-09",
+            "extra_cost": 535.5945095901487,
+            "new_cost": 892.6575159835817,
+            "SNDK_extra_cost": 160.45869971923833,
+            "MSTR_extra_cost": 121.03195257568362,
+            "TSLA_extra_cost": 206.9680241363525,
+            "NVDA_extra_cost": 47.135833158874526
+          },
+          {
+            "date": "2026-09-10",
+            "extra_cost": 594.9743899703981,
+            "new_cost": 991.6239832839973,
+            "SNDK_extra_cost": 134.67997946777342,
+            "MSTR_extra_cost": 90.55416183013917,
+            "TSLA_extra_cost": 271.18386046142575,
+            "NVDA_extra_cost": 98.55638821105957
+          },
+          {
+            "date": "2026-09-11",
+            "extra_cost": 816.2637766937247,
+            "new_cost": 1360.4396278228755,
+            "SNDK_extra_cost": 260.9090560546874,
+            "TSLA_extra_cost": 369.57844696655263,
+            "MSTR_extra_cost": 176.5376956924439,
+            "NVDA_extra_cost": 9.238577980041503
+          }
+        ]
+      },
+      "paired_baseline": {
+        "mean_daily_return_difference": 0.0029992516350958445,
+        "daily_difference_se": 0.0027063825367352984,
+        "sessions": 9
+      }
+    },
+    {
+      "candidate": {
+        "name": "context_ridge",
+        "features": "context",
+        "model": "ridge",
+        "portfolio": "joint"
+      },
+      "cost_bps": 5,
+      "status": "complete",
+      "summary": {
+        "start": "2026-08-31",
+        "end": "2026-09-11",
+        "sessions": 9,
+        "starting_equity": 100000.0,
+        "ending_equity": 106536.18717260392,
+        "net_pnl": 6536.187172603924,
+        "net_return": 0.06536187172603913,
+        "gross_pnl": 9456.090293884594,
+        "costs": 2919.9031212806703,
+        "turnover_dollars": 5839806.24256134,
+        "fill_count": 529,
+        "max_drawdown": -0.05219714533422004,
+        "max_gross_exposure": 0.9550542767149794,
+        "max_symbol_exposure": 0.702571248199882,
+        "profitable_sessions": 6
+      },
+      "per_symbol": {
+        "SNDK": {
+          "net_pnl": 1363.4459992677184,
+          "costs": 1282.3816374511719
+        },
+        "TSLA": {
+          "net_pnl": 1063.4453133545794,
+          "costs": 730.6173087158204
+        },
+        "MSTR": {
+          "net_pnl": 2582.6884288292567,
+          "costs": 728.9133396644592
+        },
+        "NVDA": {
+          "net_pnl": 1526.6074311523653,
+          "costs": 177.9908354492187
+        }
+      },
+      "fixed_order_stress_5bps": {
+        "kind": "fixed_recorded_integer_orderflow_cost_sensitivity",
+        "slippage_bps_per_side": 5,
+        "commission_bps_per_side": 0.0,
+        "starting_equity": 100000,
+        "ending_equity": 106536.18717260392,
+        "net_pnl": 6536.187172603924,
+        "net_return": 0.06536187172603913,
+        "extra_cost": 0.0,
+        "costs": 2919.90312128067,
+        "max_drawdown": -0.05219714533422004,
+        "constraint_breach_marks_including_market_drift": 36,
+        "requires_feasibility_review": true,
+        "same_quantities_and_reference_prices": true,
+        "daily": [
+          {
+            "date": "2026-08-31",
+            "extra_cost": 0.0,
+            "new_cost": 297.02504838943474,
+            "SNDK_extra_cost": 0.0,
+            "MSTR_extra_cost": 0.0,
+            "TSLA_extra_cost": 0.0,
+            "NVDA_extra_cost": 0.0
+          },
+          {
+            "date": "2026-09-01",
+            "extra_cost": 0.0,
+            "new_cost": 395.23742850875874,
+            "SNDK_extra_cost": 0.0,
+            "MSTR_extra_cost": 0.0,
+            "NVDA_extra_cost": 0.0,
+            "TSLA_extra_cost": 0.0
+          },
+          {
+            "date": "2026-09-02",
+            "extra_cost": 0.0,
+            "new_cost": 440.47011139297484,
+            "SNDK_extra_cost": 0.0,
+            "TSLA_extra_cost": 0.0,
+            "MSTR_extra_cost": 0.0,
+            "NVDA_extra_cost": 0.0
+          },
+          {
+            "date": "2026-09-03",
+            "extra_cost": 0.0,
+            "new_cost": 388.66487933349595,
+            "SNDK_extra_cost": 0.0,
+            "MSTR_extra_cost": 0.0,
+            "TSLA_extra_cost": 0.0,
+            "NVDA_extra_cost": 0.0
+          },
+          {
+            "date": "2026-09-04",
+            "extra_cost": 0.0,
+            "new_cost": 312.9440084838867,
+            "SNDK_extra_cost": 0.0,
+            "TSLA_extra_cost": 0.0,
+            "MSTR_extra_cost": 0.0
+          },
+          {
+            "date": "2026-09-08",
+            "extra_cost": 0.0,
+            "new_cost": 268.71638465881347,
+            "TSLA_extra_cost": 0.0,
+            "MSTR_extra_cost": 0.0,
+            "NVDA_extra_cost": 0.0,
+            "SNDK_extra_cost": 0.0
+          },
+          {
+            "date": "2026-09-09",
+            "extra_cost": 0.0,
+            "new_cost": 300.7950200576783,
+            "SNDK_extra_cost": 0.0,
+            "MSTR_extra_cost": 0.0,
+            "TSLA_extra_cost": 0.0
+          },
+          {
+            "date": "2026-09-10",
+            "extra_cost": 0.0,
+            "new_cost": 207.47456078338624,
+            "SNDK_extra_cost": 0.0,
+            "MSTR_extra_cost": 0.0,
+            "TSLA_extra_cost": 0.0,
+            "NVDA_extra_cost": 0.0
+          },
+          {
+            "date": "2026-09-11",
+            "extra_cost": 0.0,
+            "new_cost": 308.5756796722413,
+            "SNDK_extra_cost": 0.0,
+            "TSLA_extra_cost": 0.0,
+            "MSTR_extra_cost": 0.0
+          }
+        ]
+      },
+      "paired_baseline": {
+        "mean_daily_return_difference": 0.004337161920338868,
+        "daily_difference_se": 0.0031727399921886146,
+        "sessions": 9
+      }
+    },
+    {
+      "candidate": {
+        "name": "context_tree",
+        "features": "context",
+        "model": "tree",
+        "portfolio": "joint"
+      },
+      "cost_bps": 2,
+      "status": "complete",
+      "summary": {
+        "start": "2026-08-31",
+        "end": "2026-09-11",
+        "sessions": 9,
+        "starting_equity": 100000.0,
+        "ending_equity": 105953.5834689533,
+        "net_pnl": 5953.583468953293,
+        "net_return": 0.05953583468953294,
+        "gross_pnl": 8430.355430603378,
+        "costs": 2476.7719616500844,
+        "turnover_dollars": 12383859.808250427,
+        "fill_count": 429,
+        "max_drawdown": -0.0260419424416658,
+        "max_gross_exposure": 0.9562933489507258,
+        "max_symbol_exposure": 0.7061804128457622,
+        "profitable_sessions": 6
+      },
+      "per_symbol": {
+        "SNDK": {
+          "net_pnl": -1533.3087280273242,
+          "costs": 332.78919677734376
+        },
+        "TSLA": {
+          "net_pnl": 200.95652863780197,
+          "costs": 755.9160909912109
+        },
+        "MSTR": {
+          "net_pnl": 7748.262397624305,
+          "costs": 828.0026246536254
+        },
+        "NVDA": {
+          "net_pnl": -462.3267292815617,
+          "costs": 560.0640492279053
+        }
+      },
+      "fixed_order_stress_5bps": {
+        "kind": "fixed_recorded_integer_orderflow_cost_sensitivity",
+        "slippage_bps_per_side": 5,
+        "commission_bps_per_side": 0.0,
+        "starting_equity": 100000,
+        "ending_equity": 102238.42552647817,
+        "net_pnl": 2238.4255264781677,
+        "net_return": 0.022384255264781716,
+        "extra_cost": 3715.1579424751258,
+        "costs": 6191.929904125214,
+        "max_drawdown": -0.03613225717497315,
+        "constraint_breach_marks_including_market_drift": 804,
+        "requires_feasibility_review": true,
+        "same_quantities_and_reference_prices": true,
+        "daily": [
+          {
+            "date": "2026-08-31",
+            "extra_cost": 583.2855501411439,
+            "new_cost": 972.1425835685728,
+            "MSTR_extra_cost": 126.57065126266478,
+            "TSLA_extra_cost": 289.52761375122066,
+            "NVDA_extra_cost": 96.85619787139892,
+            "SNDK_extra_cost": 70.33108725585939
+          },
+          {
+            "date": "2026-09-01",
+            "extra_cost": 203.97408458175659,
+            "new_cost": 339.95680763626103,
+            "MSTR_extra_cost": 83.41312890243532,
+            "NVDA_extra_cost": 57.483387643432614,
+            "SNDK_extra_cost": 48.14730893554687,
+            "TSLA_extra_cost": 14.930259100341797
+          },
+          {
+            "date": "2026-09-02",
+            "extra_cost": 345.3520374412538,
+            "new_cost": 575.586729068756,
+            "MSTR_extra_cost": 94.20090147171021,
+            "NVDA_extra_cost": 87.75126342315674,
+            "SNDK_extra_cost": 79.36557088623046,
+            "TSLA_extra_cost": 84.03430166015625
+          },
+          {
+            "date": "2026-09-03",
+            "extra_cost": 465.3498771469116,
+            "new_cost": 775.5831285781865,
+            "TSLA_extra_cost": 95.23117658386232,
+            "MSTR_extra_cost": 242.38782756500242,
+            "NVDA_extra_cost": 127.73087299804689
+          },
+          {
+            "date": "2026-09-04",
+            "extra_cost": 393.24139613342277,
+            "new_cost": 655.402326889038,
+            "MSTR_extra_cost": 87.15144826812744,
+            "NVDA_extra_cost": 107.03480372772219,
+            "TSLA_extra_cost": 115.08933443298342,
+            "SNDK_extra_cost": 83.96580970458984
+          },
+          {
+            "date": "2026-09-08",
+            "extra_cost": 323.23957331085205,
+            "new_cost": 538.7326221847534,
+            "MSTR_extra_cost": 87.66322366790773,
+            "NVDA_extra_cost": 62.67482965393066,
+            "SNDK_extra_cost": 42.54459891357422,
+            "TSLA_extra_cost": 130.35692107543946
+          },
+          {
+            "date": "2026-09-09",
+            "extra_cost": 572.2193881759644,
+            "new_cost": 953.6989802932742,
+            "MSTR_extra_cost": 212.83649286346437,
+            "NVDA_extra_cost": 187.73867876586914,
+            "TSLA_extra_cost": 86.24151190795898,
+            "SNDK_extra_cost": 85.40270463867186
+          },
+          {
+            "date": "2026-09-10",
+            "extra_cost": 244.93106022033692,
+            "new_cost": 408.21843370056155,
+            "TSLA_extra_cost": 113.76537928161619,
+            "MSTR_extra_cost": 115.74005061950683,
+            "NVDA_extra_cost": 15.425630319213868
+          },
+          {
+            "date": "2026-09-11",
+            "extra_cost": 583.5649753234865,
+            "new_cost": 972.6082922058105,
+            "TSLA_extra_cost": 204.6976386932373,
+            "MSTR_extra_cost": 192.04021235961915,
+            "NVDA_extra_cost": 97.40040943908691,
+            "SNDK_extra_cost": 89.42671483154297
+          }
+        ]
+      },
+      "paired_baseline": {
+        "mean_daily_return_difference": 0.0016555932653835002,
+        "daily_difference_se": 0.006851330911279441,
+        "sessions": 9
+      }
+    },
+    {
+      "candidate": {
+        "name": "context_tree",
+        "features": "context",
+        "model": "tree",
+        "portfolio": "joint"
+      },
+      "cost_bps": 5,
+      "status": "complete",
+      "summary": {
+        "start": "2026-08-31",
+        "end": "2026-09-11",
+        "sessions": 9,
+        "starting_equity": 100000.0,
+        "ending_equity": 111055.31944802513,
+        "net_pnl": 11055.319448025126,
+        "net_return": 0.11055319448025136,
+        "gross_pnl": 15065.61360931434,
+        "costs": 4010.2941612892137,
+        "turnover_dollars": 8020588.32257843,
+        "fill_count": 396,
+        "max_drawdown": -0.02509645266977567,
+        "max_gross_exposure": 0.9624282969249179,
+        "max_symbol_exposure": 0.7059196079525702,
+        "profitable_sessions": 6
+      },
+      "per_symbol": {
+        "SNDK": {
+          "net_pnl": -194.67437152092134,
+          "costs": 695.6390932006835
+        },
+        "TSLA": {
+          "net_pnl": 1704.5812931825385,
+          "costs": 1222.9846858215335
+        },
+        "MSTR": {
+          "net_pnl": 10535.288023990783,
+          "costs": 1137.6648339805602
+        },
+        "NVDA": {
+          "net_pnl": -989.8754976271448,
+          "costs": 954.0055482864379
+        }
+      },
+      "fixed_order_stress_5bps": {
+        "kind": "fixed_recorded_integer_orderflow_cost_sensitivity",
+        "slippage_bps_per_side": 5,
+        "commission_bps_per_side": 0.0,
+        "starting_equity": 100000,
+        "ending_equity": 111055.31944802513,
+        "net_pnl": 11055.319448025126,
+        "net_return": 0.11055319448025136,
+        "extra_cost": 0.0,
+        "costs": 4010.2941612892146,
+        "max_drawdown": -0.02509645266977567,
+        "constraint_breach_marks_including_market_drift": 87,
+        "requires_feasibility_review": true,
+        "same_quantities_and_reference_prices": true,
+        "daily": [
+          {
+            "date": "2026-08-31",
+            "extra_cost": 0.0,
+            "new_cost": 476.4160091552733,
+            "MSTR_extra_cost": 0.0,
+            "TSLA_extra_cost": 0.0,
+            "NVDA_extra_cost": 0.0,
+            "SNDK_extra_cost": 0.0
+          },
+          {
+            "date": "2026-09-01",
+            "extra_cost": 0.0,
+            "new_cost": 217.42184817123413,
+            "MSTR_extra_cost": 0.0,
+            "NVDA_extra_cost": 0.0,
+            "SNDK_extra_cost": 0.0,
+            "TSLA_extra_cost": 0.0
+          },
+          {
+            "date": "2026-09-02",
+            "extra_cost": 0.0,
+            "new_cost": 496.53625849914556,
+            "MSTR_extra_cost": 0.0,
+            "NVDA_extra_cost": 0.0,
+            "TSLA_extra_cost": 0.0,
+            "SNDK_extra_cost": 0.0
+          },
+          {
+            "date": "2026-09-03",
+            "extra_cost": 0.0,
+            "new_cost": 311.8187097930908,
+            "TSLA_extra_cost": 0.0,
+            "NVDA_extra_cost": 0.0,
+            "MSTR_extra_cost": 0.0
+          },
+          {
+            "date": "2026-09-04",
+            "extra_cost": 0.0,
+            "new_cost": 650.6998263931273,
+            "MSTR_extra_cost": 0.0,
+            "NVDA_extra_cost": 0.0,
+            "TSLA_extra_cost": 0.0,
+            "SNDK_extra_cost": 0.0
+          },
+          {
+            "date": "2026-09-08",
+            "extra_cost": 0.0,
+            "new_cost": 508.88263581085204,
+            "MSTR_extra_cost": 0.0,
+            "NVDA_extra_cost": 0.0,
+            "SNDK_extra_cost": 0.0,
+            "TSLA_extra_cost": 0.0
+          },
+          {
+            "date": "2026-09-09",
+            "extra_cost": 0.0,
+            "new_cost": 584.3345853881835,
+            "MSTR_extra_cost": 0.0,
+            "NVDA_extra_cost": 0.0,
+            "TSLA_extra_cost": 0.0,
+            "SNDK_extra_cost": 0.0
+          },
+          {
+            "date": "2026-09-10",
+            "extra_cost": 0.0,
+            "new_cost": 240.9319676208496,
+            "TSLA_extra_cost": 0.0,
+            "MSTR_extra_cost": 0.0,
+            "NVDA_extra_cost": 0.0
+          },
+          {
+            "date": "2026-09-11",
+            "extra_cost": 0.0,
+            "new_cost": 523.2523204574584,
+            "TSLA_extra_cost": 0.0,
+            "MSTR_extra_cost": 0.0,
+            "NVDA_extra_cost": 0.0,
+            "SNDK_extra_cost": 0.0
+          }
+        ]
+      },
+      "paired_baseline": {
+        "mean_daily_return_difference": 0.0089705785628318,
+        "daily_difference_se": 0.004566139775647006,
+        "sessions": 9
+      }
+    },
+    {
+      "candidate": {
+        "name": "context_lightgbm",
+        "features": "context",
+        "model": "lightgbm",
+        "portfolio": "joint"
+      },
+      "cost_bps": 2,
+      "status": "complete",
+      "summary": {
+        "start": "2026-08-31",
+        "end": "2026-09-11",
+        "sessions": 9,
+        "starting_equity": 100000.0,
+        "ending_equity": 96687.03481794758,
+        "net_pnl": -3312.965182052416,
+        "net_return": -0.033129651820524186,
+        "gross_pnl": -1028.7423858640636,
+        "costs": 2284.2227961883527,
+        "turnover_dollars": 11421113.980941772,
+        "fill_count": 741,
+        "max_drawdown": -0.06510583114125312,
+        "max_gross_exposure": 0.9587956273700499,
+        "max_symbol_exposure": 0.7067487319590819,
+        "profitable_sessions": 3
+      },
+      "per_symbol": {
+        "SNDK": {
+          "net_pnl": -4486.115396337842,
+          "costs": 464.89542563476573
+        },
+        "TSLA": {
+          "net_pnl": 640.8533863160883,
+          "costs": 672.4133373168945
+        },
+        "MSTR": {
+          "net_pnl": 3225.0618515534134,
+          "costs": 755.7504805999756
+        },
+        "NVDA": {
+          "net_pnl": -2692.765023583932,
+          "costs": 391.1635526367187
+        }
+      },
+      "fixed_order_stress_5bps": {
+        "kind": "fixed_recorded_integer_orderflow_cost_sensitivity",
+        "slippage_bps_per_side": 5,
+        "commission_bps_per_side": 0.0,
+        "starting_equity": 100000,
+        "ending_equity": 93260.70062366505,
+        "net_pnl": -6739.299376334951,
+        "net_return": -0.0673929937633495,
+        "extra_cost": 3426.334194282529,
+        "costs": 5710.556990470886,
+        "max_drawdown": -0.09000113775202956,
+        "constraint_breach_marks_including_market_drift": 563,
+        "requires_feasibility_review": true,
+        "same_quantities_and_reference_prices": true,
+        "daily": [
+          {
+            "date": "2026-08-31",
+            "extra_cost": 296.6717637702941,
+            "new_cost": 494.45293961715686,
+            "SNDK_extra_cost": 67.94701223144533,
+            "MSTR_extra_cost": 92.77647717819212,
+            "NVDA_extra_cost": 73.49089715423585,
+            "TSLA_extra_cost": 62.4573772064209
+          },
+          {
+            "date": "2026-09-01",
+            "extra_cost": 244.18573844604495,
+            "new_cost": 406.9762307434083,
+            "SNDK_extra_cost": 47.78573928222656,
+            "MSTR_extra_cost": 67.73568955078122,
+            "NVDA_extra_cost": 79.77538611145022,
+            "TSLA_extra_cost": 48.888923501586916
+          },
+          {
+            "date": "2026-09-02",
+            "extra_cost": 427.116259540558,
+            "new_cost": 711.8604325675963,
+            "SNDK_extra_cost": 105.89541932373047,
+            "MSTR_extra_cost": 105.98219443130495,
+            "NVDA_extra_cost": 75.94013859558106,
+            "TSLA_extra_cost": 139.29850718994143
+          },
+          {
+            "date": "2026-09-03",
+            "extra_cost": 493.5486126800537,
+            "new_cost": 822.5810211334228,
+            "SNDK_extra_cost": 110.01523842773435,
+            "MSTR_extra_cost": 178.7722409133912,
+            "NVDA_extra_cost": 109.94207133636475,
+            "TSLA_extra_cost": 94.8190620025635
+          },
+          {
+            "date": "2026-09-04",
+            "extra_cost": 379.4295167449951,
+            "new_cost": 632.3825279083252,
+            "SNDK_extra_cost": 69.07732650146488,
+            "TSLA_extra_cost": 104.71291985778808,
+            "MSTR_extra_cost": 88.96975348663331,
+            "NVDA_extra_cost": 116.66951689910891
+          },
+          {
+            "date": "2026-09-08",
+            "extra_cost": 433.6570413482667,
+            "new_cost": 722.7617355804443,
+            "MSTR_extra_cost": 138.8132431777954,
+            "NVDA_extra_cost": 58.94135711517334,
+            "SNDK_extra_cost": 74.5987651611328,
+            "TSLA_extra_cost": 161.30367589416505
+          },
+          {
+            "date": "2026-09-09",
+            "extra_cost": 362.7159052597045,
+            "new_cost": 604.5265087661743,
+            "MSTR_extra_cost": 116.78827007904054,
+            "NVDA_extra_cost": 14.706457360839842,
+            "TSLA_extra_cost": 152.23147983398434,
+            "SNDK_extra_cost": 78.98969798583985
+          },
+          {
+            "date": "2026-09-10",
+            "extra_cost": 276.22381325683597,
+            "new_cost": 460.37302209472654,
+            "SNDK_extra_cost": 58.127537878417975,
+            "MSTR_extra_cost": 113.42956859436035,
+            "TSLA_extra_cost": 102.56950274047853,
+            "NVDA_extra_cost": 2.0972040435791017
+          },
+          {
+            "date": "2026-09-11",
+            "extra_cost": 512.7855432357788,
+            "new_cost": 854.6425720596314,
+            "SNDK_extra_cost": 84.90640166015625,
+            "MSTR_extra_cost": 230.35828348846437,
+            "TSLA_extra_cost": 142.33855774841308,
+            "NVDA_extra_cost": 55.182300338745115
+          }
+        ]
+      },
+      "paired_baseline": {
+        "mean_daily_return_difference": -0.008527768913109912,
+        "daily_difference_se": 0.006369830337840134,
+        "sessions": 9
+      }
+    },
+    {
+      "candidate": {
+        "name": "context_lightgbm",
+        "features": "context",
+        "model": "lightgbm",
+        "portfolio": "joint"
+      },
+      "cost_bps": 5,
+      "status": "complete",
+      "summary": {
+        "start": "2026-08-31",
+        "end": "2026-09-11",
+        "sessions": 9,
+        "starting_equity": 100000.0,
+        "ending_equity": 99843.58117938635,
+        "net_pnl": -156.41882061364595,
+        "net_return": -0.0015641882061364631,
+        "gross_pnl": 1877.1772537233605,
+        "costs": 2033.5960743370058,
+        "turnover_dollars": 4067192.148674011,
+        "fill_count": 309,
+        "max_drawdown": -0.04468006939430558,
+        "max_gross_exposure": 0.961555001264452,
+        "max_symbol_exposure": 0.7028597887051469,
+        "profitable_sessions": 4
+      },
+      "per_symbol": {
+        "SNDK": {
+          "net_pnl": -4420.221548217704,
+          "costs": 603.1548978271485
+        },
+        "TSLA": {
+          "net_pnl": 1465.1654165345099,
+          "costs": 524.6289560241698
+        },
+        "MSTR": {
+          "net_pnl": 3259.0803162652264,
+          "costs": 744.2219832344055
+        },
+        "NVDA": {
+          "net_pnl": -460.44300519559954,
+          "costs": 161.59023725128174
+        }
+      },
+      "fixed_order_stress_5bps": {
+        "kind": "fixed_recorded_integer_orderflow_cost_sensitivity",
+        "slippage_bps_per_side": 5,
+        "commission_bps_per_side": 0.0,
+        "starting_equity": 100000,
+        "ending_equity": 99843.58117938635,
+        "net_pnl": -156.41882061364595,
+        "net_return": -0.0015641882061364631,
+        "extra_cost": 0.0,
+        "costs": 2033.5960743370056,
+        "max_drawdown": -0.04468006939430558,
+        "constraint_breach_marks_including_market_drift": 35,
+        "requires_feasibility_review": true,
+        "same_quantities_and_reference_prices": true,
+        "daily": [
+          {
+            "date": "2026-08-31",
+            "extra_cost": 0.0,
+            "new_cost": 173.70487142181395,
+            "SNDK_extra_cost": 0.0,
+            "MSTR_extra_cost": 0.0,
+            "NVDA_extra_cost": 0.0,
+            "TSLA_extra_cost": 0.0
+          },
+          {
+            "date": "2026-09-01",
+            "extra_cost": 0.0,
+            "new_cost": 102.2438395729065,
+            "SNDK_extra_cost": 0.0,
+            "MSTR_extra_cost": 0.0,
+            "NVDA_extra_cost": 0.0,
+            "TSLA_extra_cost": 0.0
+          },
+          {
+            "date": "2026-09-02",
+            "extra_cost": 0.0,
+            "new_cost": 271.9776399765015,
+            "SNDK_extra_cost": 0.0,
+            "MSTR_extra_cost": 0.0,
+            "NVDA_extra_cost": 0.0,
+            "TSLA_extra_cost": 0.0
+          },
+          {
+            "date": "2026-09-03",
+            "extra_cost": 0.0,
+            "new_cost": 267.2413551101684,
+            "SNDK_extra_cost": 0.0,
+            "MSTR_extra_cost": 0.0,
+            "NVDA_extra_cost": 0.0,
+            "TSLA_extra_cost": 0.0
+          },
+          {
+            "date": "2026-09-04",
+            "extra_cost": 0.0,
+            "new_cost": 212.8501567840576,
+            "SNDK_extra_cost": 0.0,
+            "TSLA_extra_cost": 0.0,
+            "MSTR_extra_cost": 0.0,
+            "NVDA_extra_cost": 0.0
+          },
+          {
+            "date": "2026-09-08",
+            "extra_cost": 0.0,
+            "new_cost": 314.829978515625,
+            "MSTR_extra_cost": 0.0,
+            "NVDA_extra_cost": 0.0,
+            "SNDK_extra_cost": 0.0,
+            "TSLA_extra_cost": 0.0
+          },
+          {
+            "date": "2026-09-09",
+            "extra_cost": 0.0,
+            "new_cost": 194.51949172973633,
+            "MSTR_extra_cost": 0.0,
+            "SNDK_extra_cost": 0.0,
+            "NVDA_extra_cost": 0.0,
+            "TSLA_extra_cost": 0.0
+          },
+          {
+            "date": "2026-09-10",
+            "extra_cost": 0.0,
+            "new_cost": 227.46725228881834,
+            "SNDK_extra_cost": 0.0,
+            "MSTR_extra_cost": 0.0,
+            "TSLA_extra_cost": 0.0
+          },
+          {
+            "date": "2026-09-11",
+            "extra_cost": 0.0,
+            "new_cost": 268.761488937378,
+            "SNDK_extra_cost": 0.0,
+            "MSTR_extra_cost": 0.0,
+            "TSLA_extra_cost": 0.0,
+            "NVDA_extra_cost": 0.0
+          }
+        ]
+      },
+      "paired_baseline": {
+        "mean_daily_return_difference": -0.0029699962737734886,
+        "daily_difference_se": 0.003344263611557183,
+        "sessions": 9
+      }
+    },
+    {
+      "candidate": {
+        "name": "context_robust",
+        "features": "context",
+        "model": "ridge",
+        "portfolio": "robust"
+      },
+      "cost_bps": 2,
+      "status": "complete",
+      "summary": {
+        "start": "2026-08-31",
+        "end": "2026-09-11",
+        "sessions": 9,
+        "starting_equity": 100000.0,
+        "ending_equity": 103213.48629657317,
+        "net_pnl": 3213.4862965731736,
+        "net_return": 0.03213486296573165,
+        "gross_pnl": 4854.79309082061,
+        "costs": 1641.3067942474365,
+        "turnover_dollars": 8206533.971237183,
+        "fill_count": 497,
+        "max_drawdown": -0.020701471590203857,
+        "max_gross_exposure": 0.9539438198060023,
+        "max_symbol_exposure": 0.7053081246828421,
+        "profitable_sessions": 4
+      },
+      "per_symbol": {
+        "SNDK": {
+          "net_pnl": 165.21546613771352,
+          "costs": 268.89061296386717
+        },
+        "TSLA": {
+          "net_pnl": 2161.5662335144284,
+          "costs": 642.8418170227051
+        },
+        "MSTR": {
+          "net_pnl": 2127.656192837512,
+          "costs": 441.62191385192864
+        },
+        "NVDA": {
+          "net_pnl": -1240.9515959166883,
+          "costs": 287.95245040893553
+        }
+      },
+      "fixed_order_stress_5bps": {
+        "kind": "fixed_recorded_integer_orderflow_cost_sensitivity",
+        "slippage_bps_per_side": 5,
+        "commission_bps_per_side": 0.0,
+        "starting_equity": 100000,
+        "ending_equity": 100751.52610520202,
+        "net_pnl": 751.5261052020214,
+        "net_return": 0.007515261052020161,
+        "extra_cost": 2461.9601913711545,
+        "costs": 4103.266985618591,
+        "max_drawdown": -0.027788885380960138,
+        "constraint_breach_marks_including_market_drift": 156,
+        "requires_feasibility_review": true,
+        "same_quantities_and_reference_prices": true,
+        "daily": [
+          {
+            "date": "2026-08-31",
+            "extra_cost": 329.99812412338275,
+            "new_cost": 549.9968735389709,
+            "SNDK_extra_cost": 92.05387694091796,
+            "MSTR_extra_cost": 84.622138117218,
+            "NVDA_extra_cost": 56.668752433776866,
+            "TSLA_extra_cost": 96.65335663146972
+          },
+          {
+            "date": "2026-09-01",
+            "extra_cost": 274.4690802932739,
+            "new_cost": 457.44846715545646,
+            "MSTR_extra_cost": 58.72548506011963,
+            "TSLA_extra_cost": 76.00101729125976,
+            "SNDK_extra_cost": 61.770055590820306,
+            "NVDA_extra_cost": 77.97252235107423
+          },
+          {
+            "date": "2026-09-02",
+            "extra_cost": 212.81373082809446,
+            "new_cost": 354.68955138015747,
+            "SNDK_extra_cost": 41.65239356689454,
+            "MSTR_extra_cost": 42.602751486968984,
+            "TSLA_extra_cost": 55.154107855224616,
+            "NVDA_extra_cost": 73.40447791900633
+          },
+          {
+            "date": "2026-09-03",
+            "extra_cost": 325.7814814361572,
+            "new_cost": 542.9691357269287,
+            "SNDK_extra_cost": 35.83702741699218,
+            "MSTR_extra_cost": 119.21339806365968,
+            "TSLA_extra_cost": 103.74651782226563,
+            "NVDA_extra_cost": 66.98453813323974
+          },
+          {
+            "date": "2026-09-04",
+            "extra_cost": 228.61726089019777,
+            "new_cost": 381.02876815032965,
+            "SNDK_extra_cost": 49.687211828613286,
+            "MSTR_extra_cost": 54.29443367156981,
+            "TSLA_extra_cost": 82.04718385620117,
+            "NVDA_extra_cost": 42.58843153381347
+          },
+          {
+            "date": "2026-09-08",
+            "extra_cost": 185.60805615692138,
+            "new_cost": 309.34676026153574,
+            "TSLA_extra_cost": 120.04122319335937,
+            "MSTR_extra_cost": 9.61722432861328,
+            "NVDA_extra_cost": 29.16197992401123,
+            "SNDK_extra_cost": 26.7876287109375
+          },
+          {
+            "date": "2026-09-09",
+            "extra_cost": 283.71830081634516,
+            "new_cost": 472.86383469390864,
+            "MSTR_extra_cost": 101.80937074127199,
+            "TSLA_extra_cost": 161.51178509216305,
+            "SNDK_extra_cost": 20.39714498291016
+          },
+          {
+            "date": "2026-09-10",
+            "extra_cost": 207.62126567687977,
+            "new_cost": 346.0354427947998,
+            "SNDK_extra_cost": 32.61295015869141,
+            "MSTR_extra_cost": 51.804641262817384,
+            "NVDA_extra_cost": 51.798553582763674,
+            "TSLA_extra_cost": 71.40512067260744
+          },
+          {
+            "date": "2026-09-11",
+            "extra_cost": 413.3328911499023,
+            "new_cost": 688.8881519165037,
+            "SNDK_extra_cost": 42.537630249023444,
+            "TSLA_extra_cost": 197.70241311950682,
+            "MSTR_extra_cost": 139.74342804565433,
+            "NVDA_extra_cost": 33.349419735717774
+          }
+        ]
+      },
+      "paired_baseline": {
+        "mean_daily_return_difference": -0.001324609899136855,
+        "daily_difference_se": 0.004337047007359824,
+        "sessions": 9
+      }
+    },
+    {
+      "candidate": {
+        "name": "context_robust",
+        "features": "context",
+        "model": "ridge",
+        "portfolio": "robust"
+      },
+      "cost_bps": 5,
+      "status": "complete",
+      "summary": {
+        "start": "2026-08-31",
+        "end": "2026-09-11",
+        "sessions": 9,
+        "starting_equity": 100000.0,
+        "ending_equity": 102120.60554936228,
+        "net_pnl": 2120.6055493622844,
+        "net_return": 0.021206055493622866,
+        "gross_pnl": 3102.454589843852,
+        "costs": 981.8490404815674,
+        "turnover_dollars": 1963698.0809631348,
+        "fill_count": 117,
+        "max_drawdown": -0.01548216200387309,
+        "max_gross_exposure": 0.9532076930770531,
+        "max_symbol_exposure": 0.703498300476994,
+        "profitable_sessions": 7
+      },
+      "per_symbol": {
+        "SNDK": {
+          "net_pnl": -77.68182525632074,
+          "costs": 254.73224029541015
+        },
+        "TSLA": {
+          "net_pnl": -11.115634445173782,
+          "costs": 225.22503996276856
+        },
+        "MSTR": {
+          "net_pnl": 2209.403009063768,
+          "costs": 501.8917602233887
+        },
+        "NVDA": {
+          "net_pnl": 0.0,
+          "costs": 0
+        }
+      },
+      "fixed_order_stress_5bps": {
+        "kind": "fixed_recorded_integer_orderflow_cost_sensitivity",
+        "slippage_bps_per_side": 5,
+        "commission_bps_per_side": 0.0,
+        "starting_equity": 100000,
+        "ending_equity": 102120.60554936228,
+        "net_pnl": 2120.6055493622844,
+        "net_return": 0.021206055493622866,
+        "extra_cost": 0.0,
+        "costs": 981.8490404815674,
+        "max_drawdown": -0.01548216200387309,
+        "constraint_breach_marks_including_market_drift": 10,
+        "requires_feasibility_review": true,
+        "same_quantities_and_reference_prices": true,
+        "daily": [
+          {
+            "date": "2026-08-31",
+            "extra_cost": 0.0,
+            "new_cost": 67.88546883392335,
+            "SNDK_extra_cost": 0.0,
+            "MSTR_extra_cost": 0.0
+          },
+          {
+            "date": "2026-09-01",
+            "extra_cost": 0.0,
+            "new_cost": 129.87604192352296,
+            "MSTR_extra_cost": 0.0,
+            "TSLA_extra_cost": 0.0,
+            "SNDK_extra_cost": 0.0
+          },
+          {
+            "date": "2026-09-02",
+            "extra_cost": 0.0,
+            "new_cost": 82.3281151123047,
+            "SNDK_extra_cost": 0.0,
+            "MSTR_extra_cost": 0.0
+          },
+          {
+            "date": "2026-09-03",
+            "extra_cost": 0.0,
+            "new_cost": 189.86790167999266,
+            "SNDK_extra_cost": 0.0,
+            "MSTR_extra_cost": 0.0,
+            "TSLA_extra_cost": 0.0
+          },
+          {
+            "date": "2026-09-04",
+            "extra_cost": 0.0,
+            "new_cost": 112.74898677062991,
+            "SNDK_extra_cost": 0.0,
+            "MSTR_extra_cost": 0.0
+          },
+          {
+            "date": "2026-09-08",
+            "extra_cost": 0.0,
+            "new_cost": 24.76890855407715,
+            "TSLA_extra_cost": 0.0,
+            "SNDK_extra_cost": 0.0
+          },
+          {
+            "date": "2026-09-09",
+            "extra_cost": 0.0,
+            "new_cost": 116.24842008972169,
+            "MSTR_extra_cost": 0.0,
+            "SNDK_extra_cost": 0.0,
+            "TSLA_extra_cost": 0.0
+          },
+          {
+            "date": "2026-09-10",
+            "extra_cost": 0.0,
+            "new_cost": 95.40811652374266,
+            "SNDK_extra_cost": 0.0,
+            "MSTR_extra_cost": 0.0
+          },
+          {
+            "date": "2026-09-11",
+            "extra_cost": 0.0,
+            "new_cost": 162.71708099365233,
+            "SNDK_extra_cost": 0.0,
+            "MSTR_extra_cost": 0.0,
+            "TSLA_extra_cost": 0.0
+          }
+        ]
+      },
+      "paired_baseline": {
+        "mean_daily_return_difference": -0.0005705360049786068,
+        "daily_difference_se": 0.004185407200112448,
+        "sessions": 9
+      }
+    },
+    {
+      "candidate": {
+        "name": "l1_ridge",
+        "features": "l1",
+        "model": "ridge",
+        "portfolio": "joint"
+      },
+      "cost_bps": 2,
+      "status": "unavailable",
+      "reason": "Real L1 unavailable for SNDK"
+    },
+    {
+      "candidate": {
+        "name": "l1_ridge",
+        "features": "l1",
+        "model": "ridge",
+        "portfolio": "joint"
+      },
+      "cost_bps": 5,
+      "status": "unavailable",
+      "reason": "Real L1 unavailable for SNDK"
+    },
+    {
+      "candidate": {
+        "name": "combined_robust",
+        "features": "combined",
+        "model": "ridge",
+        "portfolio": "robust"
+      },
+      "cost_bps": 2,
+      "status": "unavailable",
+      "reason": "Real L1 unavailable for SNDK"
+    },
+    {
+      "candidate": {
+        "name": "combined_robust",
+        "features": "combined",
+        "model": "ridge",
+        "portfolio": "robust"
+      },
+      "cost_bps": 5,
+      "status": "unavailable",
+      "reason": "Real L1 unavailable for SNDK"
+    }
+  ],
+  "artifact_hashes": {
+    "coverage.csv": "3886fc7cee66c3139b6bbcfa0db253a1751fd49c816b5260071b3116981ad7c6",
+    "combined_robust_cost2/summary.json": "b8622d99b6b07d6338d64053d176f9349a4c50926ea90191762ebfcf6cb8a98f",
+    "price_ridge_cost2/train_2026-09-11_NVDA.json": "0b21f22105bcc5477e69d2b77ec0a035c11f6696755f1b033491964b611e60ed",
+    "price_ridge_cost2/train_2026-09-02_SNDK.json": "1a57a5dcec657d08a00830f51e742014c7e0829f5a89b267ad24be4f64932ba2",
+    "price_ridge_cost2/summary.json": "e3e1ef7ca699815c7a6abed4c55503610019e4a9bc0e9042420d40b55d06bc98",
+    "price_ridge_cost2/train_2026-08-31_SNDK.json": "6e47e5a0ca5cdf01b21944c748f5e072b4e68835f8bf84bce101727508b0c7f8",
+    "price_ridge_cost2/train_2026-08-31_MSTR.json": "6e47e5a0ca5cdf01b21944c748f5e072b4e68835f8bf84bce101727508b0c7f8",
+    "price_ridge_cost2/train_2026-09-08_NVDA.json": "2488b8cc2613ccece5a9fa115e71f1ce71aca51972b3eccc6bd68f2b8968d4cb",
+    "price_ridge_cost2/train_2026-09-02_MSTR.json": "1a57a5dcec657d08a00830f51e742014c7e0829f5a89b267ad24be4f64932ba2",
+    "price_ridge_cost2/train_2026-09-09_MSTR.json": "994d30c30e4684d212c6a48b97fbd0fc9c42b06a2d47677d857b9a9bb56977d3",
+    "price_ridge_cost2/fills.csv": "09f444c5854f6501067813bd696c13ee653a5e4d4d7c1c7a0944301e29d60e61",
+    "price_ridge_cost2/train_2026-09-01_TSLA.json": "c44ab52209c509d5e1eec3e84be239f98ab186828d51f42081b730f0415401bd",
+    "price_ridge_cost2/train_2026-09-10_SNDK.json": "ec4381f735fe2cd0235f8b3bf353e5471691ba7f6d8fc9f9caee9a5a7bfa066d",
+    "price_ridge_cost2/train_2026-09-04_SNDK.json": "1c156d87bde6abcf3789528b355ca81ee2ec1d809fa2f62139fd846b6e12a9dd",
+    "price_ridge_cost2/train_2026-09-03_NVDA.json": "b80c0c79912e6f15befee3e29b74060fede187f5a989b9f250d4a0b9e2787c3d",
+    "price_ridge_cost2/train_2026-09-04_MSTR.json": "1c156d87bde6abcf3789528b355ca81ee2ec1d809fa2f62139fd846b6e12a9dd",
+    "price_ridge_cost2/train_2026-09-10_MSTR.json": "ec4381f735fe2cd0235f8b3bf353e5471691ba7f6d8fc9f9caee9a5a7bfa066d",
+    "price_ridge_cost2/marks.csv": "e04846a123ea7ae0bea9ea428b183241edbcd81690708404a78139b4096a3309",
+    "price_ridge_cost2/train_2026-09-09_SNDK.json": "994d30c30e4684d212c6a48b97fbd0fc9c42b06a2d47677d857b9a9bb56977d3",
+    "price_ridge_cost2/train_2026-09-03_SNDK.json": "b80c0c79912e6f15befee3e29b74060fede187f5a989b9f250d4a0b9e2787c3d",
+    "price_ridge_cost2/train_2026-09-04_NVDA.json": "1c156d87bde6abcf3789528b355ca81ee2ec1d809fa2f62139fd846b6e12a9dd",
+    "price_ridge_cost2/train_2026-09-10_NVDA.json": "ec4381f735fe2cd0235f8b3bf353e5471691ba7f6d8fc9f9caee9a5a7bfa066d",
+    "price_ridge_cost2/train_2026-09-09_NVDA.json": "994d30c30e4684d212c6a48b97fbd0fc9c42b06a2d47677d857b9a9bb56977d3",
+    "price_ridge_cost2/train_2026-09-03_MSTR.json": "b80c0c79912e6f15befee3e29b74060fede187f5a989b9f250d4a0b9e2787c3d",
+    "price_ridge_cost2/decisions.json": "83d3f529ef93203f8fdb551946c5096ea69b60c72de4b120a906105968488cbf",
+    "price_ridge_cost2/train_2026-08-31_NVDA.json": "6e47e5a0ca5cdf01b21944c748f5e072b4e68835f8bf84bce101727508b0c7f8",
+    "price_ridge_cost2/train_2026-09-08_MSTR.json": "2488b8cc2613ccece5a9fa115e71f1ce71aca51972b3eccc6bd68f2b8968d4cb",
+    "price_ridge_cost2/train_2026-09-02_NVDA.json": "1a57a5dcec657d08a00830f51e742014c7e0829f5a89b267ad24be4f64932ba2",
+    "price_ridge_cost2/train_2026-09-11_SNDK.json": "0b21f22105bcc5477e69d2b77ec0a035c11f6696755f1b033491964b611e60ed",
+    "price_ridge_cost2/train_2026-09-11_MSTR.json": "0b21f22105bcc5477e69d2b77ec0a035c11f6696755f1b033491964b611e60ed",
+    "price_ridge_cost2/train_2026-09-08_SNDK.json": "2488b8cc2613ccece5a9fa115e71f1ce71aca51972b3eccc6bd68f2b8968d4cb",
+    "price_ridge_cost2/train_2026-09-11_TSLA.json": "0b21f22105bcc5477e69d2b77ec0a035c11f6696755f1b033491964b611e60ed",
+    "price_ridge_cost2/daily.csv": "fd6420d3799a7dd657281045969c4bd364b612d4b0b56f32f3463be5039044af",
+    "price_ridge_cost2/train_2026-09-08_TSLA.json": "2488b8cc2613ccece5a9fa115e71f1ce71aca51972b3eccc6bd68f2b8968d4cb",
+    "price_ridge_cost2/train_2026-09-03_TSLA.json": "b80c0c79912e6f15befee3e29b74060fede187f5a989b9f250d4a0b9e2787c3d",
+    "price_ridge_cost2/train_2026-09-01_NVDA.json": "c44ab52209c509d5e1eec3e84be239f98ab186828d51f42081b730f0415401bd",
+    "price_ridge_cost2/train_2026-09-10_TSLA.json": "ec4381f735fe2cd0235f8b3bf353e5471691ba7f6d8fc9f9caee9a5a7bfa066d",
+    "price_ridge_cost2/train_2026-09-01_SNDK.json": "c44ab52209c509d5e1eec3e84be239f98ab186828d51f42081b730f0415401bd",
+    "price_ridge_cost2/train_2026-09-04_TSLA.json": "1c156d87bde6abcf3789528b355ca81ee2ec1d809fa2f62139fd846b6e12a9dd",
+    "price_ridge_cost2/train_2026-09-01_MSTR.json": "c44ab52209c509d5e1eec3e84be239f98ab186828d51f42081b730f0415401bd",
+    "price_ridge_cost2/train_2026-09-09_TSLA.json": "994d30c30e4684d212c6a48b97fbd0fc9c42b06a2d47677d857b9a9bb56977d3",
+    "price_ridge_cost2/train_2026-09-02_TSLA.json": "1a57a5dcec657d08a00830f51e742014c7e0829f5a89b267ad24be4f64932ba2",
+    "price_ridge_cost2/train_2026-08-31_TSLA.json": "6e47e5a0ca5cdf01b21944c748f5e072b4e68835f8bf84bce101727508b0c7f8",
+    "price_ridge_cost5/summary.json": "ad1ea653ed15083fb65ada5c141389f0066aaf1e7b4158c1d6d81158bddbe182",
+    "price_ridge_cost5/fills.csv": "4ca40c0f34fe36b2607df7bdd199589cc701cd85293049cddf2bb40cffea58d4",
+    "price_ridge_cost5/marks.csv": "6b0d6c9b6e8be8b3f58c0af3d5f39eeb7cd53676f639c5b006c1215852bdb9d0",
+    "price_ridge_cost5/decisions.json": "08d86b3ad85b7e9c9249d6b6ca31a6725dc9571d62a13a90abfc8ab350dfbdce",
+    "price_ridge_cost5/daily.csv": "1f69c2fc388f61bcd55c0d8b1b653a3e4432e9ae871d9e95f4d96232df15ac95",
+    "combined_robust_cost5/summary.json": "4cf8b16b0fba02292130267a1d32e725d20d80585d9240efa2d3e9a00072bdba",
+    "l1_ridge_cost5/summary.json": "c7de9003ab72ae1f5569697d568b1b70bffbdc29ee6a3deafc57844031db428f",
+    "l1_ridge_cost2/summary.json": "3af76d4d92f49af43e3f292b18b9fbe7b7821ca4a36ab2ff6542011d185327ed",
+    "context_ridge_cost2/train_2026-09-11_NVDA.json": "b2fbfaa76067cb5d5fec6497cf4dbd518061cd788e12d1c58fd71582bdca78d0",
+    "context_ridge_cost2/train_2026-09-02_SNDK.json": "5f6a2d95a566c2b1007040f3e4ecd5fc4d9f4598f9771fde802a6bea7c627192",
+    "context_ridge_cost2/summary.json": "a34b9d28a8b8ef495f6e7dc8c3828ea7f3e6f3a1f4d1cfd552e41b5eaa426e23",
+    "context_ridge_cost2/train_2026-08-31_SNDK.json": "9630fa26971f65fc1bbae58333358a1961497c9155d6b07725e35d7033f82e57",
+    "context_ridge_cost2/train_2026-08-31_MSTR.json": "9630fa26971f65fc1bbae58333358a1961497c9155d6b07725e35d7033f82e57",
+    "context_ridge_cost2/train_2026-09-08_NVDA.json": "f453de2228963cfee50ca411f9a8f2d5217cca533276eb0162691dd90ee504a4",
+    "context_ridge_cost2/train_2026-09-02_MSTR.json": "5f6a2d95a566c2b1007040f3e4ecd5fc4d9f4598f9771fde802a6bea7c627192",
+    "context_ridge_cost2/train_2026-09-09_MSTR.json": "a555ec513731d2b2ec83983827954a743099d26d51943c25fed0aea67db72f4e",
+    "context_ridge_cost2/fills.csv": "8bdd7ba82067f001384af3690682da992d0f635dddaa5901e5991a83b0d0efd9",
+    "context_ridge_cost2/train_2026-09-01_TSLA.json": "08e4331cac8fe999178db9ec351fa71ffa754081b4e03d89adc3fc4c527309a0",
+    "context_ridge_cost2/train_2026-09-10_SNDK.json": "1875fc325a90e6fa90f29dd772ad4d8b58bea2a4e08141aef9ad57c997f73770",
+    "context_ridge_cost2/train_2026-09-04_SNDK.json": "e9d7fc4c9e563e4bdb26233830a6e506d4d27f98401933e5cfcc68bc9d9fe598",
+    "context_ridge_cost2/train_2026-09-03_NVDA.json": "99a39b51852f04916699327f2e9762b44899405c4391ecd49af4f867f7e09a30",
+    "context_ridge_cost2/train_2026-09-04_MSTR.json": "e9d7fc4c9e563e4bdb26233830a6e506d4d27f98401933e5cfcc68bc9d9fe598",
+    "context_ridge_cost2/train_2026-09-10_MSTR.json": "1875fc325a90e6fa90f29dd772ad4d8b58bea2a4e08141aef9ad57c997f73770",
+    "context_ridge_cost2/marks.csv": "341f5c2e4662b07a73c8067ea8eb29a370fb4599b885e4914dd4b17f59db2eb6",
+    "context_ridge_cost2/train_2026-09-09_SNDK.json": "a555ec513731d2b2ec83983827954a743099d26d51943c25fed0aea67db72f4e",
+    "context_ridge_cost2/train_2026-09-03_SNDK.json": "99a39b51852f04916699327f2e9762b44899405c4391ecd49af4f867f7e09a30",
+    "context_ridge_cost2/train_2026-09-04_NVDA.json": "e9d7fc4c9e563e4bdb26233830a6e506d4d27f98401933e5cfcc68bc9d9fe598",
+    "context_ridge_cost2/train_2026-09-10_NVDA.json": "1875fc325a90e6fa90f29dd772ad4d8b58bea2a4e08141aef9ad57c997f73770",
+    "context_ridge_cost2/train_2026-09-09_NVDA.json": "a555ec513731d2b2ec83983827954a743099d26d51943c25fed0aea67db72f4e",
+    "context_ridge_cost2/train_2026-09-03_MSTR.json": "99a39b51852f04916699327f2e9762b44899405c4391ecd49af4f867f7e09a30",
+    "context_ridge_cost2/decisions.json": "e412f1fa90a8bf275f238cbf91b5b05bd27031bf29f1418e83bdd787b6e32f78",
+    "context_ridge_cost2/train_2026-08-31_NVDA.json": "9630fa26971f65fc1bbae58333358a1961497c9155d6b07725e35d7033f82e57",
+    "context_ridge_cost2/train_2026-09-08_MSTR.json": "f453de2228963cfee50ca411f9a8f2d5217cca533276eb0162691dd90ee504a4",
+    "context_ridge_cost2/train_2026-09-02_NVDA.json": "5f6a2d95a566c2b1007040f3e4ecd5fc4d9f4598f9771fde802a6bea7c627192",
+    "context_ridge_cost2/train_2026-09-11_SNDK.json": "b2fbfaa76067cb5d5fec6497cf4dbd518061cd788e12d1c58fd71582bdca78d0",
+    "context_ridge_cost2/train_2026-09-11_MSTR.json": "b2fbfaa76067cb5d5fec6497cf4dbd518061cd788e12d1c58fd71582bdca78d0",
+    "context_ridge_cost2/train_2026-09-08_SNDK.json": "f453de2228963cfee50ca411f9a8f2d5217cca533276eb0162691dd90ee504a4",
+    "context_ridge_cost2/train_2026-09-11_TSLA.json": "b2fbfaa76067cb5d5fec6497cf4dbd518061cd788e12d1c58fd71582bdca78d0",
+    "context_ridge_cost2/daily.csv": "879cc46c75997552be19e8066bab581ba6c58b6731f0a0504f687a8d4f7d3550",
+    "context_ridge_cost2/train_2026-09-08_TSLA.json": "f453de2228963cfee50ca411f9a8f2d5217cca533276eb0162691dd90ee504a4",
+    "context_ridge_cost2/train_2026-09-03_TSLA.json": "99a39b51852f04916699327f2e9762b44899405c4391ecd49af4f867f7e09a30",
+    "context_ridge_cost2/train_2026-09-01_NVDA.json": "08e4331cac8fe999178db9ec351fa71ffa754081b4e03d89adc3fc4c527309a0",
+    "context_ridge_cost2/train_2026-09-10_TSLA.json": "1875fc325a90e6fa90f29dd772ad4d8b58bea2a4e08141aef9ad57c997f73770",
+    "context_ridge_cost2/train_2026-09-01_SNDK.json": "08e4331cac8fe999178db9ec351fa71ffa754081b4e03d89adc3fc4c527309a0",
+    "context_ridge_cost2/train_2026-09-04_TSLA.json": "e9d7fc4c9e563e4bdb26233830a6e506d4d27f98401933e5cfcc68bc9d9fe598",
+    "context_ridge_cost2/train_2026-09-01_MSTR.json": "08e4331cac8fe999178db9ec351fa71ffa754081b4e03d89adc3fc4c527309a0",
+    "context_ridge_cost2/train_2026-09-09_TSLA.json": "a555ec513731d2b2ec83983827954a743099d26d51943c25fed0aea67db72f4e",
+    "context_ridge_cost2/train_2026-09-02_TSLA.json": "5f6a2d95a566c2b1007040f3e4ecd5fc4d9f4598f9771fde802a6bea7c627192",
+    "context_ridge_cost2/train_2026-08-31_TSLA.json": "9630fa26971f65fc1bbae58333358a1961497c9155d6b07725e35d7033f82e57",
+    "context_ridge_cost5/summary.json": "d85fbbbdcbe286d924c443885d5e285598313ffb57f3eef8aca6c23bdf71704b",
+    "context_ridge_cost5/fills.csv": "b71d1757787fd2812c61dc15417cd182186b1956e4966b5c16e3ce43ace8b2f9",
+    "context_ridge_cost5/marks.csv": "7340f0ece4f4a8d5492d6ab5d6b1df90595e6c7f50cec82afe5ccf36ae4718c2",
+    "context_ridge_cost5/decisions.json": "343853cb4bc1af8481f19e29b5d527205f21bab47fa1720767162ab26aa59ac6",
+    "context_ridge_cost5/daily.csv": "85259a28a50e98396d0b9f6cb3658ac9a389c498b0c9432538a536c38ca1acac",
+    "cash_cost5/summary.json": "929c441cd23a4990b01df77f7354501e3cdb0122204a6fe9f337933c5812f280",
+    "cash_cost5/fills.csv": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+    "cash_cost5/marks.csv": "91bd0cca57b1d9e9a0ac2e3d5b22aa75c797cf2b2f2cc0c5dba2d2de7bb6c60e",
+    "cash_cost5/decisions.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+    "cash_cost5/daily.csv": "6a8d888721590e8411a353cfe73fdb282e8996f56d87b321e7278aeb20e9d27c",
+    "cash_cost2/summary.json": "8a1220a3be85a1b3b24e5a003f572718984eee4339095dfed92772086bde9c1e",
+    "cash_cost2/fills.csv": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+    "cash_cost2/marks.csv": "91bd0cca57b1d9e9a0ac2e3d5b22aa75c797cf2b2f2cc0c5dba2d2de7bb6c60e",
+    "cash_cost2/decisions.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+    "cash_cost2/daily.csv": "6a8d888721590e8411a353cfe73fdb282e8996f56d87b321e7278aeb20e9d27c",
+    "equal_weight_cost2/summary.json": "4b9a75258fd7b9ccaa98f3190cc1b9535fe9f2615df951d45d02afd937f17bb8",
+    "equal_weight_cost2/fills.csv": "9bcaa1afcbd947a7e70f6d0cfa93ae7e9a34a96e3dc7cf948763949156b4aa8b",
+    "equal_weight_cost2/marks.csv": "59f945351f3d0e0c09b55dbe881c1bbacb7b26037153c4cdda68bd5cd1eaddb2",
+    "equal_weight_cost2/decisions.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+    "equal_weight_cost2/daily.csv": "36c31d5b0f157fed1d17ae7f67b364e3389aebaeb727005aae6e129f912c06ee",
+    "equal_weight_cost5/summary.json": "558d63f901762839952f2a1e90d03f476ff7c2f608a04684385a2f94a765e2b0",
+    "equal_weight_cost5/fills.csv": "03abd366bdd92c56a4e1f000233636a4d353b038f4fb36ea1e342b48d3ef6365",
+    "equal_weight_cost5/marks.csv": "0e015aa6e4bc40f7cb7601adf61716b5641b756caff7d4edf14ad14c9d9d8654",
+    "equal_weight_cost5/decisions.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+    "equal_weight_cost5/daily.csv": "a356095f311c52d190e5d3bd8798a42a7b9df31a4d5052845b70a3f6b5b607e3",
+    "context_robust_cost2/summary.json": "5eb7e204ec37edada274c09aed60e8ca9524d50ed80e715c5a9b978a5d296b43",
+    "context_robust_cost2/fills.csv": "3b6fe83066f3b424240b11e9bf096539bb6d4bdcdce4a789fc11288d3d3dac43",
+    "context_robust_cost2/marks.csv": "654f45ec1ccaa4e6eea35ebeeb125257f857c798e0df38b53fe9e30514517589",
+    "context_robust_cost2/decisions.json": "d74f7685d68af88e1192f62948b6397bc69cfc774edafc4b967f443a75a90563",
+    "context_robust_cost2/daily.csv": "95a402b49bbc624e1bd7e572a7502eaa40287860ce72ca0251047b34879ea476",
+    "context_robust_cost5/summary.json": "eaa2112393206986e79f8af4aa5a7cafc2f25c142334792cd3e8075d132180a8",
+    "context_robust_cost5/fills.csv": "fe1f81a5b8ff1cbee31f423ec9262c3d9f428291f3c938336c5613cae787e82b",
+    "context_robust_cost5/marks.csv": "e456f003e4d303237c1c5b228608b2eec82f43a96e3a59ee0fc2101624ea6e71",
+    "context_robust_cost5/decisions.json": "85640186d4dda6ce4f2862c9dcbc2591554210b5c28e052e778db7b13dcb151a",
+    "context_robust_cost5/daily.csv": "60053b5872dd41669b0b582ea79245c69ec9f701b0a46882e2060e319abb63ce",
+    "context_lightgbm_cost2/train_2026-09-11_NVDA.json": "b2fbfaa76067cb5d5fec6497cf4dbd518061cd788e12d1c58fd71582bdca78d0",
+    "context_lightgbm_cost2/train_2026-09-02_SNDK.json": "5f6a2d95a566c2b1007040f3e4ecd5fc4d9f4598f9771fde802a6bea7c627192",
+    "context_lightgbm_cost2/summary.json": "1471d8bd2a9008b9cf7ab9a187b5db5278d8d36bfc96027d70c2119d2abefbc2",
+    "context_lightgbm_cost2/train_2026-08-31_SNDK.json": "9630fa26971f65fc1bbae58333358a1961497c9155d6b07725e35d7033f82e57",
+    "context_lightgbm_cost2/train_2026-08-31_MSTR.json": "9630fa26971f65fc1bbae58333358a1961497c9155d6b07725e35d7033f82e57",
+    "context_lightgbm_cost2/train_2026-09-08_NVDA.json": "f453de2228963cfee50ca411f9a8f2d5217cca533276eb0162691dd90ee504a4",
+    "context_lightgbm_cost2/train_2026-09-02_MSTR.json": "5f6a2d95a566c2b1007040f3e4ecd5fc4d9f4598f9771fde802a6bea7c627192",
+    "context_lightgbm_cost2/train_2026-09-09_MSTR.json": "a555ec513731d2b2ec83983827954a743099d26d51943c25fed0aea67db72f4e",
+    "context_lightgbm_cost2/fills.csv": "0b3656360e320fb220f62b042f74acee21199e3e308e5a8a40f4dde732ee8804",
+    "context_lightgbm_cost2/train_2026-09-01_TSLA.json": "08e4331cac8fe999178db9ec351fa71ffa754081b4e03d89adc3fc4c527309a0",
+    "context_lightgbm_cost2/train_2026-09-10_SNDK.json": "1875fc325a90e6fa90f29dd772ad4d8b58bea2a4e08141aef9ad57c997f73770",
+    "context_lightgbm_cost2/train_2026-09-04_SNDK.json": "e9d7fc4c9e563e4bdb26233830a6e506d4d27f98401933e5cfcc68bc9d9fe598",
+    "context_lightgbm_cost2/train_2026-09-03_NVDA.json": "99a39b51852f04916699327f2e9762b44899405c4391ecd49af4f867f7e09a30",
+    "context_lightgbm_cost2/train_2026-09-04_MSTR.json": "e9d7fc4c9e563e4bdb26233830a6e506d4d27f98401933e5cfcc68bc9d9fe598",
+    "context_lightgbm_cost2/train_2026-09-10_MSTR.json": "1875fc325a90e6fa90f29dd772ad4d8b58bea2a4e08141aef9ad57c997f73770",
+    "context_lightgbm_cost2/marks.csv": "2a43f59711863494a55ccf05cd223228d6865b5d09065051e70c07d182ba8e6c",
+    "context_lightgbm_cost2/train_2026-09-09_SNDK.json": "a555ec513731d2b2ec83983827954a743099d26d51943c25fed0aea67db72f4e",
+    "context_lightgbm_cost2/train_2026-09-03_SNDK.json": "99a39b51852f04916699327f2e9762b44899405c4391ecd49af4f867f7e09a30",
+    "context_lightgbm_cost2/train_2026-09-04_NVDA.json": "e9d7fc4c9e563e4bdb26233830a6e506d4d27f98401933e5cfcc68bc9d9fe598",
+    "context_lightgbm_cost2/train_2026-09-10_NVDA.json": "1875fc325a90e6fa90f29dd772ad4d8b58bea2a4e08141aef9ad57c997f73770",
+    "context_lightgbm_cost2/train_2026-09-09_NVDA.json": "a555ec513731d2b2ec83983827954a743099d26d51943c25fed0aea67db72f4e",
+    "context_lightgbm_cost2/train_2026-09-03_MSTR.json": "99a39b51852f04916699327f2e9762b44899405c4391ecd49af4f867f7e09a30",
+    "context_lightgbm_cost2/decisions.json": "4ea7c82eadb946446c6868095e5c5065e7a343600b2c83aa211027f4f69db8f7",
+    "context_lightgbm_cost2/train_2026-08-31_NVDA.json": "9630fa26971f65fc1bbae58333358a1961497c9155d6b07725e35d7033f82e57",
+    "context_lightgbm_cost2/train_2026-09-08_MSTR.json": "f453de2228963cfee50ca411f9a8f2d5217cca533276eb0162691dd90ee504a4",
+    "context_lightgbm_cost2/train_2026-09-02_NVDA.json": "5f6a2d95a566c2b1007040f3e4ecd5fc4d9f4598f9771fde802a6bea7c627192",
+    "context_lightgbm_cost2/train_2026-09-11_SNDK.json": "b2fbfaa76067cb5d5fec6497cf4dbd518061cd788e12d1c58fd71582bdca78d0",
+    "context_lightgbm_cost2/train_2026-09-11_MSTR.json": "b2fbfaa76067cb5d5fec6497cf4dbd518061cd788e12d1c58fd71582bdca78d0",
+    "context_lightgbm_cost2/train_2026-09-08_SNDK.json": "f453de2228963cfee50ca411f9a8f2d5217cca533276eb0162691dd90ee504a4",
+    "context_lightgbm_cost2/train_2026-09-11_TSLA.json": "b2fbfaa76067cb5d5fec6497cf4dbd518061cd788e12d1c58fd71582bdca78d0",
+    "context_lightgbm_cost2/daily.csv": "5c9d7bada4433ef1b95b855c9004f4d180a07273a9796ea5ff45991928814f53",
+    "context_lightgbm_cost2/train_2026-09-08_TSLA.json": "f453de2228963cfee50ca411f9a8f2d5217cca533276eb0162691dd90ee504a4",
+    "context_lightgbm_cost2/train_2026-09-03_TSLA.json": "99a39b51852f04916699327f2e9762b44899405c4391ecd49af4f867f7e09a30",
+    "context_lightgbm_cost2/train_2026-09-01_NVDA.json": "08e4331cac8fe999178db9ec351fa71ffa754081b4e03d89adc3fc4c527309a0",
+    "context_lightgbm_cost2/train_2026-09-10_TSLA.json": "1875fc325a90e6fa90f29dd772ad4d8b58bea2a4e08141aef9ad57c997f73770",
+    "context_lightgbm_cost2/train_2026-09-01_SNDK.json": "08e4331cac8fe999178db9ec351fa71ffa754081b4e03d89adc3fc4c527309a0",
+    "context_lightgbm_cost2/train_2026-09-04_TSLA.json": "e9d7fc4c9e563e4bdb26233830a6e506d4d27f98401933e5cfcc68bc9d9fe598",
+    "context_lightgbm_cost2/train_2026-09-01_MSTR.json": "08e4331cac8fe999178db9ec351fa71ffa754081b4e03d89adc3fc4c527309a0",
+    "context_lightgbm_cost2/train_2026-09-09_TSLA.json": "a555ec513731d2b2ec83983827954a743099d26d51943c25fed0aea67db72f4e",
+    "context_lightgbm_cost2/train_2026-09-02_TSLA.json": "5f6a2d95a566c2b1007040f3e4ecd5fc4d9f4598f9771fde802a6bea7c627192",
+    "context_lightgbm_cost2/train_2026-08-31_TSLA.json": "9630fa26971f65fc1bbae58333358a1961497c9155d6b07725e35d7033f82e57",
+    "context_lightgbm_cost5/summary.json": "d265e8b132769c060cb307a6f1d3898a4c7b1c651ff6b4ddcb18571c1813e423",
+    "context_lightgbm_cost5/fills.csv": "f1783e8781f24d4a13fa6b34fe1cdac2f218824fc9736a2096dd2dcdcd735339",
+    "context_lightgbm_cost5/marks.csv": "9af4763b9a63a927ef3001aaa3b1217bf77818251c5d840a83107876271aba66",
+    "context_lightgbm_cost5/decisions.json": "4ef65421844123059a37555990ebbdb933686c48b586f7e4991eaead5b7c8741",
+    "context_lightgbm_cost5/daily.csv": "5f9df8fc1130af67cac94e4ef4f9ba8029b26e50e063d69addff4294e83a7f88",
+    "peer_ridge_cost2/train_2026-09-11_NVDA.json": "2da527aef62049628fcdef2e764b2c82fb7cc8eb241e7044421c1f5d0221031f",
+    "peer_ridge_cost2/train_2026-09-02_SNDK.json": "85e765f5af45a7d021f4dec2f4658b28ea04b62d669e5458db98309e6b074ee0",
+    "peer_ridge_cost2/summary.json": "10a8160df5bb8c7a8149458a1abc4e4c3bb0fbc5ec4796c723ceff0bdd5f055b",
+    "peer_ridge_cost2/train_2026-08-31_SNDK.json": "38d0eb9a467e41cd15ade6e6d0e9f457fd6e1690b87dd0d9c580360e4277c347",
+    "peer_ridge_cost2/train_2026-08-31_MSTR.json": "38d0eb9a467e41cd15ade6e6d0e9f457fd6e1690b87dd0d9c580360e4277c347",
+    "peer_ridge_cost2/train_2026-09-08_NVDA.json": "8bf5a75db99947fe05b4ec464ed0f80e2e558c0d1c17c7cd30d4a68f7dab1bf6",
+    "peer_ridge_cost2/train_2026-09-02_MSTR.json": "85e765f5af45a7d021f4dec2f4658b28ea04b62d669e5458db98309e6b074ee0",
+    "peer_ridge_cost2/train_2026-09-09_MSTR.json": "73d646d3412bec8dc6c6b3f70c30b84888aa6c7147326838d45e59265f85f5c4",
+    "peer_ridge_cost2/fills.csv": "a68b8ad9e5c8cde8dafde79be4482c3c2fc94cb22f08d6e3a289b0d6d6a0720f",
+    "peer_ridge_cost2/train_2026-09-01_TSLA.json": "9a0862666ce03f24ba481417543c06c30d9aeee225abda1c4feb963ff26257b9",
+    "peer_ridge_cost2/train_2026-09-10_SNDK.json": "7f4b469f9e7902c8126d2894639f0d58d6476db24ad134dc3184881aa1e91e4f",
+    "peer_ridge_cost2/train_2026-09-04_SNDK.json": "8e2be6a179421c6c7fe57b645919df61d536c51f70aeaafa834d0ac77c92da5b",
+    "peer_ridge_cost2/train_2026-09-03_NVDA.json": "0ffb1e483eb557a7c3778caeb480a7729417e582949c9fe34e4a191dc823cebd",
+    "peer_ridge_cost2/train_2026-09-04_MSTR.json": "8e2be6a179421c6c7fe57b645919df61d536c51f70aeaafa834d0ac77c92da5b",
+    "peer_ridge_cost2/train_2026-09-10_MSTR.json": "7f4b469f9e7902c8126d2894639f0d58d6476db24ad134dc3184881aa1e91e4f",
+    "peer_ridge_cost2/marks.csv": "d6130a477b60c0cfa14369fb6d9fb2f0892997ac718e50a3db944c0d8f6d07a9",
+    "peer_ridge_cost2/train_2026-09-09_SNDK.json": "73d646d3412bec8dc6c6b3f70c30b84888aa6c7147326838d45e59265f85f5c4",
+    "peer_ridge_cost2/train_2026-09-03_SNDK.json": "0ffb1e483eb557a7c3778caeb480a7729417e582949c9fe34e4a191dc823cebd",
+    "peer_ridge_cost2/train_2026-09-04_NVDA.json": "8e2be6a179421c6c7fe57b645919df61d536c51f70aeaafa834d0ac77c92da5b",
+    "peer_ridge_cost2/train_2026-09-10_NVDA.json": "7f4b469f9e7902c8126d2894639f0d58d6476db24ad134dc3184881aa1e91e4f",
+    "peer_ridge_cost2/train_2026-09-09_NVDA.json": "73d646d3412bec8dc6c6b3f70c30b84888aa6c7147326838d45e59265f85f5c4",
+    "peer_ridge_cost2/train_2026-09-03_MSTR.json": "0ffb1e483eb557a7c3778caeb480a7729417e582949c9fe34e4a191dc823cebd",
+    "peer_ridge_cost2/decisions.json": "dff789e6bd41c5f5066e6ddd1433156d036a1676a3275e2e01cd3021cf0091d3",
+    "peer_ridge_cost2/train_2026-08-31_NVDA.json": "38d0eb9a467e41cd15ade6e6d0e9f457fd6e1690b87dd0d9c580360e4277c347",
+    "peer_ridge_cost2/train_2026-09-08_MSTR.json": "8bf5a75db99947fe05b4ec464ed0f80e2e558c0d1c17c7cd30d4a68f7dab1bf6",
+    "peer_ridge_cost2/train_2026-09-02_NVDA.json": "85e765f5af45a7d021f4dec2f4658b28ea04b62d669e5458db98309e6b074ee0",
+    "peer_ridge_cost2/train_2026-09-11_SNDK.json": "2da527aef62049628fcdef2e764b2c82fb7cc8eb241e7044421c1f5d0221031f",
+    "peer_ridge_cost2/train_2026-09-11_MSTR.json": "2da527aef62049628fcdef2e764b2c82fb7cc8eb241e7044421c1f5d0221031f",
+    "peer_ridge_cost2/train_2026-09-08_SNDK.json": "8bf5a75db99947fe05b4ec464ed0f80e2e558c0d1c17c7cd30d4a68f7dab1bf6",
+    "peer_ridge_cost2/train_2026-09-11_TSLA.json": "2da527aef62049628fcdef2e764b2c82fb7cc8eb241e7044421c1f5d0221031f",
+    "peer_ridge_cost2/daily.csv": "a8bf013beae0bf8c6b082756eca5440e8af80abcddbe894b752623a851f12a72",
+    "peer_ridge_cost2/train_2026-09-08_TSLA.json": "8bf5a75db99947fe05b4ec464ed0f80e2e558c0d1c17c7cd30d4a68f7dab1bf6",
+    "peer_ridge_cost2/train_2026-09-03_TSLA.json": "0ffb1e483eb557a7c3778caeb480a7729417e582949c9fe34e4a191dc823cebd",
+    "peer_ridge_cost2/train_2026-09-01_NVDA.json": "9a0862666ce03f24ba481417543c06c30d9aeee225abda1c4feb963ff26257b9",
+    "peer_ridge_cost2/train_2026-09-10_TSLA.json": "7f4b469f9e7902c8126d2894639f0d58d6476db24ad134dc3184881aa1e91e4f",
+    "peer_ridge_cost2/train_2026-09-01_SNDK.json": "9a0862666ce03f24ba481417543c06c30d9aeee225abda1c4feb963ff26257b9",
+    "peer_ridge_cost2/train_2026-09-04_TSLA.json": "8e2be6a179421c6c7fe57b645919df61d536c51f70aeaafa834d0ac77c92da5b",
+    "peer_ridge_cost2/train_2026-09-01_MSTR.json": "9a0862666ce03f24ba481417543c06c30d9aeee225abda1c4feb963ff26257b9",
+    "peer_ridge_cost2/train_2026-09-09_TSLA.json": "73d646d3412bec8dc6c6b3f70c30b84888aa6c7147326838d45e59265f85f5c4",
+    "peer_ridge_cost2/train_2026-09-02_TSLA.json": "85e765f5af45a7d021f4dec2f4658b28ea04b62d669e5458db98309e6b074ee0",
+    "peer_ridge_cost2/train_2026-08-31_TSLA.json": "38d0eb9a467e41cd15ade6e6d0e9f457fd6e1690b87dd0d9c580360e4277c347",
+    "peer_ridge_cost5/summary.json": "f4c961a3ffd9e33b364bf5d8901d14d71799790bf9bafb70a0bb2abce7dadbc9",
+    "peer_ridge_cost5/fills.csv": "83e8d582d4b3a9d0d65c181966a3afada583e2bf8e5e92c8b2b024bbbf9f8282",
+    "peer_ridge_cost5/marks.csv": "7d04195aaed1645a7c96ae5e46f16d60b268978e0a0da44745f1dadc33310f48",
+    "peer_ridge_cost5/decisions.json": "125bbfa1f0606380af10107a8dee9a39a89f761dfee61bf2b3d49ed3a378a4cc",
+    "peer_ridge_cost5/daily.csv": "971058113d3278d1c777772764d65500ecaa4833eb97f01626ac16252949c3b0",
+    "context_tree_cost5/summary.json": "848a389268ad2edb02e4ac741d5b25d076767fecc6be4429124cff6f9753a151",
+    "context_tree_cost5/fills.csv": "935a4827f812ce1e079d648b27c0bcea845dd9255036a2a0e26b92813ed62616",
+    "context_tree_cost5/marks.csv": "c7fa4c83fd3b4231774aa66373b5c07783a4d2329f40472466e00bd2ec914b9a",
+    "context_tree_cost5/decisions.json": "0a11e607e4a7af96c79afc252459d3d4b3ff74e7c359e9818fb406b3f2e2cd76",
+    "context_tree_cost5/daily.csv": "f0a0d86778560444c21fa7dd496d6c4d68f78d4966f86af31f114e9df973b1a0",
+    "context_tree_cost2/train_2026-09-11_NVDA.json": "b2fbfaa76067cb5d5fec6497cf4dbd518061cd788e12d1c58fd71582bdca78d0",
+    "context_tree_cost2/train_2026-09-02_SNDK.json": "5f6a2d95a566c2b1007040f3e4ecd5fc4d9f4598f9771fde802a6bea7c627192",
+    "context_tree_cost2/summary.json": "98ca14c95b52e4f2a7fe65dd614cb2b84a808d441f208e56355ac5aac98c7bbb",
+    "context_tree_cost2/train_2026-08-31_SNDK.json": "9630fa26971f65fc1bbae58333358a1961497c9155d6b07725e35d7033f82e57",
+    "context_tree_cost2/train_2026-08-31_MSTR.json": "9630fa26971f65fc1bbae58333358a1961497c9155d6b07725e35d7033f82e57",
+    "context_tree_cost2/train_2026-09-08_NVDA.json": "f453de2228963cfee50ca411f9a8f2d5217cca533276eb0162691dd90ee504a4",
+    "context_tree_cost2/train_2026-09-02_MSTR.json": "5f6a2d95a566c2b1007040f3e4ecd5fc4d9f4598f9771fde802a6bea7c627192",
+    "context_tree_cost2/train_2026-09-09_MSTR.json": "a555ec513731d2b2ec83983827954a743099d26d51943c25fed0aea67db72f4e",
+    "context_tree_cost2/fills.csv": "0a47eb232cbe19b77ae4010f807b8cb92ddecd304548a02254dd278c8c66580c",
+    "context_tree_cost2/train_2026-09-01_TSLA.json": "08e4331cac8fe999178db9ec351fa71ffa754081b4e03d89adc3fc4c527309a0",
+    "context_tree_cost2/train_2026-09-10_SNDK.json": "1875fc325a90e6fa90f29dd772ad4d8b58bea2a4e08141aef9ad57c997f73770",
+    "context_tree_cost2/train_2026-09-04_SNDK.json": "e9d7fc4c9e563e4bdb26233830a6e506d4d27f98401933e5cfcc68bc9d9fe598",
+    "context_tree_cost2/train_2026-09-03_NVDA.json": "99a39b51852f04916699327f2e9762b44899405c4391ecd49af4f867f7e09a30",
+    "context_tree_cost2/train_2026-09-04_MSTR.json": "e9d7fc4c9e563e4bdb26233830a6e506d4d27f98401933e5cfcc68bc9d9fe598",
+    "context_tree_cost2/train_2026-09-10_MSTR.json": "1875fc325a90e6fa90f29dd772ad4d8b58bea2a4e08141aef9ad57c997f73770",
+    "context_tree_cost2/marks.csv": "bc331820c90c092d5d64f5a3626259ac132977b8b2c227fc51f9097858f2d46c",
+    "context_tree_cost2/train_2026-09-09_SNDK.json": "a555ec513731d2b2ec83983827954a743099d26d51943c25fed0aea67db72f4e",
+    "context_tree_cost2/train_2026-09-03_SNDK.json": "99a39b51852f04916699327f2e9762b44899405c4391ecd49af4f867f7e09a30",
+    "context_tree_cost2/train_2026-09-04_NVDA.json": "e9d7fc4c9e563e4bdb26233830a6e506d4d27f98401933e5cfcc68bc9d9fe598",
+    "context_tree_cost2/train_2026-09-10_NVDA.json": "1875fc325a90e6fa90f29dd772ad4d8b58bea2a4e08141aef9ad57c997f73770",
+    "context_tree_cost2/train_2026-09-09_NVDA.json": "a555ec513731d2b2ec83983827954a743099d26d51943c25fed0aea67db72f4e",
+    "context_tree_cost2/train_2026-09-03_MSTR.json": "99a39b51852f04916699327f2e9762b44899405c4391ecd49af4f867f7e09a30",
+    "context_tree_cost2/decisions.json": "a894caaa04c0e68048aece97930640acff94738c2db8ee90b8d87059c71e79ba",
+    "context_tree_cost2/train_2026-08-31_NVDA.json": "9630fa26971f65fc1bbae58333358a1961497c9155d6b07725e35d7033f82e57",
+    "context_tree_cost2/train_2026-09-08_MSTR.json": "f453de2228963cfee50ca411f9a8f2d5217cca533276eb0162691dd90ee504a4",
+    "context_tree_cost2/train_2026-09-02_NVDA.json": "5f6a2d95a566c2b1007040f3e4ecd5fc4d9f4598f9771fde802a6bea7c627192",
+    "context_tree_cost2/train_2026-09-11_SNDK.json": "b2fbfaa76067cb5d5fec6497cf4dbd518061cd788e12d1c58fd71582bdca78d0",
+    "context_tree_cost2/train_2026-09-11_MSTR.json": "b2fbfaa76067cb5d5fec6497cf4dbd518061cd788e12d1c58fd71582bdca78d0",
+    "context_tree_cost2/train_2026-09-08_SNDK.json": "f453de2228963cfee50ca411f9a8f2d5217cca533276eb0162691dd90ee504a4",
+    "context_tree_cost2/train_2026-09-11_TSLA.json": "b2fbfaa76067cb5d5fec6497cf4dbd518061cd788e12d1c58fd71582bdca78d0",
+    "context_tree_cost2/daily.csv": "8edac9b5b8789d771b8f69be27145d6ac462ad84c7c5996ec477e84bb75f28de",
+    "context_tree_cost2/train_2026-09-08_TSLA.json": "f453de2228963cfee50ca411f9a8f2d5217cca533276eb0162691dd90ee504a4",
+    "context_tree_cost2/train_2026-09-03_TSLA.json": "99a39b51852f04916699327f2e9762b44899405c4391ecd49af4f867f7e09a30",
+    "context_tree_cost2/train_2026-09-01_NVDA.json": "08e4331cac8fe999178db9ec351fa71ffa754081b4e03d89adc3fc4c527309a0",
+    "context_tree_cost2/train_2026-09-10_TSLA.json": "1875fc325a90e6fa90f29dd772ad4d8b58bea2a4e08141aef9ad57c997f73770",
+    "context_tree_cost2/train_2026-09-01_SNDK.json": "08e4331cac8fe999178db9ec351fa71ffa754081b4e03d89adc3fc4c527309a0",
+    "context_tree_cost2/train_2026-09-04_TSLA.json": "e9d7fc4c9e563e4bdb26233830a6e506d4d27f98401933e5cfcc68bc9d9fe598",
+    "context_tree_cost2/train_2026-09-01_MSTR.json": "08e4331cac8fe999178db9ec351fa71ffa754081b4e03d89adc3fc4c527309a0",
+    "context_tree_cost2/train_2026-09-09_TSLA.json": "a555ec513731d2b2ec83983827954a743099d26d51943c25fed0aea67db72f4e",
+    "context_tree_cost2/train_2026-09-02_TSLA.json": "5f6a2d95a566c2b1007040f3e4ecd5fc4d9f4598f9771fde802a6bea7c627192",
+    "context_tree_cost2/train_2026-08-31_TSLA.json": "9630fa26971f65fc1bbae58333358a1961497c9155d6b07725e35d7033f82e57"
+  }
+}

@@ -54,6 +54,7 @@ export const IntradayKlineChart: React.FC<IntradayKlineChartProps> = ({ ticker: 
   const [availableDates, setAvailableDates] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<'robinhood' | 'kline'>('robinhood');
   const [data, setData] = useState<TrajectoryData | null>(null);
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState<boolean>(true);
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
 
@@ -80,6 +81,8 @@ export const IntradayKlineChart: React.FC<IntradayKlineChartProps> = ({ ticker: 
   useEffect(() => {
     let isMounted = true;
     setLoading(true);
+    setData(null);
+    setError('');
 
     const dateParam = selectedDate ? `&date=${selectedDate}` : '';
     fetch(`${API_BASE}/api/ml/prediction-trajectory?ticker=${selectedTicker}${dateParam}`)
@@ -95,13 +98,15 @@ export const IntradayKlineChart: React.FC<IntradayKlineChartProps> = ({ ticker: 
             }
           }
         } else {
-          setData(generateMockTrajectory(selectedTicker));
+          setData(null);
+          setError(resData.error || '预测数据不可用；未生成替代行情或胜率。');
         }
         setLoading(false);
       })
       .catch(() => {
         if (isMounted) {
-          setData(generateMockTrajectory(selectedTicker));
+          setData(null);
+          setError('预测请求失败；未生成替代行情或胜率。');
           setLoading(false);
         }
       });
@@ -110,83 +115,6 @@ export const IntradayKlineChart: React.FC<IntradayKlineChartProps> = ({ ticker: 
       isMounted = false;
     };
   }, [selectedTicker, selectedDate]);
-
-  const generateMockTrajectory = (sym: string): TrajectoryData => {
-    const times: string[] = [];
-    const actuals: number[] = [];
-    const opens: number[] = [];
-    const highs: number[] = [];
-    const lows: number[] = [];
-    const volumes: number[] = [];
-    const preds: number[] = [];
-    const pwin: number[] = [];
-
-    const base = sym === 'SNDK' ? 1586.0 : sym === 'TSLA' ? 362.0 : sym === 'NVDA' ? 231.0 : 137.0;
-    let cur = base;
-
-    for (let h = 9; h <= 10; h++) {
-      for (let m = 30; m < 60; m++) {
-        if (h === 9 && m < 30) continue;
-        if (h === 10 && m > 35) break;
-        const timeStr = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
-        const delta = (Math.random() - 0.42) * (sym === 'SNDK' ? 3.5 : 0.8);
-        const prev = cur;
-        cur = Math.max(base * 0.95, cur + delta);
-        times.push(timeStr);
-        opens.push(Number(prev.toFixed(2)));
-        actuals.push(Number(cur.toFixed(2)));
-        highs.push(Number((Math.max(prev, cur) + Math.random() * 1.5).toFixed(2)));
-        lows.push(Number((Math.min(prev, cur) - Math.random() * 1.5).toFixed(2)));
-        volumes.push(Math.floor(8000 + Math.random() * 25000));
-
-        const predBoost = sym === 'SNDK' ? 1.025 : 1.008;
-        const predP = cur * (predBoost + (Math.random() - 0.5) * 0.006);
-        preds.push(Number(predP.toFixed(2)));
-        pwin.push(Number((55 + Math.random() * 15).toFixed(1)));
-      }
-    }
-
-    const openP = base;
-    const latestP = actuals[actuals.length - 1] || base;
-    const dayChange = ((latestP - openP) / openP) * 100;
-
-    return {
-      success: true,
-      ticker: sym,
-      date: '2026-09-10',
-      summary: {
-        current_price: latestP,
-        open_price: openP,
-        high_price: Math.max(...actuals),
-        low_price: Math.min(...actuals),
-        day_change_pct: Number(dayChange.toFixed(2)),
-        ml_predicted_mfe_pct: sym === 'SNDK' ? 4.85 : 1.25,
-        actual_max_gain_pct: Number(dayChange.toFixed(2)),
-        ml_p_win_pct: 64.5,
-        prediction_accuracy_pct: 92.8
-      },
-      times,
-      actual_prices: actuals,
-      opens,
-      highs,
-      lows,
-      volumes,
-      predicted_prices: preds,
-      predicted_highs: highs.map(h => Number((h * 1.008).toFixed(2))),
-      predicted_lows: lows.map(l => Number((l * 0.995).toFixed(2))),
-      p_win_series: pwin,
-      future: {
-        times: ['10:36', '10:40', '10:45', '10:50'],
-        prices: [latestP * 1.005, latestP * 1.012, latestP * 1.025, latestP * 1.035].map(v => Number(v.toFixed(2))),
-        highs: [latestP * 1.01, latestP * 1.02, latestP * 1.035, latestP * 1.05].map(v => Number(v.toFixed(2))),
-        lows: [latestP * 0.998, latestP * 1.002, latestP * 1.01, latestP * 1.015].map(v => Number(v.toFixed(2)))
-      },
-      trades: [
-        { time: times[Math.floor(times.length * 0.28)] || '09:44', action: 'BUY', price: Number((base * 1.012).toFixed(2)), shares: 35 },
-        { time: times[Math.floor(times.length * 0.88)] || '10:15', action: 'SELL', price: latestP, shares: 35, pnl: 3543.03 }
-      ]
-    };
-  };
 
   // Convert "HH:MM" to trading minutes relative to US Market Open (09:30 = 0)
   const timeToMinute = (timeStr: string): number => {
@@ -389,7 +317,7 @@ export const IntradayKlineChart: React.FC<IntradayKlineChartProps> = ({ ticker: 
     );
   }
 
-  if (!data || !chartMetrics) return null;
+  if (!data || !chartMetrics) return <p role="status" style={{ padding: 20, color: "#fbbf24" }}>{error || "预测数据不可用"}</p>;
 
   const isPositive = data.summary.day_change_pct >= 0;
   const primaryColor = isPositive ? '#00c805' : '#ff3b30'; // Robinhood Neon Green or Red

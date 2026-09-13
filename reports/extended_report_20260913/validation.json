@@ -1,0 +1,22 @@
+{
+  "tested_at": "2026-09-13T15:12:53.800266+00:00",
+  "tests_passed": 32,
+  "frontend_build": "passed",
+  "registry_integrity": "passed",
+  "simulations_complete": 54,
+  "unavailable_data_trials": 10,
+  "numerical_failures_retained": 2,
+  "forward_observations": 0,
+  "orders_submitted": 0,
+  "live_runner_changed": false,
+  "published_this_turn": false,
+  "warnings": [
+    "Existing frontend bundle-size warning",
+    "LightGBM 4.3.0/scikit-learn 1.7.2 deprecation warnings"
+  ],
+  "artifacts": {
+    "equity.png": "937db2f49bcf1bf13295c6d956f29ccf248b7c74518980462bc6fc17e39a01c7",
+    "REPORT.md": "a76152e0adf5f58fa36f1a1f4c8a5f7c68a6001d052a8676efc541d563b998ea",
+    "comparison.csv": "dd26546e7bc362a38b210a2798c0b8053e2baec4e5176a1be974e4e31cd7f67a"
+  }
+}

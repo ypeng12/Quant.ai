@@ -1,0 +1,191 @@
+{
+  "candidate": {
+    "name": "pair_NVDA_AMD_h3",
+    "universe": "pair",
+    "model": "pair",
+    "horizon": 3,
+    "pooled": false,
+    "family": "context",
+    "selector": "all",
+    "omit": "",
+    "pair": [
+      "NVDA",
+      "AMD"
+    ],
+    "reference_risk": false,
+    "volatility_scaled": false
+  },
+  "cost_bps": 5,
+  "status": "complete",
+  "summary": {
+    "start": "2026-08-31",
+    "end": "2026-09-11",
+    "sessions": 9,
+    "starting_equity": 100000.0,
+    "ending_equity": 101707.33909342202,
+    "net_pnl": 1707.3390934220224,
+    "net_return": 0.017073390934220223,
+    "gross_pnl": 2055.785049438563,
+    "costs": 348.4459560165405,
+    "turnover_dollars": 696891.912033081,
+    "fill_count": 45,
+    "max_drawdown": -0.009044039052194863,
+    "max_gross_exposure": 0.8804051184749168,
+    "max_symbol_exposure": 0.7033483556778645,
+    "profitable_sessions": 4
+  },
+  "attribution": {
+    "net_pnl": 1707.3390934220224,
+    "gross_pnl": 2055.7850494384766,
+    "costs": 348.4459560165405,
+    "reconciled": true,
+    "by_symbol": [
+      {
+        "symbol": "AMD",
+        "gross_pnl": 631.6830444335938,
+        "costs": 72.6431544494629,
+        "net_pnl": 559.0398899841308
+      },
+      {
+        "symbol": "NVDA",
+        "gross_pnl": 1424.1020050048828,
+        "costs": 275.80280156707767,
+        "net_pnl": 1148.299203437805
+      }
+    ],
+    "by_direction": [
+      {
+        "direction": "long",
+        "gross_pnl": 631.6830444335938,
+        "costs": 72.6431544494629,
+        "net_pnl": 559.0398899841308
+      },
+      {
+        "direction": "short",
+        "gross_pnl": 1424.1020050048828,
+        "costs": 275.80280156707767,
+        "net_pnl": 1148.299203437805
+      }
+    ],
+    "by_day": [
+      {
+        "date": "2026-09-02",
+        "gross_pnl": 71.21978759765625,
+        "costs": 13.568129730224609,
+        "net_pnl": 57.65165786743164
+      },
+      {
+        "date": "2026-09-03",
+        "gross_pnl": -256.6715545654297,
+        "costs": 74.27615476226806,
+        "net_pnl": -330.94770932769774
+      },
+      {
+        "date": "2026-09-04",
+        "gross_pnl": 693.1541137695312,
+        "costs": 85.93746597290038,
+        "net_pnl": 607.2166477966308
+      },
+      {
+        "date": "2026-09-08",
+        "gross_pnl": 1381.2013702392578,
+        "costs": 84.51372171783447,
+        "net_pnl": 1296.6876485214234
+      },
+      {
+        "date": "2026-09-09",
+        "gross_pnl": 166.88133239746094,
+        "costs": 90.15048383331299,
+        "net_pnl": 76.73084856414795
+      }
+    ],
+    "by_hour": [
+      {
+        "hour": 9,
+        "gross_pnl": 0.0,
+        "costs": 46.61285805511475,
+        "net_pnl": -46.61285805511475
+      },
+      {
+        "hour": 10,
+        "gross_pnl": 1056.925765991211,
+        "costs": 95.70006554412842,
+        "net_pnl": 961.2257004470825
+      },
+      {
+        "hour": 11,
+        "gross_pnl": 770.2401275634766,
+        "costs": 26.90103924560547,
+        "net_pnl": 743.3390883178711
+      },
+      {
+        "hour": 12,
+        "gross_pnl": 377.3127746582031,
+        "costs": 7.4878549499511715,
+        "net_pnl": 369.82491970825197
+      },
+      {
+        "hour": 13,
+        "gross_pnl": -452.2395782470703,
+        "costs": 13.547204833984374,
+        "net_pnl": -465.7867830810547
+      },
+      {
+        "hour": 14,
+        "gross_pnl": 42.62522888183594,
+        "costs": 0.0,
+        "net_pnl": 42.62522888183594
+      },
+      {
+        "hour": 15,
+        "gross_pnl": 260.9207305908203,
+        "costs": 158.19693338775636,
+        "net_pnl": 102.72379720306395
+      }
+    ]
+  },
+  "per_symbol": {
+    "NVDA": {
+      "net_pnl": 1148.2992034378549,
+      "costs": 275.8028015670776
+    },
+    "AMD": {
+      "net_pnl": 559.0398899841493,
+      "costs": 72.64315444946288
+    }
+  },
+  "selection_period": {
+    "start": "2026-08-31",
+    "end": "2026-09-04",
+    "sessions": 5,
+    "starting_equity": 100000.0,
+    "ending_equity": 100333.9205963364,
+    "net_pnl": 333.9205963363929,
+    "net_return": 0.0033392059633639004,
+    "gross_pnl": 507.702346801786,
+    "costs": 173.78175046539306,
+    "turnover_dollars": 347563.50093078613,
+    "fill_count": 24,
+    "max_drawdown": -0.009044039052194863,
+    "max_gross_exposure": 0.8609598758474726,
+    "max_symbol_exposure": 0.7000074821087019,
+    "profitable_sessions": 2
+  },
+  "subsequent_period": {
+    "start": "2026-09-08",
+    "end": "2026-09-11",
+    "sessions": 4,
+    "starting_equity": 100333.9205963364,
+    "ending_equity": 101707.33909342202,
+    "net_pnl": 1373.4184970856295,
+    "net_return": 0.013688476329069,
+    "gross_pnl": 1548.082702636777,
+    "costs": 174.66420555114743,
+    "turnover_dollars": 349328.4111022949,
+    "fill_count": 21,
+    "max_drawdown": -0.003301199924149234,
+    "max_gross_exposure": 0.8804051184749168,
+    "max_symbol_exposure": 0.7033483556778645,
+    "profitable_sessions": 2
+  }
+}

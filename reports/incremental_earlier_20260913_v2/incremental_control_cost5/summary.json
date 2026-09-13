@@ -1,0 +1,163 @@
+{
+  "candidate": {
+    "name": "incremental_control",
+    "universe": "noncrypto",
+    "calibration": false,
+    "integrated_risk": false,
+    "symbol_limit": 0.7,
+    "benchmark": false,
+    "control": false,
+    "model": "state_ridge",
+    "horizon": 1
+  },
+  "cost_bps": 5,
+  "status": "complete",
+  "summary": {
+    "start": "2026-08-24",
+    "end": "2026-08-28",
+    "sessions": 5,
+    "starting_equity": 100000.0,
+    "ending_equity": 100595.82423412346,
+    "net_pnl": 595.8242341234582,
+    "net_return": 0.005958242341234543,
+    "gross_pnl": 3037.069168091049,
+    "costs": 2441.2449339675914,
+    "turnover_dollars": 4882489.867935181,
+    "fill_count": 604,
+    "max_drawdown": -0.02898050647464967,
+    "max_gross_exposure": 0.9537753146845622,
+    "max_symbol_exposure": 0.7031000857093049,
+    "profitable_sessions": 4
+  },
+  "attribution": {
+    "net_pnl": 595.8242341234582,
+    "gross_pnl": 3037.0691680908203,
+    "costs": 2441.2449339675904,
+    "reconciled": true,
+    "by_symbol": [
+      {
+        "symbol": "NVDA",
+        "gross_pnl": 821.0348663330078,
+        "costs": 592.1341842727661,
+        "net_pnl": 228.9006820602417
+      },
+      {
+        "symbol": "SNDK",
+        "gross_pnl": 1923.4683837890625,
+        "costs": 1341.8139627075195,
+        "net_pnl": 581.654421081543
+      },
+      {
+        "symbol": "TSLA",
+        "gross_pnl": 292.56591796875,
+        "costs": 507.2967869873047,
+        "net_pnl": -214.7308690185547
+      }
+    ],
+    "by_direction": [
+      {
+        "direction": "long",
+        "gross_pnl": 246.8511505126953,
+        "costs": 1340.41748462677,
+        "net_pnl": -1093.5663341140746
+      },
+      {
+        "direction": "short",
+        "gross_pnl": 2790.218017578125,
+        "costs": 1100.8274493408203,
+        "net_pnl": 1689.3905682373047
+      }
+    ],
+    "by_day": [
+      {
+        "date": "2026-08-24",
+        "gross_pnl": 1415.0645294189453,
+        "costs": 567.5770274887085,
+        "net_pnl": 847.4875019302368
+      },
+      {
+        "date": "2026-08-25",
+        "gross_pnl": -1586.2017974853516,
+        "costs": 533.9101769943237,
+        "net_pnl": -2120.111974479675
+      },
+      {
+        "date": "2026-08-26",
+        "gross_pnl": 1122.2618865966797,
+        "costs": 375.2448961105347,
+        "net_pnl": 747.016990486145
+      },
+      {
+        "date": "2026-08-27",
+        "gross_pnl": 1393.5180206298828,
+        "costs": 528.6014794540405,
+        "net_pnl": 864.9165411758423
+      },
+      {
+        "date": "2026-08-28",
+        "gross_pnl": 692.4265289306641,
+        "costs": 435.9113539199829,
+        "net_pnl": 256.51517501068116
+      }
+    ],
+    "by_hour": [
+      {
+        "hour": 9,
+        "gross_pnl": 2104.811553955078,
+        "costs": 587.8746068725586,
+        "net_pnl": 1516.9369470825195
+      },
+      {
+        "hour": 10,
+        "gross_pnl": 1459.5732879638672,
+        "costs": 526.631965675354,
+        "net_pnl": 932.9413222885132
+      },
+      {
+        "hour": 11,
+        "gross_pnl": -545.3845367431641,
+        "costs": 426.4943836517334,
+        "net_pnl": -971.8789203948975
+      },
+      {
+        "hour": 12,
+        "gross_pnl": -364.65174865722656,
+        "costs": 177.68657888031007,
+        "net_pnl": -542.3383275375367
+      },
+      {
+        "hour": 13,
+        "gross_pnl": 700.4888458251953,
+        "costs": 140.60277352142333,
+        "net_pnl": 559.8860723037719
+      },
+      {
+        "hour": 14,
+        "gross_pnl": -2235.936996459961,
+        "costs": 171.98423461151123,
+        "net_pnl": -2407.921231071472
+      },
+      {
+        "hour": 15,
+        "gross_pnl": 1918.1687622070312,
+        "costs": 409.97039075469974,
+        "net_pnl": 1508.1983714523315
+      }
+    ]
+  },
+  "per_symbol": {
+    "SNDK": {
+      "net_pnl": 581.6544210816646,
+      "costs": 1341.8139627075195
+    },
+    "TSLA": {
+      "net_pnl": -214.73086901852184,
+      "costs": 507.2967869873047
+    },
+    "NVDA": {
+      "net_pnl": 228.90068206033902,
+      "costs": 592.1341842727661
+    }
+  },
+  "subsequent_period": null
+}

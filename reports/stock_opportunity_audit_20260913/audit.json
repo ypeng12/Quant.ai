@@ -1,0 +1,46 @@
+{
+  "interpretation": "Descriptive, already-viewed historical sample; not predictive Alpha or simulated profit",
+  "start": "2026-08-31",
+  "end": "2026-09-11",
+  "daily_sessions": 9,
+  "sndk_mu_same_day_direction_count": 8,
+  "sndk_mu_contemporaneous_5min_correlation": 0.765424412511062,
+  "aligned_5min_rows": 693,
+  "source_sha256": "1f89b15dda92de9bc39e3d9095b088d09c63cf9c8c44397f217bcaedbf4bf68b",
+  "inputs": {
+    "SNDK": {
+      "path": "reports/quant_audit_20260912/bars/SNDK.parquet",
+      "sha256": "edc7503de4599a0d82563a7500f220b6b428d7feadb77826c6a5f74aea4b98f7"
+    },
+    "TSLA": {
+      "path": "reports/quant_audit_20260912/bars/TSLA.parquet",
+      "sha256": "d3a3a6349e39ff26953bf3d9dc2fdeef0d003f9b0d7993f2535a85109886a1c8"
+    },
+    "NVDA": {
+      "path": "reports/quant_audit_20260912/bars/NVDA.parquet",
+      "sha256": "f2fb1d7b857ff87494f0eb0995cb8d37ba5bb8cd1942d35519da8971d622b0f4"
+    },
+    "MU": {
+      "path": "reports/platform_universe30_bars_20260913/MU.parquet",
+      "sha256": "0430663ba5f0de38662f4508d045bfbe5684bc56ebd67e5c82317f4b8ed0461c"
+    },
+    "SPY": {
+      "path": "reports/platform_universe30_bars_20260913/SPY.parquet",
+      "sha256": "8ad1dd265a71ca1350143428eaa57238a1474ae12c43a82ebc65910e7921df78"
+    },
+    "SOXX": {
+      "path": "reports/platform_universe30_bars_20260913/SOXX.parquet",
+      "sha256": "a21e34441faf84dc3827fe9225ee6fece14df70bc60dad09dbc37e6f5acc6c6e"
+    }
+  },
+  "limitations": [
+    "Full-day range and path efficiency are hindsight diagnostics, never known at the open.",
+    "Contemporaneous correlation does not establish lead-lag predictability or mean reversion.",
+    "Close-path efficiency uses sampled five-minute closes and omits within-bar paths.",
+    "Data are the existing local research snapshot; this audit does not independently verify the vendor."
+  ],
+  "outputs": {
+    "observed_prefixes.csv": "e779656e5838665456fa591dcc0fbd7424be688ba44ba9a8921d82a694fa2af1",
+    "daily.csv": "d0ea830c655c522c3a392e6414318ea3a817b858f568a752193321d00e024299"
+  }
+}

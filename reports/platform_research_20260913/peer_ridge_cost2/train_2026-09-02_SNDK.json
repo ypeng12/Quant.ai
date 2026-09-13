@@ -1,0 +1,23 @@
+{
+  "last_train": "2026-09-01",
+  "rows": 2052,
+  "sessions": 27,
+  "features": [
+    "return_1",
+    "return_3",
+    "return_12",
+    "session_return",
+    "range_fraction",
+    "body_fraction",
+    "upper_wick_fraction",
+    "lower_wick_fraction",
+    "close_location",
+    "realized_volatility_12",
+    "vwap_distance",
+    "bar_relative_volume",
+    "peer_return_1",
+    "peer_residual_return_1",
+    "peer_return_3",
+    "peer_residual_return_3"
+  ]
+}

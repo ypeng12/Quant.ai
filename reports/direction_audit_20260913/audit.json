@@ -1,0 +1,21 @@
+{
+  "source": "dc1f4ba8fcab9d8accbdfda16dfa63b618092f191f2633e9ff77f105aac02b6a",
+  "bundle_sha256": "0fdd4a7368649877b827d8b510198e18e1f9ddb3f50e2d294444570174e95db5",
+  "model_predictions_reproduced": true,
+  "dates": [
+    "2026-09-04",
+    "2026-09-08",
+    "2026-09-09",
+    "2026-09-10",
+    "2026-09-11"
+  ],
+  "actual_orders_submitted": 0,
+  "artifacts": {
+    "REPORT.md": "948c5788aadd698da665f2bb3b8ff57743a905a287ae1e29a64023b84f408aac",
+    "aligned_forecasts.csv": "2c328261538078de42b119b67bd70f13124c6e0e70fea90ce1c8799cb86ebf64",
+    "sndk_diagnostics.png": "78ff2b5b149dfb8798ab4912a579a68e7ff472fd048819e10e6de5f81e87cacc",
+    "daily_diagnostics.csv": "f9072dae93c8b36bc7a60df835db18d4b722581d489d9ad9f551a0a37603e7b5",
+    "market_context.csv": "30ebc99e9958dcabcb4f17198cede36638489ba700d374268733b28d7a99768d",
+    "sndk_leaf_explanations.json": "84a130bae17a21b157df0875afcb1719437e7c0763bfcec926dcfb9e76d15d14"
+  }
+}

@@ -1,0 +1,352 @@
+[
+  {
+    "day": "2026-09-04",
+    "training_last_session": "2026-09-03",
+    "training_rows": 2204,
+    "training_sessions": 29,
+    "feature_names": [
+      "return_1",
+      "return_3",
+      "return_12",
+      "session_return",
+      "range_fraction",
+      "body_fraction",
+      "upper_wick_fraction",
+      "lower_wick_fraction",
+      "close_location",
+      "realized_volatility_12",
+      "vwap_distance",
+      "bar_relative_volume",
+      "peer_return_1",
+      "peer_residual_return_1",
+      "peer_return_3",
+      "peer_residual_return_3",
+      "time_fraction",
+      "overnight_gap",
+      "seasonal_volume"
+    ],
+    "used_split_features": [
+      "peer_return_1",
+      "realized_volatility_12",
+      "vwap_distance"
+    ],
+    "visited_leaves": {
+      "1": {
+        "visits": 2,
+        "rules": [
+          {
+            "feature": "peer_return_1",
+            "operator": "<=",
+            "threshold": -0.004143998834095244
+          }
+        ],
+        "prediction_bps": -37.10342834059489,
+        "training_rows": 48
+      },
+      "5": {
+        "visits": 74,
+        "rules": [
+          {
+            "feature": "peer_return_1",
+            "operator": ">",
+            "threshold": -0.004143998834095244
+          },
+          {
+            "feature": "vwap_distance",
+            "operator": ">",
+            "threshold": -0.040636118250879594
+          },
+          {
+            "feature": "realized_volatility_12",
+            "operator": "<=",
+            "threshold": 0.012963785451860393
+          }
+        ],
+        "prediction_bps": 1.2980787517492505,
+        "training_rows": 2049
+      }
+    }
+  },
+  {
+    "day": "2026-09-08",
+    "training_last_session": "2026-09-04",
+    "training_rows": 2280,
+    "training_sessions": 30,
+    "feature_names": [
+      "return_1",
+      "return_3",
+      "return_12",
+      "session_return",
+      "range_fraction",
+      "body_fraction",
+      "upper_wick_fraction",
+      "lower_wick_fraction",
+      "close_location",
+      "realized_volatility_12",
+      "vwap_distance",
+      "bar_relative_volume",
+      "peer_return_1",
+      "peer_residual_return_1",
+      "peer_return_3",
+      "peer_residual_return_3",
+      "time_fraction",
+      "overnight_gap",
+      "seasonal_volume"
+    ],
+    "used_split_features": [
+      "peer_return_1",
+      "realized_volatility_12",
+      "vwap_distance"
+    ],
+    "visited_leaves": {
+      "1": {
+        "visits": 1,
+        "rules": [
+          {
+            "feature": "peer_return_1",
+            "operator": "<=",
+            "threshold": -0.004143998757679837
+          }
+        ],
+        "prediction_bps": -36.03057031755785,
+        "training_rows": 50
+      },
+      "5": {
+        "visits": 72,
+        "rules": [
+          {
+            "feature": "peer_return_1",
+            "operator": ">",
+            "threshold": -0.004143998757679837
+          },
+          {
+            "feature": "vwap_distance",
+            "operator": ">",
+            "threshold": -0.040636119116950246
+          },
+          {
+            "feature": "realized_volatility_12",
+            "operator": "<=",
+            "threshold": 0.012963785729692381
+          }
+        ],
+        "prediction_bps": 1.5136355727705963,
+        "training_rows": 2123
+      },
+      "6": {
+        "visits": 3,
+        "rules": [
+          {
+            "feature": "peer_return_1",
+            "operator": ">",
+            "threshold": -0.004143998757679837
+          },
+          {
+            "feature": "vwap_distance",
+            "operator": ">",
+            "threshold": -0.040636119116950246
+          },
+          {
+            "feature": "realized_volatility_12",
+            "operator": ">",
+            "threshold": 0.012963785729692381
+          }
+        ],
+        "prediction_bps": -25.89707523559712,
+        "training_rows": 67
+      }
+    }
+  },
+  {
+    "day": "2026-09-09",
+    "training_last_session": "2026-09-08",
+    "training_rows": 2356,
+    "training_sessions": 31,
+    "feature_names": [
+      "return_1",
+      "return_3",
+      "return_12",
+      "session_return",
+      "range_fraction",
+      "body_fraction",
+      "upper_wick_fraction",
+      "lower_wick_fraction",
+      "close_location",
+      "realized_volatility_12",
+      "vwap_distance",
+      "bar_relative_volume",
+      "peer_return_1",
+      "peer_residual_return_1",
+      "peer_return_3",
+      "peer_residual_return_3",
+      "time_fraction",
+      "overnight_gap",
+      "seasonal_volume"
+    ],
+    "used_split_features": [
+      "peer_return_1",
+      "realized_volatility_12",
+      "vwap_distance"
+    ],
+    "visited_leaves": {
+      "1": {
+        "visits": 2,
+        "rules": [
+          {
+            "feature": "peer_return_1",
+            "operator": "<=",
+            "threshold": -0.004143998870765898
+          }
+        ],
+        "prediction_bps": -39.54126825789944,
+        "training_rows": 51
+      },
+      "5": {
+        "visits": 74,
+        "rules": [
+          {
+            "feature": "peer_return_1",
+            "operator": ">",
+            "threshold": -0.004143998870765898
+          },
+          {
+            "feature": "vwap_distance",
+            "operator": ">",
+            "threshold": -0.040636118207593774
+          },
+          {
+            "feature": "realized_volatility_12",
+            "operator": "<=",
+            "threshold": 0.014274196434998146
+          }
+        ],
+        "prediction_bps": 1.2179661240243143,
+        "training_rows": 2225
+      }
+    }
+  },
+  {
+    "day": "2026-09-10",
+    "training_last_session": "2026-09-09",
+    "training_rows": 2432,
+    "training_sessions": 32,
+    "feature_names": [
+      "return_1",
+      "return_3",
+      "return_12",
+      "session_return",
+      "range_fraction",
+      "body_fraction",
+      "upper_wick_fraction",
+      "lower_wick_fraction",
+      "close_location",
+      "realized_volatility_12",
+      "vwap_distance",
+      "bar_relative_volume",
+      "peer_return_1",
+      "peer_residual_return_1",
+      "peer_return_3",
+      "peer_residual_return_3",
+      "time_fraction",
+      "overnight_gap",
+      "seasonal_volume"
+    ],
+    "used_split_features": [
+      "peer_return_1",
+      "realized_volatility_12",
+      "vwap_distance"
+    ],
+    "visited_leaves": {
+      "5": {
+        "visits": 76,
+        "rules": [
+          {
+            "feature": "peer_return_1",
+            "operator": ">",
+            "threshold": -0.004143998819335872
+          },
+          {
+            "feature": "vwap_distance",
+            "operator": ">",
+            "threshold": -0.040636117691123554
+          },
+          {
+            "feature": "realized_volatility_12",
+            "operator": "<=",
+            "threshold": 0.014274196431780389
+          }
+        ],
+        "prediction_bps": 1.1898725177178129,
+        "training_rows": 2299
+      }
+    }
+  },
+  {
+    "day": "2026-09-11",
+    "training_last_session": "2026-09-10",
+    "training_rows": 2508,
+    "training_sessions": 33,
+    "feature_names": [
+      "return_1",
+      "return_3",
+      "return_12",
+      "session_return",
+      "range_fraction",
+      "body_fraction",
+      "upper_wick_fraction",
+      "lower_wick_fraction",
+      "close_location",
+      "realized_volatility_12",
+      "vwap_distance",
+      "bar_relative_volume",
+      "peer_return_1",
+      "peer_residual_return_1",
+      "peer_return_3",
+      "peer_residual_return_3",
+      "time_fraction",
+      "overnight_gap",
+      "seasonal_volume"
+    ],
+    "used_split_features": [
+      "peer_return_1",
+      "realized_volatility_12",
+      "vwap_distance"
+    ],
+    "visited_leaves": {
+      "1": {
+        "visits": 2,
+        "rules": [
+          {
+            "feature": "peer_return_1",
+            "operator": "<=",
+            "threshold": -0.004143998921216512
+          }
+        ],
+        "prediction_bps": -35.90920765805164,
+        "training_rows": 53
+      },
+      "5": {
+        "visits": 74,
+        "rules": [
+          {
+            "feature": "peer_return_1",
+            "operator": ">",
+            "threshold": -0.004143998921216512
+          },
+          {
+            "feature": "vwap_distance",
+            "operator": ">",
+            "threshold": -0.04063612070192481
+          },
+          {
+            "feature": "realized_volatility_12",
+            "operator": "<=",
+            "threshold": 0.014274196614251718
+          }
+        ],
+        "prediction_bps": 1.172115872797711,
+        "training_rows": 2375
+      }
+    }
+  }
+]

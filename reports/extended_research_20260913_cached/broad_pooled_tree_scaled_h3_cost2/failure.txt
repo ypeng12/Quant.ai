@@ -1,0 +1,16 @@
+Traceback (most recent call last):
+  File "/Users/yuliangpeng/Desktop/Quant/scripts/run_extended_research.py", line 86, in run
+    daily.append(replay_day(ledger,bars,day,target,lambda w,p,e:integer_targets(w,p,e,spec),opening))
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/yuliangpeng/Desktop/Quant/backend/app/research/policy_replay.py", line 237, in replay_day
+    target_weights = dict(target_function(i, state["weights"]))
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/yuliangpeng/Desktop/Quant/scripts/run_extended_research.py", line 82, in target
+    weights=runtime.target(context,i,current,spec)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/yuliangpeng/Desktop/Quant/backend/app/research/strategy_extensions.py", line 308, in target
+    weights=target_weights(mu,cov[np.ix_(positions,positions)],current,spec,symbols=selected,solver='osqp')
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/yuliangpeng/Desktop/Quant/backend/app/quant_policy.py", line 505, in target_weights
+    raise RuntimeError(f"Portfolio QP failed: {solution.info.status}")
+RuntimeError: Portfolio QP failed: maximum iterations reached

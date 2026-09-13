@@ -1,0 +1,86 @@
+{
+  "retrieved_at": "2026-09-13T14:59:29.780174+00:00",
+  "provider": "Yahoo Finance via yfinance",
+  "version": "1.5.2",
+  "checks": [
+    {
+      "symbol": "NVDA",
+      "kind": "five_minute_premarket",
+      "requested_start": "2026-07-27",
+      "requested_end_exclusive": "2026-09-12",
+      "prepost": true,
+      "status": "received",
+      "rows": 6528,
+      "premarket_rows": 2210,
+      "premarket_positive_volume_rows": 0,
+      "premarket_sessions": 34,
+      "sha256": "0bdcfa5b6fd646eb2cc19335961a1e7cc1174517d957dab97a642112bede8a88",
+      "file": "NVDA_extended.parquet",
+      "eligible_for_rvol_research": false,
+      "limitation": "Coverage probe only; no point-in-time universe/catalyst archive or independent volume verification"
+    },
+    {
+      "symbol": "TSLA",
+      "kind": "five_minute_premarket",
+      "requested_start": "2026-07-27",
+      "requested_end_exclusive": "2026-09-12",
+      "prepost": true,
+      "status": "received",
+      "rows": 6528,
+      "premarket_rows": 2210,
+      "premarket_positive_volume_rows": 0,
+      "premarket_sessions": 34,
+      "sha256": "04fab27abdca61fe6402f2f6e8421ea439698d3e18bff46aa76a945996659833",
+      "file": "TSLA_extended.parquet",
+      "eligible_for_rvol_research": false,
+      "limitation": "Coverage probe only; no point-in-time universe/catalyst archive or independent volume verification"
+    },
+    {
+      "symbol": "MSTR",
+      "kind": "five_minute_premarket",
+      "requested_start": "2026-07-27",
+      "requested_end_exclusive": "2026-09-12",
+      "prepost": true,
+      "status": "received",
+      "rows": 6528,
+      "premarket_rows": 2210,
+      "premarket_positive_volume_rows": 0,
+      "premarket_sessions": 34,
+      "sha256": "fb26b9e2317b48bd389b5c8f5e5895532422be0b6c29097f82e83b1fd68882db",
+      "file": "MSTR_extended.parquet",
+      "eligible_for_rvol_research": false,
+      "limitation": "Coverage probe only; no point-in-time universe/catalyst archive or independent volume verification"
+    },
+    {
+      "symbol": "NVDA",
+      "kind": "earnings_calendar",
+      "status": "received",
+      "rows": 25,
+      "columns": [
+        "EPS Estimate",
+        "Reported EPS",
+        "Surprise(%)"
+      ],
+      "file": "NVDA_earnings.csv",
+      "sha256": "0a772fd6be8789f3eb65a3c2cdc3c278f672e56d7d17990c3c2492bf6661dd77",
+      "eligible_for_point_in_time_pead": false,
+      "reason_for_exclusion": "Current retrieval does not establish historical consensus revisions, actual release availability and contemporaneous guidance"
+    },
+    {
+      "symbol": "TSLA",
+      "kind": "earnings_calendar",
+      "status": "received",
+      "rows": 25,
+      "columns": [
+        "EPS Estimate",
+        "Reported EPS",
+        "Surprise(%)"
+      ],
+      "file": "TSLA_earnings.csv",
+      "sha256": "2e6d5f2cc0cabb13d6a656de4060a048a9f8558a26c7b2ae20e52e75c0635ed3",
+      "eligible_for_point_in_time_pead": false,
+      "reason_for_exclusion": "Current retrieval does not establish historical consensus revisions, actual release availability and contemporaneous guidance"
+    }
+  ],
+  "status": "complete"
+}

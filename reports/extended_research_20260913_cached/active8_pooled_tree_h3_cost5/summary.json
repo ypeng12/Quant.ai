@@ -1,0 +1,288 @@
+{
+  "candidate": {
+    "name": "active8_pooled_tree_h3",
+    "universe": "broad",
+    "model": "tree",
+    "horizon": 3,
+    "pooled": true,
+    "family": "context",
+    "selector": "opening_activity",
+    "omit": "",
+    "pair": [],
+    "reference_risk": false,
+    "volatility_scaled": false
+  },
+  "cost_bps": 5,
+  "status": "complete",
+  "summary": {
+    "start": "2026-08-31",
+    "end": "2026-09-11",
+    "sessions": 9,
+    "starting_equity": 100000.0,
+    "ending_equity": 98355.23434640496,
+    "net_pnl": -1644.7656535950373,
+    "net_return": -0.016447656535950372,
+    "gross_pnl": -1314.2013702393244,
+    "costs": 330.56428335571275,
+    "turnover_dollars": 661128.5667114258,
+    "fill_count": 316,
+    "max_drawdown": -0.03918906409109646,
+    "max_gross_exposure": 0.955566679494828,
+    "max_symbol_exposure": 0.7055916405202032,
+    "profitable_sessions": 1
+  },
+  "attribution": {
+    "net_pnl": -1644.7656535950373,
+    "gross_pnl": -1314.2013702392578,
+    "costs": 330.564283355713,
+    "reconciled": true,
+    "by_symbol": [
+      {
+        "symbol": "COIN",
+        "gross_pnl": -572.6631469726562,
+        "costs": 15.834732086181642,
+        "net_pnl": -588.4978790588378
+      },
+      {
+        "symbol": "HOOD",
+        "gross_pnl": 1455.646240234375,
+        "costs": 141.8397889175415,
+        "net_pnl": 1313.8064513168335
+      },
+      {
+        "symbol": "MSTR",
+        "gross_pnl": -60.11869812011719,
+        "costs": 6.588779319763184,
+        "net_pnl": -66.70747743988036
+      },
+      {
+        "symbol": "ORCL",
+        "gross_pnl": -2082.498565673828,
+        "costs": 140.87678048706056,
+        "net_pnl": -2223.3753461608885
+      },
+      {
+        "symbol": "TSLA",
+        "gross_pnl": -54.56719970703125,
+        "costs": 25.424202545166015,
+        "net_pnl": -79.99140225219726
+      }
+    ],
+    "by_direction": [
+      {
+        "direction": "long",
+        "gross_pnl": -376.97984313964844,
+        "costs": 211.02398094177246,
+        "net_pnl": -588.0038240814209
+      },
+      {
+        "direction": "short",
+        "gross_pnl": -937.2215270996094,
+        "costs": 119.54030241394044,
+        "net_pnl": -1056.7618295135499
+      }
+    ],
+    "by_day": [
+      {
+        "date": "2026-09-03",
+        "gross_pnl": 2401.6183319091797,
+        "costs": 87.2148575592041,
+        "net_pnl": 2314.4034743499756
+      },
+      {
+        "date": "2026-09-04",
+        "gross_pnl": -304.43968200683594,
+        "costs": 97.1167910079956,
+        "net_pnl": -401.55647301483157
+      },
+      {
+        "date": "2026-09-08",
+        "gross_pnl": -1578.7539367675781,
+        "costs": 77.04844276428223,
+        "net_pnl": -1655.8023795318604
+      },
+      {
+        "date": "2026-09-11",
+        "gross_pnl": -1832.6260833740234,
+        "costs": 69.18419202423095,
+        "net_pnl": -1901.8102753982544
+      }
+    ],
+    "by_hour": [
+      {
+        "hour": 9,
+        "gross_pnl": 1543.5468063354492,
+        "costs": 151.2922272758484,
+        "net_pnl": 1392.254579059601
+      },
+      {
+        "hour": 10,
+        "gross_pnl": -655.4697418212891,
+        "costs": 75.57033061218262,
+        "net_pnl": -731.0400724334717
+      },
+      {
+        "hour": 11,
+        "gross_pnl": -553.3310317993164,
+        "costs": 6.219942737579346,
+        "net_pnl": -559.5509745368958
+      },
+      {
+        "hour": 12,
+        "gross_pnl": -698.3213577270508,
+        "costs": 4.778447708129883,
+        "net_pnl": -703.0998054351807
+      },
+      {
+        "hour": 13,
+        "gross_pnl": 743.6076278686523,
+        "costs": 4.6559173851013185,
+        "net_pnl": 738.951710483551
+      },
+      {
+        "hour": 14,
+        "gross_pnl": -1151.2146759033203,
+        "costs": 3.1555661926269534,
+        "net_pnl": -1154.3702420959473
+      },
+      {
+        "hour": 15,
+        "gross_pnl": -543.0189971923828,
+        "costs": 84.89185144424438,
+        "net_pnl": -627.9108486366272
+      }
+    ]
+  },
+  "per_symbol": {
+    "AAPL": {
+      "net_pnl": 0.0,
+      "costs": 0
+    },
+    "AMD": {
+      "net_pnl": 0.0,
+      "costs": 0
+    },
+    "AMZN": {
+      "net_pnl": 0.0,
+      "costs": 0
+    },
+    "AVGO": {
+      "net_pnl": 0.0,
+      "costs": 0
+    },
+    "COIN": {
+      "net_pnl": -588.4978790588375,
+      "costs": 15.834732086181644
+    },
+    "CRM": {
+      "net_pnl": 0.0,
+      "costs": 0
+    },
+    "GOOGL": {
+      "net_pnl": 0.0,
+      "costs": 0
+    },
+    "HOOD": {
+      "net_pnl": 1313.806451316861,
+      "costs": 141.8397889175415
+    },
+    "INTC": {
+      "net_pnl": 0.0,
+      "costs": 0
+    },
+    "JPM": {
+      "net_pnl": 0.0,
+      "costs": 0
+    },
+    "MARA": {
+      "net_pnl": 0.0,
+      "costs": 0
+    },
+    "META": {
+      "net_pnl": 0.0,
+      "costs": 0
+    },
+    "MSFT": {
+      "net_pnl": 0.0,
+      "costs": 0
+    },
+    "MSTR": {
+      "net_pnl": -66.70747743987855,
+      "costs": 6.588779319763183
+    },
+    "MU": {
+      "net_pnl": 0.0,
+      "costs": 0
+    },
+    "NFLX": {
+      "net_pnl": 0.0,
+      "costs": 0
+    },
+    "NVDA": {
+      "net_pnl": 0.0,
+      "costs": 0
+    },
+    "ORCL": {
+      "net_pnl": -2223.3753461608867,
+      "costs": 140.87678048706056
+    },
+    "PLTR": {
+      "net_pnl": 0.0,
+      "costs": 0
+    },
+    "SMCI": {
+      "net_pnl": 0.0,
+      "costs": 0
+    },
+    "SNDK": {
+      "net_pnl": 0.0,
+      "costs": 0
+    },
+    "TSLA": {
+      "net_pnl": -79.99140225218525,
+      "costs": 25.424202545166008
+    },
+    "TSM": {
+      "net_pnl": 0.0,
+      "costs": 0
+    },
+    "UBER": {
+      "net_pnl": 0.0,
+      "costs": 0
+    }
+  },
+  "selection_period": {
+    "start": "2026-08-31",
+    "end": "2026-09-04",
+    "sessions": 5,
+    "starting_equity": 100000.0,
+    "ending_equity": 101912.8470013352,
+    "net_pnl": 1912.8470013352053,
+    "net_return": 0.01912847001335205,
+    "gross_pnl": 2097.178649902405,
+    "costs": 184.3316485671996,
+    "turnover_dollars": 368663.2971343994,
+    "fill_count": 184,
+    "max_drawdown": -0.008544067926385623,
+    "max_gross_exposure": 0.955566679494828,
+    "max_symbol_exposure": 0.7055916405202032,
+    "profitable_sessions": 1
+  },
+  "subsequent_period": {
+    "start": "2026-09-08",
+    "end": "2026-09-11",
+    "sessions": 4,
+    "starting_equity": 101912.8470013352,
+    "ending_equity": 98355.23434640496,
+    "net_pnl": -3557.6126549302426,
+    "net_return": -0.03490838259953266,
+    "gross_pnl": -3411.38002014173,
+    "costs": 146.23263478851314,
+    "turnover_dollars": 292465.26957702637,
+    "fill_count": 132,
+    "max_drawdown": -0.03764445747050593,
+    "max_gross_exposure": 0.7634699038531608,
+    "max_symbol_exposure": 0.7009041697520477,
+    "profitable_sessions": 0
+  }
+}

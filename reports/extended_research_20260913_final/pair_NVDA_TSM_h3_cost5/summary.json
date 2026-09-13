@@ -1,0 +1,173 @@
+{
+  "candidate": {
+    "name": "pair_NVDA_TSM_h3",
+    "universe": "pair",
+    "model": "pair",
+    "horizon": 3,
+    "pooled": false,
+    "family": "context",
+    "selector": "all",
+    "omit": "",
+    "pair": [
+      "NVDA",
+      "TSM"
+    ],
+    "reference_risk": false,
+    "volatility_scaled": false
+  },
+  "cost_bps": 5,
+  "status": "complete",
+  "summary": {
+    "start": "2026-08-31",
+    "end": "2026-09-11",
+    "sessions": 9,
+    "starting_equity": 100000.0,
+    "ending_equity": 101217.92355402379,
+    "net_pnl": 1217.923554023786,
+    "net_return": 0.01217923554023792,
+    "gross_pnl": 1409.648147583051,
+    "costs": 191.72459355926514,
+    "turnover_dollars": 383449.1871185303,
+    "fill_count": 35,
+    "max_drawdown": -0.0034371150360607006,
+    "max_gross_exposure": 0.953309479352692,
+    "max_symbol_exposure": 0.5640697357087894,
+    "profitable_sessions": 2
+  },
+  "attribution": {
+    "net_pnl": 1217.923554023786,
+    "gross_pnl": 1409.6481475830078,
+    "costs": 191.72459355926514,
+    "reconciled": true,
+    "by_symbol": [
+      {
+        "symbol": "NVDA",
+        "gross_pnl": 291.07594299316406,
+        "costs": 78.31499785614014,
+        "net_pnl": 212.76094513702392
+      },
+      {
+        "symbol": "TSM",
+        "gross_pnl": 1118.5722045898438,
+        "costs": 113.409595703125,
+        "net_pnl": 1005.1626088867188
+      }
+    ],
+    "by_direction": [
+      {
+        "direction": "long",
+        "gross_pnl": 1118.5722045898438,
+        "costs": 113.409595703125,
+        "net_pnl": 1005.1626088867188
+      },
+      {
+        "direction": "short",
+        "gross_pnl": 291.07594299316406,
+        "costs": 78.31499785614014,
+        "net_pnl": 212.76094513702392
+      }
+    ],
+    "by_day": [
+      {
+        "date": "2026-09-02",
+        "gross_pnl": 663.4565887451172,
+        "costs": 95.20102306365966,
+        "net_pnl": 568.2555656814575
+      },
+      {
+        "date": "2026-09-03",
+        "gross_pnl": 746.1915588378906,
+        "costs": 96.52357049560547,
+        "net_pnl": 649.6679883422852
+      }
+    ],
+    "by_hour": [
+      {
+        "hour": 9,
+        "gross_pnl": -4.8134765625,
+        "costs": 4.159260017395019,
+        "net_pnl": -8.97273657989502
+      },
+      {
+        "hour": 10,
+        "gross_pnl": 231.0889129638672,
+        "costs": 43.63143907928467,
+        "net_pnl": 187.45747388458253
+      },
+      {
+        "hour": 11,
+        "gross_pnl": -168.59417724609375,
+        "costs": 22.745796684265137,
+        "net_pnl": -191.3399739303589
+      },
+      {
+        "hour": 12,
+        "gross_pnl": 779.8803558349609,
+        "costs": 25.099436935424805,
+        "net_pnl": 754.7809188995361
+      },
+      {
+        "hour": 13,
+        "gross_pnl": -156.1113739013672,
+        "costs": 0.4376799926757813,
+        "net_pnl": -156.54905389404297
+      },
+      {
+        "hour": 14,
+        "gross_pnl": 361.87416076660156,
+        "costs": 0.11233999633789063,
+        "net_pnl": 361.7618207702637
+      },
+      {
+        "hour": 15,
+        "gross_pnl": 366.32374572753906,
+        "costs": 95.53864085388183,
+        "net_pnl": 270.78510487365725
+      }
+    ]
+  },
+  "per_symbol": {
+    "NVDA": {
+      "net_pnl": 212.76094513702992,
+      "costs": 78.31499785614014
+    },
+    "TSM": {
+      "net_pnl": 1005.1626088867342,
+      "costs": 113.409595703125
+    }
+  },
+  "selection_period": {
+    "start": "2026-08-31",
+    "end": "2026-09-04",
+    "sessions": 5,
+    "starting_equity": 100000.0,
+    "ending_equity": 101217.92355402379,
+    "net_pnl": 1217.923554023786,
+    "net_return": 0.01217923554023792,
+    "gross_pnl": 1409.648147583051,
+    "costs": 191.72459355926514,
+    "turnover_dollars": 383449.1871185303,
+    "fill_count": 35,
+    "max_drawdown": -0.0034371150360607006,
+    "max_gross_exposure": 0.953309479352692,
+    "max_symbol_exposure": 0.5640697357087894,
+    "profitable_sessions": 2
+  },
+  "subsequent_period": {
+    "start": "2026-09-08",
+    "end": "2026-09-11",
+    "sessions": 4,
+    "starting_equity": 101217.92355402379,
+    "ending_equity": 101217.92355402379,
+    "net_pnl": 0.0,
+    "net_return": 0.0,
+    "gross_pnl": 0.0,
+    "costs": 0.0,
+    "turnover_dollars": 0.0,
+    "fill_count": 0,
+    "max_drawdown": 0.0,
+    "max_gross_exposure": 0.0,
+    "max_symbol_exposure": 0.0,
+    "profitable_sessions": 0
+  }
+}

@@ -1,0 +1,146 @@
+[
+  {
+    "day": "2026-08-31",
+    "training": [
+      {
+        "beta": 1.4572111287747427,
+        "intercept": -3.417655309053623,
+        "last_train": "2026-08-28",
+        "rows": 1850
+      }
+    ],
+    "selection": null,
+    "selected": [
+      "NVDA",
+      "TSM"
+    ]
+  },
+  {
+    "day": "2026-09-01",
+    "training": [
+      {
+        "beta": 1.4603592523855946,
+        "intercept": -3.4360728196421904,
+        "last_train": "2026-08-31",
+        "rows": 1924
+      }
+    ],
+    "selection": null,
+    "selected": [
+      "NVDA",
+      "TSM"
+    ]
+  },
+  {
+    "day": "2026-09-02",
+    "training": [
+      {
+        "beta": 1.4601700023123951,
+        "intercept": -3.4342329139088976,
+        "last_train": "2026-09-01",
+        "rows": 1998
+      }
+    ],
+    "selection": null,
+    "selected": [
+      "NVDA",
+      "TSM"
+    ]
+  },
+  {
+    "day": "2026-09-03",
+    "training": [
+      {
+        "beta": 1.4545915271897703,
+        "intercept": -3.398755046530687,
+        "last_train": "2026-09-02",
+        "rows": 2072
+      }
+    ],
+    "selection": null,
+    "selected": [
+      "NVDA",
+      "TSM"
+    ]
+  },
+  {
+    "day": "2026-09-04",
+    "training": [
+      {
+        "beta": 1.444654166864654,
+        "intercept": -3.3365720961954017,
+        "last_train": "2026-09-03",
+        "rows": 2146
+      }
+    ],
+    "selection": null,
+    "selected": [
+      "NVDA",
+      "TSM"
+    ]
+  },
+  {
+    "day": "2026-09-08",
+    "training": [
+      {
+        "beta": 1.4794085866648672,
+        "intercept": -3.5450243708915288,
+        "last_train": "2026-09-04",
+        "rows": 2220
+      }
+    ],
+    "selection": null,
+    "selected": [
+      "NVDA",
+      "TSM"
+    ]
+  },
+  {
+    "day": "2026-09-09",
+    "training": [
+      {
+        "beta": 1.4137969418637384,
+        "intercept": -3.15045696063061,
+        "last_train": "2026-09-08",
+        "rows": 2294
+      }
+    ],
+    "selection": null,
+    "selected": [
+      "NVDA",
+      "TSM"
+    ]
+  },
+  {
+    "day": "2026-09-10",
+    "training": [
+      {
+        "beta": 1.3760293985489394,
+        "intercept": -2.923476897961223,
+        "last_train": "2026-09-09",
+        "rows": 2368
+      }
+    ],
+    "selection": null,
+    "selected": [
+      "NVDA",
+      "TSM"
+    ]
+  },
+  {
+    "day": "2026-09-11",
+    "training": [
+      {
+        "beta": 1.342053675878153,
+        "intercept": -2.719544166842998,
+        "last_train": "2026-09-10",
+        "rows": 2442
+      }
+    ],
+    "selection": null,
+    "selected": [
+      "NVDA",
+      "TSM"
+    ]
+  }
+]

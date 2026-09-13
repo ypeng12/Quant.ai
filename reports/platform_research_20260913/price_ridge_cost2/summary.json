@@ -1,0 +1,143 @@
+{
+  "candidate": {
+    "name": "price_ridge",
+    "features": "price_volume",
+    "model": "ridge",
+    "portfolio": "joint"
+  },
+  "cost_bps": 2,
+  "status": "complete",
+  "summary": {
+    "start": "2026-08-31",
+    "end": "2026-09-11",
+    "sessions": 9,
+    "starting_equity": 100000.0,
+    "ending_equity": 104454.3714935962,
+    "net_pnl": 4454.371493596205,
+    "net_return": 0.04454371493596199,
+    "gross_pnl": 7903.778678894361,
+    "costs": 3449.407185298156,
+    "turnover_dollars": 17247035.926490784,
+    "fill_count": 1329,
+    "max_drawdown": -0.02852972787435959,
+    "max_gross_exposure": 0.9535078872726356,
+    "max_symbol_exposure": 0.7052296314983034,
+    "profitable_sessions": 4
+  },
+  "per_symbol": {
+    "SNDK": {
+      "net_pnl": 762.4103140626266,
+      "costs": 1000.290613671875
+    },
+    "TSLA": {
+      "net_pnl": 1536.609622772332,
+      "costs": 1197.4961206359862
+    },
+    "MSTR": {
+      "net_pnl": 3141.9820875321166,
+      "costs": 710.2649293746948
+    },
+    "NVDA": {
+      "net_pnl": -986.630530770788,
+      "costs": 541.3555216156005
+    }
+  },
+  "fixed_order_stress_5bps": {
+    "kind": "fixed_recorded_integer_orderflow_cost_sensitivity",
+    "slippage_bps_per_side": 5,
+    "commission_bps_per_side": 0.0,
+    "starting_equity": 100000,
+    "ending_equity": 99280.26071564897,
+    "net_pnl": -719.7392843510315,
+    "net_return": -0.007197392843510286,
+    "extra_cost": 5174.110777947238,
+    "costs": 8623.517963245391,
+    "max_drawdown": -0.05818218607566339,
+    "constraint_breach_marks_including_market_drift": 985,
+    "requires_feasibility_review": true,
+    "same_quantities_and_reference_prices": true,
+    "daily": [
+      {
+        "date": "2026-08-31",
+        "extra_cost": 672.1577377578736,
+        "new_cost": 1120.2628962631222,
+        "SNDK_extra_cost": 190.1222787597656,
+        "MSTR_extra_cost": 178.97249043273922,
+        "NVDA_extra_cost": 97.43607774810789,
+        "TSLA_extra_cost": 205.62689081726066
+      },
+      {
+        "date": "2026-09-01",
+        "extra_cost": 481.69983522033675,
+        "new_cost": 802.8330587005617,
+        "SNDK_extra_cost": 175.07098088378908,
+        "MSTR_extra_cost": 102.21125336151124,
+        "NVDA_extra_cost": 101.34602313995362,
+        "TSLA_extra_cost": 103.07157783508299
+      },
+      {
+        "date": "2026-09-02",
+        "extra_cost": 613.9306903678895,
+        "new_cost": 1023.2178172798158,
+        "SNDK_extra_cost": 170.27300211181642,
+        "TSLA_extra_cost": 212.09641838378906,
+        "MSTR_extra_cost": 64.47773831863402,
+        "NVDA_extra_cost": 167.08353155364986
+      },
+      {
+        "date": "2026-09-03",
+        "extra_cost": 632.2676414886469,
+        "new_cost": 1053.7794024810794,
+        "SNDK_extra_cost": 209.16064259033203,
+        "TSLA_extra_cost": 183.09675156555173,
+        "MSTR_extra_cost": 134.18194095153805,
+        "NVDA_extra_cost": 105.8283063812256
+      },
+      {
+        "date": "2026-09-04",
+        "extra_cost": 537.2636283233644,
+        "new_cost": 895.4393805389406,
+        "SNDK_extra_cost": 150.64544589843746,
+        "MSTR_extra_cost": 104.31747680511474,
+        "TSLA_extra_cost": 188.78536088562007,
+        "NVDA_extra_cost": 93.51534473419187
+      },
+      {
+        "date": "2026-09-08",
+        "extra_cost": 544.7278887496949,
+        "new_cost": 907.879814582825,
+        "TSLA_extra_cost": 177.19985484008788,
+        "MSTR_extra_cost": 95.16106286315922,
+        "NVDA_extra_cost": 100.34810999908449,
+        "SNDK_extra_cost": 172.01886104736323
+      },
+      {
+        "date": "2026-09-09",
+        "extra_cost": 589.1711993637086,
+        "new_cost": 981.9519989395143,
+        "SNDK_extra_cost": 175.02819580078125,
+        "MSTR_extra_cost": 117.97455346069337,
+        "TSLA_extra_cost": 246.05849291381833,
+        "NVDA_extra_cost": 50.10995718841551
+      },
+      {
+        "date": "2026-09-10",
+        "extra_cost": 566.1499049926759,
+        "new_cost": 943.5831749877927,
+        "SNDK_extra_cost": 88.72436927490233,
+        "MSTR_extra_cost": 96.82730909271238,
+        "TSLA_extra_cost": 284.49641458740234,
+        "NVDA_extra_cost": 96.1018120376587
+      },
+      {
+        "date": "2026-09-11",
+        "extra_cost": 536.7422516830442,
+        "new_cost": 894.5704194717401,
+        "SNDK_extra_cost": 169.39214414062505,
+        "TSLA_extra_cost": 195.81241912536623,
+        "MSTR_extra_cost": 171.27356877593994,
+        "NVDA_extra_cost": 0.26411964111328123
+      }
+    ]
+  }
+}

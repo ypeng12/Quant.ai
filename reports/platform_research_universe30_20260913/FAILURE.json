@@ -1,0 +1,5 @@
+{
+  "status": "failed",
+  "reason": "SLSQP failed with Inequality constraints incompatible during context_tree_cost5. Trial incomplete; no complete comparison or winner is claimed.",
+  "replacement": "Same-objective convex QP solver with all universes rerun."
+}

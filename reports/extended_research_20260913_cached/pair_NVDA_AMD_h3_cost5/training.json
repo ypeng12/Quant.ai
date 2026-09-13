@@ -1,0 +1,146 @@
+[
+  {
+    "day": "2026-08-31",
+    "training": [
+      {
+        "beta": 0.470639978776136,
+        "intercept": 2.459443680794281,
+        "last_train": "2026-08-28",
+        "rows": 1850
+      }
+    ],
+    "selection": null,
+    "selected": [
+      "NVDA",
+      "AMD"
+    ]
+  },
+  {
+    "day": "2026-09-01",
+    "training": [
+      {
+        "beta": 0.445225568378054,
+        "intercept": 2.6177622417660777,
+        "last_train": "2026-08-31",
+        "rows": 1924
+      }
+    ],
+    "selection": null,
+    "selected": [
+      "NVDA",
+      "AMD"
+    ]
+  },
+  {
+    "day": "2026-09-02",
+    "training": [
+      {
+        "beta": 0.39618862844973085,
+        "intercept": 2.9218329215763212,
+        "last_train": "2026-09-01",
+        "rows": 1998
+      }
+    ],
+    "selection": null,
+    "selected": [
+      "NVDA",
+      "AMD"
+    ]
+  },
+  {
+    "day": "2026-09-03",
+    "training": [
+      {
+        "beta": 0.32216125436620474,
+        "intercept": 3.380877375266584,
+        "last_train": "2026-09-02",
+        "rows": 2072
+      }
+    ],
+    "selection": null,
+    "selected": [
+      "NVDA",
+      "AMD"
+    ]
+  },
+  {
+    "day": "2026-09-04",
+    "training": [
+      {
+        "beta": 0.23551866228833912,
+        "intercept": 3.9178944503180495,
+        "last_train": "2026-09-03",
+        "rows": 2146
+      }
+    ],
+    "selection": null,
+    "selected": [
+      "NVDA",
+      "AMD"
+    ]
+  },
+  {
+    "day": "2026-09-08",
+    "training": [
+      {
+        "beta": 0.21614559388877946,
+        "intercept": 4.039920970224112,
+        "last_train": "2026-09-04",
+        "rows": 2220
+      }
+    ],
+    "selection": null,
+    "selected": [
+      "NVDA",
+      "AMD"
+    ]
+  },
+  {
+    "day": "2026-09-09",
+    "training": [
+      {
+        "beta": 0.2616329230081269,
+        "intercept": 3.7605411625585896,
+        "last_train": "2026-09-08",
+        "rows": 2294
+      }
+    ],
+    "selection": null,
+    "selected": [
+      "NVDA",
+      "AMD"
+    ]
+  },
+  {
+    "day": "2026-09-10",
+    "training": [
+      {
+        "beta": 0.28578046401019047,
+        "intercept": 3.6119759787615835,
+        "last_train": "2026-09-09",
+        "rows": 2368
+      }
+    ],
+    "selection": null,
+    "selected": [
+      "NVDA",
+      "AMD"
+    ]
+  },
+  {
+    "day": "2026-09-11",
+    "training": [
+      {
+        "beta": 0.2802218828404262,
+        "intercept": 3.6461190807810646,
+        "last_train": "2026-09-10",
+        "rows": 2442
+      }
+    ],
+    "selection": null,
+    "selected": [
+      "NVDA",
+      "AMD"
+    ]
+  }
+]

@@ -1,0 +1,5883 @@
+[
+  {
+    "day": "2026-08-31",
+    "eligibility": {
+      "SNDK": {
+        "eligible": true,
+        "reason": "admitted",
+        "last_price": 1485.469970703125,
+        "adv": 18354765429.57018,
+        "history_start": "2026-08-03",
+        "history_end": "2026-08-28",
+        "sessions": 20,
+        "dollar_volume_method": "sum_5min_close_times_volume_proxy",
+        "instrument_admitted": true,
+        "market_cap": 239153479680,
+        "metadata_known_at": "2026-09-13T19:07:20.750549+00:00",
+        "membership_basis": "contemporary_selected_panel_not_historical_proof"
+      },
+      "TSLA": {
+        "eligible": true,
+        "reason": "admitted",
+        "last_price": 348.760009765625,
+        "adv": 10097269044.42464,
+        "history_start": "2026-08-03",
+        "history_end": "2026-08-28",
+        "sessions": 20,
+        "dollar_volume_method": "sum_5min_close_times_volume_proxy",
+        "instrument_admitted": true,
+        "market_cap": 1443322658816,
+        "metadata_known_at": "2026-09-13T19:07:20.861480+00:00",
+        "membership_basis": "contemporary_selected_panel_not_historical_proof"
+      },
+      "NVDA": {
+        "eligible": true,
+        "reason": "admitted",
+        "last_price": 217.5399932861328,
+        "adv": 22643455732.513577,
+        "history_start": "2026-08-03",
+        "history_end": "2026-08-28",
+        "sessions": 20,
+        "dollar_volume_method": "sum_5min_close_times_volume_proxy",
+        "instrument_admitted": true,
+        "market_cap": 5271048421376,
+        "metadata_known_at": "2026-09-13T19:07:20.541350+00:00",
+        "membership_basis": "contemporary_selected_panel_not_historical_proof"
+      }
+    },
+    "training": [
+      {
+        "symbol": "SNDK",
+        "model": "context_tree",
+        "horizon": 1,
+        "last_train": "2026-08-28",
+        "rows": 1900,
+        "sessions": 25,
+        "names": [
+          "return_1",
+          "return_3",
+          "return_12",
+          "session_return",
+          "range_fraction",
+          "body_fraction",
+          "upper_wick_fraction",
+          "lower_wick_fraction",
+          "close_location",
+          "realized_volatility_12",
+          "vwap_distance",
+          "bar_relative_volume",
+          "peer_return_1",
+          "peer_residual_return_1",
+          "peer_return_3",
+          "peer_residual_return_3",
+          "time_fraction",
+          "overnight_gap",
+          "seasonal_volume"
+        ]
+      },
+      {
+        "symbol": "TSLA",
+        "model": "context_tree",
+        "horizon": 1,
+        "last_train": "2026-08-28",
+        "rows": 1900,
+        "sessions": 25,
+        "names": [
+          "return_1",
+          "return_3",
+          "return_12",
+          "session_return",
+          "range_fraction",
+          "body_fraction",
+          "upper_wick_fraction",
+          "lower_wick_fraction",
+          "close_location",
+          "realized_volatility_12",
+          "vwap_distance",
+          "bar_relative_volume",
+          "peer_return_1",
+          "peer_residual_return_1",
+          "peer_return_3",
+          "peer_residual_return_3",
+          "time_fraction",
+          "overnight_gap",
+          "seasonal_volume"
+        ]
+      },
+      {
+        "symbol": "NVDA",
+        "model": "context_tree",
+        "horizon": 1,
+        "last_train": "2026-08-28",
+        "rows": 1900,
+        "sessions": 25,
+        "names": [
+          "return_1",
+          "return_3",
+          "return_12",
+          "session_return",
+          "range_fraction",
+          "body_fraction",
+          "upper_wick_fraction",
+          "lower_wick_fraction",
+          "close_location",
+          "realized_volatility_12",
+          "vwap_distance",
+          "bar_relative_volume",
+          "peer_return_1",
+          "peer_residual_return_1",
+          "peer_return_3",
+          "peer_residual_return_3",
+          "time_fraction",
+          "overnight_gap",
+          "seasonal_volume"
+        ]
+      }
+    ],
+    "selection": {
+      "method": "lowest_mean_daily_out_of_sample_squared_error",
+      "validation_dates": [
+        "2026-08-24",
+        "2026-08-25",
+        "2026-08-26",
+        "2026-08-27",
+        "2026-08-28"
+      ],
+      "selections": {
+        "SNDK": {
+          "model": "context_tree",
+          "scores_mse_bps2": {
+            "context_tree": 1580.0404583857558,
+            "market_tree": 1602.6105662173582,
+            "market_ridge": 1628.1719747084674
+          }
+        },
+        "TSLA": {
+          "model": "context_tree",
+          "scores_mse_bps2": {
+            "context_tree": 389.4747859873386,
+            "market_tree": 389.4747859873386,
+            "market_ridge": 396.8205686956436
+          }
+        },
+        "NVDA": {
+          "model": "context_tree",
+          "scores_mse_bps2": {
+            "context_tree": 469.2726167643899,
+            "market_tree": 474.42509078388287,
+            "market_ridge": 474.7825072095878
+          }
+        }
+      },
+      "folds": [
+        {
+          "symbol": "SNDK",
+          "model": "context_tree",
+          "validation_day": "2026-08-24",
+          "last_train": "2026-08-21",
+          "rows": 76,
+          "training_rows": 1520,
+          "mse_bps2": 1492.4937057765728,
+          "zero_forecast_mse_bps2": 1562.523703336908
+        },
+        {
+          "symbol": "TSLA",
+          "model": "context_tree",
+          "validation_day": "2026-08-24",
+          "last_train": "2026-08-21",
+          "rows": 76,
+          "training_rows": 1520,
+          "mse_bps2": 364.0188525878412,
+          "zero_forecast_mse_bps2": 357.4223805470471
+        },
+        {
+          "symbol": "NVDA",
+          "model": "context_tree",
+          "validation_day": "2026-08-24",
+          "last_train": "2026-08-21",
+          "rows": 76,
+          "training_rows": 1520,
+          "mse_bps2": 318.5324125466894,
+          "zero_forecast_mse_bps2": 356.3199775129314
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_tree",
+          "validation_day": "2026-08-24",
+          "last_train": "2026-08-21",
+          "rows": 76,
+          "training_rows": 1520,
+          "mse_bps2": 1611.7202598421236,
+          "zero_forecast_mse_bps2": 1562.523703336908
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_tree",
+          "validation_day": "2026-08-24",
+          "last_train": "2026-08-21",
+          "rows": 76,
+          "training_rows": 1520,
+          "mse_bps2": 364.0188525878412,
+          "zero_forecast_mse_bps2": 357.4223805470471
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_tree",
+          "validation_day": "2026-08-24",
+          "last_train": "2026-08-21",
+          "rows": 76,
+          "training_rows": 1520,
+          "mse_bps2": 319.9825482942572,
+          "zero_forecast_mse_bps2": 356.3199775129314
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_ridge",
+          "validation_day": "2026-08-24",
+          "last_train": "2026-08-21",
+          "rows": 76,
+          "training_rows": 1520,
+          "mse_bps2": 1489.8507469518572,
+          "zero_forecast_mse_bps2": 1562.523703336908
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_ridge",
+          "validation_day": "2026-08-24",
+          "last_train": "2026-08-21",
+          "rows": 76,
+          "training_rows": 1520,
+          "mse_bps2": 328.8091393106626,
+          "zero_forecast_mse_bps2": 357.4223805470471
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_ridge",
+          "validation_day": "2026-08-24",
+          "last_train": "2026-08-21",
+          "rows": 76,
+          "training_rows": 1520,
+          "mse_bps2": 353.36064596864077,
+          "zero_forecast_mse_bps2": 356.3199775129314
+        },
+        {
+          "symbol": "SNDK",
+          "model": "context_tree",
+          "validation_day": "2026-08-25",
+          "last_train": "2026-08-24",
+          "rows": 76,
+          "training_rows": 1596,
+          "mse_bps2": 2033.421815976741,
+          "zero_forecast_mse_bps2": 2037.6809014494945
+        },
+        {
+          "symbol": "TSLA",
+          "model": "context_tree",
+          "validation_day": "2026-08-25",
+          "last_train": "2026-08-24",
+          "rows": 76,
+          "training_rows": 1596,
+          "mse_bps2": 479.8639654265032,
+          "zero_forecast_mse_bps2": 490.42678894596526
+        },
+        {
+          "symbol": "NVDA",
+          "model": "context_tree",
+          "validation_day": "2026-08-25",
+          "last_train": "2026-08-24",
+          "rows": 76,
+          "training_rows": 1596,
+          "mse_bps2": 261.0058767434868,
+          "zero_forecast_mse_bps2": 239.16781612673793
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_tree",
+          "validation_day": "2026-08-25",
+          "last_train": "2026-08-24",
+          "rows": 76,
+          "training_rows": 1596,
+          "mse_bps2": 1974.0629905872438,
+          "zero_forecast_mse_bps2": 2037.6809014494945
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_tree",
+          "validation_day": "2026-08-25",
+          "last_train": "2026-08-24",
+          "rows": 76,
+          "training_rows": 1596,
+          "mse_bps2": 479.8639654265032,
+          "zero_forecast_mse_bps2": 490.42678894596526
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_tree",
+          "validation_day": "2026-08-25",
+          "last_train": "2026-08-24",
+          "rows": 76,
+          "training_rows": 1596,
+          "mse_bps2": 260.6815692671702,
+          "zero_forecast_mse_bps2": 239.16781612673793
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_ridge",
+          "validation_day": "2026-08-25",
+          "last_train": "2026-08-24",
+          "rows": 76,
+          "training_rows": 1596,
+          "mse_bps2": 2302.703672078997,
+          "zero_forecast_mse_bps2": 2037.6809014494945
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_ridge",
+          "validation_day": "2026-08-25",
+          "last_train": "2026-08-24",
+          "rows": 76,
+          "training_rows": 1596,
+          "mse_bps2": 480.657196737227,
+          "zero_forecast_mse_bps2": 490.42678894596526
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_ridge",
+          "validation_day": "2026-08-25",
+          "last_train": "2026-08-24",
+          "rows": 76,
+          "training_rows": 1596,
+          "mse_bps2": 255.17365908281386,
+          "zero_forecast_mse_bps2": 239.16781612673793
+        },
+        {
+          "symbol": "SNDK",
+          "model": "context_tree",
+          "validation_day": "2026-08-26",
+          "last_train": "2026-08-25",
+          "rows": 76,
+          "training_rows": 1672,
+          "mse_bps2": 890.7502907566013,
+          "zero_forecast_mse_bps2": 909.8146255543876
+        },
+        {
+          "symbol": "TSLA",
+          "model": "context_tree",
+          "validation_day": "2026-08-26",
+          "last_train": "2026-08-25",
+          "rows": 76,
+          "training_rows": 1672,
+          "mse_bps2": 370.7662546579903,
+          "zero_forecast_mse_bps2": 408.13383094458237
+        },
+        {
+          "symbol": "NVDA",
+          "model": "context_tree",
+          "validation_day": "2026-08-26",
+          "last_train": "2026-08-25",
+          "rows": 76,
+          "training_rows": 1672,
+          "mse_bps2": 226.22620241505066,
+          "zero_forecast_mse_bps2": 203.89616065132617
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_tree",
+          "validation_day": "2026-08-26",
+          "last_train": "2026-08-25",
+          "rows": 76,
+          "training_rows": 1672,
+          "mse_bps2": 902.4716628539469,
+          "zero_forecast_mse_bps2": 909.8146255543876
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_tree",
+          "validation_day": "2026-08-26",
+          "last_train": "2026-08-25",
+          "rows": 76,
+          "training_rows": 1672,
+          "mse_bps2": 370.7662546579903,
+          "zero_forecast_mse_bps2": 408.13383094458237
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_tree",
+          "validation_day": "2026-08-26",
+          "last_train": "2026-08-25",
+          "rows": 76,
+          "training_rows": 1672,
+          "mse_bps2": 228.84467345939237,
+          "zero_forecast_mse_bps2": 203.89616065132617
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_ridge",
+          "validation_day": "2026-08-26",
+          "last_train": "2026-08-25",
+          "rows": 76,
+          "training_rows": 1672,
+          "mse_bps2": 948.0526650164207,
+          "zero_forecast_mse_bps2": 909.8146255543876
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_ridge",
+          "validation_day": "2026-08-26",
+          "last_train": "2026-08-25",
+          "rows": 76,
+          "training_rows": 1672,
+          "mse_bps2": 429.23197027922254,
+          "zero_forecast_mse_bps2": 408.13383094458237
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_ridge",
+          "validation_day": "2026-08-26",
+          "last_train": "2026-08-25",
+          "rows": 76,
+          "training_rows": 1672,
+          "mse_bps2": 202.67963867712322,
+          "zero_forecast_mse_bps2": 203.89616065132617
+        },
+        {
+          "symbol": "SNDK",
+          "model": "context_tree",
+          "validation_day": "2026-08-27",
+          "last_train": "2026-08-26",
+          "rows": 76,
+          "training_rows": 1748,
+          "mse_bps2": 1370.5947571003708,
+          "zero_forecast_mse_bps2": 1145.8991959572943
+        },
+        {
+          "symbol": "TSLA",
+          "model": "context_tree",
+          "validation_day": "2026-08-27",
+          "last_train": "2026-08-26",
+          "rows": 76,
+          "training_rows": 1748,
+          "mse_bps2": 447.64800416293656,
+          "zero_forecast_mse_bps2": 471.8914984938263
+        },
+        {
+          "symbol": "NVDA",
+          "model": "context_tree",
+          "validation_day": "2026-08-27",
+          "last_train": "2026-08-26",
+          "rows": 76,
+          "training_rows": 1748,
+          "mse_bps2": 987.4027140241466,
+          "zero_forecast_mse_bps2": 942.5791145088571
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_tree",
+          "validation_day": "2026-08-27",
+          "last_train": "2026-08-26",
+          "rows": 76,
+          "training_rows": 1748,
+          "mse_bps2": 1489.297796521481,
+          "zero_forecast_mse_bps2": 1145.8991959572943
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_tree",
+          "validation_day": "2026-08-27",
+          "last_train": "2026-08-26",
+          "rows": 76,
+          "training_rows": 1748,
+          "mse_bps2": 447.64800416293656,
+          "zero_forecast_mse_bps2": 471.8914984938263
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_tree",
+          "validation_day": "2026-08-27",
+          "last_train": "2026-08-26",
+          "rows": 76,
+          "training_rows": 1748,
+          "mse_bps2": 991.9790954568456,
+          "zero_forecast_mse_bps2": 942.5791145088571
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_ridge",
+          "validation_day": "2026-08-27",
+          "last_train": "2026-08-26",
+          "rows": 76,
+          "training_rows": 1748,
+          "mse_bps2": 1246.7793951018066,
+          "zero_forecast_mse_bps2": 1145.8991959572943
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_ridge",
+          "validation_day": "2026-08-27",
+          "last_train": "2026-08-26",
+          "rows": 76,
+          "training_rows": 1748,
+          "mse_bps2": 439.4854032573469,
+          "zero_forecast_mse_bps2": 471.8914984938263
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_ridge",
+          "validation_day": "2026-08-27",
+          "last_train": "2026-08-26",
+          "rows": 76,
+          "training_rows": 1748,
+          "mse_bps2": 942.2584936367944,
+          "zero_forecast_mse_bps2": 942.5791145088571
+        },
+        {
+          "symbol": "SNDK",
+          "model": "context_tree",
+          "validation_day": "2026-08-28",
+          "last_train": "2026-08-27",
+          "rows": 76,
+          "training_rows": 1824,
+          "mse_bps2": 2112.941722318493,
+          "zero_forecast_mse_bps2": 2071.7908683583787
+        },
+        {
+          "symbol": "TSLA",
+          "model": "context_tree",
+          "validation_day": "2026-08-28",
+          "last_train": "2026-08-27",
+          "rows": 76,
+          "training_rows": 1824,
+          "mse_bps2": 285.0768531014218,
+          "zero_forecast_mse_bps2": 261.1989488944191
+        },
+        {
+          "symbol": "NVDA",
+          "model": "context_tree",
+          "validation_day": "2026-08-28",
+          "last_train": "2026-08-27",
+          "rows": 76,
+          "training_rows": 1824,
+          "mse_bps2": 553.1958780925763,
+          "zero_forecast_mse_bps2": 573.323608819061
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_tree",
+          "validation_day": "2026-08-28",
+          "last_train": "2026-08-27",
+          "rows": 76,
+          "training_rows": 1824,
+          "mse_bps2": 2035.500121281995,
+          "zero_forecast_mse_bps2": 2071.7908683583787
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_tree",
+          "validation_day": "2026-08-28",
+          "last_train": "2026-08-27",
+          "rows": 76,
+          "training_rows": 1824,
+          "mse_bps2": 285.0768531014218,
+          "zero_forecast_mse_bps2": 261.1989488944191
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_tree",
+          "validation_day": "2026-08-28",
+          "last_train": "2026-08-27",
+          "rows": 76,
+          "training_rows": 1824,
+          "mse_bps2": 570.6375674417493,
+          "zero_forecast_mse_bps2": 573.323608819061
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_ridge",
+          "validation_day": "2026-08-28",
+          "last_train": "2026-08-27",
+          "rows": 76,
+          "training_rows": 1824,
+          "mse_bps2": 2153.4733943932547,
+          "zero_forecast_mse_bps2": 2071.7908683583787
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_ridge",
+          "validation_day": "2026-08-28",
+          "last_train": "2026-08-27",
+          "rows": 76,
+          "training_rows": 1824,
+          "mse_bps2": 305.91913389375884,
+          "zero_forecast_mse_bps2": 261.1989488944191
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_ridge",
+          "validation_day": "2026-08-28",
+          "last_train": "2026-08-27",
+          "rows": 76,
+          "training_rows": 1824,
+          "mse_bps2": 620.4400986825666,
+          "zero_forecast_mse_bps2": 573.323608819061
+        }
+      ]
+    },
+    "calibration": null
+  },
+  {
+    "day": "2026-09-01",
+    "eligibility": {
+      "SNDK": {
+        "eligible": true,
+        "reason": "admitted",
+        "last_price": 1569.6099853515625,
+        "adv": 18456705199.490368,
+        "history_start": "2026-08-04",
+        "history_end": "2026-08-31",
+        "sessions": 20,
+        "dollar_volume_method": "sum_5min_close_times_volume_proxy",
+        "instrument_admitted": true,
+        "market_cap": 239153479680,
+        "metadata_known_at": "2026-09-13T19:07:20.750549+00:00",
+        "membership_basis": "contemporary_selected_panel_not_historical_proof"
+      },
+      "TSLA": {
+        "eligible": true,
+        "reason": "admitted",
+        "last_price": 367.9200134277344,
+        "adv": 10492380574.153614,
+        "history_start": "2026-08-04",
+        "history_end": "2026-08-31",
+        "sessions": 20,
+        "dollar_volume_method": "sum_5min_close_times_volume_proxy",
+        "instrument_admitted": true,
+        "market_cap": 1443322658816,
+        "metadata_known_at": "2026-09-13T19:07:20.861480+00:00",
+        "membership_basis": "contemporary_selected_panel_not_historical_proof"
+      },
+      "NVDA": {
+        "eligible": true,
+        "reason": "admitted",
+        "last_price": 220.8800048828125,
+        "adv": 22573252185.89088,
+        "history_start": "2026-08-04",
+        "history_end": "2026-08-31",
+        "sessions": 20,
+        "dollar_volume_method": "sum_5min_close_times_volume_proxy",
+        "instrument_admitted": true,
+        "market_cap": 5271048421376,
+        "metadata_known_at": "2026-09-13T19:07:20.541350+00:00",
+        "membership_basis": "contemporary_selected_panel_not_historical_proof"
+      }
+    },
+    "training": [
+      {
+        "symbol": "SNDK",
+        "model": "context_tree",
+        "horizon": 1,
+        "last_train": "2026-08-31",
+        "rows": 1976,
+        "sessions": 26,
+        "names": [
+          "return_1",
+          "return_3",
+          "return_12",
+          "session_return",
+          "range_fraction",
+          "body_fraction",
+          "upper_wick_fraction",
+          "lower_wick_fraction",
+          "close_location",
+          "realized_volatility_12",
+          "vwap_distance",
+          "bar_relative_volume",
+          "peer_return_1",
+          "peer_residual_return_1",
+          "peer_return_3",
+          "peer_residual_return_3",
+          "time_fraction",
+          "overnight_gap",
+          "seasonal_volume"
+        ]
+      },
+      {
+        "symbol": "TSLA",
+        "model": "context_tree",
+        "horizon": 1,
+        "last_train": "2026-08-31",
+        "rows": 1976,
+        "sessions": 26,
+        "names": [
+          "return_1",
+          "return_3",
+          "return_12",
+          "session_return",
+          "range_fraction",
+          "body_fraction",
+          "upper_wick_fraction",
+          "lower_wick_fraction",
+          "close_location",
+          "realized_volatility_12",
+          "vwap_distance",
+          "bar_relative_volume",
+          "peer_return_1",
+          "peer_residual_return_1",
+          "peer_return_3",
+          "peer_residual_return_3",
+          "time_fraction",
+          "overnight_gap",
+          "seasonal_volume"
+        ]
+      },
+      {
+        "symbol": "NVDA",
+        "model": "market_ridge",
+        "horizon": 1,
+        "last_train": "2026-08-31",
+        "rows": 1976,
+        "sessions": 26,
+        "names": [
+          "return_1",
+          "return_3",
+          "return_12",
+          "session_return",
+          "range_fraction",
+          "body_fraction",
+          "upper_wick_fraction",
+          "lower_wick_fraction",
+          "close_location",
+          "realized_volatility_12",
+          "vwap_distance",
+          "bar_relative_volume",
+          "peer_return_1",
+          "peer_residual_return_1",
+          "peer_return_3",
+          "peer_residual_return_3",
+          "time_fraction",
+          "overnight_gap",
+          "seasonal_volume",
+          "market_return_1",
+          "market_return_3",
+          "market_return_12",
+          "market_session_return",
+          "market_vwap_distance",
+          "market_seasonal_volume",
+          "market_relative_session_return",
+          "market_residual_return_1",
+          "reference_return_1",
+          "reference_return_3",
+          "reference_return_12",
+          "reference_session_return",
+          "reference_vwap_distance",
+          "reference_seasonal_volume",
+          "reference_relative_session_return",
+          "reference_residual_return_1"
+        ]
+      }
+    ],
+    "selection": {
+      "method": "lowest_mean_daily_out_of_sample_squared_error",
+      "validation_dates": [
+        "2026-08-25",
+        "2026-08-26",
+        "2026-08-27",
+        "2026-08-28",
+        "2026-08-31"
+      ],
+      "selections": {
+        "SNDK": {
+          "model": "context_tree",
+          "scores_mse_bps2": {
+            "context_tree": 1911.6468599619504,
+            "market_tree": 1939.1432117115182,
+            "market_ridge": 1970.9867991272179
+          }
+        },
+        "TSLA": {
+          "model": "context_tree",
+          "scores_mse_bps2": {
+            "context_tree": 458.3343722877794,
+            "market_tree": 458.3343722877794,
+            "market_ridge": 475.43170635015775
+          }
+        },
+        "NVDA": {
+          "model": "market_ridge",
+          "scores_mse_bps2": {
+            "context_tree": 460.3692607422453,
+            "market_tree": 465.81305859639696,
+            "market_ridge": 460.14435522506994
+          }
+        }
+      },
+      "folds": [
+        {
+          "symbol": "SNDK",
+          "model": "context_tree",
+          "validation_day": "2026-08-25",
+          "last_train": "2026-08-24",
+          "rows": 76,
+          "training_rows": 1596,
+          "mse_bps2": 2033.421815976741,
+          "zero_forecast_mse_bps2": 2037.6809014494945
+        },
+        {
+          "symbol": "TSLA",
+          "model": "context_tree",
+          "validation_day": "2026-08-25",
+          "last_train": "2026-08-24",
+          "rows": 76,
+          "training_rows": 1596,
+          "mse_bps2": 479.8639654265032,
+          "zero_forecast_mse_bps2": 490.42678894596526
+        },
+        {
+          "symbol": "NVDA",
+          "model": "context_tree",
+          "validation_day": "2026-08-25",
+          "last_train": "2026-08-24",
+          "rows": 76,
+          "training_rows": 1596,
+          "mse_bps2": 261.0058767434868,
+          "zero_forecast_mse_bps2": 239.16781612673793
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_tree",
+          "validation_day": "2026-08-25",
+          "last_train": "2026-08-24",
+          "rows": 76,
+          "training_rows": 1596,
+          "mse_bps2": 1974.0629905872438,
+          "zero_forecast_mse_bps2": 2037.6809014494945
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_tree",
+          "validation_day": "2026-08-25",
+          "last_train": "2026-08-24",
+          "rows": 76,
+          "training_rows": 1596,
+          "mse_bps2": 479.8639654265032,
+          "zero_forecast_mse_bps2": 490.42678894596526
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_tree",
+          "validation_day": "2026-08-25",
+          "last_train": "2026-08-24",
+          "rows": 76,
+          "training_rows": 1596,
+          "mse_bps2": 260.6815692671702,
+          "zero_forecast_mse_bps2": 239.16781612673793
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_ridge",
+          "validation_day": "2026-08-25",
+          "last_train": "2026-08-24",
+          "rows": 76,
+          "training_rows": 1596,
+          "mse_bps2": 2302.703672078997,
+          "zero_forecast_mse_bps2": 2037.6809014494945
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_ridge",
+          "validation_day": "2026-08-25",
+          "last_train": "2026-08-24",
+          "rows": 76,
+          "training_rows": 1596,
+          "mse_bps2": 480.657196737227,
+          "zero_forecast_mse_bps2": 490.42678894596526
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_ridge",
+          "validation_day": "2026-08-25",
+          "last_train": "2026-08-24",
+          "rows": 76,
+          "training_rows": 1596,
+          "mse_bps2": 255.17365908281386,
+          "zero_forecast_mse_bps2": 239.16781612673793
+        },
+        {
+          "symbol": "SNDK",
+          "model": "context_tree",
+          "validation_day": "2026-08-26",
+          "last_train": "2026-08-25",
+          "rows": 76,
+          "training_rows": 1672,
+          "mse_bps2": 890.7502907566013,
+          "zero_forecast_mse_bps2": 909.8146255543876
+        },
+        {
+          "symbol": "TSLA",
+          "model": "context_tree",
+          "validation_day": "2026-08-26",
+          "last_train": "2026-08-25",
+          "rows": 76,
+          "training_rows": 1672,
+          "mse_bps2": 370.7662546579903,
+          "zero_forecast_mse_bps2": 408.13383094458237
+        },
+        {
+          "symbol": "NVDA",
+          "model": "context_tree",
+          "validation_day": "2026-08-26",
+          "last_train": "2026-08-25",
+          "rows": 76,
+          "training_rows": 1672,
+          "mse_bps2": 226.22620241505066,
+          "zero_forecast_mse_bps2": 203.89616065132617
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_tree",
+          "validation_day": "2026-08-26",
+          "last_train": "2026-08-25",
+          "rows": 76,
+          "training_rows": 1672,
+          "mse_bps2": 902.4716628539469,
+          "zero_forecast_mse_bps2": 909.8146255543876
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_tree",
+          "validation_day": "2026-08-26",
+          "last_train": "2026-08-25",
+          "rows": 76,
+          "training_rows": 1672,
+          "mse_bps2": 370.7662546579903,
+          "zero_forecast_mse_bps2": 408.13383094458237
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_tree",
+          "validation_day": "2026-08-26",
+          "last_train": "2026-08-25",
+          "rows": 76,
+          "training_rows": 1672,
+          "mse_bps2": 228.84467345939237,
+          "zero_forecast_mse_bps2": 203.89616065132617
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_ridge",
+          "validation_day": "2026-08-26",
+          "last_train": "2026-08-25",
+          "rows": 76,
+          "training_rows": 1672,
+          "mse_bps2": 948.0526650164207,
+          "zero_forecast_mse_bps2": 909.8146255543876
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_ridge",
+          "validation_day": "2026-08-26",
+          "last_train": "2026-08-25",
+          "rows": 76,
+          "training_rows": 1672,
+          "mse_bps2": 429.23197027922254,
+          "zero_forecast_mse_bps2": 408.13383094458237
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_ridge",
+          "validation_day": "2026-08-26",
+          "last_train": "2026-08-25",
+          "rows": 76,
+          "training_rows": 1672,
+          "mse_bps2": 202.67963867712322,
+          "zero_forecast_mse_bps2": 203.89616065132617
+        },
+        {
+          "symbol": "SNDK",
+          "model": "context_tree",
+          "validation_day": "2026-08-27",
+          "last_train": "2026-08-26",
+          "rows": 76,
+          "training_rows": 1748,
+          "mse_bps2": 1370.5947571003708,
+          "zero_forecast_mse_bps2": 1145.8991959572943
+        },
+        {
+          "symbol": "TSLA",
+          "model": "context_tree",
+          "validation_day": "2026-08-27",
+          "last_train": "2026-08-26",
+          "rows": 76,
+          "training_rows": 1748,
+          "mse_bps2": 447.64800416293656,
+          "zero_forecast_mse_bps2": 471.8914984938263
+        },
+        {
+          "symbol": "NVDA",
+          "model": "context_tree",
+          "validation_day": "2026-08-27",
+          "last_train": "2026-08-26",
+          "rows": 76,
+          "training_rows": 1748,
+          "mse_bps2": 987.4027140241466,
+          "zero_forecast_mse_bps2": 942.5791145088571
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_tree",
+          "validation_day": "2026-08-27",
+          "last_train": "2026-08-26",
+          "rows": 76,
+          "training_rows": 1748,
+          "mse_bps2": 1489.297796521481,
+          "zero_forecast_mse_bps2": 1145.8991959572943
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_tree",
+          "validation_day": "2026-08-27",
+          "last_train": "2026-08-26",
+          "rows": 76,
+          "training_rows": 1748,
+          "mse_bps2": 447.64800416293656,
+          "zero_forecast_mse_bps2": 471.8914984938263
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_tree",
+          "validation_day": "2026-08-27",
+          "last_train": "2026-08-26",
+          "rows": 76,
+          "training_rows": 1748,
+          "mse_bps2": 991.9790954568456,
+          "zero_forecast_mse_bps2": 942.5791145088571
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_ridge",
+          "validation_day": "2026-08-27",
+          "last_train": "2026-08-26",
+          "rows": 76,
+          "training_rows": 1748,
+          "mse_bps2": 1246.7793951018066,
+          "zero_forecast_mse_bps2": 1145.8991959572943
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_ridge",
+          "validation_day": "2026-08-27",
+          "last_train": "2026-08-26",
+          "rows": 76,
+          "training_rows": 1748,
+          "mse_bps2": 439.4854032573469,
+          "zero_forecast_mse_bps2": 471.8914984938263
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_ridge",
+          "validation_day": "2026-08-27",
+          "last_train": "2026-08-26",
+          "rows": 76,
+          "training_rows": 1748,
+          "mse_bps2": 942.2584936367944,
+          "zero_forecast_mse_bps2": 942.5791145088571
+        },
+        {
+          "symbol": "SNDK",
+          "model": "context_tree",
+          "validation_day": "2026-08-28",
+          "last_train": "2026-08-27",
+          "rows": 76,
+          "training_rows": 1824,
+          "mse_bps2": 2112.941722318493,
+          "zero_forecast_mse_bps2": 2071.7908683583787
+        },
+        {
+          "symbol": "TSLA",
+          "model": "context_tree",
+          "validation_day": "2026-08-28",
+          "last_train": "2026-08-27",
+          "rows": 76,
+          "training_rows": 1824,
+          "mse_bps2": 285.0768531014218,
+          "zero_forecast_mse_bps2": 261.1989488944191
+        },
+        {
+          "symbol": "NVDA",
+          "model": "context_tree",
+          "validation_day": "2026-08-28",
+          "last_train": "2026-08-27",
+          "rows": 76,
+          "training_rows": 1824,
+          "mse_bps2": 553.1958780925763,
+          "zero_forecast_mse_bps2": 573.323608819061
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_tree",
+          "validation_day": "2026-08-28",
+          "last_train": "2026-08-27",
+          "rows": 76,
+          "training_rows": 1824,
+          "mse_bps2": 2035.500121281995,
+          "zero_forecast_mse_bps2": 2071.7908683583787
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_tree",
+          "validation_day": "2026-08-28",
+          "last_train": "2026-08-27",
+          "rows": 76,
+          "training_rows": 1824,
+          "mse_bps2": 285.0768531014218,
+          "zero_forecast_mse_bps2": 261.1989488944191
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_tree",
+          "validation_day": "2026-08-28",
+          "last_train": "2026-08-27",
+          "rows": 76,
+          "training_rows": 1824,
+          "mse_bps2": 570.6375674417493,
+          "zero_forecast_mse_bps2": 573.323608819061
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_ridge",
+          "validation_day": "2026-08-28",
+          "last_train": "2026-08-27",
+          "rows": 76,
+          "training_rows": 1824,
+          "mse_bps2": 2153.4733943932547,
+          "zero_forecast_mse_bps2": 2071.7908683583787
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_ridge",
+          "validation_day": "2026-08-28",
+          "last_train": "2026-08-27",
+          "rows": 76,
+          "training_rows": 1824,
+          "mse_bps2": 305.91913389375884,
+          "zero_forecast_mse_bps2": 261.1989488944191
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_ridge",
+          "validation_day": "2026-08-28",
+          "last_train": "2026-08-27",
+          "rows": 76,
+          "training_rows": 1824,
+          "mse_bps2": 620.4400986825666,
+          "zero_forecast_mse_bps2": 573.323608819061
+        },
+        {
+          "symbol": "SNDK",
+          "model": "context_tree",
+          "validation_day": "2026-08-31",
+          "last_train": "2026-08-28",
+          "rows": 76,
+          "training_rows": 1900,
+          "mse_bps2": 3150.5257136575474,
+          "zero_forecast_mse_bps2": 3154.302217868761
+        },
+        {
+          "symbol": "TSLA",
+          "model": "context_tree",
+          "validation_day": "2026-08-31",
+          "last_train": "2026-08-28",
+          "rows": 76,
+          "training_rows": 1900,
+          "mse_bps2": 708.3167840900451,
+          "zero_forecast_mse_bps2": 673.1134564879084
+        },
+        {
+          "symbol": "NVDA",
+          "model": "context_tree",
+          "validation_day": "2026-08-31",
+          "last_train": "2026-08-28",
+          "rows": 76,
+          "training_rows": 1900,
+          "mse_bps2": 274.0156324359662,
+          "zero_forecast_mse_bps2": 264.7051139602904
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_tree",
+          "validation_day": "2026-08-31",
+          "last_train": "2026-08-28",
+          "rows": 76,
+          "training_rows": 1900,
+          "mse_bps2": 3294.3834873129235,
+          "zero_forecast_mse_bps2": 3154.302217868761
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_tree",
+          "validation_day": "2026-08-31",
+          "last_train": "2026-08-28",
+          "rows": 76,
+          "training_rows": 1900,
+          "mse_bps2": 708.3167840900451,
+          "zero_forecast_mse_bps2": 673.1134564879084
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_tree",
+          "validation_day": "2026-08-31",
+          "last_train": "2026-08-28",
+          "rows": 76,
+          "training_rows": 1900,
+          "mse_bps2": 276.92238735682776,
+          "zero_forecast_mse_bps2": 264.7051139602904
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_ridge",
+          "validation_day": "2026-08-31",
+          "last_train": "2026-08-28",
+          "rows": 76,
+          "training_rows": 1900,
+          "mse_bps2": 3203.9248690456093,
+          "zero_forecast_mse_bps2": 3154.302217868761
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_ridge",
+          "validation_day": "2026-08-31",
+          "last_train": "2026-08-28",
+          "rows": 76,
+          "training_rows": 1900,
+          "mse_bps2": 721.8648275832334,
+          "zero_forecast_mse_bps2": 673.1134564879084
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_ridge",
+          "validation_day": "2026-08-31",
+          "last_train": "2026-08-28",
+          "rows": 76,
+          "training_rows": 1900,
+          "mse_bps2": 280.1698860460516,
+          "zero_forecast_mse_bps2": 264.7051139602904
+        }
+      ]
+    },
+    "calibration": null
+  },
+  {
+    "day": "2026-09-02",
+    "eligibility": {
+      "SNDK": {
+        "eligible": true,
+        "reason": "admitted",
+        "last_price": 1536.989990234375,
+        "adv": 18407285437.12107,
+        "history_start": "2026-08-05",
+        "history_end": "2026-09-01",
+        "sessions": 20,
+        "dollar_volume_method": "sum_5min_close_times_volume_proxy",
+        "instrument_admitted": true,
+        "market_cap": 239153479680,
+        "metadata_known_at": "2026-09-13T19:07:20.750549+00:00",
+        "membership_basis": "contemporary_selected_panel_not_historical_proof"
+      },
+      "TSLA": {
+        "eligible": true,
+        "reason": "admitted",
+        "last_price": 356.1199951171875,
+        "adv": 10594368570.012281,
+        "history_start": "2026-08-05",
+        "history_end": "2026-09-01",
+        "sessions": 20,
+        "dollar_volume_method": "sum_5min_close_times_volume_proxy",
+        "instrument_admitted": true,
+        "market_cap": 1443322658816,
+        "metadata_known_at": "2026-09-13T19:07:20.861480+00:00",
+        "membership_basis": "contemporary_selected_panel_not_historical_proof"
+      },
+      "NVDA": {
+        "eligible": true,
+        "reason": "admitted",
+        "last_price": 217.5399932861328,
+        "adv": 22437710639.241737,
+        "history_start": "2026-08-05",
+        "history_end": "2026-09-01",
+        "sessions": 20,
+        "dollar_volume_method": "sum_5min_close_times_volume_proxy",
+        "instrument_admitted": true,
+        "market_cap": 5271048421376,
+        "metadata_known_at": "2026-09-13T19:07:20.541350+00:00",
+        "membership_basis": "contemporary_selected_panel_not_historical_proof"
+      }
+    },
+    "training": [
+      {
+        "symbol": "SNDK",
+        "model": "context_tree",
+        "horizon": 1,
+        "last_train": "2026-09-01",
+        "rows": 2052,
+        "sessions": 27,
+        "names": [
+          "return_1",
+          "return_3",
+          "return_12",
+          "session_return",
+          "range_fraction",
+          "body_fraction",
+          "upper_wick_fraction",
+          "lower_wick_fraction",
+          "close_location",
+          "realized_volatility_12",
+          "vwap_distance",
+          "bar_relative_volume",
+          "peer_return_1",
+          "peer_residual_return_1",
+          "peer_return_3",
+          "peer_residual_return_3",
+          "time_fraction",
+          "overnight_gap",
+          "seasonal_volume"
+        ]
+      },
+      {
+        "symbol": "TSLA",
+        "model": "context_tree",
+        "horizon": 1,
+        "last_train": "2026-09-01",
+        "rows": 2052,
+        "sessions": 27,
+        "names": [
+          "return_1",
+          "return_3",
+          "return_12",
+          "session_return",
+          "range_fraction",
+          "body_fraction",
+          "upper_wick_fraction",
+          "lower_wick_fraction",
+          "close_location",
+          "realized_volatility_12",
+          "vwap_distance",
+          "bar_relative_volume",
+          "peer_return_1",
+          "peer_residual_return_1",
+          "peer_return_3",
+          "peer_residual_return_3",
+          "time_fraction",
+          "overnight_gap",
+          "seasonal_volume"
+        ]
+      },
+      {
+        "symbol": "NVDA",
+        "model": "context_tree",
+        "horizon": 1,
+        "last_train": "2026-09-01",
+        "rows": 2052,
+        "sessions": 27,
+        "names": [
+          "return_1",
+          "return_3",
+          "return_12",
+          "session_return",
+          "range_fraction",
+          "body_fraction",
+          "upper_wick_fraction",
+          "lower_wick_fraction",
+          "close_location",
+          "realized_volatility_12",
+          "vwap_distance",
+          "bar_relative_volume",
+          "peer_return_1",
+          "peer_residual_return_1",
+          "peer_return_3",
+          "peer_residual_return_3",
+          "time_fraction",
+          "overnight_gap",
+          "seasonal_volume"
+        ]
+      }
+    ],
+    "selection": {
+      "method": "lowest_mean_daily_out_of_sample_squared_error",
+      "validation_dates": [
+        "2026-08-26",
+        "2026-08-27",
+        "2026-08-28",
+        "2026-08-31",
+        "2026-09-01"
+      ],
+      "selections": {
+        "SNDK": {
+          "model": "context_tree",
+          "scores_mse_bps2": {
+            "context_tree": 1729.0868430100334,
+            "market_tree": 1768.7226011956743,
+            "market_ridge": 1746.2618382484227
+          }
+        },
+        "TSLA": {
+          "model": "context_tree",
+          "scores_mse_bps2": {
+            "context_tree": 419.2239280587117,
+            "market_tree": 419.2239280587117,
+            "market_ridge": 437.8218599436865
+          }
+        },
+        "NVDA": {
+          "model": "context_tree",
+          "scores_mse_bps2": {
+            "context_tree": 453.8468671405718,
+            "market_tree": 459.28697029826407,
+            "market_ridge": 455.1367555765431
+          }
+        }
+      },
+      "folds": [
+        {
+          "symbol": "SNDK",
+          "model": "context_tree",
+          "validation_day": "2026-08-26",
+          "last_train": "2026-08-25",
+          "rows": 76,
+          "training_rows": 1672,
+          "mse_bps2": 890.7502907566013,
+          "zero_forecast_mse_bps2": 909.8146255543876
+        },
+        {
+          "symbol": "TSLA",
+          "model": "context_tree",
+          "validation_day": "2026-08-26",
+          "last_train": "2026-08-25",
+          "rows": 76,
+          "training_rows": 1672,
+          "mse_bps2": 370.7662546579903,
+          "zero_forecast_mse_bps2": 408.13383094458237
+        },
+        {
+          "symbol": "NVDA",
+          "model": "context_tree",
+          "validation_day": "2026-08-26",
+          "last_train": "2026-08-25",
+          "rows": 76,
+          "training_rows": 1672,
+          "mse_bps2": 226.22620241505066,
+          "zero_forecast_mse_bps2": 203.89616065132617
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_tree",
+          "validation_day": "2026-08-26",
+          "last_train": "2026-08-25",
+          "rows": 76,
+          "training_rows": 1672,
+          "mse_bps2": 902.4716628539469,
+          "zero_forecast_mse_bps2": 909.8146255543876
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_tree",
+          "validation_day": "2026-08-26",
+          "last_train": "2026-08-25",
+          "rows": 76,
+          "training_rows": 1672,
+          "mse_bps2": 370.7662546579903,
+          "zero_forecast_mse_bps2": 408.13383094458237
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_tree",
+          "validation_day": "2026-08-26",
+          "last_train": "2026-08-25",
+          "rows": 76,
+          "training_rows": 1672,
+          "mse_bps2": 228.84467345939237,
+          "zero_forecast_mse_bps2": 203.89616065132617
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_ridge",
+          "validation_day": "2026-08-26",
+          "last_train": "2026-08-25",
+          "rows": 76,
+          "training_rows": 1672,
+          "mse_bps2": 948.0526650164207,
+          "zero_forecast_mse_bps2": 909.8146255543876
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_ridge",
+          "validation_day": "2026-08-26",
+          "last_train": "2026-08-25",
+          "rows": 76,
+          "training_rows": 1672,
+          "mse_bps2": 429.23197027922254,
+          "zero_forecast_mse_bps2": 408.13383094458237
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_ridge",
+          "validation_day": "2026-08-26",
+          "last_train": "2026-08-25",
+          "rows": 76,
+          "training_rows": 1672,
+          "mse_bps2": 202.67963867712322,
+          "zero_forecast_mse_bps2": 203.89616065132617
+        },
+        {
+          "symbol": "SNDK",
+          "model": "context_tree",
+          "validation_day": "2026-08-27",
+          "last_train": "2026-08-26",
+          "rows": 76,
+          "training_rows": 1748,
+          "mse_bps2": 1370.5947571003708,
+          "zero_forecast_mse_bps2": 1145.8991959572943
+        },
+        {
+          "symbol": "TSLA",
+          "model": "context_tree",
+          "validation_day": "2026-08-27",
+          "last_train": "2026-08-26",
+          "rows": 76,
+          "training_rows": 1748,
+          "mse_bps2": 447.64800416293656,
+          "zero_forecast_mse_bps2": 471.8914984938263
+        },
+        {
+          "symbol": "NVDA",
+          "model": "context_tree",
+          "validation_day": "2026-08-27",
+          "last_train": "2026-08-26",
+          "rows": 76,
+          "training_rows": 1748,
+          "mse_bps2": 987.4027140241466,
+          "zero_forecast_mse_bps2": 942.5791145088571
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_tree",
+          "validation_day": "2026-08-27",
+          "last_train": "2026-08-26",
+          "rows": 76,
+          "training_rows": 1748,
+          "mse_bps2": 1489.297796521481,
+          "zero_forecast_mse_bps2": 1145.8991959572943
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_tree",
+          "validation_day": "2026-08-27",
+          "last_train": "2026-08-26",
+          "rows": 76,
+          "training_rows": 1748,
+          "mse_bps2": 447.64800416293656,
+          "zero_forecast_mse_bps2": 471.8914984938263
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_tree",
+          "validation_day": "2026-08-27",
+          "last_train": "2026-08-26",
+          "rows": 76,
+          "training_rows": 1748,
+          "mse_bps2": 991.9790954568456,
+          "zero_forecast_mse_bps2": 942.5791145088571
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_ridge",
+          "validation_day": "2026-08-27",
+          "last_train": "2026-08-26",
+          "rows": 76,
+          "training_rows": 1748,
+          "mse_bps2": 1246.7793951018066,
+          "zero_forecast_mse_bps2": 1145.8991959572943
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_ridge",
+          "validation_day": "2026-08-27",
+          "last_train": "2026-08-26",
+          "rows": 76,
+          "training_rows": 1748,
+          "mse_bps2": 439.4854032573469,
+          "zero_forecast_mse_bps2": 471.8914984938263
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_ridge",
+          "validation_day": "2026-08-27",
+          "last_train": "2026-08-26",
+          "rows": 76,
+          "training_rows": 1748,
+          "mse_bps2": 942.2584936367944,
+          "zero_forecast_mse_bps2": 942.5791145088571
+        },
+        {
+          "symbol": "SNDK",
+          "model": "context_tree",
+          "validation_day": "2026-08-28",
+          "last_train": "2026-08-27",
+          "rows": 76,
+          "training_rows": 1824,
+          "mse_bps2": 2112.941722318493,
+          "zero_forecast_mse_bps2": 2071.7908683583787
+        },
+        {
+          "symbol": "TSLA",
+          "model": "context_tree",
+          "validation_day": "2026-08-28",
+          "last_train": "2026-08-27",
+          "rows": 76,
+          "training_rows": 1824,
+          "mse_bps2": 285.0768531014218,
+          "zero_forecast_mse_bps2": 261.1989488944191
+        },
+        {
+          "symbol": "NVDA",
+          "model": "context_tree",
+          "validation_day": "2026-08-28",
+          "last_train": "2026-08-27",
+          "rows": 76,
+          "training_rows": 1824,
+          "mse_bps2": 553.1958780925763,
+          "zero_forecast_mse_bps2": 573.323608819061
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_tree",
+          "validation_day": "2026-08-28",
+          "last_train": "2026-08-27",
+          "rows": 76,
+          "training_rows": 1824,
+          "mse_bps2": 2035.500121281995,
+          "zero_forecast_mse_bps2": 2071.7908683583787
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_tree",
+          "validation_day": "2026-08-28",
+          "last_train": "2026-08-27",
+          "rows": 76,
+          "training_rows": 1824,
+          "mse_bps2": 285.0768531014218,
+          "zero_forecast_mse_bps2": 261.1989488944191
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_tree",
+          "validation_day": "2026-08-28",
+          "last_train": "2026-08-27",
+          "rows": 76,
+          "training_rows": 1824,
+          "mse_bps2": 570.6375674417493,
+          "zero_forecast_mse_bps2": 573.323608819061
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_ridge",
+          "validation_day": "2026-08-28",
+          "last_train": "2026-08-27",
+          "rows": 76,
+          "training_rows": 1824,
+          "mse_bps2": 2153.4733943932547,
+          "zero_forecast_mse_bps2": 2071.7908683583787
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_ridge",
+          "validation_day": "2026-08-28",
+          "last_train": "2026-08-27",
+          "rows": 76,
+          "training_rows": 1824,
+          "mse_bps2": 305.91913389375884,
+          "zero_forecast_mse_bps2": 261.1989488944191
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_ridge",
+          "validation_day": "2026-08-28",
+          "last_train": "2026-08-27",
+          "rows": 76,
+          "training_rows": 1824,
+          "mse_bps2": 620.4400986825666,
+          "zero_forecast_mse_bps2": 573.323608819061
+        },
+        {
+          "symbol": "SNDK",
+          "model": "context_tree",
+          "validation_day": "2026-08-31",
+          "last_train": "2026-08-28",
+          "rows": 76,
+          "training_rows": 1900,
+          "mse_bps2": 3150.5257136575474,
+          "zero_forecast_mse_bps2": 3154.302217868761
+        },
+        {
+          "symbol": "TSLA",
+          "model": "context_tree",
+          "validation_day": "2026-08-31",
+          "last_train": "2026-08-28",
+          "rows": 76,
+          "training_rows": 1900,
+          "mse_bps2": 708.3167840900451,
+          "zero_forecast_mse_bps2": 673.1134564879084
+        },
+        {
+          "symbol": "NVDA",
+          "model": "context_tree",
+          "validation_day": "2026-08-31",
+          "last_train": "2026-08-28",
+          "rows": 76,
+          "training_rows": 1900,
+          "mse_bps2": 274.0156324359662,
+          "zero_forecast_mse_bps2": 264.7051139602904
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_tree",
+          "validation_day": "2026-08-31",
+          "last_train": "2026-08-28",
+          "rows": 76,
+          "training_rows": 1900,
+          "mse_bps2": 3294.3834873129235,
+          "zero_forecast_mse_bps2": 3154.302217868761
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_tree",
+          "validation_day": "2026-08-31",
+          "last_train": "2026-08-28",
+          "rows": 76,
+          "training_rows": 1900,
+          "mse_bps2": 708.3167840900451,
+          "zero_forecast_mse_bps2": 673.1134564879084
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_tree",
+          "validation_day": "2026-08-31",
+          "last_train": "2026-08-28",
+          "rows": 76,
+          "training_rows": 1900,
+          "mse_bps2": 276.92238735682776,
+          "zero_forecast_mse_bps2": 264.7051139602904
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_ridge",
+          "validation_day": "2026-08-31",
+          "last_train": "2026-08-28",
+          "rows": 76,
+          "training_rows": 1900,
+          "mse_bps2": 3203.9248690456093,
+          "zero_forecast_mse_bps2": 3154.302217868761
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_ridge",
+          "validation_day": "2026-08-31",
+          "last_train": "2026-08-28",
+          "rows": 76,
+          "training_rows": 1900,
+          "mse_bps2": 721.8648275832334,
+          "zero_forecast_mse_bps2": 673.1134564879084
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_ridge",
+          "validation_day": "2026-08-31",
+          "last_train": "2026-08-28",
+          "rows": 76,
+          "training_rows": 1900,
+          "mse_bps2": 280.1698860460516,
+          "zero_forecast_mse_bps2": 264.7051139602904
+        },
+        {
+          "symbol": "SNDK",
+          "model": "context_tree",
+          "validation_day": "2026-09-01",
+          "last_train": "2026-08-31",
+          "rows": 76,
+          "training_rows": 1976,
+          "mse_bps2": 1120.6217312171552,
+          "zero_forecast_mse_bps2": 1113.7830932684597
+        },
+        {
+          "symbol": "TSLA",
+          "model": "context_tree",
+          "validation_day": "2026-09-01",
+          "last_train": "2026-08-31",
+          "rows": 76,
+          "training_rows": 1976,
+          "mse_bps2": 284.3117442811645,
+          "zero_forecast_mse_bps2": 310.37966574949417
+        },
+        {
+          "symbol": "NVDA",
+          "model": "context_tree",
+          "validation_day": "2026-09-01",
+          "last_train": "2026-08-31",
+          "rows": 76,
+          "training_rows": 1976,
+          "mse_bps2": 228.3939087351192,
+          "zero_forecast_mse_bps2": 214.16726477729972
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_tree",
+          "validation_day": "2026-09-01",
+          "last_train": "2026-08-31",
+          "rows": 76,
+          "training_rows": 1976,
+          "mse_bps2": 1121.959938008025,
+          "zero_forecast_mse_bps2": 1113.7830932684597
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_tree",
+          "validation_day": "2026-09-01",
+          "last_train": "2026-08-31",
+          "rows": 76,
+          "training_rows": 1976,
+          "mse_bps2": 284.3117442811645,
+          "zero_forecast_mse_bps2": 310.37966574949417
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_tree",
+          "validation_day": "2026-09-01",
+          "last_train": "2026-08-31",
+          "rows": 76,
+          "training_rows": 1976,
+          "mse_bps2": 228.05112777650558,
+          "zero_forecast_mse_bps2": 214.16726477729972
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_ridge",
+          "validation_day": "2026-09-01",
+          "last_train": "2026-08-31",
+          "rows": 76,
+          "training_rows": 1976,
+          "mse_bps2": 1179.078867685022,
+          "zero_forecast_mse_bps2": 1113.7830932684597
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_ridge",
+          "validation_day": "2026-09-01",
+          "last_train": "2026-08-31",
+          "rows": 76,
+          "training_rows": 1976,
+          "mse_bps2": 292.6079647048705,
+          "zero_forecast_mse_bps2": 310.37966574949417
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_ridge",
+          "validation_day": "2026-09-01",
+          "last_train": "2026-08-31",
+          "rows": 76,
+          "training_rows": 1976,
+          "mse_bps2": 230.1356608401803,
+          "zero_forecast_mse_bps2": 214.16726477729972
+        }
+      ]
+    },
+    "calibration": null
+  },
+  {
+    "day": "2026-09-03",
+    "eligibility": {
+      "SNDK": {
+        "eligible": true,
+        "reason": "admitted",
+        "last_price": 1553.0050048828125,
+        "adv": 18162614144.142384,
+        "history_start": "2026-08-06",
+        "history_end": "2026-09-02",
+        "sessions": 20,
+        "dollar_volume_method": "sum_5min_close_times_volume_proxy",
+        "instrument_admitted": true,
+        "market_cap": 239153479680,
+        "metadata_known_at": "2026-09-13T19:07:20.750549+00:00",
+        "membership_basis": "contemporary_selected_panel_not_historical_proof"
+      },
+      "TSLA": {
+        "eligible": true,
+        "reason": "admitted",
+        "last_price": 356.989990234375,
+        "adv": 10745205497.858168,
+        "history_start": "2026-08-06",
+        "history_end": "2026-09-02",
+        "sessions": 20,
+        "dollar_volume_method": "sum_5min_close_times_volume_proxy",
+        "instrument_admitted": true,
+        "market_cap": 1443322658816,
+        "metadata_known_at": "2026-09-13T19:07:20.861480+00:00",
+        "membership_basis": "contemporary_selected_panel_not_historical_proof"
+      },
+      "NVDA": {
+        "eligible": true,
+        "reason": "admitted",
+        "last_price": 224.39999389648438,
+        "adv": 22429633562.388878,
+        "history_start": "2026-08-06",
+        "history_end": "2026-09-02",
+        "sessions": 20,
+        "dollar_volume_method": "sum_5min_close_times_volume_proxy",
+        "instrument_admitted": true,
+        "market_cap": 5271048421376,
+        "metadata_known_at": "2026-09-13T19:07:20.541350+00:00",
+        "membership_basis": "contemporary_selected_panel_not_historical_proof"
+      }
+    },
+    "training": [
+      {
+        "symbol": "SNDK",
+        "model": "market_ridge",
+        "horizon": 1,
+        "last_train": "2026-09-02",
+        "rows": 2128,
+        "sessions": 28,
+        "names": [
+          "return_1",
+          "return_3",
+          "return_12",
+          "session_return",
+          "range_fraction",
+          "body_fraction",
+          "upper_wick_fraction",
+          "lower_wick_fraction",
+          "close_location",
+          "realized_volatility_12",
+          "vwap_distance",
+          "bar_relative_volume",
+          "peer_return_1",
+          "peer_residual_return_1",
+          "peer_return_3",
+          "peer_residual_return_3",
+          "time_fraction",
+          "overnight_gap",
+          "seasonal_volume",
+          "market_return_1",
+          "market_return_3",
+          "market_return_12",
+          "market_session_return",
+          "market_vwap_distance",
+          "market_seasonal_volume",
+          "market_relative_session_return",
+          "market_residual_return_1",
+          "reference_return_1",
+          "reference_return_3",
+          "reference_return_12",
+          "reference_session_return",
+          "reference_vwap_distance",
+          "reference_seasonal_volume",
+          "reference_relative_session_return",
+          "reference_residual_return_1"
+        ]
+      },
+      {
+        "symbol": "TSLA",
+        "model": "market_ridge",
+        "horizon": 1,
+        "last_train": "2026-09-02",
+        "rows": 2128,
+        "sessions": 28,
+        "names": [
+          "return_1",
+          "return_3",
+          "return_12",
+          "session_return",
+          "range_fraction",
+          "body_fraction",
+          "upper_wick_fraction",
+          "lower_wick_fraction",
+          "close_location",
+          "realized_volatility_12",
+          "vwap_distance",
+          "bar_relative_volume",
+          "peer_return_1",
+          "peer_residual_return_1",
+          "peer_return_3",
+          "peer_residual_return_3",
+          "time_fraction",
+          "overnight_gap",
+          "seasonal_volume",
+          "market_return_1",
+          "market_return_3",
+          "market_return_12",
+          "market_session_return",
+          "market_vwap_distance",
+          "market_seasonal_volume",
+          "market_relative_session_return",
+          "market_residual_return_1",
+          "reference_return_1",
+          "reference_return_3",
+          "reference_return_12",
+          "reference_session_return",
+          "reference_vwap_distance",
+          "reference_seasonal_volume",
+          "reference_relative_session_return",
+          "reference_residual_return_1"
+        ]
+      },
+      {
+        "symbol": "NVDA",
+        "model": "context_tree",
+        "horizon": 1,
+        "last_train": "2026-09-02",
+        "rows": 2128,
+        "sessions": 28,
+        "names": [
+          "return_1",
+          "return_3",
+          "return_12",
+          "session_return",
+          "range_fraction",
+          "body_fraction",
+          "upper_wick_fraction",
+          "lower_wick_fraction",
+          "close_location",
+          "realized_volatility_12",
+          "vwap_distance",
+          "bar_relative_volume",
+          "peer_return_1",
+          "peer_residual_return_1",
+          "peer_return_3",
+          "peer_residual_return_3",
+          "time_fraction",
+          "overnight_gap",
+          "seasonal_volume"
+        ]
+      }
+    ],
+    "selection": {
+      "method": "lowest_mean_daily_out_of_sample_squared_error",
+      "validation_dates": [
+        "2026-08-27",
+        "2026-08-28",
+        "2026-08-31",
+        "2026-09-01",
+        "2026-09-02"
+      ],
+      "selections": {
+        "SNDK": {
+          "model": "market_ridge",
+          "scores_mse_bps2": {
+            "context_tree": 1989.3115827506786,
+            "market_tree": 2025.7724989411922,
+            "market_ridge": 1986.0965989136319
+          }
+        },
+        "TSLA": {
+          "model": "market_ridge",
+          "scores_mse_bps2": {
+            "context_tree": 480.71675318009795,
+            "market_tree": 480.71675318009795,
+            "market_ridge": 464.98247435492084
+          }
+        },
+        "NVDA": {
+          "model": "context_tree",
+          "scores_mse_bps2": {
+            "context_tree": 473.1509985440045,
+            "market_tree": 473.5220141159305,
+            "market_ridge": 479.14737112826924
+          }
+        }
+      },
+      "folds": [
+        {
+          "symbol": "SNDK",
+          "model": "context_tree",
+          "validation_day": "2026-08-27",
+          "last_train": "2026-08-26",
+          "rows": 76,
+          "training_rows": 1748,
+          "mse_bps2": 1370.5947571003708,
+          "zero_forecast_mse_bps2": 1145.8991959572943
+        },
+        {
+          "symbol": "TSLA",
+          "model": "context_tree",
+          "validation_day": "2026-08-27",
+          "last_train": "2026-08-26",
+          "rows": 76,
+          "training_rows": 1748,
+          "mse_bps2": 447.64800416293656,
+          "zero_forecast_mse_bps2": 471.8914984938263
+        },
+        {
+          "symbol": "NVDA",
+          "model": "context_tree",
+          "validation_day": "2026-08-27",
+          "last_train": "2026-08-26",
+          "rows": 76,
+          "training_rows": 1748,
+          "mse_bps2": 987.4027140241466,
+          "zero_forecast_mse_bps2": 942.5791145088571
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_tree",
+          "validation_day": "2026-08-27",
+          "last_train": "2026-08-26",
+          "rows": 76,
+          "training_rows": 1748,
+          "mse_bps2": 1489.297796521481,
+          "zero_forecast_mse_bps2": 1145.8991959572943
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_tree",
+          "validation_day": "2026-08-27",
+          "last_train": "2026-08-26",
+          "rows": 76,
+          "training_rows": 1748,
+          "mse_bps2": 447.64800416293656,
+          "zero_forecast_mse_bps2": 471.8914984938263
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_tree",
+          "validation_day": "2026-08-27",
+          "last_train": "2026-08-26",
+          "rows": 76,
+          "training_rows": 1748,
+          "mse_bps2": 991.9790954568456,
+          "zero_forecast_mse_bps2": 942.5791145088571
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_ridge",
+          "validation_day": "2026-08-27",
+          "last_train": "2026-08-26",
+          "rows": 76,
+          "training_rows": 1748,
+          "mse_bps2": 1246.7793951018066,
+          "zero_forecast_mse_bps2": 1145.8991959572943
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_ridge",
+          "validation_day": "2026-08-27",
+          "last_train": "2026-08-26",
+          "rows": 76,
+          "training_rows": 1748,
+          "mse_bps2": 439.4854032573469,
+          "zero_forecast_mse_bps2": 471.8914984938263
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_ridge",
+          "validation_day": "2026-08-27",
+          "last_train": "2026-08-26",
+          "rows": 76,
+          "training_rows": 1748,
+          "mse_bps2": 942.2584936367944,
+          "zero_forecast_mse_bps2": 942.5791145088571
+        },
+        {
+          "symbol": "SNDK",
+          "model": "context_tree",
+          "validation_day": "2026-08-28",
+          "last_train": "2026-08-27",
+          "rows": 76,
+          "training_rows": 1824,
+          "mse_bps2": 2112.941722318493,
+          "zero_forecast_mse_bps2": 2071.7908683583787
+        },
+        {
+          "symbol": "TSLA",
+          "model": "context_tree",
+          "validation_day": "2026-08-28",
+          "last_train": "2026-08-27",
+          "rows": 76,
+          "training_rows": 1824,
+          "mse_bps2": 285.0768531014218,
+          "zero_forecast_mse_bps2": 261.1989488944191
+        },
+        {
+          "symbol": "NVDA",
+          "model": "context_tree",
+          "validation_day": "2026-08-28",
+          "last_train": "2026-08-27",
+          "rows": 76,
+          "training_rows": 1824,
+          "mse_bps2": 553.1958780925763,
+          "zero_forecast_mse_bps2": 573.323608819061
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_tree",
+          "validation_day": "2026-08-28",
+          "last_train": "2026-08-27",
+          "rows": 76,
+          "training_rows": 1824,
+          "mse_bps2": 2035.500121281995,
+          "zero_forecast_mse_bps2": 2071.7908683583787
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_tree",
+          "validation_day": "2026-08-28",
+          "last_train": "2026-08-27",
+          "rows": 76,
+          "training_rows": 1824,
+          "mse_bps2": 285.0768531014218,
+          "zero_forecast_mse_bps2": 261.1989488944191
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_tree",
+          "validation_day": "2026-08-28",
+          "last_train": "2026-08-27",
+          "rows": 76,
+          "training_rows": 1824,
+          "mse_bps2": 570.6375674417493,
+          "zero_forecast_mse_bps2": 573.323608819061
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_ridge",
+          "validation_day": "2026-08-28",
+          "last_train": "2026-08-27",
+          "rows": 76,
+          "training_rows": 1824,
+          "mse_bps2": 2153.4733943932547,
+          "zero_forecast_mse_bps2": 2071.7908683583787
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_ridge",
+          "validation_day": "2026-08-28",
+          "last_train": "2026-08-27",
+          "rows": 76,
+          "training_rows": 1824,
+          "mse_bps2": 305.91913389375884,
+          "zero_forecast_mse_bps2": 261.1989488944191
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_ridge",
+          "validation_day": "2026-08-28",
+          "last_train": "2026-08-27",
+          "rows": 76,
+          "training_rows": 1824,
+          "mse_bps2": 620.4400986825666,
+          "zero_forecast_mse_bps2": 573.323608819061
+        },
+        {
+          "symbol": "SNDK",
+          "model": "context_tree",
+          "validation_day": "2026-08-31",
+          "last_train": "2026-08-28",
+          "rows": 76,
+          "training_rows": 1900,
+          "mse_bps2": 3150.5257136575474,
+          "zero_forecast_mse_bps2": 3154.302217868761
+        },
+        {
+          "symbol": "TSLA",
+          "model": "context_tree",
+          "validation_day": "2026-08-31",
+          "last_train": "2026-08-28",
+          "rows": 76,
+          "training_rows": 1900,
+          "mse_bps2": 708.3167840900451,
+          "zero_forecast_mse_bps2": 673.1134564879084
+        },
+        {
+          "symbol": "NVDA",
+          "model": "context_tree",
+          "validation_day": "2026-08-31",
+          "last_train": "2026-08-28",
+          "rows": 76,
+          "training_rows": 1900,
+          "mse_bps2": 274.0156324359662,
+          "zero_forecast_mse_bps2": 264.7051139602904
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_tree",
+          "validation_day": "2026-08-31",
+          "last_train": "2026-08-28",
+          "rows": 76,
+          "training_rows": 1900,
+          "mse_bps2": 3294.3834873129235,
+          "zero_forecast_mse_bps2": 3154.302217868761
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_tree",
+          "validation_day": "2026-08-31",
+          "last_train": "2026-08-28",
+          "rows": 76,
+          "training_rows": 1900,
+          "mse_bps2": 708.3167840900451,
+          "zero_forecast_mse_bps2": 673.1134564879084
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_tree",
+          "validation_day": "2026-08-31",
+          "last_train": "2026-08-28",
+          "rows": 76,
+          "training_rows": 1900,
+          "mse_bps2": 276.92238735682776,
+          "zero_forecast_mse_bps2": 264.7051139602904
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_ridge",
+          "validation_day": "2026-08-31",
+          "last_train": "2026-08-28",
+          "rows": 76,
+          "training_rows": 1900,
+          "mse_bps2": 3203.9248690456093,
+          "zero_forecast_mse_bps2": 3154.302217868761
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_ridge",
+          "validation_day": "2026-08-31",
+          "last_train": "2026-08-28",
+          "rows": 76,
+          "training_rows": 1900,
+          "mse_bps2": 721.8648275832334,
+          "zero_forecast_mse_bps2": 673.1134564879084
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_ridge",
+          "validation_day": "2026-08-31",
+          "last_train": "2026-08-28",
+          "rows": 76,
+          "training_rows": 1900,
+          "mse_bps2": 280.1698860460516,
+          "zero_forecast_mse_bps2": 264.7051139602904
+        },
+        {
+          "symbol": "SNDK",
+          "model": "context_tree",
+          "validation_day": "2026-09-01",
+          "last_train": "2026-08-31",
+          "rows": 76,
+          "training_rows": 1976,
+          "mse_bps2": 1120.6217312171552,
+          "zero_forecast_mse_bps2": 1113.7830932684597
+        },
+        {
+          "symbol": "TSLA",
+          "model": "context_tree",
+          "validation_day": "2026-09-01",
+          "last_train": "2026-08-31",
+          "rows": 76,
+          "training_rows": 1976,
+          "mse_bps2": 284.3117442811645,
+          "zero_forecast_mse_bps2": 310.37966574949417
+        },
+        {
+          "symbol": "NVDA",
+          "model": "context_tree",
+          "validation_day": "2026-09-01",
+          "last_train": "2026-08-31",
+          "rows": 76,
+          "training_rows": 1976,
+          "mse_bps2": 228.3939087351192,
+          "zero_forecast_mse_bps2": 214.16726477729972
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_tree",
+          "validation_day": "2026-09-01",
+          "last_train": "2026-08-31",
+          "rows": 76,
+          "training_rows": 1976,
+          "mse_bps2": 1121.959938008025,
+          "zero_forecast_mse_bps2": 1113.7830932684597
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_tree",
+          "validation_day": "2026-09-01",
+          "last_train": "2026-08-31",
+          "rows": 76,
+          "training_rows": 1976,
+          "mse_bps2": 284.3117442811645,
+          "zero_forecast_mse_bps2": 310.37966574949417
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_tree",
+          "validation_day": "2026-09-01",
+          "last_train": "2026-08-31",
+          "rows": 76,
+          "training_rows": 1976,
+          "mse_bps2": 228.05112777650558,
+          "zero_forecast_mse_bps2": 214.16726477729972
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_ridge",
+          "validation_day": "2026-09-01",
+          "last_train": "2026-08-31",
+          "rows": 76,
+          "training_rows": 1976,
+          "mse_bps2": 1179.078867685022,
+          "zero_forecast_mse_bps2": 1113.7830932684597
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_ridge",
+          "validation_day": "2026-09-01",
+          "last_train": "2026-08-31",
+          "rows": 76,
+          "training_rows": 1976,
+          "mse_bps2": 292.6079647048705,
+          "zero_forecast_mse_bps2": 310.37966574949417
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_ridge",
+          "validation_day": "2026-09-01",
+          "last_train": "2026-08-31",
+          "rows": 76,
+          "training_rows": 1976,
+          "mse_bps2": 230.1356608401803,
+          "zero_forecast_mse_bps2": 214.16726477729972
+        },
+        {
+          "symbol": "SNDK",
+          "model": "context_tree",
+          "validation_day": "2026-09-02",
+          "last_train": "2026-09-01",
+          "rows": 76,
+          "training_rows": 2052,
+          "mse_bps2": 2191.8739894598284,
+          "zero_forecast_mse_bps2": 1973.0197920690043
+        },
+        {
+          "symbol": "TSLA",
+          "model": "context_tree",
+          "validation_day": "2026-09-02",
+          "last_train": "2026-09-01",
+          "rows": 76,
+          "training_rows": 2052,
+          "mse_bps2": 678.2303802649218,
+          "zero_forecast_mse_bps2": 622.3786004217724
+        },
+        {
+          "symbol": "NVDA",
+          "model": "context_tree",
+          "validation_day": "2026-09-02",
+          "last_train": "2026-09-01",
+          "rows": 76,
+          "training_rows": 2052,
+          "mse_bps2": 322.74685943221436,
+          "zero_forecast_mse_bps2": 294.20395611593045
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_tree",
+          "validation_day": "2026-09-02",
+          "last_train": "2026-09-01",
+          "rows": 76,
+          "training_rows": 2052,
+          "mse_bps2": 2187.721151581539,
+          "zero_forecast_mse_bps2": 1973.0197920690043
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_tree",
+          "validation_day": "2026-09-02",
+          "last_train": "2026-09-01",
+          "rows": 76,
+          "training_rows": 2052,
+          "mse_bps2": 678.2303802649218,
+          "zero_forecast_mse_bps2": 622.3786004217724
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_tree",
+          "validation_day": "2026-09-02",
+          "last_train": "2026-09-01",
+          "rows": 76,
+          "training_rows": 2052,
+          "mse_bps2": 300.0198925477241,
+          "zero_forecast_mse_bps2": 294.20395611593045
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_ridge",
+          "validation_day": "2026-09-02",
+          "last_train": "2026-09-01",
+          "rows": 76,
+          "training_rows": 2052,
+          "mse_bps2": 2147.226468342467,
+          "zero_forecast_mse_bps2": 1973.0197920690043
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_ridge",
+          "validation_day": "2026-09-02",
+          "last_train": "2026-09-01",
+          "rows": 76,
+          "training_rows": 2052,
+          "mse_bps2": 565.0350423353949,
+          "zero_forecast_mse_bps2": 622.3786004217724
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_ridge",
+          "validation_day": "2026-09-02",
+          "last_train": "2026-09-01",
+          "rows": 76,
+          "training_rows": 2052,
+          "mse_bps2": 322.7327164357536,
+          "zero_forecast_mse_bps2": 294.20395611593045
+        }
+      ]
+    },
+    "calibration": null
+  },
+  {
+    "day": "2026-09-04",
+    "eligibility": {
+      "SNDK": {
+        "eligible": true,
+        "reason": "admitted",
+        "last_price": 1555.050048828125,
+        "adv": 17624624056.207115,
+        "history_start": "2026-08-07",
+        "history_end": "2026-09-03",
+        "sessions": 20,
+        "dollar_volume_method": "sum_5min_close_times_volume_proxy",
+        "instrument_admitted": true,
+        "market_cap": 239153479680,
+        "metadata_known_at": "2026-09-13T19:07:20.750549+00:00",
+        "membership_basis": "contemporary_selected_panel_not_historical_proof"
+      },
+      "TSLA": {
+        "eligible": true,
+        "reason": "admitted",
+        "last_price": 376.3550109863281,
+        "adv": 11468340906.93531,
+        "history_start": "2026-08-07",
+        "history_end": "2026-09-03",
+        "sessions": 20,
+        "dollar_volume_method": "sum_5min_close_times_volume_proxy",
+        "instrument_admitted": true,
+        "market_cap": 1443322658816,
+        "metadata_known_at": "2026-09-13T19:07:20.861480+00:00",
+        "membership_basis": "contemporary_selected_panel_not_historical_proof"
+      },
+      "NVDA": {
+        "eligible": true,
+        "reason": "admitted",
+        "last_price": 228.39999389648438,
+        "adv": 22659443585.994488,
+        "history_start": "2026-08-07",
+        "history_end": "2026-09-03",
+        "sessions": 20,
+        "dollar_volume_method": "sum_5min_close_times_volume_proxy",
+        "instrument_admitted": true,
+        "market_cap": 5271048421376,
+        "metadata_known_at": "2026-09-13T19:07:20.541350+00:00",
+        "membership_basis": "contemporary_selected_panel_not_historical_proof"
+      }
+    },
+    "training": [
+      {
+        "symbol": "SNDK",
+        "model": "market_tree",
+        "horizon": 1,
+        "last_train": "2026-09-03",
+        "rows": 2204,
+        "sessions": 29,
+        "names": [
+          "return_1",
+          "return_3",
+          "return_12",
+          "session_return",
+          "range_fraction",
+          "body_fraction",
+          "upper_wick_fraction",
+          "lower_wick_fraction",
+          "close_location",
+          "realized_volatility_12",
+          "vwap_distance",
+          "bar_relative_volume",
+          "peer_return_1",
+          "peer_residual_return_1",
+          "peer_return_3",
+          "peer_residual_return_3",
+          "time_fraction",
+          "overnight_gap",
+          "seasonal_volume",
+          "market_return_1",
+          "market_return_3",
+          "market_return_12",
+          "market_session_return",
+          "market_vwap_distance",
+          "market_seasonal_volume",
+          "market_relative_session_return",
+          "market_residual_return_1",
+          "reference_return_1",
+          "reference_return_3",
+          "reference_return_12",
+          "reference_session_return",
+          "reference_vwap_distance",
+          "reference_seasonal_volume",
+          "reference_relative_session_return",
+          "reference_residual_return_1"
+        ]
+      },
+      {
+        "symbol": "TSLA",
+        "model": "market_ridge",
+        "horizon": 1,
+        "last_train": "2026-09-03",
+        "rows": 2204,
+        "sessions": 29,
+        "names": [
+          "return_1",
+          "return_3",
+          "return_12",
+          "session_return",
+          "range_fraction",
+          "body_fraction",
+          "upper_wick_fraction",
+          "lower_wick_fraction",
+          "close_location",
+          "realized_volatility_12",
+          "vwap_distance",
+          "bar_relative_volume",
+          "peer_return_1",
+          "peer_residual_return_1",
+          "peer_return_3",
+          "peer_residual_return_3",
+          "time_fraction",
+          "overnight_gap",
+          "seasonal_volume",
+          "market_return_1",
+          "market_return_3",
+          "market_return_12",
+          "market_session_return",
+          "market_vwap_distance",
+          "market_seasonal_volume",
+          "market_relative_session_return",
+          "market_residual_return_1",
+          "reference_return_1",
+          "reference_return_3",
+          "reference_return_12",
+          "reference_session_return",
+          "reference_vwap_distance",
+          "reference_seasonal_volume",
+          "reference_relative_session_return",
+          "reference_residual_return_1"
+        ]
+      },
+      {
+        "symbol": "NVDA",
+        "model": "market_tree",
+        "horizon": 1,
+        "last_train": "2026-09-03",
+        "rows": 2204,
+        "sessions": 29,
+        "names": [
+          "return_1",
+          "return_3",
+          "return_12",
+          "session_return",
+          "range_fraction",
+          "body_fraction",
+          "upper_wick_fraction",
+          "lower_wick_fraction",
+          "close_location",
+          "realized_volatility_12",
+          "vwap_distance",
+          "bar_relative_volume",
+          "peer_return_1",
+          "peer_residual_return_1",
+          "peer_return_3",
+          "peer_residual_return_3",
+          "time_fraction",
+          "overnight_gap",
+          "seasonal_volume",
+          "market_return_1",
+          "market_return_3",
+          "market_return_12",
+          "market_session_return",
+          "market_vwap_distance",
+          "market_seasonal_volume",
+          "market_relative_session_return",
+          "market_residual_return_1",
+          "reference_return_1",
+          "reference_return_3",
+          "reference_return_12",
+          "reference_session_return",
+          "reference_vwap_distance",
+          "reference_seasonal_volume",
+          "reference_relative_session_return",
+          "reference_residual_return_1"
+        ]
+      }
+    ],
+    "selection": {
+      "method": "lowest_mean_daily_out_of_sample_squared_error",
+      "validation_dates": [
+        "2026-08-28",
+        "2026-08-31",
+        "2026-09-01",
+        "2026-09-02",
+        "2026-09-03"
+      ],
+      "selections": {
+        "SNDK": {
+          "model": "market_tree",
+          "scores_mse_bps2": {
+            "context_tree": 1945.26447570628,
+            "market_tree": 1943.5854268207254,
+            "market_ridge": 1976.571195616983
+          }
+        },
+        "TSLA": {
+          "model": "market_ridge",
+          "scores_mse_bps2": {
+            "context_tree": 531.725651422985,
+            "market_tree": 531.725651422985,
+            "market_ridge": 517.0734913695969
+          }
+        },
+        "NVDA": {
+          "model": "market_tree",
+          "scores_mse_bps2": {
+            "context_tree": 336.77217248317663,
+            "market_tree": 336.2279117685628,
+            "market_ridge": 350.1754704709001
+          }
+        }
+      },
+      "folds": [
+        {
+          "symbol": "SNDK",
+          "model": "context_tree",
+          "validation_day": "2026-08-28",
+          "last_train": "2026-08-27",
+          "rows": 76,
+          "training_rows": 1824,
+          "mse_bps2": 2112.941722318493,
+          "zero_forecast_mse_bps2": 2071.7908683583787
+        },
+        {
+          "symbol": "TSLA",
+          "model": "context_tree",
+          "validation_day": "2026-08-28",
+          "last_train": "2026-08-27",
+          "rows": 76,
+          "training_rows": 1824,
+          "mse_bps2": 285.0768531014218,
+          "zero_forecast_mse_bps2": 261.1989488944191
+        },
+        {
+          "symbol": "NVDA",
+          "model": "context_tree",
+          "validation_day": "2026-08-28",
+          "last_train": "2026-08-27",
+          "rows": 76,
+          "training_rows": 1824,
+          "mse_bps2": 553.1958780925763,
+          "zero_forecast_mse_bps2": 573.323608819061
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_tree",
+          "validation_day": "2026-08-28",
+          "last_train": "2026-08-27",
+          "rows": 76,
+          "training_rows": 1824,
+          "mse_bps2": 2035.500121281995,
+          "zero_forecast_mse_bps2": 2071.7908683583787
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_tree",
+          "validation_day": "2026-08-28",
+          "last_train": "2026-08-27",
+          "rows": 76,
+          "training_rows": 1824,
+          "mse_bps2": 285.0768531014218,
+          "zero_forecast_mse_bps2": 261.1989488944191
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_tree",
+          "validation_day": "2026-08-28",
+          "last_train": "2026-08-27",
+          "rows": 76,
+          "training_rows": 1824,
+          "mse_bps2": 570.6375674417493,
+          "zero_forecast_mse_bps2": 573.323608819061
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_ridge",
+          "validation_day": "2026-08-28",
+          "last_train": "2026-08-27",
+          "rows": 76,
+          "training_rows": 1824,
+          "mse_bps2": 2153.4733943932547,
+          "zero_forecast_mse_bps2": 2071.7908683583787
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_ridge",
+          "validation_day": "2026-08-28",
+          "last_train": "2026-08-27",
+          "rows": 76,
+          "training_rows": 1824,
+          "mse_bps2": 305.91913389375884,
+          "zero_forecast_mse_bps2": 261.1989488944191
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_ridge",
+          "validation_day": "2026-08-28",
+          "last_train": "2026-08-27",
+          "rows": 76,
+          "training_rows": 1824,
+          "mse_bps2": 620.4400986825666,
+          "zero_forecast_mse_bps2": 573.323608819061
+        },
+        {
+          "symbol": "SNDK",
+          "model": "context_tree",
+          "validation_day": "2026-08-31",
+          "last_train": "2026-08-28",
+          "rows": 76,
+          "training_rows": 1900,
+          "mse_bps2": 3150.5257136575474,
+          "zero_forecast_mse_bps2": 3154.302217868761
+        },
+        {
+          "symbol": "TSLA",
+          "model": "context_tree",
+          "validation_day": "2026-08-31",
+          "last_train": "2026-08-28",
+          "rows": 76,
+          "training_rows": 1900,
+          "mse_bps2": 708.3167840900451,
+          "zero_forecast_mse_bps2": 673.1134564879084
+        },
+        {
+          "symbol": "NVDA",
+          "model": "context_tree",
+          "validation_day": "2026-08-31",
+          "last_train": "2026-08-28",
+          "rows": 76,
+          "training_rows": 1900,
+          "mse_bps2": 274.0156324359662,
+          "zero_forecast_mse_bps2": 264.7051139602904
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_tree",
+          "validation_day": "2026-08-31",
+          "last_train": "2026-08-28",
+          "rows": 76,
+          "training_rows": 1900,
+          "mse_bps2": 3294.3834873129235,
+          "zero_forecast_mse_bps2": 3154.302217868761
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_tree",
+          "validation_day": "2026-08-31",
+          "last_train": "2026-08-28",
+          "rows": 76,
+          "training_rows": 1900,
+          "mse_bps2": 708.3167840900451,
+          "zero_forecast_mse_bps2": 673.1134564879084
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_tree",
+          "validation_day": "2026-08-31",
+          "last_train": "2026-08-28",
+          "rows": 76,
+          "training_rows": 1900,
+          "mse_bps2": 276.92238735682776,
+          "zero_forecast_mse_bps2": 264.7051139602904
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_ridge",
+          "validation_day": "2026-08-31",
+          "last_train": "2026-08-28",
+          "rows": 76,
+          "training_rows": 1900,
+          "mse_bps2": 3203.9248690456093,
+          "zero_forecast_mse_bps2": 3154.302217868761
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_ridge",
+          "validation_day": "2026-08-31",
+          "last_train": "2026-08-28",
+          "rows": 76,
+          "training_rows": 1900,
+          "mse_bps2": 721.8648275832334,
+          "zero_forecast_mse_bps2": 673.1134564879084
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_ridge",
+          "validation_day": "2026-08-31",
+          "last_train": "2026-08-28",
+          "rows": 76,
+          "training_rows": 1900,
+          "mse_bps2": 280.1698860460516,
+          "zero_forecast_mse_bps2": 264.7051139602904
+        },
+        {
+          "symbol": "SNDK",
+          "model": "context_tree",
+          "validation_day": "2026-09-01",
+          "last_train": "2026-08-31",
+          "rows": 76,
+          "training_rows": 1976,
+          "mse_bps2": 1120.6217312171552,
+          "zero_forecast_mse_bps2": 1113.7830932684597
+        },
+        {
+          "symbol": "TSLA",
+          "model": "context_tree",
+          "validation_day": "2026-09-01",
+          "last_train": "2026-08-31",
+          "rows": 76,
+          "training_rows": 1976,
+          "mse_bps2": 284.3117442811645,
+          "zero_forecast_mse_bps2": 310.37966574949417
+        },
+        {
+          "symbol": "NVDA",
+          "model": "context_tree",
+          "validation_day": "2026-09-01",
+          "last_train": "2026-08-31",
+          "rows": 76,
+          "training_rows": 1976,
+          "mse_bps2": 228.3939087351192,
+          "zero_forecast_mse_bps2": 214.16726477729972
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_tree",
+          "validation_day": "2026-09-01",
+          "last_train": "2026-08-31",
+          "rows": 76,
+          "training_rows": 1976,
+          "mse_bps2": 1121.959938008025,
+          "zero_forecast_mse_bps2": 1113.7830932684597
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_tree",
+          "validation_day": "2026-09-01",
+          "last_train": "2026-08-31",
+          "rows": 76,
+          "training_rows": 1976,
+          "mse_bps2": 284.3117442811645,
+          "zero_forecast_mse_bps2": 310.37966574949417
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_tree",
+          "validation_day": "2026-09-01",
+          "last_train": "2026-08-31",
+          "rows": 76,
+          "training_rows": 1976,
+          "mse_bps2": 228.05112777650558,
+          "zero_forecast_mse_bps2": 214.16726477729972
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_ridge",
+          "validation_day": "2026-09-01",
+          "last_train": "2026-08-31",
+          "rows": 76,
+          "training_rows": 1976,
+          "mse_bps2": 1179.078867685022,
+          "zero_forecast_mse_bps2": 1113.7830932684597
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_ridge",
+          "validation_day": "2026-09-01",
+          "last_train": "2026-08-31",
+          "rows": 76,
+          "training_rows": 1976,
+          "mse_bps2": 292.6079647048705,
+          "zero_forecast_mse_bps2": 310.37966574949417
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_ridge",
+          "validation_day": "2026-09-01",
+          "last_train": "2026-08-31",
+          "rows": 76,
+          "training_rows": 1976,
+          "mse_bps2": 230.1356608401803,
+          "zero_forecast_mse_bps2": 214.16726477729972
+        },
+        {
+          "symbol": "SNDK",
+          "model": "context_tree",
+          "validation_day": "2026-09-02",
+          "last_train": "2026-09-01",
+          "rows": 76,
+          "training_rows": 2052,
+          "mse_bps2": 2191.8739894598284,
+          "zero_forecast_mse_bps2": 1973.0197920690043
+        },
+        {
+          "symbol": "TSLA",
+          "model": "context_tree",
+          "validation_day": "2026-09-02",
+          "last_train": "2026-09-01",
+          "rows": 76,
+          "training_rows": 2052,
+          "mse_bps2": 678.2303802649218,
+          "zero_forecast_mse_bps2": 622.3786004217724
+        },
+        {
+          "symbol": "NVDA",
+          "model": "context_tree",
+          "validation_day": "2026-09-02",
+          "last_train": "2026-09-01",
+          "rows": 76,
+          "training_rows": 2052,
+          "mse_bps2": 322.74685943221436,
+          "zero_forecast_mse_bps2": 294.20395611593045
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_tree",
+          "validation_day": "2026-09-02",
+          "last_train": "2026-09-01",
+          "rows": 76,
+          "training_rows": 2052,
+          "mse_bps2": 2187.721151581539,
+          "zero_forecast_mse_bps2": 1973.0197920690043
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_tree",
+          "validation_day": "2026-09-02",
+          "last_train": "2026-09-01",
+          "rows": 76,
+          "training_rows": 2052,
+          "mse_bps2": 678.2303802649218,
+          "zero_forecast_mse_bps2": 622.3786004217724
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_tree",
+          "validation_day": "2026-09-02",
+          "last_train": "2026-09-01",
+          "rows": 76,
+          "training_rows": 2052,
+          "mse_bps2": 300.0198925477241,
+          "zero_forecast_mse_bps2": 294.20395611593045
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_ridge",
+          "validation_day": "2026-09-02",
+          "last_train": "2026-09-01",
+          "rows": 76,
+          "training_rows": 2052,
+          "mse_bps2": 2147.226468342467,
+          "zero_forecast_mse_bps2": 1973.0197920690043
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_ridge",
+          "validation_day": "2026-09-02",
+          "last_train": "2026-09-01",
+          "rows": 76,
+          "training_rows": 2052,
+          "mse_bps2": 565.0350423353949,
+          "zero_forecast_mse_bps2": 622.3786004217724
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_ridge",
+          "validation_day": "2026-09-02",
+          "last_train": "2026-09-01",
+          "rows": 76,
+          "training_rows": 2052,
+          "mse_bps2": 322.7327164357536,
+          "zero_forecast_mse_bps2": 294.20395611593045
+        },
+        {
+          "symbol": "SNDK",
+          "model": "context_tree",
+          "validation_day": "2026-09-03",
+          "last_train": "2026-09-02",
+          "rows": 76,
+          "training_rows": 2128,
+          "mse_bps2": 1150.3592218783783,
+          "zero_forecast_mse_bps2": 1100.3033860600729
+        },
+        {
+          "symbol": "TSLA",
+          "model": "context_tree",
+          "validation_day": "2026-09-03",
+          "last_train": "2026-09-02",
+          "rows": 76,
+          "training_rows": 2128,
+          "mse_bps2": 702.6924953773723,
+          "zero_forecast_mse_bps2": 717.1242006928393
+        },
+        {
+          "symbol": "NVDA",
+          "model": "context_tree",
+          "validation_day": "2026-09-03",
+          "last_train": "2026-09-02",
+          "rows": 76,
+          "training_rows": 2128,
+          "mse_bps2": 305.5085837200073,
+          "zero_forecast_mse_bps2": 300.13175478285274
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_tree",
+          "validation_day": "2026-09-03",
+          "last_train": "2026-09-02",
+          "rows": 76,
+          "training_rows": 2128,
+          "mse_bps2": 1078.3624359191435,
+          "zero_forecast_mse_bps2": 1100.3033860600729
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_tree",
+          "validation_day": "2026-09-03",
+          "last_train": "2026-09-02",
+          "rows": 76,
+          "training_rows": 2128,
+          "mse_bps2": 702.6924953773723,
+          "zero_forecast_mse_bps2": 717.1242006928393
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_tree",
+          "validation_day": "2026-09-03",
+          "last_train": "2026-09-02",
+          "rows": 76,
+          "training_rows": 2128,
+          "mse_bps2": 305.5085837200073,
+          "zero_forecast_mse_bps2": 300.13175478285274
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_ridge",
+          "validation_day": "2026-09-03",
+          "last_train": "2026-09-02",
+          "rows": 76,
+          "training_rows": 2128,
+          "mse_bps2": 1199.1523786185624,
+          "zero_forecast_mse_bps2": 1100.3033860600729
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_ridge",
+          "validation_day": "2026-09-03",
+          "last_train": "2026-09-02",
+          "rows": 76,
+          "training_rows": 2128,
+          "mse_bps2": 699.9404883307268,
+          "zero_forecast_mse_bps2": 717.1242006928393
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_ridge",
+          "validation_day": "2026-09-03",
+          "last_train": "2026-09-02",
+          "rows": 76,
+          "training_rows": 2128,
+          "mse_bps2": 297.3989903499485,
+          "zero_forecast_mse_bps2": 300.13175478285274
+        }
+      ]
+    },
+    "calibration": null
+  },
+  {
+    "day": "2026-09-08",
+    "eligibility": {
+      "SNDK": {
+        "eligible": true,
+        "reason": "admitted",
+        "last_price": 1739.8101806640625,
+        "adv": 18069209135.824535,
+        "history_start": "2026-08-10",
+        "history_end": "2026-09-04",
+        "sessions": 20,
+        "dollar_volume_method": "sum_5min_close_times_volume_proxy",
+        "instrument_admitted": true,
+        "market_cap": 239153479680,
+        "metadata_known_at": "2026-09-13T19:07:20.750549+00:00",
+        "membership_basis": "contemporary_selected_panel_not_historical_proof"
+      },
+      "TSLA": {
+        "eligible": true,
+        "reason": "admitted",
+        "last_price": 353.94989013671875,
+        "adv": 11937765887.644228,
+        "history_start": "2026-08-10",
+        "history_end": "2026-09-04",
+        "sessions": 20,
+        "dollar_volume_method": "sum_5min_close_times_volume_proxy",
+        "instrument_admitted": true,
+        "market_cap": 1443322658816,
+        "metadata_known_at": "2026-09-13T19:07:20.861480+00:00",
+        "membership_basis": "contemporary_selected_panel_not_historical_proof"
+      },
+      "NVDA": {
+        "eligible": true,
+        "reason": "admitted",
+        "last_price": 230.34500122070312,
+        "adv": 23030679440.8809,
+        "history_start": "2026-08-10",
+        "history_end": "2026-09-04",
+        "sessions": 20,
+        "dollar_volume_method": "sum_5min_close_times_volume_proxy",
+        "instrument_admitted": true,
+        "market_cap": 5271048421376,
+        "metadata_known_at": "2026-09-13T19:07:20.541350+00:00",
+        "membership_basis": "contemporary_selected_panel_not_historical_proof"
+      }
+    },
+    "training": [
+      {
+        "symbol": "SNDK",
+        "model": "context_tree",
+        "horizon": 1,
+        "last_train": "2026-09-04",
+        "rows": 2280,
+        "sessions": 30,
+        "names": [
+          "return_1",
+          "return_3",
+          "return_12",
+          "session_return",
+          "range_fraction",
+          "body_fraction",
+          "upper_wick_fraction",
+          "lower_wick_fraction",
+          "close_location",
+          "realized_volatility_12",
+          "vwap_distance",
+          "bar_relative_volume",
+          "peer_return_1",
+          "peer_residual_return_1",
+          "peer_return_3",
+          "peer_residual_return_3",
+          "time_fraction",
+          "overnight_gap",
+          "seasonal_volume"
+        ]
+      },
+      {
+        "symbol": "TSLA",
+        "model": "market_ridge",
+        "horizon": 1,
+        "last_train": "2026-09-04",
+        "rows": 2280,
+        "sessions": 30,
+        "names": [
+          "return_1",
+          "return_3",
+          "return_12",
+          "session_return",
+          "range_fraction",
+          "body_fraction",
+          "upper_wick_fraction",
+          "lower_wick_fraction",
+          "close_location",
+          "realized_volatility_12",
+          "vwap_distance",
+          "bar_relative_volume",
+          "peer_return_1",
+          "peer_residual_return_1",
+          "peer_return_3",
+          "peer_residual_return_3",
+          "time_fraction",
+          "overnight_gap",
+          "seasonal_volume",
+          "market_return_1",
+          "market_return_3",
+          "market_return_12",
+          "market_session_return",
+          "market_vwap_distance",
+          "market_seasonal_volume",
+          "market_relative_session_return",
+          "market_residual_return_1",
+          "reference_return_1",
+          "reference_return_3",
+          "reference_return_12",
+          "reference_session_return",
+          "reference_vwap_distance",
+          "reference_seasonal_volume",
+          "reference_relative_session_return",
+          "reference_residual_return_1"
+        ]
+      },
+      {
+        "symbol": "NVDA",
+        "model": "market_tree",
+        "horizon": 1,
+        "last_train": "2026-09-04",
+        "rows": 2280,
+        "sessions": 30,
+        "names": [
+          "return_1",
+          "return_3",
+          "return_12",
+          "session_return",
+          "range_fraction",
+          "body_fraction",
+          "upper_wick_fraction",
+          "lower_wick_fraction",
+          "close_location",
+          "realized_volatility_12",
+          "vwap_distance",
+          "bar_relative_volume",
+          "peer_return_1",
+          "peer_residual_return_1",
+          "peer_return_3",
+          "peer_residual_return_3",
+          "time_fraction",
+          "overnight_gap",
+          "seasonal_volume",
+          "market_return_1",
+          "market_return_3",
+          "market_return_12",
+          "market_session_return",
+          "market_vwap_distance",
+          "market_seasonal_volume",
+          "market_relative_session_return",
+          "market_residual_return_1",
+          "reference_return_1",
+          "reference_return_3",
+          "reference_return_12",
+          "reference_session_return",
+          "reference_vwap_distance",
+          "reference_seasonal_volume",
+          "reference_relative_session_return",
+          "reference_residual_return_1"
+        ]
+      }
+    ],
+    "selection": {
+      "method": "lowest_mean_daily_out_of_sample_squared_error",
+      "validation_dates": [
+        "2026-08-31",
+        "2026-09-01",
+        "2026-09-02",
+        "2026-09-03",
+        "2026-09-04"
+      ],
+      "selections": {
+        "SNDK": {
+          "model": "context_tree",
+          "scores_mse_bps2": {
+            "context_tree": 1725.6094356823996,
+            "market_tree": 1734.9768949668874,
+            "market_ridge": 1756.060041013246
+          }
+        },
+        "TSLA": {
+          "model": "market_ridge",
+          "scores_mse_bps2": {
+            "context_tree": 565.220865703646,
+            "market_tree": 565.220865703646,
+            "market_ridge": 549.3820458767651
+          }
+        },
+        "NVDA": {
+          "model": "market_tree",
+          "scores_mse_bps2": {
+            "context_tree": 274.8952911380584,
+            "market_tree": 270.8626925536099,
+            "market_ridge": 275.6012733613635
+          }
+        }
+      },
+      "folds": [
+        {
+          "symbol": "SNDK",
+          "model": "context_tree",
+          "validation_day": "2026-08-31",
+          "last_train": "2026-08-28",
+          "rows": 76,
+          "training_rows": 1900,
+          "mse_bps2": 3150.5257136575474,
+          "zero_forecast_mse_bps2": 3154.302217868761
+        },
+        {
+          "symbol": "TSLA",
+          "model": "context_tree",
+          "validation_day": "2026-08-31",
+          "last_train": "2026-08-28",
+          "rows": 76,
+          "training_rows": 1900,
+          "mse_bps2": 708.3167840900451,
+          "zero_forecast_mse_bps2": 673.1134564879084
+        },
+        {
+          "symbol": "NVDA",
+          "model": "context_tree",
+          "validation_day": "2026-08-31",
+          "last_train": "2026-08-28",
+          "rows": 76,
+          "training_rows": 1900,
+          "mse_bps2": 274.0156324359662,
+          "zero_forecast_mse_bps2": 264.7051139602904
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_tree",
+          "validation_day": "2026-08-31",
+          "last_train": "2026-08-28",
+          "rows": 76,
+          "training_rows": 1900,
+          "mse_bps2": 3294.3834873129235,
+          "zero_forecast_mse_bps2": 3154.302217868761
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_tree",
+          "validation_day": "2026-08-31",
+          "last_train": "2026-08-28",
+          "rows": 76,
+          "training_rows": 1900,
+          "mse_bps2": 708.3167840900451,
+          "zero_forecast_mse_bps2": 673.1134564879084
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_tree",
+          "validation_day": "2026-08-31",
+          "last_train": "2026-08-28",
+          "rows": 76,
+          "training_rows": 1900,
+          "mse_bps2": 276.92238735682776,
+          "zero_forecast_mse_bps2": 264.7051139602904
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_ridge",
+          "validation_day": "2026-08-31",
+          "last_train": "2026-08-28",
+          "rows": 76,
+          "training_rows": 1900,
+          "mse_bps2": 3203.9248690456093,
+          "zero_forecast_mse_bps2": 3154.302217868761
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_ridge",
+          "validation_day": "2026-08-31",
+          "last_train": "2026-08-28",
+          "rows": 76,
+          "training_rows": 1900,
+          "mse_bps2": 721.8648275832334,
+          "zero_forecast_mse_bps2": 673.1134564879084
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_ridge",
+          "validation_day": "2026-08-31",
+          "last_train": "2026-08-28",
+          "rows": 76,
+          "training_rows": 1900,
+          "mse_bps2": 280.1698860460516,
+          "zero_forecast_mse_bps2": 264.7051139602904
+        },
+        {
+          "symbol": "SNDK",
+          "model": "context_tree",
+          "validation_day": "2026-09-01",
+          "last_train": "2026-08-31",
+          "rows": 76,
+          "training_rows": 1976,
+          "mse_bps2": 1120.6217312171552,
+          "zero_forecast_mse_bps2": 1113.7830932684597
+        },
+        {
+          "symbol": "TSLA",
+          "model": "context_tree",
+          "validation_day": "2026-09-01",
+          "last_train": "2026-08-31",
+          "rows": 76,
+          "training_rows": 1976,
+          "mse_bps2": 284.3117442811645,
+          "zero_forecast_mse_bps2": 310.37966574949417
+        },
+        {
+          "symbol": "NVDA",
+          "model": "context_tree",
+          "validation_day": "2026-09-01",
+          "last_train": "2026-08-31",
+          "rows": 76,
+          "training_rows": 1976,
+          "mse_bps2": 228.3939087351192,
+          "zero_forecast_mse_bps2": 214.16726477729972
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_tree",
+          "validation_day": "2026-09-01",
+          "last_train": "2026-08-31",
+          "rows": 76,
+          "training_rows": 1976,
+          "mse_bps2": 1121.959938008025,
+          "zero_forecast_mse_bps2": 1113.7830932684597
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_tree",
+          "validation_day": "2026-09-01",
+          "last_train": "2026-08-31",
+          "rows": 76,
+          "training_rows": 1976,
+          "mse_bps2": 284.3117442811645,
+          "zero_forecast_mse_bps2": 310.37966574949417
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_tree",
+          "validation_day": "2026-09-01",
+          "last_train": "2026-08-31",
+          "rows": 76,
+          "training_rows": 1976,
+          "mse_bps2": 228.05112777650558,
+          "zero_forecast_mse_bps2": 214.16726477729972
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_ridge",
+          "validation_day": "2026-09-01",
+          "last_train": "2026-08-31",
+          "rows": 76,
+          "training_rows": 1976,
+          "mse_bps2": 1179.078867685022,
+          "zero_forecast_mse_bps2": 1113.7830932684597
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_ridge",
+          "validation_day": "2026-09-01",
+          "last_train": "2026-08-31",
+          "rows": 76,
+          "training_rows": 1976,
+          "mse_bps2": 292.6079647048705,
+          "zero_forecast_mse_bps2": 310.37966574949417
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_ridge",
+          "validation_day": "2026-09-01",
+          "last_train": "2026-08-31",
+          "rows": 76,
+          "training_rows": 1976,
+          "mse_bps2": 230.1356608401803,
+          "zero_forecast_mse_bps2": 214.16726477729972
+        },
+        {
+          "symbol": "SNDK",
+          "model": "context_tree",
+          "validation_day": "2026-09-02",
+          "last_train": "2026-09-01",
+          "rows": 76,
+          "training_rows": 2052,
+          "mse_bps2": 2191.8739894598284,
+          "zero_forecast_mse_bps2": 1973.0197920690043
+        },
+        {
+          "symbol": "TSLA",
+          "model": "context_tree",
+          "validation_day": "2026-09-02",
+          "last_train": "2026-09-01",
+          "rows": 76,
+          "training_rows": 2052,
+          "mse_bps2": 678.2303802649218,
+          "zero_forecast_mse_bps2": 622.3786004217724
+        },
+        {
+          "symbol": "NVDA",
+          "model": "context_tree",
+          "validation_day": "2026-09-02",
+          "last_train": "2026-09-01",
+          "rows": 76,
+          "training_rows": 2052,
+          "mse_bps2": 322.74685943221436,
+          "zero_forecast_mse_bps2": 294.20395611593045
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_tree",
+          "validation_day": "2026-09-02",
+          "last_train": "2026-09-01",
+          "rows": 76,
+          "training_rows": 2052,
+          "mse_bps2": 2187.721151581539,
+          "zero_forecast_mse_bps2": 1973.0197920690043
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_tree",
+          "validation_day": "2026-09-02",
+          "last_train": "2026-09-01",
+          "rows": 76,
+          "training_rows": 2052,
+          "mse_bps2": 678.2303802649218,
+          "zero_forecast_mse_bps2": 622.3786004217724
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_tree",
+          "validation_day": "2026-09-02",
+          "last_train": "2026-09-01",
+          "rows": 76,
+          "training_rows": 2052,
+          "mse_bps2": 300.0198925477241,
+          "zero_forecast_mse_bps2": 294.20395611593045
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_ridge",
+          "validation_day": "2026-09-02",
+          "last_train": "2026-09-01",
+          "rows": 76,
+          "training_rows": 2052,
+          "mse_bps2": 2147.226468342467,
+          "zero_forecast_mse_bps2": 1973.0197920690043
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_ridge",
+          "validation_day": "2026-09-02",
+          "last_train": "2026-09-01",
+          "rows": 76,
+          "training_rows": 2052,
+          "mse_bps2": 565.0350423353949,
+          "zero_forecast_mse_bps2": 622.3786004217724
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_ridge",
+          "validation_day": "2026-09-02",
+          "last_train": "2026-09-01",
+          "rows": 76,
+          "training_rows": 2052,
+          "mse_bps2": 322.7327164357536,
+          "zero_forecast_mse_bps2": 294.20395611593045
+        },
+        {
+          "symbol": "SNDK",
+          "model": "context_tree",
+          "validation_day": "2026-09-03",
+          "last_train": "2026-09-02",
+          "rows": 76,
+          "training_rows": 2128,
+          "mse_bps2": 1150.3592218783783,
+          "zero_forecast_mse_bps2": 1100.3033860600729
+        },
+        {
+          "symbol": "TSLA",
+          "model": "context_tree",
+          "validation_day": "2026-09-03",
+          "last_train": "2026-09-02",
+          "rows": 76,
+          "training_rows": 2128,
+          "mse_bps2": 702.6924953773723,
+          "zero_forecast_mse_bps2": 717.1242006928393
+        },
+        {
+          "symbol": "NVDA",
+          "model": "context_tree",
+          "validation_day": "2026-09-03",
+          "last_train": "2026-09-02",
+          "rows": 76,
+          "training_rows": 2128,
+          "mse_bps2": 305.5085837200073,
+          "zero_forecast_mse_bps2": 300.13175478285274
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_tree",
+          "validation_day": "2026-09-03",
+          "last_train": "2026-09-02",
+          "rows": 76,
+          "training_rows": 2128,
+          "mse_bps2": 1078.3624359191435,
+          "zero_forecast_mse_bps2": 1100.3033860600729
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_tree",
+          "validation_day": "2026-09-03",
+          "last_train": "2026-09-02",
+          "rows": 76,
+          "training_rows": 2128,
+          "mse_bps2": 702.6924953773723,
+          "zero_forecast_mse_bps2": 717.1242006928393
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_tree",
+          "validation_day": "2026-09-03",
+          "last_train": "2026-09-02",
+          "rows": 76,
+          "training_rows": 2128,
+          "mse_bps2": 305.5085837200073,
+          "zero_forecast_mse_bps2": 300.13175478285274
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_ridge",
+          "validation_day": "2026-09-03",
+          "last_train": "2026-09-02",
+          "rows": 76,
+          "training_rows": 2128,
+          "mse_bps2": 1199.1523786185624,
+          "zero_forecast_mse_bps2": 1100.3033860600729
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_ridge",
+          "validation_day": "2026-09-03",
+          "last_train": "2026-09-02",
+          "rows": 76,
+          "training_rows": 2128,
+          "mse_bps2": 699.9404883307268,
+          "zero_forecast_mse_bps2": 717.1242006928393
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_ridge",
+          "validation_day": "2026-09-03",
+          "last_train": "2026-09-02",
+          "rows": 76,
+          "training_rows": 2128,
+          "mse_bps2": 297.3989903499485,
+          "zero_forecast_mse_bps2": 300.13175478285274
+        },
+        {
+          "symbol": "SNDK",
+          "model": "context_tree",
+          "validation_day": "2026-09-04",
+          "last_train": "2026-09-03",
+          "rows": 76,
+          "training_rows": 2204,
+          "mse_bps2": 1014.6665221990877,
+          "zero_forecast_mse_bps2": 1034.708350636124
+        },
+        {
+          "symbol": "TSLA",
+          "model": "context_tree",
+          "validation_day": "2026-09-04",
+          "last_train": "2026-09-03",
+          "rows": 76,
+          "training_rows": 2204,
+          "mse_bps2": 452.5529245047269,
+          "zero_forecast_mse_bps2": 429.68105022409213
+        },
+        {
+          "symbol": "NVDA",
+          "model": "context_tree",
+          "validation_day": "2026-09-04",
+          "last_train": "2026-09-03",
+          "rows": 76,
+          "training_rows": 2204,
+          "mse_bps2": 243.81147136698482,
+          "zero_forecast_mse_bps2": 243.80160614927397
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_tree",
+          "validation_day": "2026-09-04",
+          "last_train": "2026-09-03",
+          "rows": 76,
+          "training_rows": 2204,
+          "mse_bps2": 992.4574620128051,
+          "zero_forecast_mse_bps2": 1034.708350636124
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_tree",
+          "validation_day": "2026-09-04",
+          "last_train": "2026-09-03",
+          "rows": 76,
+          "training_rows": 2204,
+          "mse_bps2": 452.5529245047269,
+          "zero_forecast_mse_bps2": 429.68105022409213
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_tree",
+          "validation_day": "2026-09-04",
+          "last_train": "2026-09-03",
+          "rows": 76,
+          "training_rows": 2204,
+          "mse_bps2": 243.81147136698482,
+          "zero_forecast_mse_bps2": 243.80160614927397
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_ridge",
+          "validation_day": "2026-09-04",
+          "last_train": "2026-09-03",
+          "rows": 76,
+          "training_rows": 2204,
+          "mse_bps2": 1050.91762137457,
+          "zero_forecast_mse_bps2": 1034.708350636124
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_ridge",
+          "validation_day": "2026-09-04",
+          "last_train": "2026-09-03",
+          "rows": 76,
+          "training_rows": 2204,
+          "mse_bps2": 467.4619064296,
+          "zero_forecast_mse_bps2": 429.68105022409213
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_ridge",
+          "validation_day": "2026-09-04",
+          "last_train": "2026-09-03",
+          "rows": 76,
+          "training_rows": 2204,
+          "mse_bps2": 247.56911313488357,
+          "zero_forecast_mse_bps2": 243.80160614927397
+        }
+      ]
+    },
+    "calibration": null
+  },
+  {
+    "day": "2026-09-09",
+    "eligibility": {
+      "SNDK": {
+        "eligible": true,
+        "reason": "admitted",
+        "last_price": 1737.8499755859375,
+        "adv": 18392286063.947308,
+        "history_start": "2026-08-11",
+        "history_end": "2026-09-08",
+        "sessions": 20,
+        "dollar_volume_method": "sum_5min_close_times_volume_proxy",
+        "instrument_admitted": true,
+        "market_cap": 239153479680,
+        "metadata_known_at": "2026-09-13T19:07:20.750549+00:00",
+        "membership_basis": "contemporary_selected_panel_not_historical_proof"
+      },
+      "TSLA": {
+        "eligible": true,
+        "reason": "admitted",
+        "last_price": 368.0400085449219,
+        "adv": 12402907218.853773,
+        "history_start": "2026-08-11",
+        "history_end": "2026-09-08",
+        "sessions": 20,
+        "dollar_volume_method": "sum_5min_close_times_volume_proxy",
+        "instrument_admitted": true,
+        "market_cap": 1443322658816,
+        "metadata_known_at": "2026-09-13T19:07:20.861480+00:00",
+        "membership_basis": "contemporary_selected_panel_not_historical_proof"
+      },
+      "NVDA": {
+        "eligible": true,
+        "reason": "admitted",
+        "last_price": 225.77000427246094,
+        "adv": 23124039281.508827,
+        "history_start": "2026-08-11",
+        "history_end": "2026-09-08",
+        "sessions": 20,
+        "dollar_volume_method": "sum_5min_close_times_volume_proxy",
+        "instrument_admitted": true,
+        "market_cap": 5271048421376,
+        "metadata_known_at": "2026-09-13T19:07:20.541350+00:00",
+        "membership_basis": "contemporary_selected_panel_not_historical_proof"
+      }
+    },
+    "training": [
+      {
+        "symbol": "SNDK",
+        "model": "market_tree",
+        "horizon": 1,
+        "last_train": "2026-09-08",
+        "rows": 2356,
+        "sessions": 31,
+        "names": [
+          "return_1",
+          "return_3",
+          "return_12",
+          "session_return",
+          "range_fraction",
+          "body_fraction",
+          "upper_wick_fraction",
+          "lower_wick_fraction",
+          "close_location",
+          "realized_volatility_12",
+          "vwap_distance",
+          "bar_relative_volume",
+          "peer_return_1",
+          "peer_residual_return_1",
+          "peer_return_3",
+          "peer_residual_return_3",
+          "time_fraction",
+          "overnight_gap",
+          "seasonal_volume",
+          "market_return_1",
+          "market_return_3",
+          "market_return_12",
+          "market_session_return",
+          "market_vwap_distance",
+          "market_seasonal_volume",
+          "market_relative_session_return",
+          "market_residual_return_1",
+          "reference_return_1",
+          "reference_return_3",
+          "reference_return_12",
+          "reference_session_return",
+          "reference_vwap_distance",
+          "reference_seasonal_volume",
+          "reference_relative_session_return",
+          "reference_residual_return_1"
+        ]
+      },
+      {
+        "symbol": "TSLA",
+        "model": "market_ridge",
+        "horizon": 1,
+        "last_train": "2026-09-08",
+        "rows": 2356,
+        "sessions": 31,
+        "names": [
+          "return_1",
+          "return_3",
+          "return_12",
+          "session_return",
+          "range_fraction",
+          "body_fraction",
+          "upper_wick_fraction",
+          "lower_wick_fraction",
+          "close_location",
+          "realized_volatility_12",
+          "vwap_distance",
+          "bar_relative_volume",
+          "peer_return_1",
+          "peer_residual_return_1",
+          "peer_return_3",
+          "peer_residual_return_3",
+          "time_fraction",
+          "overnight_gap",
+          "seasonal_volume",
+          "market_return_1",
+          "market_return_3",
+          "market_return_12",
+          "market_session_return",
+          "market_vwap_distance",
+          "market_seasonal_volume",
+          "market_relative_session_return",
+          "market_residual_return_1",
+          "reference_return_1",
+          "reference_return_3",
+          "reference_return_12",
+          "reference_session_return",
+          "reference_vwap_distance",
+          "reference_seasonal_volume",
+          "reference_relative_session_return",
+          "reference_residual_return_1"
+        ]
+      },
+      {
+        "symbol": "NVDA",
+        "model": "market_tree",
+        "horizon": 1,
+        "last_train": "2026-09-08",
+        "rows": 2356,
+        "sessions": 31,
+        "names": [
+          "return_1",
+          "return_3",
+          "return_12",
+          "session_return",
+          "range_fraction",
+          "body_fraction",
+          "upper_wick_fraction",
+          "lower_wick_fraction",
+          "close_location",
+          "realized_volatility_12",
+          "vwap_distance",
+          "bar_relative_volume",
+          "peer_return_1",
+          "peer_residual_return_1",
+          "peer_return_3",
+          "peer_residual_return_3",
+          "time_fraction",
+          "overnight_gap",
+          "seasonal_volume",
+          "market_return_1",
+          "market_return_3",
+          "market_return_12",
+          "market_session_return",
+          "market_vwap_distance",
+          "market_seasonal_volume",
+          "market_relative_session_return",
+          "market_residual_return_1",
+          "reference_return_1",
+          "reference_return_3",
+          "reference_return_12",
+          "reference_session_return",
+          "reference_vwap_distance",
+          "reference_seasonal_volume",
+          "reference_relative_session_return",
+          "reference_residual_return_1"
+        ]
+      }
+    ],
+    "selection": {
+      "method": "lowest_mean_daily_out_of_sample_squared_error",
+      "validation_dates": [
+        "2026-09-01",
+        "2026-09-02",
+        "2026-09-03",
+        "2026-09-04",
+        "2026-09-08"
+      ],
+      "selections": {
+        "SNDK": {
+          "model": "market_tree",
+          "scores_mse_bps2": {
+            "context_tree": 1458.786527359998,
+            "market_tree": 1418.043421570036,
+            "market_ridge": 1486.2813021510233
+          }
+        },
+        "TSLA": {
+          "model": "market_ridge",
+          "scores_mse_bps2": {
+            "context_tree": 495.73862449452054,
+            "market_tree": 495.73862449452054,
+            "market_ridge": 475.17574043597017
+          }
+        },
+        "NVDA": {
+          "model": "market_tree",
+          "scores_mse_bps2": {
+            "context_tree": 269.1925309731853,
+            "market_tree": 264.5785814045645,
+            "market_ridge": 265.3778213643653
+          }
+        }
+      },
+      "folds": [
+        {
+          "symbol": "SNDK",
+          "model": "context_tree",
+          "validation_day": "2026-09-01",
+          "last_train": "2026-08-31",
+          "rows": 76,
+          "training_rows": 1976,
+          "mse_bps2": 1120.6217312171552,
+          "zero_forecast_mse_bps2": 1113.7830932684597
+        },
+        {
+          "symbol": "TSLA",
+          "model": "context_tree",
+          "validation_day": "2026-09-01",
+          "last_train": "2026-08-31",
+          "rows": 76,
+          "training_rows": 1976,
+          "mse_bps2": 284.3117442811645,
+          "zero_forecast_mse_bps2": 310.37966574949417
+        },
+        {
+          "symbol": "NVDA",
+          "model": "context_tree",
+          "validation_day": "2026-09-01",
+          "last_train": "2026-08-31",
+          "rows": 76,
+          "training_rows": 1976,
+          "mse_bps2": 228.3939087351192,
+          "zero_forecast_mse_bps2": 214.16726477729972
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_tree",
+          "validation_day": "2026-09-01",
+          "last_train": "2026-08-31",
+          "rows": 76,
+          "training_rows": 1976,
+          "mse_bps2": 1121.959938008025,
+          "zero_forecast_mse_bps2": 1113.7830932684597
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_tree",
+          "validation_day": "2026-09-01",
+          "last_train": "2026-08-31",
+          "rows": 76,
+          "training_rows": 1976,
+          "mse_bps2": 284.3117442811645,
+          "zero_forecast_mse_bps2": 310.37966574949417
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_tree",
+          "validation_day": "2026-09-01",
+          "last_train": "2026-08-31",
+          "rows": 76,
+          "training_rows": 1976,
+          "mse_bps2": 228.05112777650558,
+          "zero_forecast_mse_bps2": 214.16726477729972
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_ridge",
+          "validation_day": "2026-09-01",
+          "last_train": "2026-08-31",
+          "rows": 76,
+          "training_rows": 1976,
+          "mse_bps2": 1179.078867685022,
+          "zero_forecast_mse_bps2": 1113.7830932684597
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_ridge",
+          "validation_day": "2026-09-01",
+          "last_train": "2026-08-31",
+          "rows": 76,
+          "training_rows": 1976,
+          "mse_bps2": 292.6079647048705,
+          "zero_forecast_mse_bps2": 310.37966574949417
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_ridge",
+          "validation_day": "2026-09-01",
+          "last_train": "2026-08-31",
+          "rows": 76,
+          "training_rows": 1976,
+          "mse_bps2": 230.1356608401803,
+          "zero_forecast_mse_bps2": 214.16726477729972
+        },
+        {
+          "symbol": "SNDK",
+          "model": "context_tree",
+          "validation_day": "2026-09-02",
+          "last_train": "2026-09-01",
+          "rows": 76,
+          "training_rows": 2052,
+          "mse_bps2": 2191.8739894598284,
+          "zero_forecast_mse_bps2": 1973.0197920690043
+        },
+        {
+          "symbol": "TSLA",
+          "model": "context_tree",
+          "validation_day": "2026-09-02",
+          "last_train": "2026-09-01",
+          "rows": 76,
+          "training_rows": 2052,
+          "mse_bps2": 678.2303802649218,
+          "zero_forecast_mse_bps2": 622.3786004217724
+        },
+        {
+          "symbol": "NVDA",
+          "model": "context_tree",
+          "validation_day": "2026-09-02",
+          "last_train": "2026-09-01",
+          "rows": 76,
+          "training_rows": 2052,
+          "mse_bps2": 322.74685943221436,
+          "zero_forecast_mse_bps2": 294.20395611593045
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_tree",
+          "validation_day": "2026-09-02",
+          "last_train": "2026-09-01",
+          "rows": 76,
+          "training_rows": 2052,
+          "mse_bps2": 2187.721151581539,
+          "zero_forecast_mse_bps2": 1973.0197920690043
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_tree",
+          "validation_day": "2026-09-02",
+          "last_train": "2026-09-01",
+          "rows": 76,
+          "training_rows": 2052,
+          "mse_bps2": 678.2303802649218,
+          "zero_forecast_mse_bps2": 622.3786004217724
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_tree",
+          "validation_day": "2026-09-02",
+          "last_train": "2026-09-01",
+          "rows": 76,
+          "training_rows": 2052,
+          "mse_bps2": 300.0198925477241,
+          "zero_forecast_mse_bps2": 294.20395611593045
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_ridge",
+          "validation_day": "2026-09-02",
+          "last_train": "2026-09-01",
+          "rows": 76,
+          "training_rows": 2052,
+          "mse_bps2": 2147.226468342467,
+          "zero_forecast_mse_bps2": 1973.0197920690043
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_ridge",
+          "validation_day": "2026-09-02",
+          "last_train": "2026-09-01",
+          "rows": 76,
+          "training_rows": 2052,
+          "mse_bps2": 565.0350423353949,
+          "zero_forecast_mse_bps2": 622.3786004217724
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_ridge",
+          "validation_day": "2026-09-02",
+          "last_train": "2026-09-01",
+          "rows": 76,
+          "training_rows": 2052,
+          "mse_bps2": 322.7327164357536,
+          "zero_forecast_mse_bps2": 294.20395611593045
+        },
+        {
+          "symbol": "SNDK",
+          "model": "context_tree",
+          "validation_day": "2026-09-03",
+          "last_train": "2026-09-02",
+          "rows": 76,
+          "training_rows": 2128,
+          "mse_bps2": 1150.3592218783783,
+          "zero_forecast_mse_bps2": 1100.3033860600729
+        },
+        {
+          "symbol": "TSLA",
+          "model": "context_tree",
+          "validation_day": "2026-09-03",
+          "last_train": "2026-09-02",
+          "rows": 76,
+          "training_rows": 2128,
+          "mse_bps2": 702.6924953773723,
+          "zero_forecast_mse_bps2": 717.1242006928393
+        },
+        {
+          "symbol": "NVDA",
+          "model": "context_tree",
+          "validation_day": "2026-09-03",
+          "last_train": "2026-09-02",
+          "rows": 76,
+          "training_rows": 2128,
+          "mse_bps2": 305.5085837200073,
+          "zero_forecast_mse_bps2": 300.13175478285274
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_tree",
+          "validation_day": "2026-09-03",
+          "last_train": "2026-09-02",
+          "rows": 76,
+          "training_rows": 2128,
+          "mse_bps2": 1078.3624359191435,
+          "zero_forecast_mse_bps2": 1100.3033860600729
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_tree",
+          "validation_day": "2026-09-03",
+          "last_train": "2026-09-02",
+          "rows": 76,
+          "training_rows": 2128,
+          "mse_bps2": 702.6924953773723,
+          "zero_forecast_mse_bps2": 717.1242006928393
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_tree",
+          "validation_day": "2026-09-03",
+          "last_train": "2026-09-02",
+          "rows": 76,
+          "training_rows": 2128,
+          "mse_bps2": 305.5085837200073,
+          "zero_forecast_mse_bps2": 300.13175478285274
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_ridge",
+          "validation_day": "2026-09-03",
+          "last_train": "2026-09-02",
+          "rows": 76,
+          "training_rows": 2128,
+          "mse_bps2": 1199.1523786185624,
+          "zero_forecast_mse_bps2": 1100.3033860600729
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_ridge",
+          "validation_day": "2026-09-03",
+          "last_train": "2026-09-02",
+          "rows": 76,
+          "training_rows": 2128,
+          "mse_bps2": 699.9404883307268,
+          "zero_forecast_mse_bps2": 717.1242006928393
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_ridge",
+          "validation_day": "2026-09-03",
+          "last_train": "2026-09-02",
+          "rows": 76,
+          "training_rows": 2128,
+          "mse_bps2": 297.3989903499485,
+          "zero_forecast_mse_bps2": 300.13175478285274
+        },
+        {
+          "symbol": "SNDK",
+          "model": "context_tree",
+          "validation_day": "2026-09-04",
+          "last_train": "2026-09-03",
+          "rows": 76,
+          "training_rows": 2204,
+          "mse_bps2": 1014.6665221990877,
+          "zero_forecast_mse_bps2": 1034.708350636124
+        },
+        {
+          "symbol": "TSLA",
+          "model": "context_tree",
+          "validation_day": "2026-09-04",
+          "last_train": "2026-09-03",
+          "rows": 76,
+          "training_rows": 2204,
+          "mse_bps2": 452.5529245047269,
+          "zero_forecast_mse_bps2": 429.68105022409213
+        },
+        {
+          "symbol": "NVDA",
+          "model": "context_tree",
+          "validation_day": "2026-09-04",
+          "last_train": "2026-09-03",
+          "rows": 76,
+          "training_rows": 2204,
+          "mse_bps2": 243.81147136698482,
+          "zero_forecast_mse_bps2": 243.80160614927397
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_tree",
+          "validation_day": "2026-09-04",
+          "last_train": "2026-09-03",
+          "rows": 76,
+          "training_rows": 2204,
+          "mse_bps2": 992.4574620128051,
+          "zero_forecast_mse_bps2": 1034.708350636124
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_tree",
+          "validation_day": "2026-09-04",
+          "last_train": "2026-09-03",
+          "rows": 76,
+          "training_rows": 2204,
+          "mse_bps2": 452.5529245047269,
+          "zero_forecast_mse_bps2": 429.68105022409213
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_tree",
+          "validation_day": "2026-09-04",
+          "last_train": "2026-09-03",
+          "rows": 76,
+          "training_rows": 2204,
+          "mse_bps2": 243.81147136698482,
+          "zero_forecast_mse_bps2": 243.80160614927397
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_ridge",
+          "validation_day": "2026-09-04",
+          "last_train": "2026-09-03",
+          "rows": 76,
+          "training_rows": 2204,
+          "mse_bps2": 1050.91762137457,
+          "zero_forecast_mse_bps2": 1034.708350636124
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_ridge",
+          "validation_day": "2026-09-04",
+          "last_train": "2026-09-03",
+          "rows": 76,
+          "training_rows": 2204,
+          "mse_bps2": 467.4619064296,
+          "zero_forecast_mse_bps2": 429.68105022409213
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_ridge",
+          "validation_day": "2026-09-04",
+          "last_train": "2026-09-03",
+          "rows": 76,
+          "training_rows": 2204,
+          "mse_bps2": 247.56911313488357,
+          "zero_forecast_mse_bps2": 243.80160614927397
+        },
+        {
+          "symbol": "SNDK",
+          "model": "context_tree",
+          "validation_day": "2026-09-08",
+          "last_train": "2026-09-04",
+          "rows": 76,
+          "training_rows": 2280,
+          "mse_bps2": 1816.4111720455403,
+          "zero_forecast_mse_bps2": 1781.367416961933
+        },
+        {
+          "symbol": "TSLA",
+          "model": "context_tree",
+          "validation_day": "2026-09-08",
+          "last_train": "2026-09-04",
+          "rows": 76,
+          "training_rows": 2280,
+          "mse_bps2": 360.9055780444172,
+          "zero_forecast_mse_bps2": 373.32861115634313
+        },
+        {
+          "symbol": "NVDA",
+          "model": "context_tree",
+          "validation_day": "2026-09-08",
+          "last_train": "2026-09-04",
+          "rows": 76,
+          "training_rows": 2280,
+          "mse_bps2": 245.50183161160058,
+          "zero_forecast_mse_bps2": 240.43125956669414
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_tree",
+          "validation_day": "2026-09-08",
+          "last_train": "2026-09-04",
+          "rows": 76,
+          "training_rows": 2280,
+          "mse_bps2": 1709.7161203286673,
+          "zero_forecast_mse_bps2": 1781.367416961933
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_tree",
+          "validation_day": "2026-09-08",
+          "last_train": "2026-09-04",
+          "rows": 76,
+          "training_rows": 2280,
+          "mse_bps2": 360.9055780444172,
+          "zero_forecast_mse_bps2": 373.32861115634313
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_tree",
+          "validation_day": "2026-09-08",
+          "last_train": "2026-09-04",
+          "rows": 76,
+          "training_rows": 2280,
+          "mse_bps2": 245.50183161160058,
+          "zero_forecast_mse_bps2": 240.43125956669414
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_ridge",
+          "validation_day": "2026-09-08",
+          "last_train": "2026-09-04",
+          "rows": 76,
+          "training_rows": 2280,
+          "mse_bps2": 1855.0311747344945,
+          "zero_forecast_mse_bps2": 1781.367416961933
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_ridge",
+          "validation_day": "2026-09-08",
+          "last_train": "2026-09-04",
+          "rows": 76,
+          "training_rows": 2280,
+          "mse_bps2": 350.83330037925816,
+          "zero_forecast_mse_bps2": 373.32861115634313
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_ridge",
+          "validation_day": "2026-09-08",
+          "last_train": "2026-09-04",
+          "rows": 76,
+          "training_rows": 2280,
+          "mse_bps2": 229.05262606106035,
+          "zero_forecast_mse_bps2": 240.43125956669414
+        }
+      ]
+    },
+    "calibration": null
+  },
+  {
+    "day": "2026-09-10",
+    "eligibility": {
+      "SNDK": {
+        "eligible": true,
+        "reason": "admitted",
+        "last_price": 1763.75,
+        "adv": 18637433371.96482,
+        "history_start": "2026-08-12",
+        "history_end": "2026-09-09",
+        "sessions": 20,
+        "dollar_volume_method": "sum_5min_close_times_volume_proxy",
+        "instrument_admitted": true,
+        "market_cap": 239153479680,
+        "metadata_known_at": "2026-09-13T19:07:20.750549+00:00",
+        "membership_basis": "contemporary_selected_panel_not_historical_proof"
+      },
+      "TSLA": {
+        "eligible": true,
+        "reason": "admitted",
+        "last_price": 367.79998779296875,
+        "adv": 12606912947.386898,
+        "history_start": "2026-08-12",
+        "history_end": "2026-09-09",
+        "sessions": 20,
+        "dollar_volume_method": "sum_5min_close_times_volume_proxy",
+        "instrument_admitted": true,
+        "market_cap": 1443322658816,
+        "metadata_known_at": "2026-09-13T19:07:20.861480+00:00",
+        "membership_basis": "contemporary_selected_panel_not_historical_proof"
+      },
+      "NVDA": {
+        "eligible": true,
+        "reason": "admitted",
+        "last_price": 223.6999969482422,
+        "adv": 22978454290.025394,
+        "history_start": "2026-08-12",
+        "history_end": "2026-09-09",
+        "sessions": 20,
+        "dollar_volume_method": "sum_5min_close_times_volume_proxy",
+        "instrument_admitted": true,
+        "market_cap": 5271048421376,
+        "metadata_known_at": "2026-09-13T19:07:20.541350+00:00",
+        "membership_basis": "contemporary_selected_panel_not_historical_proof"
+      }
+    },
+    "training": [
+      {
+        "symbol": "SNDK",
+        "model": "market_tree",
+        "horizon": 1,
+        "last_train": "2026-09-09",
+        "rows": 2432,
+        "sessions": 32,
+        "names": [
+          "return_1",
+          "return_3",
+          "return_12",
+          "session_return",
+          "range_fraction",
+          "body_fraction",
+          "upper_wick_fraction",
+          "lower_wick_fraction",
+          "close_location",
+          "realized_volatility_12",
+          "vwap_distance",
+          "bar_relative_volume",
+          "peer_return_1",
+          "peer_residual_return_1",
+          "peer_return_3",
+          "peer_residual_return_3",
+          "time_fraction",
+          "overnight_gap",
+          "seasonal_volume",
+          "market_return_1",
+          "market_return_3",
+          "market_return_12",
+          "market_session_return",
+          "market_vwap_distance",
+          "market_seasonal_volume",
+          "market_relative_session_return",
+          "market_residual_return_1",
+          "reference_return_1",
+          "reference_return_3",
+          "reference_return_12",
+          "reference_session_return",
+          "reference_vwap_distance",
+          "reference_seasonal_volume",
+          "reference_relative_session_return",
+          "reference_residual_return_1"
+        ]
+      },
+      {
+        "symbol": "TSLA",
+        "model": "market_ridge",
+        "horizon": 1,
+        "last_train": "2026-09-09",
+        "rows": 2432,
+        "sessions": 32,
+        "names": [
+          "return_1",
+          "return_3",
+          "return_12",
+          "session_return",
+          "range_fraction",
+          "body_fraction",
+          "upper_wick_fraction",
+          "lower_wick_fraction",
+          "close_location",
+          "realized_volatility_12",
+          "vwap_distance",
+          "bar_relative_volume",
+          "peer_return_1",
+          "peer_residual_return_1",
+          "peer_return_3",
+          "peer_residual_return_3",
+          "time_fraction",
+          "overnight_gap",
+          "seasonal_volume",
+          "market_return_1",
+          "market_return_3",
+          "market_return_12",
+          "market_session_return",
+          "market_vwap_distance",
+          "market_seasonal_volume",
+          "market_relative_session_return",
+          "market_residual_return_1",
+          "reference_return_1",
+          "reference_return_3",
+          "reference_return_12",
+          "reference_session_return",
+          "reference_vwap_distance",
+          "reference_seasonal_volume",
+          "reference_relative_session_return",
+          "reference_residual_return_1"
+        ]
+      },
+      {
+        "symbol": "NVDA",
+        "model": "market_tree",
+        "horizon": 1,
+        "last_train": "2026-09-09",
+        "rows": 2432,
+        "sessions": 32,
+        "names": [
+          "return_1",
+          "return_3",
+          "return_12",
+          "session_return",
+          "range_fraction",
+          "body_fraction",
+          "upper_wick_fraction",
+          "lower_wick_fraction",
+          "close_location",
+          "realized_volatility_12",
+          "vwap_distance",
+          "bar_relative_volume",
+          "peer_return_1",
+          "peer_residual_return_1",
+          "peer_return_3",
+          "peer_residual_return_3",
+          "time_fraction",
+          "overnight_gap",
+          "seasonal_volume",
+          "market_return_1",
+          "market_return_3",
+          "market_return_12",
+          "market_session_return",
+          "market_vwap_distance",
+          "market_seasonal_volume",
+          "market_relative_session_return",
+          "market_residual_return_1",
+          "reference_return_1",
+          "reference_return_3",
+          "reference_return_12",
+          "reference_session_return",
+          "reference_vwap_distance",
+          "reference_seasonal_volume",
+          "reference_relative_session_return",
+          "reference_residual_return_1"
+        ]
+      }
+    ],
+    "selection": {
+      "method": "lowest_mean_daily_out_of_sample_squared_error",
+      "validation_dates": [
+        "2026-09-02",
+        "2026-09-03",
+        "2026-09-04",
+        "2026-09-08",
+        "2026-09-09"
+      ],
+      "selections": {
+        "SNDK": {
+          "model": "market_tree",
+          "scores_mse_bps2": {
+            "context_tree": 1535.775473515207,
+            "market_tree": 1500.0424439599767,
+            "market_ridge": 1554.633206512283
+          }
+        },
+        "TSLA": {
+          "model": "market_ridge",
+          "scores_mse_bps2": {
+            "context_tree": 530.6502814797343,
+            "market_tree": 530.6502814797343,
+            "market_ridge": 507.29127338184105
+          }
+        },
+        "NVDA": {
+          "model": "market_tree",
+          "scores_mse_bps2": {
+            "context_tree": 263.21530954461537,
+            "market_tree": 255.81976504118416,
+            "market_ridge": 255.92894019313826
+          }
+        }
+      },
+      "folds": [
+        {
+          "symbol": "SNDK",
+          "model": "context_tree",
+          "validation_day": "2026-09-02",
+          "last_train": "2026-09-01",
+          "rows": 76,
+          "training_rows": 2052,
+          "mse_bps2": 2191.8739894598284,
+          "zero_forecast_mse_bps2": 1973.0197920690043
+        },
+        {
+          "symbol": "TSLA",
+          "model": "context_tree",
+          "validation_day": "2026-09-02",
+          "last_train": "2026-09-01",
+          "rows": 76,
+          "training_rows": 2052,
+          "mse_bps2": 678.2303802649218,
+          "zero_forecast_mse_bps2": 622.3786004217724
+        },
+        {
+          "symbol": "NVDA",
+          "model": "context_tree",
+          "validation_day": "2026-09-02",
+          "last_train": "2026-09-01",
+          "rows": 76,
+          "training_rows": 2052,
+          "mse_bps2": 322.74685943221436,
+          "zero_forecast_mse_bps2": 294.20395611593045
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_tree",
+          "validation_day": "2026-09-02",
+          "last_train": "2026-09-01",
+          "rows": 76,
+          "training_rows": 2052,
+          "mse_bps2": 2187.721151581539,
+          "zero_forecast_mse_bps2": 1973.0197920690043
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_tree",
+          "validation_day": "2026-09-02",
+          "last_train": "2026-09-01",
+          "rows": 76,
+          "training_rows": 2052,
+          "mse_bps2": 678.2303802649218,
+          "zero_forecast_mse_bps2": 622.3786004217724
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_tree",
+          "validation_day": "2026-09-02",
+          "last_train": "2026-09-01",
+          "rows": 76,
+          "training_rows": 2052,
+          "mse_bps2": 300.0198925477241,
+          "zero_forecast_mse_bps2": 294.20395611593045
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_ridge",
+          "validation_day": "2026-09-02",
+          "last_train": "2026-09-01",
+          "rows": 76,
+          "training_rows": 2052,
+          "mse_bps2": 2147.226468342467,
+          "zero_forecast_mse_bps2": 1973.0197920690043
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_ridge",
+          "validation_day": "2026-09-02",
+          "last_train": "2026-09-01",
+          "rows": 76,
+          "training_rows": 2052,
+          "mse_bps2": 565.0350423353949,
+          "zero_forecast_mse_bps2": 622.3786004217724
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_ridge",
+          "validation_day": "2026-09-02",
+          "last_train": "2026-09-01",
+          "rows": 76,
+          "training_rows": 2052,
+          "mse_bps2": 322.7327164357536,
+          "zero_forecast_mse_bps2": 294.20395611593045
+        },
+        {
+          "symbol": "SNDK",
+          "model": "context_tree",
+          "validation_day": "2026-09-03",
+          "last_train": "2026-09-02",
+          "rows": 76,
+          "training_rows": 2128,
+          "mse_bps2": 1150.3592218783783,
+          "zero_forecast_mse_bps2": 1100.3033860600729
+        },
+        {
+          "symbol": "TSLA",
+          "model": "context_tree",
+          "validation_day": "2026-09-03",
+          "last_train": "2026-09-02",
+          "rows": 76,
+          "training_rows": 2128,
+          "mse_bps2": 702.6924953773723,
+          "zero_forecast_mse_bps2": 717.1242006928393
+        },
+        {
+          "symbol": "NVDA",
+          "model": "context_tree",
+          "validation_day": "2026-09-03",
+          "last_train": "2026-09-02",
+          "rows": 76,
+          "training_rows": 2128,
+          "mse_bps2": 305.5085837200073,
+          "zero_forecast_mse_bps2": 300.13175478285274
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_tree",
+          "validation_day": "2026-09-03",
+          "last_train": "2026-09-02",
+          "rows": 76,
+          "training_rows": 2128,
+          "mse_bps2": 1078.3624359191435,
+          "zero_forecast_mse_bps2": 1100.3033860600729
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_tree",
+          "validation_day": "2026-09-03",
+          "last_train": "2026-09-02",
+          "rows": 76,
+          "training_rows": 2128,
+          "mse_bps2": 702.6924953773723,
+          "zero_forecast_mse_bps2": 717.1242006928393
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_tree",
+          "validation_day": "2026-09-03",
+          "last_train": "2026-09-02",
+          "rows": 76,
+          "training_rows": 2128,
+          "mse_bps2": 305.5085837200073,
+          "zero_forecast_mse_bps2": 300.13175478285274
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_ridge",
+          "validation_day": "2026-09-03",
+          "last_train": "2026-09-02",
+          "rows": 76,
+          "training_rows": 2128,
+          "mse_bps2": 1199.1523786185624,
+          "zero_forecast_mse_bps2": 1100.3033860600729
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_ridge",
+          "validation_day": "2026-09-03",
+          "last_train": "2026-09-02",
+          "rows": 76,
+          "training_rows": 2128,
+          "mse_bps2": 699.9404883307268,
+          "zero_forecast_mse_bps2": 717.1242006928393
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_ridge",
+          "validation_day": "2026-09-03",
+          "last_train": "2026-09-02",
+          "rows": 76,
+          "training_rows": 2128,
+          "mse_bps2": 297.3989903499485,
+          "zero_forecast_mse_bps2": 300.13175478285274
+        },
+        {
+          "symbol": "SNDK",
+          "model": "context_tree",
+          "validation_day": "2026-09-04",
+          "last_train": "2026-09-03",
+          "rows": 76,
+          "training_rows": 2204,
+          "mse_bps2": 1014.6665221990877,
+          "zero_forecast_mse_bps2": 1034.708350636124
+        },
+        {
+          "symbol": "TSLA",
+          "model": "context_tree",
+          "validation_day": "2026-09-04",
+          "last_train": "2026-09-03",
+          "rows": 76,
+          "training_rows": 2204,
+          "mse_bps2": 452.5529245047269,
+          "zero_forecast_mse_bps2": 429.68105022409213
+        },
+        {
+          "symbol": "NVDA",
+          "model": "context_tree",
+          "validation_day": "2026-09-04",
+          "last_train": "2026-09-03",
+          "rows": 76,
+          "training_rows": 2204,
+          "mse_bps2": 243.81147136698482,
+          "zero_forecast_mse_bps2": 243.80160614927397
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_tree",
+          "validation_day": "2026-09-04",
+          "last_train": "2026-09-03",
+          "rows": 76,
+          "training_rows": 2204,
+          "mse_bps2": 992.4574620128051,
+          "zero_forecast_mse_bps2": 1034.708350636124
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_tree",
+          "validation_day": "2026-09-04",
+          "last_train": "2026-09-03",
+          "rows": 76,
+          "training_rows": 2204,
+          "mse_bps2": 452.5529245047269,
+          "zero_forecast_mse_bps2": 429.68105022409213
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_tree",
+          "validation_day": "2026-09-04",
+          "last_train": "2026-09-03",
+          "rows": 76,
+          "training_rows": 2204,
+          "mse_bps2": 243.81147136698482,
+          "zero_forecast_mse_bps2": 243.80160614927397
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_ridge",
+          "validation_day": "2026-09-04",
+          "last_train": "2026-09-03",
+          "rows": 76,
+          "training_rows": 2204,
+          "mse_bps2": 1050.91762137457,
+          "zero_forecast_mse_bps2": 1034.708350636124
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_ridge",
+          "validation_day": "2026-09-04",
+          "last_train": "2026-09-03",
+          "rows": 76,
+          "training_rows": 2204,
+          "mse_bps2": 467.4619064296,
+          "zero_forecast_mse_bps2": 429.68105022409213
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_ridge",
+          "validation_day": "2026-09-04",
+          "last_train": "2026-09-03",
+          "rows": 76,
+          "training_rows": 2204,
+          "mse_bps2": 247.56911313488357,
+          "zero_forecast_mse_bps2": 243.80160614927397
+        },
+        {
+          "symbol": "SNDK",
+          "model": "context_tree",
+          "validation_day": "2026-09-08",
+          "last_train": "2026-09-04",
+          "rows": 76,
+          "training_rows": 2280,
+          "mse_bps2": 1816.4111720455403,
+          "zero_forecast_mse_bps2": 1781.367416961933
+        },
+        {
+          "symbol": "TSLA",
+          "model": "context_tree",
+          "validation_day": "2026-09-08",
+          "last_train": "2026-09-04",
+          "rows": 76,
+          "training_rows": 2280,
+          "mse_bps2": 360.9055780444172,
+          "zero_forecast_mse_bps2": 373.32861115634313
+        },
+        {
+          "symbol": "NVDA",
+          "model": "context_tree",
+          "validation_day": "2026-09-08",
+          "last_train": "2026-09-04",
+          "rows": 76,
+          "training_rows": 2280,
+          "mse_bps2": 245.50183161160058,
+          "zero_forecast_mse_bps2": 240.43125956669414
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_tree",
+          "validation_day": "2026-09-08",
+          "last_train": "2026-09-04",
+          "rows": 76,
+          "training_rows": 2280,
+          "mse_bps2": 1709.7161203286673,
+          "zero_forecast_mse_bps2": 1781.367416961933
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_tree",
+          "validation_day": "2026-09-08",
+          "last_train": "2026-09-04",
+          "rows": 76,
+          "training_rows": 2280,
+          "mse_bps2": 360.9055780444172,
+          "zero_forecast_mse_bps2": 373.32861115634313
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_tree",
+          "validation_day": "2026-09-08",
+          "last_train": "2026-09-04",
+          "rows": 76,
+          "training_rows": 2280,
+          "mse_bps2": 245.50183161160058,
+          "zero_forecast_mse_bps2": 240.43125956669414
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_ridge",
+          "validation_day": "2026-09-08",
+          "last_train": "2026-09-04",
+          "rows": 76,
+          "training_rows": 2280,
+          "mse_bps2": 1855.0311747344945,
+          "zero_forecast_mse_bps2": 1781.367416961933
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_ridge",
+          "validation_day": "2026-09-08",
+          "last_train": "2026-09-04",
+          "rows": 76,
+          "training_rows": 2280,
+          "mse_bps2": 350.83330037925816,
+          "zero_forecast_mse_bps2": 373.32861115634313
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_ridge",
+          "validation_day": "2026-09-08",
+          "last_train": "2026-09-04",
+          "rows": 76,
+          "training_rows": 2280,
+          "mse_bps2": 229.05262606106035,
+          "zero_forecast_mse_bps2": 240.43125956669414
+        },
+        {
+          "symbol": "SNDK",
+          "model": "context_tree",
+          "validation_day": "2026-09-09",
+          "last_train": "2026-09-08",
+          "rows": 76,
+          "training_rows": 2356,
+          "mse_bps2": 1505.5664619932008,
+          "zero_forecast_mse_bps2": 1508.758825565569
+        },
+        {
+          "symbol": "TSLA",
+          "model": "context_tree",
+          "validation_day": "2026-09-09",
+          "last_train": "2026-09-08",
+          "rows": 76,
+          "training_rows": 2356,
+          "mse_bps2": 458.8700292072334,
+          "zero_forecast_mse_bps2": 422.1658074042198
+        },
+        {
+          "symbol": "NVDA",
+          "model": "context_tree",
+          "validation_day": "2026-09-09",
+          "last_train": "2026-09-08",
+          "rows": 76,
+          "training_rows": 2356,
+          "mse_bps2": 198.50780159226971,
+          "zero_forecast_mse_bps2": 180.43404327481167
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_tree",
+          "validation_day": "2026-09-09",
+          "last_train": "2026-09-08",
+          "rows": 76,
+          "training_rows": 2356,
+          "mse_bps2": 1531.9550499577288,
+          "zero_forecast_mse_bps2": 1508.758825565569
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_tree",
+          "validation_day": "2026-09-09",
+          "last_train": "2026-09-08",
+          "rows": 76,
+          "training_rows": 2356,
+          "mse_bps2": 458.8700292072334,
+          "zero_forecast_mse_bps2": 422.1658074042198
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_tree",
+          "validation_day": "2026-09-09",
+          "last_train": "2026-09-08",
+          "rows": 76,
+          "training_rows": 2356,
+          "mse_bps2": 184.25704595960374,
+          "zero_forecast_mse_bps2": 180.43404327481167
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_ridge",
+          "validation_day": "2026-09-09",
+          "last_train": "2026-09-08",
+          "rows": 76,
+          "training_rows": 2356,
+          "mse_bps2": 1520.8383894913225,
+          "zero_forecast_mse_bps2": 1508.758825565569
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_ridge",
+          "validation_day": "2026-09-09",
+          "last_train": "2026-09-08",
+          "rows": 76,
+          "training_rows": 2356,
+          "mse_bps2": 453.1856294342257,
+          "zero_forecast_mse_bps2": 422.1658074042198
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_ridge",
+          "validation_day": "2026-09-09",
+          "last_train": "2026-09-08",
+          "rows": 76,
+          "training_rows": 2356,
+          "mse_bps2": 182.89125498404516,
+          "zero_forecast_mse_bps2": 180.43404327481167
+        }
+      ]
+    },
+    "calibration": null
+  },
+  {
+    "day": "2026-09-11",
+    "eligibility": {
+      "SNDK": {
+        "eligible": true,
+        "reason": "admitted",
+        "last_price": 1692.8900146484375,
+        "adv": 18596324812.144722,
+        "history_start": "2026-08-13",
+        "history_end": "2026-09-10",
+        "sessions": 20,
+        "dollar_volume_method": "sum_5min_close_times_volume_proxy",
+        "instrument_admitted": true,
+        "market_cap": 239153479680,
+        "metadata_known_at": "2026-09-13T19:07:20.750549+00:00",
+        "membership_basis": "contemporary_selected_panel_not_historical_proof"
+      },
+      "TSLA": {
+        "eligible": true,
+        "reason": "admitted",
+        "last_price": 363.6099853515625,
+        "adv": 12669580253.979996,
+        "history_start": "2026-08-13",
+        "history_end": "2026-09-10",
+        "sessions": 20,
+        "dollar_volume_method": "sum_5min_close_times_volume_proxy",
+        "instrument_admitted": true,
+        "market_cap": 1443322658816,
+        "metadata_known_at": "2026-09-13T19:07:20.861480+00:00",
+        "membership_basis": "contemporary_selected_panel_not_historical_proof"
+      },
+      "NVDA": {
+        "eligible": true,
+        "reason": "admitted",
+        "last_price": 218.3800048828125,
+        "adv": 22877861343.541523,
+        "history_start": "2026-08-13",
+        "history_end": "2026-09-10",
+        "sessions": 20,
+        "dollar_volume_method": "sum_5min_close_times_volume_proxy",
+        "instrument_admitted": true,
+        "market_cap": 5271048421376,
+        "metadata_known_at": "2026-09-13T19:07:20.541350+00:00",
+        "membership_basis": "contemporary_selected_panel_not_historical_proof"
+      }
+    },
+    "training": [
+      {
+        "symbol": "SNDK",
+        "model": "market_tree",
+        "horizon": 1,
+        "last_train": "2026-09-10",
+        "rows": 2508,
+        "sessions": 33,
+        "names": [
+          "return_1",
+          "return_3",
+          "return_12",
+          "session_return",
+          "range_fraction",
+          "body_fraction",
+          "upper_wick_fraction",
+          "lower_wick_fraction",
+          "close_location",
+          "realized_volatility_12",
+          "vwap_distance",
+          "bar_relative_volume",
+          "peer_return_1",
+          "peer_residual_return_1",
+          "peer_return_3",
+          "peer_residual_return_3",
+          "time_fraction",
+          "overnight_gap",
+          "seasonal_volume",
+          "market_return_1",
+          "market_return_3",
+          "market_return_12",
+          "market_session_return",
+          "market_vwap_distance",
+          "market_seasonal_volume",
+          "market_relative_session_return",
+          "market_residual_return_1",
+          "reference_return_1",
+          "reference_return_3",
+          "reference_return_12",
+          "reference_session_return",
+          "reference_vwap_distance",
+          "reference_seasonal_volume",
+          "reference_relative_session_return",
+          "reference_residual_return_1"
+        ]
+      },
+      {
+        "symbol": "TSLA",
+        "model": "context_tree",
+        "horizon": 1,
+        "last_train": "2026-09-10",
+        "rows": 2508,
+        "sessions": 33,
+        "names": [
+          "return_1",
+          "return_3",
+          "return_12",
+          "session_return",
+          "range_fraction",
+          "body_fraction",
+          "upper_wick_fraction",
+          "lower_wick_fraction",
+          "close_location",
+          "realized_volatility_12",
+          "vwap_distance",
+          "bar_relative_volume",
+          "peer_return_1",
+          "peer_residual_return_1",
+          "peer_return_3",
+          "peer_residual_return_3",
+          "time_fraction",
+          "overnight_gap",
+          "seasonal_volume"
+        ]
+      },
+      {
+        "symbol": "NVDA",
+        "model": "market_ridge",
+        "horizon": 1,
+        "last_train": "2026-09-10",
+        "rows": 2508,
+        "sessions": 33,
+        "names": [
+          "return_1",
+          "return_3",
+          "return_12",
+          "session_return",
+          "range_fraction",
+          "body_fraction",
+          "upper_wick_fraction",
+          "lower_wick_fraction",
+          "close_location",
+          "realized_volatility_12",
+          "vwap_distance",
+          "bar_relative_volume",
+          "peer_return_1",
+          "peer_residual_return_1",
+          "peer_return_3",
+          "peer_residual_return_3",
+          "time_fraction",
+          "overnight_gap",
+          "seasonal_volume",
+          "market_return_1",
+          "market_return_3",
+          "market_return_12",
+          "market_session_return",
+          "market_vwap_distance",
+          "market_seasonal_volume",
+          "market_relative_session_return",
+          "market_residual_return_1",
+          "reference_return_1",
+          "reference_return_3",
+          "reference_return_12",
+          "reference_session_return",
+          "reference_vwap_distance",
+          "reference_seasonal_volume",
+          "reference_relative_session_return",
+          "reference_residual_return_1"
+        ]
+      }
+    ],
+    "selection": {
+      "method": "lowest_mean_daily_out_of_sample_squared_error",
+      "validation_dates": [
+        "2026-09-03",
+        "2026-09-04",
+        "2026-09-08",
+        "2026-09-09",
+        "2026-09-10"
+      ],
+      "selections": {
+        "SNDK": {
+          "model": "market_tree",
+          "scores_mse_bps2": {
+            "context_tree": 1228.8285764129532,
+            "market_tree": 1194.4205067348491,
+            "market_ridge": 1279.6450577407074
+          }
+        },
+        "TSLA": {
+          "model": "context_tree",
+          "scores_mse_bps2": {
+            "context_tree": 486.05750344920943,
+            "market_tree": 486.05750344920943,
+            "market_ridge": 490.2410457911375
+          }
+        },
+        "NVDA": {
+          "model": "market_ridge",
+          "scores_mse_bps2": {
+            "context_tree": 230.44159178159333,
+            "market_tree": 227.83998210857598,
+            "market_ridge": 227.20671994856025
+          }
+        }
+      },
+      "folds": [
+        {
+          "symbol": "SNDK",
+          "model": "context_tree",
+          "validation_day": "2026-09-03",
+          "last_train": "2026-09-02",
+          "rows": 76,
+          "training_rows": 2128,
+          "mse_bps2": 1150.3592218783783,
+          "zero_forecast_mse_bps2": 1100.3033860600729
+        },
+        {
+          "symbol": "TSLA",
+          "model": "context_tree",
+          "validation_day": "2026-09-03",
+          "last_train": "2026-09-02",
+          "rows": 76,
+          "training_rows": 2128,
+          "mse_bps2": 702.6924953773723,
+          "zero_forecast_mse_bps2": 717.1242006928393
+        },
+        {
+          "symbol": "NVDA",
+          "model": "context_tree",
+          "validation_day": "2026-09-03",
+          "last_train": "2026-09-02",
+          "rows": 76,
+          "training_rows": 2128,
+          "mse_bps2": 305.5085837200073,
+          "zero_forecast_mse_bps2": 300.13175478285274
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_tree",
+          "validation_day": "2026-09-03",
+          "last_train": "2026-09-02",
+          "rows": 76,
+          "training_rows": 2128,
+          "mse_bps2": 1078.3624359191435,
+          "zero_forecast_mse_bps2": 1100.3033860600729
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_tree",
+          "validation_day": "2026-09-03",
+          "last_train": "2026-09-02",
+          "rows": 76,
+          "training_rows": 2128,
+          "mse_bps2": 702.6924953773723,
+          "zero_forecast_mse_bps2": 717.1242006928393
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_tree",
+          "validation_day": "2026-09-03",
+          "last_train": "2026-09-02",
+          "rows": 76,
+          "training_rows": 2128,
+          "mse_bps2": 305.5085837200073,
+          "zero_forecast_mse_bps2": 300.13175478285274
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_ridge",
+          "validation_day": "2026-09-03",
+          "last_train": "2026-09-02",
+          "rows": 76,
+          "training_rows": 2128,
+          "mse_bps2": 1199.1523786185624,
+          "zero_forecast_mse_bps2": 1100.3033860600729
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_ridge",
+          "validation_day": "2026-09-03",
+          "last_train": "2026-09-02",
+          "rows": 76,
+          "training_rows": 2128,
+          "mse_bps2": 699.9404883307268,
+          "zero_forecast_mse_bps2": 717.1242006928393
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_ridge",
+          "validation_day": "2026-09-03",
+          "last_train": "2026-09-02",
+          "rows": 76,
+          "training_rows": 2128,
+          "mse_bps2": 297.3989903499485,
+          "zero_forecast_mse_bps2": 300.13175478285274
+        },
+        {
+          "symbol": "SNDK",
+          "model": "context_tree",
+          "validation_day": "2026-09-04",
+          "last_train": "2026-09-03",
+          "rows": 76,
+          "training_rows": 2204,
+          "mse_bps2": 1014.6665221990877,
+          "zero_forecast_mse_bps2": 1034.708350636124
+        },
+        {
+          "symbol": "TSLA",
+          "model": "context_tree",
+          "validation_day": "2026-09-04",
+          "last_train": "2026-09-03",
+          "rows": 76,
+          "training_rows": 2204,
+          "mse_bps2": 452.5529245047269,
+          "zero_forecast_mse_bps2": 429.68105022409213
+        },
+        {
+          "symbol": "NVDA",
+          "model": "context_tree",
+          "validation_day": "2026-09-04",
+          "last_train": "2026-09-03",
+          "rows": 76,
+          "training_rows": 2204,
+          "mse_bps2": 243.81147136698482,
+          "zero_forecast_mse_bps2": 243.80160614927397
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_tree",
+          "validation_day": "2026-09-04",
+          "last_train": "2026-09-03",
+          "rows": 76,
+          "training_rows": 2204,
+          "mse_bps2": 992.4574620128051,
+          "zero_forecast_mse_bps2": 1034.708350636124
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_tree",
+          "validation_day": "2026-09-04",
+          "last_train": "2026-09-03",
+          "rows": 76,
+          "training_rows": 2204,
+          "mse_bps2": 452.5529245047269,
+          "zero_forecast_mse_bps2": 429.68105022409213
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_tree",
+          "validation_day": "2026-09-04",
+          "last_train": "2026-09-03",
+          "rows": 76,
+          "training_rows": 2204,
+          "mse_bps2": 243.81147136698482,
+          "zero_forecast_mse_bps2": 243.80160614927397
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_ridge",
+          "validation_day": "2026-09-04",
+          "last_train": "2026-09-03",
+          "rows": 76,
+          "training_rows": 2204,
+          "mse_bps2": 1050.91762137457,
+          "zero_forecast_mse_bps2": 1034.708350636124
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_ridge",
+          "validation_day": "2026-09-04",
+          "last_train": "2026-09-03",
+          "rows": 76,
+          "training_rows": 2204,
+          "mse_bps2": 467.4619064296,
+          "zero_forecast_mse_bps2": 429.68105022409213
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_ridge",
+          "validation_day": "2026-09-04",
+          "last_train": "2026-09-03",
+          "rows": 76,
+          "training_rows": 2204,
+          "mse_bps2": 247.56911313488357,
+          "zero_forecast_mse_bps2": 243.80160614927397
+        },
+        {
+          "symbol": "SNDK",
+          "model": "context_tree",
+          "validation_day": "2026-09-08",
+          "last_train": "2026-09-04",
+          "rows": 76,
+          "training_rows": 2280,
+          "mse_bps2": 1816.4111720455403,
+          "zero_forecast_mse_bps2": 1781.367416961933
+        },
+        {
+          "symbol": "TSLA",
+          "model": "context_tree",
+          "validation_day": "2026-09-08",
+          "last_train": "2026-09-04",
+          "rows": 76,
+          "training_rows": 2280,
+          "mse_bps2": 360.9055780444172,
+          "zero_forecast_mse_bps2": 373.32861115634313
+        },
+        {
+          "symbol": "NVDA",
+          "model": "context_tree",
+          "validation_day": "2026-09-08",
+          "last_train": "2026-09-04",
+          "rows": 76,
+          "training_rows": 2280,
+          "mse_bps2": 245.50183161160058,
+          "zero_forecast_mse_bps2": 240.43125956669414
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_tree",
+          "validation_day": "2026-09-08",
+          "last_train": "2026-09-04",
+          "rows": 76,
+          "training_rows": 2280,
+          "mse_bps2": 1709.7161203286673,
+          "zero_forecast_mse_bps2": 1781.367416961933
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_tree",
+          "validation_day": "2026-09-08",
+          "last_train": "2026-09-04",
+          "rows": 76,
+          "training_rows": 2280,
+          "mse_bps2": 360.9055780444172,
+          "zero_forecast_mse_bps2": 373.32861115634313
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_tree",
+          "validation_day": "2026-09-08",
+          "last_train": "2026-09-04",
+          "rows": 76,
+          "training_rows": 2280,
+          "mse_bps2": 245.50183161160058,
+          "zero_forecast_mse_bps2": 240.43125956669414
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_ridge",
+          "validation_day": "2026-09-08",
+          "last_train": "2026-09-04",
+          "rows": 76,
+          "training_rows": 2280,
+          "mse_bps2": 1855.0311747344945,
+          "zero_forecast_mse_bps2": 1781.367416961933
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_ridge",
+          "validation_day": "2026-09-08",
+          "last_train": "2026-09-04",
+          "rows": 76,
+          "training_rows": 2280,
+          "mse_bps2": 350.83330037925816,
+          "zero_forecast_mse_bps2": 373.32861115634313
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_ridge",
+          "validation_day": "2026-09-08",
+          "last_train": "2026-09-04",
+          "rows": 76,
+          "training_rows": 2280,
+          "mse_bps2": 229.05262606106035,
+          "zero_forecast_mse_bps2": 240.43125956669414
+        },
+        {
+          "symbol": "SNDK",
+          "model": "context_tree",
+          "validation_day": "2026-09-09",
+          "last_train": "2026-09-08",
+          "rows": 76,
+          "training_rows": 2356,
+          "mse_bps2": 1505.5664619932008,
+          "zero_forecast_mse_bps2": 1508.758825565569
+        },
+        {
+          "symbol": "TSLA",
+          "model": "context_tree",
+          "validation_day": "2026-09-09",
+          "last_train": "2026-09-08",
+          "rows": 76,
+          "training_rows": 2356,
+          "mse_bps2": 458.8700292072334,
+          "zero_forecast_mse_bps2": 422.1658074042198
+        },
+        {
+          "symbol": "NVDA",
+          "model": "context_tree",
+          "validation_day": "2026-09-09",
+          "last_train": "2026-09-08",
+          "rows": 76,
+          "training_rows": 2356,
+          "mse_bps2": 198.50780159226971,
+          "zero_forecast_mse_bps2": 180.43404327481167
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_tree",
+          "validation_day": "2026-09-09",
+          "last_train": "2026-09-08",
+          "rows": 76,
+          "training_rows": 2356,
+          "mse_bps2": 1531.9550499577288,
+          "zero_forecast_mse_bps2": 1508.758825565569
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_tree",
+          "validation_day": "2026-09-09",
+          "last_train": "2026-09-08",
+          "rows": 76,
+          "training_rows": 2356,
+          "mse_bps2": 458.8700292072334,
+          "zero_forecast_mse_bps2": 422.1658074042198
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_tree",
+          "validation_day": "2026-09-09",
+          "last_train": "2026-09-08",
+          "rows": 76,
+          "training_rows": 2356,
+          "mse_bps2": 184.25704595960374,
+          "zero_forecast_mse_bps2": 180.43404327481167
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_ridge",
+          "validation_day": "2026-09-09",
+          "last_train": "2026-09-08",
+          "rows": 76,
+          "training_rows": 2356,
+          "mse_bps2": 1520.8383894913225,
+          "zero_forecast_mse_bps2": 1508.758825565569
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_ridge",
+          "validation_day": "2026-09-09",
+          "last_train": "2026-09-08",
+          "rows": 76,
+          "training_rows": 2356,
+          "mse_bps2": 453.1856294342257,
+          "zero_forecast_mse_bps2": 422.1658074042198
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_ridge",
+          "validation_day": "2026-09-09",
+          "last_train": "2026-09-08",
+          "rows": 76,
+          "training_rows": 2356,
+          "mse_bps2": 182.89125498404516,
+          "zero_forecast_mse_bps2": 180.43404327481167
+        },
+        {
+          "symbol": "SNDK",
+          "model": "context_tree",
+          "validation_day": "2026-09-10",
+          "last_train": "2026-09-09",
+          "rows": 76,
+          "training_rows": 2432,
+          "mse_bps2": 657.1395039485586,
+          "zero_forecast_mse_bps2": 656.8732738683287
+        },
+        {
+          "symbol": "TSLA",
+          "model": "context_tree",
+          "validation_day": "2026-09-10",
+          "last_train": "2026-09-09",
+          "rows": 76,
+          "training_rows": 2432,
+          "mse_bps2": 455.2664901122971,
+          "zero_forecast_mse_bps2": 478.6908789161837
+        },
+        {
+          "symbol": "NVDA",
+          "model": "context_tree",
+          "validation_day": "2026-09-10",
+          "last_train": "2026-09-09",
+          "rows": 76,
+          "training_rows": 2432,
+          "mse_bps2": 158.8782706171042,
+          "zero_forecast_mse_bps2": 160.15667820906094
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_tree",
+          "validation_day": "2026-09-10",
+          "last_train": "2026-09-09",
+          "rows": 76,
+          "training_rows": 2432,
+          "mse_bps2": 659.6114654559015,
+          "zero_forecast_mse_bps2": 656.8732738683287
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_tree",
+          "validation_day": "2026-09-10",
+          "last_train": "2026-09-09",
+          "rows": 76,
+          "training_rows": 2432,
+          "mse_bps2": 455.2664901122971,
+          "zero_forecast_mse_bps2": 478.6908789161837
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_tree",
+          "validation_day": "2026-09-10",
+          "last_train": "2026-09-09",
+          "rows": 76,
+          "training_rows": 2432,
+          "mse_bps2": 160.1209778846834,
+          "zero_forecast_mse_bps2": 160.15667820906094
+        },
+        {
+          "symbol": "SNDK",
+          "model": "market_ridge",
+          "validation_day": "2026-09-10",
+          "last_train": "2026-09-09",
+          "rows": 76,
+          "training_rows": 2432,
+          "mse_bps2": 772.2857244845894,
+          "zero_forecast_mse_bps2": 656.8732738683287
+        },
+        {
+          "symbol": "TSLA",
+          "model": "market_ridge",
+          "validation_day": "2026-09-10",
+          "last_train": "2026-09-09",
+          "rows": 76,
+          "training_rows": 2432,
+          "mse_bps2": 479.7839043818769,
+          "zero_forecast_mse_bps2": 478.6908789161837
+        },
+        {
+          "symbol": "NVDA",
+          "model": "market_ridge",
+          "validation_day": "2026-09-10",
+          "last_train": "2026-09-09",
+          "rows": 76,
+          "training_rows": 2432,
+          "mse_bps2": 179.12161521286367,
+          "zero_forecast_mse_bps2": 160.15667820906094
+        }
+      ]
+    },
+    "calibration": null
+  }
+]

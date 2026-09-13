@@ -1,0 +1,8 @@
+{
+  "bundle_hashes": {
+    "reports/incremental_research_20260913_v2": "288cbf155a2a518d217fd6a6c6d8583de400396f4b06362d3672db69fe2dc6ce",
+    "reports/incremental_earlier_20260913_v2": "5a5b8d4a617288f55edcdfa86f290758e273c1e46f2b5236a7c9f8c70638daa9"
+  },
+  "checks": "artifact and PnL integrity passed",
+  "orders_submitted": 0
+}
