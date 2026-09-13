@@ -7,7 +7,7 @@ sdk: docker
 app_port: 7860
 pinned: true
 license: mit
-short_description: Causal research, portfolio optimization and auditable simulations
+short_description: Causal research, portfolios and auditable simulations
 tags:
   - quant
   - trading
