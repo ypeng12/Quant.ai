@@ -1,0 +1,16 @@
+{
+  "date": "2026-09-13",
+  "tests_passed": 100,
+  "subtests_passed": 8,
+  "frontend_build": "passed",
+  "relocated_bundles_verified": [
+    "four_two_weeks",
+    "four_recent_week",
+    "thirty_two_weeks"
+  ],
+  "staged_credential_scan": "no_pattern_matches",
+  "backtest_results_modified": false,
+  "tree_selected_for_live": false,
+  "default_policy": "price_volume_h1_g50",
+  "local_broker_started_by_this_task": false
+}

@@ -1,0 +1,118 @@
+{
+  "created_at_utc": "2026-09-13T04:07:18.164012+00:00",
+  "kind": "offline_ohlcv_research_baseline_not_live_runner_replay",
+  "requested_dates": [
+    "2026-08-31",
+    "2026-09-01",
+    "2026-09-02",
+    "2026-09-03",
+    "2026-09-04",
+    "2026-09-08",
+    "2026-09-09",
+    "2026-09-10",
+    "2026-09-11"
+  ],
+  "candidate_order": [
+    "flat",
+    "trend_3",
+    "trend_12",
+    "reversal_3",
+    "ml_ridge"
+  ],
+  "config": {
+    "slippage_bps": 2.0,
+    "commission_bps": 0.0,
+    "min_train_sessions": 5,
+    "validation_sessions": 3,
+    "ridge_alpha": 10.0
+  },
+  "assumptions": [
+    "Inputs are real, timezone-aware OHLCV with 5-minute bar OPEN timestamps; provenance is caller-supplied.",
+    "Only exact complete 09:30-16:00 New York sessions are eligible. No fallback, interpolation, or synthetic data.",
+    "Features reset per session and use completed bars only. Signals fill next bar open; no latency is modeled.",
+    "Daily candidate choice maximizes compounded net return on the prior validation sessions.",
+    "Validation ML refits only on sessions before each validation day; test ML refits on all earlier complete sessions.",
+    "Features/scalers/labels never cross a session or train/test boundary. Ridge alpha is fixed at 10.",
+    "Exposure is an idealized +/-1 bar-return model with full session-end liquidation, not shares or real executions.",
+    "One-way commission and slippage bps apply to target-exposure turnover, including reversals and final close.",
+    "No live alpha/LAB/ML behavior, order book, spread history, queue, latency, liquidity, borrow, or financing is reproduced.",
+    "Intraday drawdown is marked at 5-minute interval boundaries and costs; within-bar adverse excursions are omitted.",
+    "Buy-and-hold enters at 09:30 by prior commitment; signal strategies first enter at 09:35 or later.",
+    "Candidate test returns are descriptive only and must not be used to choose that same day's candidate.",
+    "Incomplete dates are excluded and disclosed; evaluated-date totals are not full-period returns when dates are missing.",
+    "Short validation windows cannot establish reliable performance or guarantee profits."
+  ],
+  "inputs": {
+    "SNDK": {
+      "path": "/Users/yuliangpeng/Desktop/Quant/reports/quant_audit_20260912/bars/SNDK.parquet",
+      "sha256": "edc7503de4599a0d82563a7500f220b6b428d7feadb77826c6a5f74aea4b98f7",
+      "rows": 2652
+    },
+    "TSLA": {
+      "path": "/Users/yuliangpeng/Desktop/Quant/reports/quant_audit_20260912/bars/TSLA.parquet",
+      "sha256": "d3a3a6349e39ff26953bf3d9dc2fdeef0d003f9b0d7993f2535a85109886a1c8",
+      "rows": 2652
+    },
+    "MSTR": {
+      "path": "/Users/yuliangpeng/Desktop/Quant/reports/quant_audit_20260912/bars/MSTR.parquet",
+      "sha256": "960731e89bc4668b12ea49335d59e60b13dccef2304fce3017da88f034eb00ab",
+      "rows": 2652
+    },
+    "NVDA": {
+      "path": "/Users/yuliangpeng/Desktop/Quant/reports/quant_audit_20260912/bars/NVDA.parquet",
+      "sha256": "f2fb1d7b857ff87494f0eb0995cb8d37ba5bb8cd1942d35519da8971d622b0f4",
+      "rows": 2652
+    }
+  },
+  "summary": {
+    "SNDK": {
+      "requested_sessions": 9,
+      "evaluated_sessions": 9,
+      "complete_requested_sessions": 9,
+      "all_requested_sessions_evaluated": true,
+      "selected_compounded_return_on_evaluated_sessions": 0.00022002161079592852,
+      "selected_close_to_close_max_drawdown": -0.08383091869941972,
+      "selected_trade_count": 96,
+      "positive_sessions": 2,
+      "negative_sessions": 5,
+      "flat_sessions": 2
+    },
+    "TSLA": {
+      "requested_sessions": 9,
+      "evaluated_sessions": 9,
+      "complete_requested_sessions": 9,
+      "all_requested_sessions_evaluated": true,
+      "selected_compounded_return_on_evaluated_sessions": -0.11468428127404806,
+      "selected_close_to_close_max_drawdown": -0.11468428127404806,
+      "selected_trade_count": 173,
+      "positive_sessions": 2,
+      "negative_sessions": 5,
+      "flat_sessions": 2
+    },
+    "MSTR": {
+      "requested_sessions": 9,
+      "evaluated_sessions": 9,
+      "complete_requested_sessions": 9,
+      "all_requested_sessions_evaluated": true,
+      "selected_compounded_return_on_evaluated_sessions": -0.010924080787948376,
+      "selected_close_to_close_max_drawdown": -0.05991877866055251,
+      "selected_trade_count": 91,
+      "positive_sessions": 2,
+      "negative_sessions": 5,
+      "flat_sessions": 2
+    },
+    "NVDA": {
+      "requested_sessions": 9,
+      "evaluated_sessions": 9,
+      "complete_requested_sessions": 9,
+      "all_requested_sessions_evaluated": true,
+      "selected_compounded_return_on_evaluated_sessions": -0.051415979681887714,
+      "selected_close_to_close_max_drawdown": -0.051415979681887714,
+      "selected_trade_count": 80,
+      "positive_sessions": 0,
+      "negative_sessions": 5,
+      "flat_sessions": 4
+    }
+  },
+  "errors": {}
+}

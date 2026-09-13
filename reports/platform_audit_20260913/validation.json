@@ -1,0 +1,69 @@
+{
+  "tests_passed": 99,
+  "subtests_passed": 8,
+  "frontend_build": "passed",
+  "broker_server_started": false,
+  "orders_submitted": 0,
+  "bundles": {
+    "four_two_weeks": {
+      "status": "verified",
+      "complete_trials": 20,
+      "unavailable_trials": 4,
+      "symbols": 4,
+      "sessions": 9,
+      "attribution_reconciled": true,
+      "source_matches_workspace": {
+        "scripts/run_unified_research.py": false,
+        "backend/app/research/platform.py": true,
+        "backend/app/quant_policy.py": true,
+        "backend/app/research/policy_replay.py": true,
+        "backend/app/research/causal_week_replay.py": true,
+        "backend/app/alpha/real_l1_alpha.py": true,
+        "backend/app/research/attribution.py": false,
+        "backend/app/market_data/alpaca_l1_capture.py": true,
+        "backend/app/market_data/history.py": true,
+        "backend/app/research/data_audit.py": true
+      }
+    },
+    "four_recent_week": {
+      "status": "verified",
+      "complete_trials": 20,
+      "unavailable_trials": 4,
+      "symbols": 4,
+      "sessions": 4,
+      "attribution_reconciled": true,
+      "source_matches_workspace": {
+        "scripts/run_unified_research.py": false,
+        "backend/app/research/platform.py": true,
+        "backend/app/quant_policy.py": true,
+        "backend/app/research/policy_replay.py": true,
+        "backend/app/research/causal_week_replay.py": true,
+        "backend/app/alpha/real_l1_alpha.py": true,
+        "backend/app/research/attribution.py": false,
+        "backend/app/market_data/alpaca_l1_capture.py": true,
+        "backend/app/market_data/history.py": true,
+        "backend/app/research/data_audit.py": true
+      }
+    },
+    "thirty_two_weeks": {
+      "status": "verified",
+      "complete_trials": 20,
+      "unavailable_trials": 4,
+      "symbols": 30,
+      "sessions": 9,
+      "attribution_reconciled": true,
+      "source_matches_workspace": {
+        "scripts/run_unified_research.py": false,
+        "backend/app/research/platform.py": true,
+        "backend/app/quant_policy.py": true,
+        "backend/app/research/policy_replay.py": true,
+        "backend/app/research/causal_week_replay.py": true,
+        "backend/app/alpha/real_l1_alpha.py": true,
+        "backend/app/research/attribution.py": true,
+        "backend/app/market_data/alpaca_l1_capture.py": true,
+        "backend/app/market_data/history.py": true,
+        "backend/app/research/data_audit.py": true
+      }
+    }
+  }
+}

@@ -1,71 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { API_BASE } from '../config';
 import { MLDynamicVisualizationDashboard } from './MLDynamicVisualizationDashboard';
 import { MLVisualInteractiveLab } from './MLVisualInteractiveLab';
+import { ResearchPlatformResults } from './ResearchPlatformResults';
+import { InstitutionalQuantDashboard } from './InstitutionalQuantDashboard';
 
 export const InstitutionalPanel: React.FC = () => {
   const [activeSubTab, setActiveSubTab] = useState<'itchEngine' | 'mlVisualLab' | 'twoStage' | 'alphaLab' | 'optimal' | 'statArb' | 'riskParity' | 'dsr' | 'lowLatency' | 'ofi' | 'multiAsset'>('itchEngine');
   const [loading, setLoading] = useState<boolean>(false);
   const [resultData, setResultData] = useState<any>(null);
-  const [alphaResearchData, setAlphaResearchData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
-
-  // Fetch precomputed Alpha Research Lab results on mount
-  useEffect(() => {
-    fetchLatestAlphaResearch();
-  }, []);
-
-  const fetchLatestAlphaResearch = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(`${API_BASE}/api/research/latest_results`);
-      const data = await res.json();
-      if (data.success) {
-        setAlphaResearchData(data);
-      } else {
-        setError(data.error || 'Failed to fetch research results');
-      }
-    } catch (e: any) {
-      setError(e.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const triggerRunAlphaExperiment = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(`${API_BASE}/api/research/run`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ lookback_days: 20, holding_days: 5, cost_bps: 5.0, use_synthetic: true })
-      });
-      const data = await res.json();
-      if (data.success) {
-        fetchLatestAlphaResearch();
-      } else {
-        setError(data.error || 'Failed to trigger alpha experiment');
-      }
-    } catch (e: any) {
-      setError(e.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // OFI Trigger
-  const runOFI = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(`${API_BASE}/api/orderbook/ofi`, { method: 'POST' });
-      const data = await res.json();
-      if (data.success) setResultData(data.result);
-      else setError(data.error || 'Failed to compute OFI');
-    } catch (e: any) { setError(e.message); } finally { setLoading(false); }
-  };
 
   // Multi-Asset Backtest Trigger
   const runMultiAsset = async () => {
@@ -341,118 +285,7 @@ export const InstitutionalPanel: React.FC = () => {
         </div>
       )}
 
-      {activeSubTab === 'alphaLab' && (
-        <div className="space-y-6">
-          <div className="bg-slate-950/60 border border-amber-500/20 rounded-xl p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-semibold text-amber-300">
-                  点位时间一致性与 Purged Walk-Forward Alpha 验证
-                </h3>
-                <p className="text-xs text-slate-400 mt-1">
-                  Point-in-time universe across 38 liquid ETFs (94,040 rows OHLCV). Zero future leakage, 5d embargo, 5 bps friction.
-                </p>
-              </div>
-              <button
-                onClick={triggerRunAlphaExperiment}
-                disabled={loading}
-                className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-bold transition-all shadow-lg shadow-amber-600/20 disabled:opacity-50"
-              >
-                {loading ? 'Running Experiment...' : '⚡ Re-Run Out-of-Sample CV'}
-              </button>
-            </div>
-
-            {alphaResearchData && (
-              <div className="mt-5 space-y-5">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 font-mono text-xs">
-                  <div className="bg-slate-900/80 p-3 rounded-lg border border-slate-800">
-                    <span className="text-slate-500 block text-[10px]">HISTORICAL SPAN</span>
-                    <span className="text-white font-bold">{alphaResearchData.trading_dates} Trading Days</span>
-                  </div>
-                  <div className="bg-slate-900/80 p-3 rounded-lg border border-slate-800">
-                    <span className="text-slate-500 block text-[10px]">UNIVERSE SIZE</span>
-                    <span className="text-white font-bold">{alphaResearchData.universe_size} Liquid ETFs</span>
-                  </div>
-                  <div className="bg-slate-900/80 p-3 rounded-lg border border-slate-800">
-                    <span className="text-slate-500 block text-[10px]">VALIDATION SCHEME</span>
-                    <span className="text-amber-400 font-bold">Purged Walk-Forward (5d Embargo)</span>
-                  </div>
-                  <div className="bg-slate-900/80 p-3 rounded-lg border border-slate-800">
-                    <span className="text-slate-500 block text-[10px]">TRANSACTION FRICTION</span>
-                    <span className="text-emerald-400 font-bold">{alphaResearchData.cost_bps} bps</span>
-                  </div>
-                </div>
-
-                {/* Model Suite Comparison Table */}
-                <div>
-                  <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
-                    Model Hierarchy Out-of-Sample Performance Table
-                  </h4>
-                  <div className="overflow-x-auto border border-slate-800 rounded-lg">
-                    <table className="w-full text-left text-xs font-mono">
-                      <thead className="bg-slate-900 text-slate-400 uppercase text-[10px]">
-                        <tr>
-                          <th className="py-2.5 px-3">Model Name</th>
-                          <th className="py-2.5 px-3">Rank IC</th>
-                          <th className="py-2.5 px-3">Net Sharpe</th>
-                          <th className="py-2.5 px-3">Max Drawdown</th>
-                          <th className="py-2.5 px-3">Turnover</th>
-                          <th className="py-2.5 px-3">Deflated Sharpe (DSR)</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-800/60 bg-slate-950/40">
-                        {alphaResearchData.results.map((m: any, idx: number) => (
-                          <tr key={idx} className="hover:bg-slate-900/50 transition-colors">
-                            <td className="py-2.5 px-3 font-bold text-slate-200">
-                              {m.model_name}
-                              <span className="block text-[10px] text-slate-500 font-normal">{m.description}</span>
-                            </td>
-                            <td className={`py-2.5 px-3 ${m.rank_ic >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                              {m.rank_ic.toFixed(4)}
-                            </td>
-                            <td className={`py-2.5 px-3 font-bold ${m.net_sharpe >= 0.5 ? 'text-emerald-400' : m.net_sharpe >= 0 ? 'text-amber-400' : 'text-rose-400'}`}>
-                              {m.net_sharpe.toFixed(2)}
-                            </td>
-                            <td className="py-2.5 px-3 text-rose-400">
-                              {(m.max_drawdown * 100).toFixed(1)}%
-                            </td>
-                            <td className="py-2.5 px-3 text-slate-300">
-                              {(m.turnover * 100).toFixed(1)}%
-                            </td>
-                            <td className="py-2.5 px-3 text-indigo-300 font-bold">
-                              {m.dsr.toFixed(2)}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-
-                {/* Feature Drift PSI Audit */}
-                <div>
-                  <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
-                    Population Stability Index (PSI) Feature Drift Audit
-                  </h4>
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-2 font-mono text-xs">
-                    {alphaResearchData.drift_audit.map((d: any, idx: number) => (
-                      <div key={idx} className="bg-slate-900 p-2.5 rounded-lg border border-slate-800 flex items-center justify-between">
-                        <div>
-                          <span className="text-[10px] text-slate-400 block">{d.feature}</span>
-                          <span className="font-bold text-slate-200">PSI: {d.psi.toFixed(4)}</span>
-                        </div>
-                        <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                          {d.status}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      {activeSubTab === 'alphaLab' && <ResearchPlatformResults />}
 
       {/* Subtab 1: Almgren-Chriss Execution */}
       {activeSubTab === 'optimal' && (
@@ -734,58 +567,9 @@ export const InstitutionalPanel: React.FC = () => {
         </div>
       )}
 
-      {/* Subtab 6: OFI */}
+      {/* Subtab 6: genuine L1 OFI inputs */}
       {activeSubTab === 'ofi' && (
-        <div className="space-y-4">
-          <div className="bg-slate-950/60 border border-slate-800 rounded-xl p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-semibold text-indigo-300">Level-2 Order Flow Imbalance (OFI) & Micro-Price</h3>
-                <p className="text-xs text-slate-400 mt-1">
-                  Calculates Order Flow Imbalance (OFI) and Micro-Price (P_micro) for HFT lead-lag signals.
-                </p>
-              </div>
-              <button
-                onClick={runOFI}
-                disabled={loading}
-                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold transition-all shadow-lg shadow-indigo-600/20 disabled:opacity-50"
-              >
-                {loading ? 'Computing OFI...' : 'Run OFI Signal Test'}
-              </button>
-            </div>
-
-            {resultData && (
-              <div className="mt-5 space-y-4 font-mono text-xs">
-                <div className="overflow-x-auto border border-slate-800 rounded-lg">
-                  <table className="w-full text-left text-xs">
-                    <thead className="bg-slate-900 text-slate-400 uppercase text-[10px]">
-                      <tr>
-                        <th className="py-2 px-3">Bid Price</th>
-                        <th className="py-2 px-3">Bid Vol</th>
-                        <th className="py-2 px-3">Ask Price</th>
-                        <th className="py-2 px-3">Ask Vol</th>
-                        <th className="py-2 px-3">OFI Signal</th>
-                        <th className="py-2 px-3">Micro-Price</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-800/60">
-                      {resultData.map((row: any, idx: number) => (
-                        <tr key={idx}>
-                          <td className="py-2 px-3 text-emerald-400 font-bold">${row.bid_price}</td>
-                          <td className="py-2 px-3 text-slate-300">{row.bid_vol}</td>
-                          <td className="py-2 px-3 text-rose-400 font-bold">${row.ask_price}</td>
-                          <td className="py-2 px-3 text-slate-300">{row.ask_vol}</td>
-                          <td className={`py-2 px-3 font-bold ${row.ofi > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{row.ofi}</td>
-                          <td className="py-2 px-3 text-amber-300">${row.micro_price?.toFixed(2)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+        <InstitutionalQuantDashboard />
       )}
 
       {/* Subtab 7: Multi-Asset */}

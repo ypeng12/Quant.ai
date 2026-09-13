@@ -1,7 +1,7 @@
 # backend/app/broker/live_runner.py
 """
-Live Trading Runner Background Service (Modular Quant Core)
-Polls real-time quotes, evaluates probabilistic signals, executes trades on Alpaca, and logs decisions.
+Live execution of the shared causal research policy.
+Completed bars determine portfolio targets; broker orders and fills determine execution state.
 """
 
 import asyncio
@@ -12,29 +12,268 @@ import os
 import pytz
 import threading
 import time
-import uuid
 from typing import Dict, List, Optional
-import numpy as np
 import pandas as pd
 
 from app.broker.alpaca_adapter import AlpacaAdapter
 from app.broker.mock_adapter import MockAlpacaAdapter
-from app.broker.universe_screener import UniverseScreener
-from app.broker.risk_position_sizer import RiskPositionSizer
-from app.broker.probability_engine import evaluate_mathematical_expectation
-from app.alpha_engine import InstitutionalAlphaEngine
-try:
-    from app.ml.rl_trading_agent import RLTradingAgent
-    from app.ml.auto_reflection_engine import AutoReflectionEngine
-except ImportError:
-    from backend.app.ml.rl_trading_agent import RLTradingAgent
-    from backend.app.ml.auto_reflection_engine import AutoReflectionEngine
 from app.config import ALPACA_API_KEY, ALPACA_SECRET_KEY, ALPACA_BASE_URL, WATCHLIST, EXCLUDED_TICKERS, save_watchlist, load_watchlist
 from app.data_manager import fetch_and_prepare_data
 from app.data_cache import invalidate_cache
+from app.broker.research_execution import closed_bars, plan_rebalance, recalculate_fifo, TERMINAL_STATUSES
 
 
 class LiveTradingRunner:
+    @staticmethod
+    def _quant_policy_defaults() -> Dict:
+        return {
+            "strategy_version": "causal_quant_policy_v1",
+            "strategy_mode": "quant_policy",
+            "quant_policy_path": "../reports/quant_research_20260913/selected_policy.json",
+            "bar_interval": "5m",
+            "allow_shorting": True,
+            # Preserve the existing account authorization. Model gross and symbol
+            # limits are explicit in its artifact; these are execution settings.
+            "paper_only_aggressive": True,
+            "allow_aggressive_live": False,
+            "buying_power_utilization_pct": 0.95,
+            "max_single_position_equity_pct": 0.70,
+            "orders_sync_interval_seconds": 2.0,
+        }
+
+    @classmethod
+    def _normalize_quant_params(cls, params) -> Dict:
+        defaults = cls._quant_policy_defaults()
+        defaults.update({key: value for key, value in params.items() if key in defaults})
+        defaults.update(strategy_mode="quant_policy", strategy_version="causal_quant_policy_v1", bar_interval="5m")
+        return defaults
+
+    def load_runner_config(self):
+        try:
+            if os.path.exists(self.config_file):
+                with open(self.config_file, encoding="utf-8") as handle:
+                    saved = json.load(handle).get("strategy_params", {})
+                self.strategy_params = self._normalize_quant_params(saved)
+        except (OSError, ValueError, TypeError) as exc:
+            self.add_log(f"Quant policy configuration unavailable: {exc}")
+
+    def recalculate_trade_pnls(self):
+        recalculate_fifo(self.trade_history)
+
+    def is_market_open(self) -> bool:
+        clock = getattr(self, "_quant_clock", {})
+        return bool(clock.get("success") and clock.get("is_open"))
+
+    def _quant_broker_snapshot(self):
+        """Read orders before fresh positions so a fill cannot free a stale target.
+
+        The old adapter silently returned cached positions on errors. Execution
+        requires an authoritative read, including orders placed on earlier dates.
+        """
+        from alpaca.trading.requests import GetOrdersRequest
+        from alpaca.trading.enums import QueryOrderStatus
+        raw_orders = self.adapter.client.get_orders(filter=GetOrdersRequest(status=QueryOrderStatus.OPEN, limit=500))
+        orders = [self._serialize_alpaca_order(order) for order in raw_orders]
+        by_client = {order["client_order_id"]: order for order in orders}
+        # A submission with an unknown outcome remains an unresolved broker order,
+        # not an invented holding or permission to submit the same order again.
+        for client_id, submission in list(self._quant_submissions.items()):
+            if submission.get("resolved"):
+                continue
+            order = by_client.get(client_id)
+            if order is None:
+                try:
+                    raw = self.adapter.client.get_order_by_client_id(client_id)
+                    order = self._serialize_alpaca_order(raw)
+                except Exception:
+                    orders.append(submission)
+                    continue
+            if order["status"] in TERMINAL_STATUSES:
+                submission.update(order)
+                submission["resolved"] = True
+            elif client_id not in by_client:
+                orders.append(order)
+        positions = []
+        for position in self.adapter.client.get_all_positions():
+            positions.append({
+                "ticker": str(self._order_field(position, "symbol")),
+                "shares": float(self._order_field(position, "qty")),
+                "current_price": float(self._order_field(position, "current_price")),
+                "avg_entry_price": float(self._order_field(position, "avg_entry_price")),
+            })
+        account = self.adapter.get_account_summary()
+        if account.get("success") is False:
+            raise ValueError("Authoritative account data unavailable")
+        return orders, positions, account
+
+    def _quant_model(self):
+        from app.quant_policy import PolicyModel
+        backend_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+        path = os.environ.get("QUANT_POLICY_PATH") or self.strategy_params["quant_policy_path"]
+        path = path if os.path.isabs(path) else os.path.join(backend_dir, path)
+        modified = os.stat(path).st_mtime_ns
+        if getattr(self, "_quant_model_key", None) != (path, modified):
+            self._quant_fitted_model = PolicyModel.load(path)
+            self._quant_model_key = (path, modified)
+            self._quant_last_bar = None
+        return self._quant_fitted_model
+
+    def _run_quant_policy_cycle(self):
+        from app.quant_policy import integer_targets, target_weights
+        if isinstance(self.adapter, MockAlpacaAdapter):
+            self._quant_status = {"state": "unavailable", "reason": "Calibrated execution requires broker snapshots; legacy mock fills are not research evidence."}
+            return
+        clock = self.adapter.get_clock()
+        self._quant_clock = clock
+        if not clock.get("success"):
+            raise ValueError("Exchange clock unavailable")
+        if not clock.get("is_open"):
+            self._quant_status = {**self._quant_status, "state": "market_closed", "clock": clock.get("timestamp")}
+            return
+        now = pd.Timestamp(clock["timestamp"])
+        close = pd.Timestamp(clock["next_close"])
+        orders, positions, account = self._quant_broker_snapshot()
+        equity = float(account["equity"])
+        if not math.isfinite(equity) or equity <= 0:
+            raise ValueError("Positive broker equity is required to express portfolio weights")
+        # Honor the existing account authorization before any broker mutation,
+        # including cancellation of working orders at the session boundary.
+        permitted = not self.strategy_params.get("paper_only_aggressive", True) or self.strategy_params.get("allow_aggressive_live", False) or bool(getattr(self.adapter, "is_paper", False))
+        if not permitted:
+            self._quant_status = {"state": "execution_not_authorized", "reason": "Existing configuration permits paper execution only"}
+            return
+        # Keep the existing intraday-flat mandate. The research contract executes
+        # at the last 5m interval, based on the exchange calendar (early closes too).
+        flatten = now >= close - pd.Timedelta(minutes=5)
+        prices = {position["ticker"]: position["current_price"] for position in positions}
+        model = None
+        if flatten:
+            # A still-working entry can recreate inventory after a liquidation.
+            # Cancel actual broker orders first; their disappearance/terminal state
+            # must be reconciled before a same-symbol close can be submitted.
+            for order in orders:
+                order_id = order.get("order_id")
+                held = next((position["shares"] for position in positions if position["ticker"] == order.get("ticker")), 0)
+                remaining = float(order.get("qty") or 0) - float(order.get("filled_qty") or 0)
+                working_exit = (str(order.get("client_order_id", "")).startswith("QP-EXIT-")
+                                and 0 < remaining <= abs(held)
+                                and order.get("side") == ("sell" if held > 0 else "buy"))
+                if working_exit:
+                    continue
+                if order_id and order.get("status") not in TERMINAL_STATUSES | {"pending_cancel"}:
+                    self.adapter.client.cancel_order_by_id(order_id)
+            self._quant_targets = {position["ticker"]: 0 for position in positions}
+            cycle_id = f"{now.date()}:session_close"
+            self._quant_status = {"state": "session_close", "target_shares": self._quant_targets, "exchange_close": close.isoformat()}
+        else:
+            try:
+                model = self._quant_model()
+                if str(model.trained_before) > str(now.tz_convert("America/New_York").date()):
+                    raise ValueError("Model training cutoff is later than this trading session")
+                symbols = tuple(model.symbols)
+                watchlist = set(load_watchlist())
+                allowed_symbols = tuple(symbol for symbol in symbols if symbol in watchlist)
+                self.active_tickers = list(allowed_symbols)
+                frames = {symbol: closed_bars(fetch_and_prepare_data(symbol, period="5d", interval="5m"), now) for symbol in symbols}
+                session_date = now.tz_convert("America/New_York").date()
+                frames = {symbol: frame.loc[frame.index.tz_convert("America/New_York").date == session_date] for symbol, frame in frames.items()}
+                timestamps = {frame.index[-1] for frame in frames.values()}
+                if len(timestamps) != 1:
+                    raise ValueError("The portfolio requires synchronized completed bars")
+                bar = next(iter(timestamps))
+                prices.update({symbol: float(frame["close"].iloc[-1]) for symbol, frame in frames.items()})
+                cycle_id = f"{self._quant_model_key}:{bar.isoformat()}:{allowed_symbols}"
+                if self._quant_last_bar != cycle_id:
+                    current = {symbol: 0.0 for symbol in symbols}
+                    for position in positions:
+                        if position["ticker"] in current:
+                            current[position["ticker"]] = position["shares"] * prices[position["ticker"]] / equity
+                    shortable = {}
+                    for symbol in symbols:
+                        asset = self.adapter.client.get_asset(symbol)
+                        shortable[symbol] = bool(self.strategy_params["allow_shorting"] and account.get("shorting_enabled") and self._order_field(asset, "shortable", False))
+                    forecast = model.forecast(frames)
+                    indices = [symbols.index(symbol) for symbol in allowed_symbols]
+                    weights = dict.fromkeys(symbols, 0.0)
+                    weights.update(target_weights(
+                        {symbol: forecast.mu[symbol] for symbol in allowed_symbols},
+                        forecast.covariance.take(indices, axis=0).take(indices, axis=1),
+                        {symbol: current[symbol] for symbol in allowed_symbols},
+                        model.spec, shortable=shortable, symbols=allowed_symbols))
+                    # User account concentration settings may be tighter than the
+                    # validated artifact, never wider. No extra score multiplier.
+                    cap = float(self.strategy_params["max_single_position_equity_pct"])
+                    weights = {symbol: max(-cap, min(cap, weight)) for symbol, weight in weights.items()}
+                    self._quant_targets = integer_targets(weights, prices, equity, spec=model.spec)
+                    self._quant_last_bar = cycle_id
+                    self.ticker_scores = {}
+                    self.ticker_directions = {symbol: "LONG" if weight > 0 else "SHORT" if weight < 0 else "FLAT" for symbol, weight in weights.items()}
+                    self.intraday_opportunities = {
+                        symbol: {"ticker": symbol, "direction": self.ticker_directions[symbol],
+                                 "expected_return_bps": float(forecast.mu[symbol]) * 10000,
+                                 "round_trip_cost_bps": 2 * model.spec.cost_bps,
+                                 "target_weight": weights[symbol], "bar_time": bar.isoformat(),
+                                 "model": model.spec.name, "status": "model_forecast"}
+                        for symbol in allowed_symbols
+                    }
+                self._quant_status = {"state": "ready", "model": model.spec.name,
+                                      "trained_before": model.trained_before,
+                                      "bar_time": bar.isoformat(), "target_shares": dict(self._quant_targets),
+                                      "unmodeled_watchlist_symbols": sorted(watchlist.difference(symbols)),
+                                      "gross_limit": model.spec.gross_limit}
+            except Exception as exc:
+                self.ticker_scores = {}
+                self.intraday_opportunities = {}
+                self._quant_status = {"state": "unavailable", "reason": str(exc),
+                                      "inventory": positions, "inventory_policy": "Retain confirmed inventory and existing broker protective orders; close at the established intraday session boundary."}
+                return
+        gross_limit = float(model.spec.gross_limit) if model else 0.0
+        execution_marks = {**prices, **{position["ticker"]: position["current_price"] for position in positions}}
+        intents = plan_rebalance(self._quant_targets, positions, execution_marks, orders,
+                                 equity=equity, buying_power=float(account["buying_power"]),
+                                 gross_limit=gross_limit,
+                                 buying_power_utilization=float(self.strategy_params["buying_power_utilization_pct"]),
+                                 symbol_limit=min(float(model.spec.symbol_limit), float(self.strategy_params["max_single_position_equity_pct"])) if model else 0,
+                                 cost_bps=float(model.spec.cost_bps) if model else 0,
+                                 cycle_id=cycle_id)
+        for intent in intents:
+            prior = next((submission for submission in reversed(list(self._quant_submissions.values()))
+                          if submission.get("base_client_order_id") == intent.client_order_id), None)
+            if prior and (not prior.get("resolved") or prior.get("status") == "filled"):
+                continue
+            attempt = int(prior.get("attempt", 0)) + 1 if prior else 1
+            client_id = intent.client_order_id if attempt == 1 else f"{intent.client_order_id[:36]}-{attempt}"
+            submission = {"client_order_id": client_id, "base_client_order_id": intent.client_order_id,
+                          "attempt": attempt, "ticker": intent.symbol,
+                          "qty": intent.quantity, "filled_qty": 0, "side": intent.side,
+                          "status": "submission_unknown", "limit_price": execution_marks[intent.symbol]}
+            self._quant_submissions[client_id] = submission
+            result = self.adapter.submit_market_order(intent.symbol, intent.quantity, intent.side,
+                                                      price=execution_marks[intent.symbol], client_order_id=client_id)
+            submission.update(order_id=result.get("order_id"), status=result.get("status") or "submission_unknown")
+            if result.get("error"):
+                submission["error"] = result["error"]
+            if submission["status"] in TERMINAL_STATUSES:
+                submission["resolved"] = True
+            self.add_log(f"[Quant policy] {intent.symbol} {intent.side} {intent.quantity}: {submission['status']}; awaiting broker fill reconciliation.")
+        unresolved = [dict(submission) for submission in self._quant_submissions.values() if not submission.get("resolved")]
+        self._quant_status["pending_submissions"] = unresolved
+        if any(submission.get("status") == "submission_unknown" for submission in unresolved):
+            self._quant_status.update(state="awaiting_broker_resolution", reason="A submission has no confirmed broker outcome; its client ID is being reconciled")
+        # Genuine filled quantities/prices enter the ledger through the existing
+        # order reconciliation worker. Submission success never enters inventory.
+
+    async def _run_loop(self):
+        while self.is_running:
+            try:
+                self._run_quant_policy_cycle()
+            except asyncio.CancelledError:
+                break
+            except Exception as exc:
+                self._quant_status = {"state": "unavailable", "reason": str(exc)}
+                self.add_log(f"[Quant policy] Broker/data reconciliation unavailable: {exc}")
+            await asyncio.sleep(float(self.strategy_params["orders_sync_interval_seconds"]))
+
     def __init__(self):
         self.is_running = True
         self.logs = []
@@ -49,29 +288,8 @@ class LiveTradingRunner:
         self._account_cache_time = 0.0
         self._positions_cache = None
         self._positions_cache_time = 0.0
-        self.highest_prices = {}
-        self.position_extremes = {}
         self.intraday_opportunities = {}
         self.ticker_directions = {}
-        self.last_exit_times = {}
-        self.entry_times = {}
-        self._score_warmup_complete = False
-        self.pyramid_done = {}  # {ticker: bool} tracks whether a pyramid add has been done for current position
-        self.pyramid_counts = {}  # {ticker: int} tracks exact count of pyramid additions per trade
-        self.partial_tp_done = {}  # {ticker: bool} tracks whether partial profit scaling has been taken
-        self.ticker_consecutive_losses = {}  # {ticker: int} tracks consecutive losses per session to avoid whipsaw losses
-        self.staged_entries = {}  # {ticker: {"tier": int, "entry_price": float, "shares": int, "notional": float, "side": str}}
-
-        self.screener = UniverseScreener(self._get_alpaca_credentials, self.add_log)
-        self.risk_sizer = RiskPositionSizer()
-        self.alpha_engine = InstitutionalAlphaEngine()
-        try:
-            self.rl_agent = RLTradingAgent.load()
-            self.add_log("🧠 [Reinforcement Learning] RLTradingAgent policy loaded successfully.")
-        except Exception as e:
-            self.rl_agent = RLTradingAgent(state_dim=6)
-            self.add_log(f"🧠 [Reinforcement Learning] Initialized fresh RLTradingAgent: {e}")
-
         self.loop_task = None
         self.order_sync_thread = None
         self._orders_lock = threading.RLock()
@@ -81,142 +299,17 @@ class LiveTradingRunner:
         self._orders_cache_error = None
         self._orders_cache_latency_ms = None
 
-        self.strategy_params = self._aggressive_intraday_defaults()
+        self.strategy_params = self._quant_policy_defaults()
         self.ticker_scores = {}
+        self._quant_status = {"state": "initializing"}
+        self._quant_submissions = {}
+        self._quant_last_bar = None
+        self._quant_targets = {}
         self._loaded_strategy_version = None
         self.load_runner_config()
-        self.add_log("📡 [System Initialized] Quant AI Intraday Probability & Risk Engine ready...")
+        self.add_log("Quant policy execution initialized; model forecasts and actual broker fills are reported separately.")
         self.start()
 
-    @staticmethod
-    def _aggressive_intraday_defaults() -> Dict:
-        return {
-            "strategy_version": "aggressive_intraday_v6_max_profit",
-            "strategy_mode": "aggressive_intraday",
-            "paper_only_aggressive": True,
-            "allow_aggressive_live": False,
-            "allow_shorting": True,  # Enable high-expectancy trend following & breakdown shorting
-            "inverted_mode": False,  # True institutional trend-following & momentum alpha engine (trend long, breakdown short)
-            "dynamic_screener_enabled": False,  # Strict focus on focus watchlist (SNDK, TSLA, MSTR, NVDA)
-            "screener_refresh_seconds": 120,
-            "screener_top_actives": 6,
-            "screener_top_movers": 4,
-            "max_scan_symbols": 14,
-            "entry_score_min": 78.0,
-            "full_size_score": 85.0,
-            "min_expected_value_r": 0.0,
-            "min_p_win_pct": 50.0,
-            "min_entry_rvol": 0.0,
-            "rl_gate_enabled": False,
-            "midday_chop_filter_enabled": False,
-            "reentry_cooldown_seconds": 180,
-
-            "max_concurrent_positions": 2,
-            "buying_power_utilization_pct": 0.95,
-            "starter_buying_power_pct": 0.60,
-            "max_position_buying_power_pct": 0.95,
-            "max_single_position_equity_pct": 0.70,
-            "max_position_risk_pct": 0.035,
-            "max_trade_risk_pct": 0.035,
-            "pyramid_trigger_pct": 0.005,
-            "pyramid_multiplier": 1.8,
-            "min_stock_price": 5.0,
-            "daily_loss_limit_pct": 0.05,
-            "initial_stop_atr_mult": 1.80,
-            "stop_min_pct": 0.0080,
-            "stop_max_pct": 0.0250,
-            "trail_start_pct": 0.0120,
-            "trailing_stop_atr_mult": 2.20,
-            "trailing_stop_min_pct": 0.0080,
-            "trailing_stop_max_pct": 0.0350,
-            "minimum_hold_minutes": 4,
-            "max_hold_minutes": 300,
-            "time_stop_min_score": 52.0,
-            "orders_sync_interval_seconds": 2.0,
-            "staged_entry_enabled": True,  # Citadel-style 2-tier staged entry (40% starter, 60% golden add)
-            "tier1_size_ratio": 0.40,  # 40% starter sizing
-            "tier2_size_ratio": 0.60,  # 60% golden add sizing
-        }
-
-    # 🌊 Saggese LOB Microstructure Ticker-Specific Wave Profiles
-    TICKER_WAVE_PROFILES = {
-        "MSTR": {
-            "min_wave_bps": 75.0,        # High-beta crypto-adjacent asset, target 75~150 bps waves
-            "trail_start_pct": 0.0120,   # Wide swings require breathing room before trailing
-            "trail_buf_min_pct": 0.0100, # 1.0% minimum buffer
-            "trail_buf_max_pct": 0.0350, # up to 3.5% buffer for multi-percent momentum
-            "trailing_stop_atr_mult": 2.20,
-            "p_win_threshold": 51.0,
-        },
-        "NVDA": {
-            "min_wave_bps": 25.0,        # Highly liquid mega-cap tech, 25~45 bps waves
-            "trail_start_pct": 0.0045,   # Fast profit locking on tighter moves
-            "trail_buf_min_pct": 0.0040, # 0.4% tight trail buffer
-            "trail_buf_max_pct": 0.0150, # 1.5% max buffer
-            "trailing_stop_atr_mult": 1.50,
-            "p_win_threshold": 53.0,
-        },
-        "TSLA": {
-            "min_wave_bps": 45.0,        # Growth tech momentum, 45~80 bps waves
-            "trail_start_pct": 0.0070,   # 0.7% trail trigger
-            "trail_buf_min_pct": 0.0060, # 0.6% buffer
-            "trail_buf_max_pct": 0.0220, # 2.2% max buffer
-            "trailing_stop_atr_mult": 1.80,
-            "p_win_threshold": 52.0,
-        },
-        "SNDK": {
-            "min_wave_bps": 50.0,        # High-beta semiconductor stock, 50~100 bps waves
-            "trail_start_pct": 0.0080,   # 0.8% trail trigger
-            "trail_buf_min_pct": 0.0070, # 0.7% buffer
-            "trail_buf_max_pct": 0.0250, # 2.5% max buffer
-            "trailing_stop_atr_mult": 2.00,
-            "p_win_threshold": 51.5,
-        },
-    }
-
-    def _get_ticker_wave_profile(self, ticker: str) -> Dict:
-        return self.TICKER_WAVE_PROFILES.get(ticker.upper(), {
-            "min_wave_bps": 40.0,
-            "trail_start_pct": self._safe_float(self.strategy_params.get("trail_start_pct"), 0.0080),
-            "trail_buf_min_pct": self._safe_float(self.strategy_params.get("trailing_stop_min_pct"), 0.006),
-            "trail_buf_max_pct": self._safe_float(self.strategy_params.get("trailing_stop_max_pct"), 0.025),
-            "trailing_stop_atr_mult": self._safe_float(self.strategy_params.get("trailing_stop_atr_mult"), 1.80),
-            "p_win_threshold": self._safe_float(self.strategy_params.get("min_p_win_pct"), 50.0),
-        })
-
-
-
-    # Proxy properties for locks to maintain full backward compatibility
-    @property
-    def pending_entry_locks(self):
-        return self.risk_sizer.pending_entry_locks
-
-    @property
-    def pending_exit_locks(self):
-        return self.risk_sizer.pending_exit_locks
-
-    def is_entry_locked(self, ticker: str) -> bool:
-        return self.risk_sizer.is_entry_locked(ticker)
-
-    def is_exit_locked(self, ticker: str) -> bool:
-        return self.risk_sizer.is_exit_locked(ticker)
-
-    def lock_entry(self, ticker: str):
-        self.risk_sizer.lock_entry(ticker)
-
-    def unlock_entry(self, ticker: str):
-        self.risk_sizer.unlock_entry(ticker)
-
-    def lock_exit(self, ticker: str):
-        self.risk_sizer.lock_exit(ticker)
-
-    def unlock_exit(self, ticker: str):
-        self.risk_sizer.unlock_exit(ticker)
-
-    def _can_open_short(self, ticker: str) -> bool:
-        if not self.strategy_params.get("allow_shorting", True):
-            return False
-        return self.risk_sizer.can_open_short(ticker, self.adapter)
 
     def _bg_refresh_account(self):
         try:
@@ -255,29 +348,6 @@ class LiveTradingRunner:
         self._bg_refresh_positions()
         return self._positions_cache or []
 
-    def load_runner_config(self):
-        try:
-            if os.path.exists(self.config_file):
-                with open(self.config_file, 'r', encoding='utf-8') as f:
-                    data = json.load(f)
-                    if "strategy_params" in data and isinstance(data["strategy_params"], dict):
-                        saved = data["strategy_params"]
-                        saved_mode = saved.get("strategy_mode", "")
-                        current_mode = self.strategy_params.get("strategy_mode", "")
-                        # Guard: never let a stale config from a different strategy mode
-                        # overwrite the engine defaults (e.g. old "dynamic" config clobbering aggressive_intraday_v3)
-                        if saved_mode and current_mode and saved_mode != current_mode:
-                            print(
-                                f"[Config] Skipping runner_config.json — saved mode '{saved_mode}' "
-                                f"does not match active mode '{current_mode}'. Using engine defaults."
-                            )
-                            return
-                        self._loaded_strategy_version = saved.get("strategy_version")
-                        self.strategy_params.update(saved)
-            # Guarantee allow_shorting is True so short trigger orders are never locked out
-            self.strategy_params["allow_shorting"] = bool(self.strategy_params.get("allow_shorting", True))
-        except Exception as e:
-            print(f"Error loading runner_config.json: {e}")
 
     def save_runner_config(self):
         try:
@@ -302,6 +372,7 @@ class LiveTradingRunner:
                 with open(self.history_file, 'r', encoding='utf-8') as f:
                     data = json.load(f)
                     self.trade_history = data.get("trade_history", [])
+                    self.recalculate_trade_pnls()
                     raw_action_logs = data.get("action_logs", [])
                     self.action_logs = [l for l in raw_action_logs if "Waiting for bar data" not in str(l) and "MU" not in str(l)]
                     raw_logs = data.get("logs", [])
@@ -309,115 +380,6 @@ class LiveTradingRunner:
         except Exception as e:
             print(f"Error loading trade_history.json: {e}")
 
-    def recalculate_trade_pnls(self):
-        if not self.trade_history:
-            return
-        self.trade_history.sort(key=lambda x: x.get("time", ""))
-        trades_by_date = {}
-        for trade in self.trade_history:
-            d = trade.get("date") or (trade.get("time", "")[:10] if trade.get("time") else "")
-            d = d.strip()
-            if d not in trades_by_date:
-                trades_by_date[d] = []
-            trades_by_date[d].append(trade)
-
-        for d, day_trades in trades_by_date.items():
-            ticker_queues = {}
-            for trade in day_trades:
-                ticker = trade.get("ticker", "")
-                raw_action = trade.get("action", "").upper()
-                qty = int(trade.get("shares", 0))
-                price = float(trade.get("price", 0.0))
-                if not ticker or qty <= 0 or price <= 0:
-                    continue
-                if ticker not in ticker_queues:
-                    ticker_queues[ticker] = {"long": [], "short": []}
-
-                long_q = ticker_queues[ticker]["long"]
-                short_q = ticker_queues[ticker]["short"]
-                trade_pnl = 0.0
-
-                if raw_action in ("BUY", "PYRAMID_BUY", "COVER", "PARTIAL_COVER"):
-                    if short_q:
-                        trade["action"] = "COVER"
-                        trade["action_cn"] = "COVER"
-                        rem_qty = qty
-                        while rem_qty > 0 and short_q:
-                            entry = short_q[0]
-                            matched = min(rem_qty, entry["qty"])
-                            trade_pnl += (entry["price"] - price) * matched
-                            entry["qty"] -= matched
-                            rem_qty -= matched
-                            if entry["qty"] <= 0:
-                                short_q.pop(0)
-                        if rem_qty > 0:
-                            long_q.append({"price": price, "qty": rem_qty})
-                    else:
-                        trade["action"] = "BUY"
-                        trade["action_cn"] = "BUY"
-                        long_q.append({"price": price, "qty": qty})
-                        trade_pnl = 0.0
-                elif raw_action in ("SELL", "PARTIAL_SELL", "SHORT"):
-                    if long_q:
-                        trade["action"] = "SELL"
-                        trade["action_cn"] = "SELL"
-                        rem_qty = qty
-                        while rem_qty > 0 and long_q:
-                            entry = long_q[0]
-                            matched = min(rem_qty, entry["qty"])
-                            trade_pnl += (price - entry["price"]) * matched
-                            entry["qty"] -= matched
-                            rem_qty -= matched
-                            if entry["qty"] <= 0:
-                                long_q.pop(0)
-                        if rem_qty > 0:
-                            short_q.append({"price": price, "qty": rem_qty})
-                    else:
-                        trade["action"] = "SHORT"
-                trade["pnl"] = round(trade_pnl, 2)
-
-        # Recalculate session losses for circuit breaker
-        est = pytz.timezone('America/New_York')
-        today_str = datetime.datetime.now(est).strftime("%Y-%m-%d")
-        today_trades = trades_by_date.get(today_str, [])
-        session_losses = {}
-        for t in today_trades:
-            sym = str(t.get("ticker", "")).upper()
-            act = t.get("action", "")
-            pnl = float(t.get("pnl", 0.0) or 0.0)
-            if sym not in session_losses:
-                session_losses[sym] = 0
-            if act in ("SELL", "COVER") and pnl < -5.0:
-                session_losses[sym] += 1
-            elif act in ("SELL", "COVER") and pnl > 20.0:
-                session_losses[sym] = max(0, session_losses[sym] - 1)
-        self.ticker_consecutive_losses = session_losses
-
-    def get_ticker_session_losses(self, ticker: str) -> int:
-        """
-        Calculates number of consecutive or realized losses for this ticker in the current session.
-        """
-        ticker_upper = str(ticker).upper()
-        if ticker_upper in self.ticker_consecutive_losses:
-            return self.ticker_consecutive_losses[ticker_upper]
-
-        est = pytz.timezone('America/New_York')
-        today_str = datetime.datetime.now(est).strftime("%Y-%m-%d")
-        losses = 0
-        today_trades = [
-            t for t in self.trade_history
-            if (t.get("date") == today_str or str(t.get("time", ""))[:10] == today_str)
-            and str(t.get("ticker", "")).upper() == ticker_upper
-        ]
-        for t in today_trades:
-            action = t.get("action", "")
-            pnl = float(t.get("pnl", 0.0) or 0.0)
-            if action in ("SELL", "COVER") and pnl < -5.0:
-                losses += 1
-            elif action in ("SELL", "COVER") and pnl > 20.0:
-                losses = max(0, losses - 1)
-        self.ticker_consecutive_losses[ticker_upper] = losses
-        return losses
 
     def save_trade_history(self):
         try:
@@ -489,16 +451,16 @@ class LiveTradingRunner:
 
         today_trades = [t for t in self.trade_history if parse_trade_date(t) == today]
 
-        closed_trades = [t for t in today_trades if t.get("action") in ("SELL", "COVER", "PARTIAL_SELL", "PARTIAL_COVER")]
+        closed_trades = [t for t in today_trades if t.get("matched_closing_qty", 0) > 0 and t.get("pnl_complete")]
+        unknown_basis = [t for t in today_trades if t.get("unknown_basis_qty", 0) > 0]
         wins = [t for t in closed_trades if (t.get("pnl") or 0.0) > 0]
         losses = [t for t in closed_trades if (t.get("pnl") or 0.0) < 0]
         realized_pnl = sum((t.get("pnl") or 0.0) for t in closed_trades)
 
-        unrealized_pnl = 0.0
+        unrealized_pnl = None
         try:
             open_positions = self.adapter.get_open_positions()
-            for pos in open_positions:
-                unrealized_pnl += pos.get("unrealized_pnl", 0.0)
+            unrealized_pnl = sum(pos["unrealized_pnl"] for pos in open_positions)
         except Exception:
             pass
 
@@ -510,20 +472,24 @@ class LiveTradingRunner:
         except Exception:
             pass
 
-        total_strategy_pnl = round(realized_pnl + unrealized_pnl, 2)
-        official_pnl = round(alpaca_official_today_pnl, 2) if alpaca_official_today_pnl is not None else total_strategy_pnl
+        total_strategy_pnl = round(realized_pnl + unrealized_pnl, 2) if unrealized_pnl is not None else None
+        official_pnl = round(alpaca_official_today_pnl, 2) if alpaca_official_today_pnl is not None else None
         return {
             "date": today,
             "total_trades": len(today_trades),
             "closed_trades": len(closed_trades),
             "wins": len(wins),
             "losses": len(losses),
-            "win_rate": round(len(wins) / len(closed_trades) * 100, 1) if closed_trades else 0.0,
+            "win_rate": round(len(wins) / len(closed_trades) * 100, 1) if closed_trades else None,
             "realized_pnl": round(realized_pnl, 2),
-            "unrealized_pnl": round(unrealized_pnl, 2),
+            "unrealized_pnl": round(unrealized_pnl, 2) if unrealized_pnl is not None else None,
             "total_pnl": total_strategy_pnl,
             "alpaca_official_pnl": official_pnl,
-            "overnight_gap_pnl": round(official_pnl - total_strategy_pnl, 2),
+            "official_pnl_source": "broker_account" if official_pnl is not None else "unavailable",
+            "unknown_basis_trades": len(unknown_basis),
+            "realized_pnl_complete": not unknown_basis,
+            "realized_pnl_basis": "Known FIFO closing lots before fees; incomplete opening inventory is reported separately",
+            "reconciliation_difference": round(official_pnl - total_strategy_pnl, 2) if official_pnl is not None and total_strategy_pnl is not None else None,
             "best_trade": round(max((t.get("pnl", 0.0) for t in closed_trades), default=0.0), 2),
             "worst_trade": round(min((t.get("pnl", 0.0) for t in closed_trades), default=0.0), 2)
         }
@@ -637,681 +603,6 @@ class LiveTradingRunner:
         except (TypeError, ValueError):
             return float(default)
 
-    @staticmethod
-    def _market_date(index_value):
-        try:
-            if getattr(index_value, "tzinfo", None) is not None and hasattr(index_value, "tz_convert"):
-                index_value = index_value.tz_convert("America/New_York")
-            return index_value.date()
-        except Exception:
-            return None
-
-    def _today_session_frame(self, df):
-        try:
-            last_date = self._market_date(df.index[-1])
-            if last_date is None:
-                return df
-            mask = [self._market_date(value) == last_date for value in df.index]
-            session_df = df[mask]
-            return session_df if not session_df.empty else df
-        except Exception:
-            return df
-
-    def _build_intraday_opportunity(self, ticker: str, df, row, prev_row) -> Dict:
-        close = self._safe_float(row.get("Close"), 0.0)
-        prev_close = self._safe_float(prev_row.get("Close"), close)
-        session = self._today_session_frame(df)
-
-        session_open = self._safe_float(session.iloc[0].get("Open"), close)
-        session_high = self._safe_float(session["High"].max(), close) if "High" in session else close
-        session_low = self._safe_float(session["Low"].min(), close) if "Low" in session else close
-        ema_9 = self._safe_float(row.get("EMA_9"), close)
-        ema_21 = self._safe_float(row.get("EMA_21"), close)
-        prev_ema_21 = self._safe_float(prev_row.get("EMA_21"), prev_close)
-        vwap = self._safe_float(row.get("VWAP"), close)
-        prev_vwap = self._safe_float(prev_row.get("VWAP"), prev_close)
-        atr = max(0.0, self._safe_float(row.get("ATR"), close * 0.004))
-        rvol = max(0.0, self._safe_float(row.get("RVOL"), 1.0))
-
-        base_3 = self._safe_float(df.iloc[-4].get("Close"), prev_close) if len(df) >= 4 else prev_close
-        base_10 = self._safe_float(df.iloc[-11].get("Close"), base_3) if len(df) >= 11 else base_3
-        session_move_pct = ((close / session_open) - 1.0) * 100.0 if session_open > 0 else 0.0
-        high_to_now_pct = ((close / session_high) - 1.0) * 100.0 if session_high > 0 else 0.0
-        low_to_now_pct = ((close / session_low) - 1.0) * 100.0 if session_low > 0 else 0.0
-        up_from_open_pct = ((session_high / session_open) - 1.0) * 100.0 if session_open > 0 else 0.0
-        down_from_open_pct = ((session_low / session_open) - 1.0) * 100.0 if session_open > 0 else 0.0
-        session_range_pct = ((session_high - session_low) / session_open) * 100.0 if session_open > 0 else 0.0
-        momentum_3_pct = ((close / base_3) - 1.0) * 100.0 if base_3 > 0 else 0.0
-        momentum_10_pct = ((close / base_10) - 1.0) * 100.0 if base_10 > 0 else 0.0
-        atr_pct = (atr / close) * 100.0 if close > 0 else 0.0
-        price_range = max(0.0, session_high - session_low)
-        range_position = ((close - session_low) / price_range) if price_range > 0 else 0.5
-
-        # Institutional Microstructure & Market Structure Direction Classification
-        # (Heuristic point additions removed: pure feature vector + ML probability inference)
-        reversal_short = (
-            up_from_open_pct >= 1.20
-            and high_to_now_pct <= -0.80
-            and close < vwap
-            and momentum_3_pct < -0.05
-        )
-        reversal_long = (
-            down_from_open_pct <= -1.20
-            and low_to_now_pct >= 0.80
-            and close > vwap
-            and momentum_3_pct > 0.05
-        )
-
-        candle_range = max(1e-5, self._safe_float(row.get("High"), close) - self._safe_float(row.get("Low"), close))
-        bar_close_loc = (close - self._safe_float(row.get("Low"), close)) / candle_range
-        body_high = max(self._safe_float(row.get("Open"), close), close)
-        body_low = min(self._safe_float(row.get("Open"), close), close)
-        upper_wick_ratio = (self._safe_float(row.get("High"), close) - body_high) / candle_range
-        lower_wick_ratio = (body_low - self._safe_float(row.get("Low"), close)) / candle_range
-        vwap_dist_pct = ((close - vwap) / vwap * 100.0) if vwap > 0 else 0.0
-
-        long_structure = close > vwap and ema_9 > ema_21 and close >= ema_21
-        short_structure = close < vwap and ema_9 < ema_21 and close <= ema_21
-
-        # Pullback Support Entry: Macro bullish trend pulling back to VWAP/EMA21 support
-        dist_to_ema21_pct = ((close - ema_21) / max(1e-5, ema_21)) * 100.0
-        pullback_support = (
-            ema_9 > ema_21
-            and abs(dist_to_ema21_pct) <= 0.40
-            and close >= min(vwap, ema_21) * 0.997
-            and momentum_3_pct >= -0.25
-            and lower_wick_ratio >= 0.18
-        )
-
-        inverted_mode = bool(self.strategy_params.get("inverted_mode", True))
-
-        if inverted_mode:
-            # 🔄 INVERTED COUNTER-TREND ALPHA ENGINE (Fade the peaks, buy the oversold dips)
-            # When price breaks high above VWAP & EMA (retail chasers buy top) -> We SHORT the top!
-            # When price drops low below VWAP & EMA (retail panics at bottom) -> We BUY the oversold dip!
-            if long_structure:
-                direction = "SHORT"
-                regime = "FADE_TOP_SHORT"
-            elif short_structure:
-                direction = "LONG"
-                regime = "FADE_DIP_BUY"
-            elif pullback_support:
-                direction = "SHORT"
-                regime = "FADE_PULLBACK_SHORT"
-            elif reversal_long:
-                direction = "SHORT"
-                regime = "FADE_BOUNCE_SHORT"
-            elif reversal_short:
-                direction = "LONG"
-                regime = "FADE_DROP_LONG"
-            else:
-                direction = "NEUTRAL"
-                regime = "RANGE"
-        else:
-            if pullback_support:
-                direction = "LONG"
-                regime = "PULLBACK_LONG"
-            elif reversal_long:
-                direction = "LONG"
-                regime = "LONG_REVERSAL"
-            elif reversal_short:
-                direction = "SHORT"
-                regime = "SHORT_REVERSAL"
-            elif long_structure:
-                direction = "LONG"
-                regime = "LONG_TREND"
-            elif short_structure:
-                direction = "SHORT"
-                regime = "SHORT_TREND"
-            else:
-                direction = "NEUTRAL"
-                regime = "RANGE"
-
-        # Initial placeholders; win_probability and score will be set by probability_engine evaluation below
-        score = 50.0
-        long_score = 50.0
-        short_score = 50.0
-
-        prev_long_structure = prev_close > prev_vwap or prev_close > prev_ema_21
-        prev_short_structure = prev_close < prev_vwap or prev_close < prev_ema_21
-        long_confirmed = (direction == "LONG")
-        short_confirmed = (direction == "SHORT")
-        
-        rsi = self._safe_float(row.get("RSI"), 50.0)
-
-        # Pure ML Model Control: Traditional rule-based overextension blockers removed.
-        is_overextended = False
-
-        # Stock-adaptive ATR Noise Stop:
-        # High volatility / high ATR stocks (e.g. CRCL/SNDK with ATR% >= 2.0%) get expanded initial stop buffer to avoid micro noise shakeout
-        initial_mult = self._safe_float(self.strategy_params.get("initial_stop_atr_mult"), 1.60)
-        if atr_pct >= 2.0:
-            initial_mult = max(1.85, initial_mult * 1.15)
-        stop_pct = min(
-            self._safe_float(self.strategy_params.get("stop_max_pct"), 0.0250),
-            max(
-                self._safe_float(self.strategy_params.get("stop_min_pct"), 0.0050),
-                initial_mult * (atr / close if close > 0 else 0.0050),
-            ),
-        )
-
-        # Extract features and compute true ML model probabilities for directional alpha (100% dedicated per-ticker!)
-        from app.broker.probability_engine import get_calibrated_ml_model
-        ml_model_l = get_calibrated_ml_model("long", ticker=ticker)
-        ml_model_s = get_calibrated_ml_model("short", ticker=ticker)
-        p_long = 0.50
-        p_short = 0.50
-        if ml_model_l is not None and ml_model_s is not None:
-            try:
-                feat_dict = {
-                    "feature_ofi": float(self.alpha_engine.compute_ofi_alpha(row, prev_row)),
-                    "feature_rvol": float(rvol),
-                    "feature_vwap_dist_pct": float(vwap_dist_pct),
-                    "feature_ema_diff_pct": float((ema_9 - ema_21) / max(1e-5, ema_21) * 100.0),
-                    "feature_mom_5m": float(momentum_3_pct),
-                    "feature_mom_15m": float(momentum_10_pct),
-                    "feature_er": float(row.get("er", 0.35)),
-                    "feature_atr_pct": float(atr_pct),
-                }
-                df_feat = pd.DataFrame([feat_dict])
-                p_long = float(ml_model_l.predict_proba(df_feat)[0, 1])
-                p_short = float(ml_model_s.predict_proba(df_feat)[0, 1])
-            except Exception:
-                pass
-
-        # Evaluate Institutional Composite Alpha Factors including alpha_ml & Saggese Microstructure Wave
-        alpha_eval = self.alpha_engine.evaluate_dataframe_alpha(
-            df=df, row=row, prev_row=prev_row, ml_p_win_long=p_long, ml_p_win_short=p_short
-        )
-
-        is_trap = alpha_eval.get("is_trap", False)
-        trap_reason = alpha_eval.get("trap_reason", "")
-
-        # Anti-Bull Trap: If near local high with upper wick rejection or trap detected
-        bull_trap_risk = (
-            upper_wick_ratio >= 0.32
-            and (vwap_dist_pct >= 0.45 or high_to_now_pct >= -0.25)
-            and (close < ema_9 or is_trap)
-        )
-        if bull_trap_risk:
-            long_confirmed = False
-            if self.strategy_params.get("allow_shorting", True) or ticker == "SNDK":
-                direction = "SHORT"
-                regime = "FADE_BULL_TRAP"
-                short_confirmed = True
-            else:
-                direction = "NEUTRAL"
-                regime = "TRAP_REJECT"
-                short_confirmed = False
-        elif (
-            is_trap
-            and ("Bear Trap" in trap_reason or lower_wick_ratio >= 0.35)
-            and alpha_eval.get("alpha_ofi", 0.0) >= -0.10
-            and alpha_eval.get("composite_alpha_score", 0.0) >= -30.0
-            and close >= min(vwap, ema_21) * 0.995
-        ):
-            short_confirmed = False
-            direction = "LONG"
-            regime = "FADE_BEAR_TRAP"
-            long_confirmed = True
-        elif is_trap and ("Bull Trap" in trap_reason or "Ask Depth" in trap_reason) and close < ema_9:
-            long_confirmed = False
-            if alpha_eval["composite_alpha_score"] <= -45.0:
-                direction = "SHORT"
-                short_confirmed = True
-
-        # Compute Advanced ML 24-feature inputs
-        candle_range = max(1e-5, self._safe_float(row.get("High"), close) - self._safe_float(row.get("Low"), close))
-        bar_close_loc = (close - self._safe_float(row.get("Low"), close)) / candle_range
-        body_high = max(self._safe_float(row.get("Open"), close), close)
-        upper_wick_ratio = (self._safe_float(row.get("High"), close) - body_high) / candle_range
-        volume_cur = self._safe_float(row.get("Volume"), 1000.0)
-        vol_prev = self._safe_float(prev_row.get("Volume"), volume_cur)
-        vol_accel = volume_cur / max(1.0, vol_prev)
-        dollar_vol_log = math.log(max(1.0, close * volume_cur))
-        mom_1m = ((close / prev_close) - 1.0) * 100.0 if prev_close > 0 else 0.0
-        mom_accel = momentum_3_pct - momentum_10_pct
-        vwap_slope = ((vwap / prev_vwap) - 1.0) * 100.0 if prev_vwap > 0 else 0.0
-        vwap_zscore = max(-3.0, min(3.0, (close - vwap) / max(1e-5, atr * 0.5)))
-        ema9_slope = ((ema_9 / prev_close) - 1.0) * 100.0 if prev_close > 0 else 0.0
-        atr_expansion = atr / max(1e-5, self._safe_float(df.iloc[-30].get("ATR") if len(df) >= 30 else atr, atr))
-        er_val = self._safe_float(row.get("er"), 0.25)
-        donchian_breakout = max(-3.0, min(3.0, (close - session_high) / max(1e-5, atr)))
-        est = pytz.timezone("America/New_York")
-        now_ny = datetime.datetime.now(est)
-        ny_time = now_ny.hour + now_ny.minute / 60.0 + now_ny.second / 3600.0
-        minutes_from_open = max(0.0, min(1.0, (ny_time - 9.5) / 6.5))
-
-        opp = {
-            "ticker": ticker,
-            "direction": direction,
-            "regime": regime,
-            "score": score,
-            "long_score": long_score,
-            "short_score": short_score,
-            "composite_alpha_score": alpha_eval["composite_alpha_score"],
-            "alpha_ofi": alpha_eval["alpha_ofi"],
-            "alpha_ofi_slope": 0.0,
-            "alpha_micro": alpha_eval["alpha_micro"],
-            "alpha_ou": alpha_eval["alpha_ou"],
-            "alpha_lead_lag": alpha_eval["alpha_lead_lag"],
-            "is_trap": is_trap,
-            "trap_reason": trap_reason,
-            "session_move_pct": round(session_move_pct, 2),
-            "session_range_pct": round(session_range_pct, 2),
-            "high_to_now_pct": round(high_to_now_pct, 2),
-            "low_to_now_pct": round(low_to_now_pct, 2),
-            "momentum_1m_pct": round(mom_1m, 2),
-            "momentum_3_pct": round(momentum_3_pct, 2),
-            "momentum_5m_pct": round(momentum_3_pct, 2),
-            "momentum_10_pct": round(momentum_10_pct, 2),
-            "momentum_15m_pct": round(momentum_10_pct, 2),
-            "momentum_accel": round(mom_accel, 2),
-            "rvol": round(rvol, 2),
-            "vol_accel": round(vol_accel, 2),
-            "dollar_vol_log": round(dollar_vol_log, 2),
-            "bar_close_loc": round(bar_close_loc, 2),
-            "upper_wick_ratio": round(upper_wick_ratio, 2),
-            "vwap_dist_pct": vwap_dist_pct,
-            "vwap_slope": round(vwap_slope, 2),
-            "vwap_zscore": round(vwap_zscore, 2),
-            "ema9_slope": round(ema9_slope, 2),
-            "atr_pct": round(atr_pct, 2),
-            "atr_expansion": round(atr_expansion, 2),
-            "er": round(er_val, 2),
-            "donchian_breakout": round(donchian_breakout, 2),
-            "minutes_from_open": round(minutes_from_open, 2),
-            "price": round(close, 4),
-            "volume": volume_cur,
-            "_entry_confirmed": long_confirmed if direction == "LONG" else short_confirmed,
-            "_stop_pct": stop_pct,
-            "_vwap_dist_pct": vwap_dist_pct,
-            "_rsi": rsi,
-            "_is_overextended": is_overextended,
-            "_ema_9": ema_9,
-            "_ema_21": ema_21,
-            "_prev_ema_21": prev_ema_21,
-            "_vwap": vwap,
-            "_prev_vwap": prev_vwap,
-            "_prev_close": prev_close,
-            "_atr": atr,
-            "wave_p_win_long": alpha_eval.get("wave_p_win_long", 0.50),
-            "wave_p_win_short": alpha_eval.get("wave_p_win_short", 0.50),
-            "expected_wave_return_pct": alpha_eval.get("expected_wave_return_pct", 0.0),
-            "alpha_ofi": alpha_eval.get("alpha_ofi", alpha_eval.get("feature_ofi", 0.0)),
-            "ofi": alpha_eval.get("alpha_ofi", alpha_eval.get("feature_ofi", 0.0)),
-            "alpha_micro_drift": alpha_eval.get("alpha_micro_drift", alpha_eval.get("feature_micro_drift", 0.0)),
-            "microprice_drift": alpha_eval.get("alpha_micro_drift", alpha_eval.get("feature_micro_drift", 0.0)),
-            "queue_imbalance": alpha_eval.get("queue_imbalance", alpha_eval.get("feature_queue_imbalance", 0.0)),
-            "sweep_vel": alpha_eval.get("sweep_vel", alpha_eval.get("feature_sweep_vel", 0.0)),
-            "toxic_flow": alpha_eval.get("toxic_flow", alpha_eval.get("feature_hrt_toxic_flow", 0.0)),
-            "is_trap": alpha_eval.get("is_trap", False),
-        }
-
-
-        # Evaluate Probabilistic Win Rate P_win and Expected Value E[PnL]
-        prob_eval = evaluate_mathematical_expectation(opp, self.strategy_params)
-        opp.update(prob_eval)
-        # Sync score metrics to ML calibrated win rate percentage for API/UI display compatibility
-        ml_score = prob_eval.get("win_rate_pct", 50.0)
-        opp["score"] = ml_score
-        opp["long_score"] = ml_score if direction == "LONG" else round(100.0 - ml_score, 1)
-        opp["short_score"] = ml_score if direction == "SHORT" else round(100.0 - ml_score, 1)
-
-        # Opening Catalyst Zero-Delay Trigger (9:30 - 9:45 EST Blitz):
-        # Bypasses multi-bar lag for high RVOL / high volatility catalyst stocks
-        est = pytz.timezone("America/New_York")
-        now_ny = datetime.datetime.now(est)
-        ny_time = now_ny.hour + now_ny.minute / 60.0 + now_ny.second / 3600.0
-        is_opening_blitz = (now_ny.weekday() <= 4) and (9.50 <= ny_time < 9.75)
-        if not opp.get("_entry_confirmed", False):
-            if prob_eval.get("is_positive_ev", False) or prob_eval.get("p_win", 0.0) >= 0.50:
-                opp["_entry_confirmed"] = True
-            else:
-                from app.broker.probability_engine import evaluate_zero_delay_opening_trigger
-                if evaluate_zero_delay_opening_trigger(opp, is_opening_blitz):
-                    opp["_entry_confirmed"] = True
-                    opp["_zero_delay_triggered"] = True
-
-        return opp
-
-    def _aggressive_orders_allowed(self) -> bool:
-        if not self.strategy_params.get("paper_only_aggressive", True):
-            return True
-        if self.strategy_params.get("allow_aggressive_live", False):
-            return True
-        if isinstance(self.adapter, MockAlpacaAdapter):
-            return True
-        try:
-            _key, _secret, base_url = self._get_alpaca_credentials()
-            return "paper-api.alpaca.markets" in str(base_url or "").lower()
-        except Exception:
-            return False
-
-    def _refresh_intraday_universe(self, user_watchlist: List[str], active_pos_tickers) -> List[str]:
-        return self.screener.refresh_intraday_universe(
-            user_watchlist=user_watchlist,
-            active_pos_tickers=active_pos_tickers,
-            strategy_params=self.strategy_params,
-            ticker_scores=self.ticker_scores,
-        )
-
-    def _evaluate_aggressive_intraday(
-        self,
-        ticker: str,
-        opportunity: Dict,
-        current_shares: int,
-        avg_cost: float,
-        open_position_count: int,
-    ):
-        close = self._safe_float(opportunity.get("price"), 0.0)
-        direction = opportunity.get("direction", "NEUTRAL")
-        p_win_pct = opportunity.get("win_rate_pct", 50.0)
-        ev_r = opportunity.get("expected_value_r", 0.0)
-        is_pos_ev = opportunity.get("is_positive_ev", False)
-        ofi = self._safe_float(opportunity.get("alpha_ofi", opportunity.get("ofi", 0.0)), 0.0)
-        rvol = self._safe_float(opportunity.get("rvol"), 1.0)
-        atr_pct = self._safe_float(opportunity.get("atr_pct"), 1.5)
-        mom_3 = self._safe_float(opportunity.get("momentum_3_pct"), 0.0)
-
-        base_reason = (
-            f"[{opportunity.get('regime')}] {direction} | P_win={p_win_pct:.1f}% | "
-            f"E[PnL]={ev_r:+.2f}R | Session={opportunity.get('session_move_pct', 0):+.2f}% | "
-            f"M3={mom_3:+.2f}% | RVOL={rvol:.2f}x | OFI={ofi:+.2f}"
-        )
-
-        if current_shares == 0:
-            self.position_extremes.pop(ticker, None)
-            self.staged_entries.pop(ticker, None)
-            # Reset pyramid and partial TP state when flat
-            if ticker in self.pyramid_done:
-                del self.pyramid_done[ticker]
-            self.pyramid_counts[ticker] = 0
-            if ticker in self.partial_tp_done:
-                del self.partial_tp_done[ticker]
-            from app.broker.universe_screener import is_valid_quality_stock_symbol
-            min_price = self._safe_float(self.strategy_params.get("min_stock_price"), 5.00)
-
-            # Quality Stock & Warrant/Unit Filter (dynamic quality screening instead of static blacklists)
-            if not is_valid_quality_stock_symbol(ticker):
-                return "HOLD", f"{base_reason} | Asset is a warrant/unit derivative, trade blocked"
-
-            # ⚠️ Bull Trap Protection (veto high chasing)
-            if direction == "LONG" and (
-                opportunity.get("upper_wick_ratio", 0.0) >= 0.32
-                or (opportunity.get("is_trap", False) and "Bull Trap" in opportunity.get("trap_reason", ""))
-                or opportunity.get("regime") == "TRAP_REJECT"
-            ):
-                return "HOLD", f"{base_reason} | ⚠️ [Bull Trap Intercept] Upper wick rejection or heavy ask depth, blocking long chase"
-
-            # ⚠️ Bear Trap Protection (veto shorting into strong bids)
-            if direction == "SHORT" and (
-                opportunity.get("lower_wick_ratio", 0.0) >= 0.32
-                or (opportunity.get("is_trap", False) and "Bear Trap" in opportunity.get("trap_reason", ""))
-                or opportunity.get("regime") == "BOUNCE_CONFIRM"
-            ):
-                return "HOLD", f"{base_reason} | ⚠️ [Bear Trap Intercept] Lower wick rejection or strong bid absorption, blocking short chase"
-
-            # Alpha Model Entry Direction Evaluation:
-            if direction == "NEUTRAL":
-                return "HOLD", f"{base_reason} | NEUTRAL signal, waiting"
-
-            # 🎯 Cooldown & Max Position Guards
-            last_exit = self.last_exit_times.get(ticker)
-            cooldown = self._safe_float(self.strategy_params.get("reentry_cooldown_seconds"), 180.0)
-            if last_exit and (time.time() - last_exit) < cooldown:
-                remain = int(cooldown - (time.time() - last_exit))
-                return "HOLD", f"{base_reason} | Exit cooldown ({remain}s remaining)"
-            if open_position_count >= int(self.strategy_params.get("max_concurrent_positions", 2)):
-                return "HOLD", f"{base_reason} | Max concurrent positions reached"
-
-            if direction == "SHORT":
-                if not self.strategy_params.get("allow_shorting", True):
-                    return "HOLD", f"{base_reason} | 🛡️ Long-Only mode active (shorting disabled)"
-                if not self._can_open_short(ticker):
-                    return "HOLD", f"{base_reason} | Alpaca asset not shortable or requires locate"
-
-            # Pure Quantitative Alpha Decision: Zero hardcoded prohibitions, 100% driven by Alpha model
-            action_type = "BUY" if direction == "LONG" else "SHORT"
-            return action_type, f"{base_reason} | 🚀 Quantitative Alpha Model (P_win={p_win_pct:.1f}%, E[R]={ev_r:+.2f}R) Submitting Order"
-
-        side = "LONG" if current_shares > 0 else "SHORT"
-
-        state = self.position_extremes.get(ticker)
-        if not state or state.get("side") != side:
-            state = {"side": side, "best_price": avg_cost or close}
-            self.position_extremes[ticker] = state
-        if side == "LONG":
-            state["best_price"] = max(self._safe_float(state.get("best_price"), close), close)
-        else:
-            state["best_price"] = min(self._safe_float(state.get("best_price"), close), close)
-
-        entry_at = self.entry_times.setdefault(ticker, datetime.datetime.now())
-        minutes_held = max(0.0, (datetime.datetime.now() - entry_at).total_seconds() / 60.0)
-        pnl_pct = ((close - avg_cost) / avg_cost) if side == "LONG" and avg_cost > 0 else ((avg_cost - close) / avg_cost if avg_cost > 0 else 0.0)
-
-
-        # 🎯 0. Early Partial Take Profit
-        partial_tp_pct = self._safe_float(self.strategy_params.get("partial_tp_trigger_pct"), 0.0065)
-        if not self.partial_tp_done.get(ticker, False) and pnl_pct >= partial_tp_pct:
-            action_type = "PARTIAL_SELL" if side == "LONG" else "PARTIAL_COVER"
-            return action_type, f"{base_reason} | 🎯 [Scaled Take-Profit] Gain reached +{pnl_pct*100:.2f}%, taking 50% profit, remainder to breakeven!"
-
-        # Breakeven Stop: If partial TP has been taken, protect remaining shares at cost price (avg_cost)
-        if self.partial_tp_done.get(ticker, False) and pnl_pct <= 0.001:
-            return ("SELL" if side == "LONG" else "COVER"), f"{base_reason} | 🛡️ Scaled profit secured, remainder hit breakeven (${avg_cost:.2f}), closing position!"
-
-        # ─── Dynamic LOB Microstructure Trailing Stop & Per-Ticker Wave Engine ─────────
-        ticker_prof = self._get_ticker_wave_profile(ticker)
-        trail_start_pct = ticker_prof["trail_start_pct"]
-        trailing_atr_mult = ticker_prof["trailing_stop_atr_mult"]
-        trail_buf_min = ticker_prof["trail_buf_min_pct"]
-        trail_buf_max = ticker_prof["trail_buf_max_pct"]
-        atr_val = opportunity.get("_atr", close * 0.01)
-        best_p = state.get("best_price", close)
-
-        # LOB Microstructure features
-        lob_ofi = self._safe_float(opportunity.get("alpha_ofi"), 0.0)
-        lob_micro = self._safe_float(opportunity.get("alpha_micro_drift"), 0.0)
-        lob_toxic = self._safe_float(opportunity.get("toxic_flow"), 0.0)
-        is_trap = bool(opportunity.get("is_trap", False))
-
-        # 1. Dynamic LOB Microstructure Trailing Stop with Profit Ratchet
-        if side == "LONG":
-            peak_pnl = (best_p - avg_cost) / max(1e-5, avg_cost)
-            # A. LOB Microstructure Exhaustion / Toxic Outflow Trailing Stop (告别坐过山车)
-            if pnl_pct >= 0.0030:
-                is_exhausted = (lob_ofi <= -0.18 and lob_micro <= -0.12) or lob_toxic <= -0.30 or is_trap
-                if is_exhausted:
-                    # Ratchet stop tight to secure profit and prevent giving back gains
-                    lob_tight_stop = max(avg_cost * 1.0015, best_p * (1.0 - max(0.0025, trail_buf_min * 0.4)))
-                    if close <= lob_tight_stop:
-                        return "SELL", (
-                            f"{base_reason} | 🌊 [LOB Microstructure Trailing Stop] Peak ${best_p:.2f} (+{peak_pnl*100:.2f}%), "
-                            f"LOB OFI ({lob_ofi:+.2f}) / Micro-drift ({lob_micro:+.2f}) / Toxic ({lob_toxic:+.2f}) signaled buyer exhaustion, "
-                            f"locking profit at ${close:.2f} (+{pnl_pct*100:.2f}%)"
-                        )
-
-            # B. Dynamic Wave ATR Trailing Stop with Profit Ratchet
-            if peak_pnl >= trail_start_pct:
-                trail_buf = max(trailing_atr_mult * atr_val, best_p * trail_buf_min)
-                trail_buf = min(trail_buf, best_p * trail_buf_max)
-                # If LOB buy pressure is surging, grant breathing room to maximize wave run
-                if lob_ofi >= 0.20 and lob_micro >= 0.15:
-                    trail_buf *= 1.25
-
-                trail_stop_price = best_p - trail_buf
-                # Stepwise profit ratchet
-                # Stepwise profit ratchet - 阶梯硬锁定利润，杜绝浮盈坐过山车
-                if peak_pnl >= 0.04:
-                    trail_stop_price = max(trail_stop_price, avg_cost * 1.028)
-                elif peak_pnl >= 0.02:
-                    trail_stop_price = max(trail_stop_price, avg_cost * 1.014)
-                elif peak_pnl >= 0.012:
-                    trail_stop_price = max(trail_stop_price, avg_cost * 1.006)
-                elif peak_pnl >= trail_start_pct:
-                    trail_stop_price = max(trail_stop_price, avg_cost * 1.002)
-
-                if close <= trail_stop_price:
-                    return "SELL", (
-                        f"{base_reason} | 🎯 [Dynamic Trailing Stop] Peak ${best_p:.2f} (+{peak_pnl*100:.2f}%), "
-                        f"pulled back to stop ${trail_stop_price:.2f}, locking profit"
-                    )
-        else:
-            peak_pnl = (avg_cost - best_p) / max(1e-5, avg_cost)
-            # A. LOB Microstructure Exhaustion / Toxic Inflow Trailing Stop
-            if pnl_pct >= 0.0030:
-                is_exhausted = (lob_ofi >= 0.18 and lob_micro >= 0.12) or lob_toxic >= 0.30 or is_trap
-                if is_exhausted:
-                    lob_tight_stop = min(avg_cost * 0.9985, best_p * (1.0 + max(0.0025, trail_buf_min * 0.4)))
-                    if close >= lob_tight_stop:
-                        return "COVER", (
-                            f"{base_reason} | 🌊 [LOB Microstructure Trailing Stop] Short low ${best_p:.2f} (+{peak_pnl*100:.2f}%), "
-                            f"LOB OFI ({lob_ofi:+.2f}) / Micro-drift ({lob_micro:+.2f}) / Toxic ({lob_toxic:+.2f}) signaled seller exhaustion, "
-                            f"locking profit at ${close:.2f} (+{pnl_pct*100:.2f}%)"
-                        )
-
-            # B. Dynamic Wave ATR Trailing Stop with Profit Ratchet
-            if peak_pnl >= trail_start_pct:
-                trail_buf = max(trailing_atr_mult * atr_val, best_p * trail_buf_min)
-                trail_buf = min(trail_buf, best_p * trail_buf_max)
-                if lob_ofi <= -0.20 and lob_micro <= -0.15:
-                    trail_buf *= 1.25
-
-                trail_stop_price = best_p + trail_buf
-                if peak_pnl >= 0.04:
-                    trail_stop_price = min(trail_stop_price, avg_cost * 0.972)
-                elif peak_pnl >= 0.02:
-                    trail_stop_price = min(trail_stop_price, avg_cost * 0.986)
-                elif peak_pnl >= 0.012:
-                    trail_stop_price = min(trail_stop_price, avg_cost * 0.994)
-                elif peak_pnl >= trail_start_pct:
-                    trail_stop_price = min(trail_stop_price, avg_cost * 0.998)
-
-                if close >= trail_stop_price:
-                    return "COVER", (
-                        f"{base_reason} | 🎯 [Dynamic Trailing Stop] Short low ${best_p:.2f} (+{peak_pnl*100:.2f}%), "
-                        f"rebounded to stop ${trail_stop_price:.2f}, locking profit"
-                    )
-
-        # ─── 纯粹 LOB 订单流反转出场与大单吞没离场 (Pure LOB Microstructure Reversal Exit) ──────────
-        # 严格禁止任何非 LOB 杂质（如均线穿线、4分钟中性衰退、0.25%过敏斩仓）。
-        # 只有在持仓出现明确的真实对手盘机构扫盘反转时，才触发主动平仓：
-        if side == "LONG" and lob_ofi <= -0.30 and lob_micro <= -0.25:
-            return "SELL", f"{base_reason} | 🌊 [Pure LOB Reversal] Institutional selling sweep detected (OFI={lob_ofi:+.2f}, Drift={lob_micro:+.2f}), exiting long"
-        elif side == "SHORT" and lob_ofi >= 0.30 and lob_micro >= 0.25:
-            return "COVER", f"{base_reason} | 🌊 [Pure LOB Reversal] Institutional aggressive buying sweep detected (OFI={lob_ofi:+.2f}, Drift={lob_micro:+.2f}), exiting short"
-
-        staged_info = self.staged_entries.get(ticker)
-        if not staged_info:
-            staged_info = {"tier": 1, "entry_price": avg_cost, "shares": abs(current_shares), "notional": abs(current_shares) * avg_cost, "side": side}
-            self.staged_entries[ticker] = staged_info
-
-        if self.strategy_params.get("staged_entry_enabled", True) and staged_info.get("tier") == 1 and not self.is_entry_locked(ticker):
-            entry_p = staged_info.get("entry_price", avg_cost)
-            if side == "LONG" and entry_p > 0:
-                dip_pct = (entry_p - close) / entry_p
-                atr_dip = (entry_p - close) / max(1e-5, atr_val)
-                # Path A: Microstructure Continuation Confirmation (右侧微观确认加仓 60%)
-                micro_confirm_long = (lob_micro >= 0.12 and lob_ofi >= 0.10 and not is_trap)
-                if micro_confirm_long and (close >= entry_p * 1.0005 or pnl_pct >= 0.001):
-                    return "TIER2_ADD_BUY", (
-                        f"{base_reason} | 🚀 [LOB Tier 2 Microstructure Add 60%] Order flow breakout confirmed (OFI={lob_ofi:+.2f}, Drift={lob_micro:+.2f}) — "
-                        f"Deploying remaining 60% golden add to ride primary wave!"
-                    )
-                # Path B: Golden oversold support: deeper dip (>= 0.5% or >= 0.9 ATR) + lower wick absorption / oversold RSI / bounce bar
-                lower_wick = self._safe_float(opportunity.get("lower_wick_ratio"), 0.0)
-                rsi_val = self._safe_float(opportunity.get("rsi"), 50.0)
-                is_bounce_bar = close > self._safe_float(opportunity.get("_open"), close)
-                if (dip_pct >= 0.005 or atr_dip >= 0.9) and (lower_wick >= 0.18 or rsi_val <= 38.0 or is_bounce_bar):
-                    return "TIER2_ADD_BUY", (
-                        f"{base_reason} | 🎯 [Tier 2 Golden Add 60%] Deeper dip confirmed (-{dip_pct*100:.2f}%, ATR dip={atr_dip:.1f}, "
-                        f"lower wick={lower_wick:.2f}, RSI={rsi_val:.0f}) — Deploying remaining 60% position to lower average cost basis!"
-                    )
-            elif side == "SHORT" and entry_p > 0 and self.strategy_params.get("allow_shorting", True):
-                rally_pct = (close - entry_p) / entry_p
-                atr_rally = (close - entry_p) / max(1e-5, atr_val)
-                # Path A: Microstructure Breakdown Confirmation (右侧微观击穿确认加空 60%)
-                micro_confirm_short = (lob_micro <= -0.12 and lob_ofi <= -0.10 and not is_trap)
-                if micro_confirm_short and (close <= entry_p * 0.9995 or pnl_pct >= 0.001):
-                    return "TIER2_ADD_SHORT", (
-                        f"{base_reason} | ⚡ [LOB Tier 2 Microstructure Add 60%] Breakdown continuation confirmed (OFI={lob_ofi:+.2f}, Drift={lob_micro:+.2f}) — "
-                        f"Deploying remaining 60% short position to maximize breakdown gain!"
-                    )
-                # Path B: Golden overbought resistance: deeper rally (>= 0.5% or >= 0.9 ATR) + upper wick rejection / overbought RSI / rejection bar
-                upper_wick = self._safe_float(opportunity.get("upper_wick_ratio"), 0.0)
-                rsi_val = self._safe_float(opportunity.get("rsi"), 50.0)
-                is_reject_bar = close < self._safe_float(opportunity.get("_open"), close)
-                if (rally_pct >= 0.005 or atr_rally >= 0.9) and (upper_wick >= 0.18 or rsi_val >= 62.0 or is_reject_bar):
-                    return "TIER2_ADD_SHORT", (
-                        f"{base_reason} | ⚡ [Tier 2 Golden Add 60%] Overbought rally exhaustion confirmed (+{rally_pct*100:.2f}%, ATR rally={atr_rally:.1f}, "
-                        f"upper wick={upper_wick:.2f}, RSI={rsi_val:.0f}) — Deploying remaining 60% short position to optimize cost basis!"
-                    )
-
-        # ─── Pyramiding Buy / Short ──────────────────────────────────────────
-        pyramid_threshold_pct = self._safe_float(self.strategy_params.get("pyramid_trigger_pct"), 0.015)
-        can_pyramid = (
-            self.partial_tp_done.get(ticker, False)
-            and pnl_pct >= pyramid_threshold_pct
-            and (is_pos_ev or p_win_pct >= 55.0)
-            and ev_r >= 0.25
-            and self._safe_float(opportunity.get("rvol"), 1.0) >= 1.4
-            and not self.pyramid_done.get(ticker, False)
-            and self.pyramid_counts.get(ticker, 0) < 1
-            and self._aggressive_orders_allowed()
-            and (side == "LONG" or self.strategy_params.get("allow_shorting", True))
-        )
-        if can_pyramid:
-            if side == "LONG":
-                trend_ok = close >= opportunity.get("_vwap", close) and close >= opportunity.get("_ema_21", close)
-            else:
-                trend_ok = close <= opportunity.get("_vwap", close) and close <= opportunity.get("_ema_21", close)
-            if trend_ok:
-                action_str = "PYRAMID_BUY" if side == "LONG" else "PYRAMID_SHORT"
-                current_score = self._safe_float(opportunity.get("score"), 0.0)
-                return action_str, (
-                    f"{base_reason} | 📈 [Pyramid Add +{pnl_pct*100:.2f}% PnL] Strong trend with volume Score={current_score:.0f} / "
-                    f"E[R]={ev_r:+.2f}R — Triggering {action_str}"
-                )
-
-        return "HOLD", f"{base_reason} | {side} trend valid, holding with dynamic trailing stop"
-
-    def _size_aggressive_entry(
-        self,
-        account: Dict,
-        close_price: float,
-        opportunity: Dict,
-        prob_eval: Optional[Dict] = None,
-        tier: int = 1,
-        existing_notional: float = 0.0,
-    ) -> Dict:
-        return self.risk_sizer.size_aggressive_entry(
-            account=account,
-            close_price=close_price,
-            opportunity=opportunity,
-            strategy_params=self.strategy_params,
-            prob_eval=prob_eval or opportunity,
-            tier=tier,
-            existing_notional=existing_notional,
-        )
-
-    def _size_probe_entry(self, account: Dict, close_price: float, opportunity: Dict, prob_eval: Optional[Dict] = None) -> Dict:
-        return self.risk_sizer.size_probe_entry(
-            account=account,
-            close_price=close_price,
-            opportunity=opportunity,
-            strategy_params=self.strategy_params,
-            prob_eval=prob_eval or opportunity
-        )
-
-    def _size_pyramid_entry(self, account: Dict, close_price: float, opportunity: Dict) -> Dict:
-        return self.risk_sizer.size_pyramid_entry(
-            account=account,
-            close_price=close_price,
-            opportunity=opportunity,
-            strategy_params=self.strategy_params,
-            prob_eval=opportunity
-        )
 
     def start(self, strategy_params: Optional[Dict] = None, tickers: Optional[List[str]] = None, **kwargs):
         if getattr(self, '_loop_thread', None) is not None and self._loop_thread.is_alive():
@@ -1320,15 +611,12 @@ class LiveTradingRunner:
 
         try:
             invalidate_cache()
-            self.highest_prices.clear()
-            self.position_extremes.clear()
-            self._score_warmup_complete = False
-            self.add_log("🧹 [Manual Reset] Cleared intraday cache and high-water records, initialized clean session cycle.")
+            self.add_log("Cleared market data cache; using the fitted research policy and broker inventory.")
         except Exception as e:
             print(f"Cache clear warning on start: {e}")
             
         if strategy_params:
-            self.strategy_params.update(strategy_params)
+            self.strategy_params = self._normalize_quant_params({**self.strategy_params, **strategy_params})
 
         if tickers:
             self.update_tickers(tickers)
@@ -1381,7 +669,7 @@ class LiveTradingRunner:
             return None
         try:
             number = float(value)
-            return int(number) if number.is_integer() else round(number, 6)
+            return int(number) if number.is_integer() else number
         except (TypeError, ValueError):
             return None
 
@@ -1607,6 +895,9 @@ class LiveTradingRunner:
                     "client_order_id": order.get("client_order_id", ""),
                     "order_status": order.get("status", ""),
                     "source": "alpaca_trading_api",
+                    "broker_side": order.get("side", ""),
+                    "broker_action": action,
+                    "broker_filled_qty": qty,
                     "date": order.get("date", ""),
                     "time": order.get("time", ""),
                     "action": record.get("action") or action,
@@ -1748,11 +1039,12 @@ class LiveTradingRunner:
             "ticker_directions": self.ticker_directions,
             "intraday_opportunities": sorted(
                 self.intraday_opportunities.values(),
-                key=lambda item: item.get("score", 0.0),
+                key=lambda item: abs(item.get("expected_return_bps", 0.0)),
                 reverse=True,
             ),
             "monitored_tickers": self.active_tickers,
             "strategy_params": self.strategy_params,
+            "quant_policy": self._quant_status,
             "logs_count": len(self.logs),
             "orders": orders_snapshot["orders"],
             "orders_meta": {
@@ -1765,684 +1057,31 @@ class LiveTradingRunner:
     def get_live_orders(self, force_refresh: bool = False) -> Dict:
         return self.refresh_alpaca_orders() if force_refresh else self._cached_orders_snapshot()
 
-    def is_market_open(self) -> bool:
-        est = pytz.timezone('America/New_York')
-        now_ny = datetime.datetime.now(est)
-        is_weekday = now_ny.weekday() <= 4
-        ny_time = now_ny.hour + now_ny.minute / 60.0 + now_ny.second / 3600.0
-        return is_weekday and (9.5 <= ny_time < 16.0)
-
-    def is_eod_no_entry_window(self) -> bool:
-        """
-        Allows full trading into the high-volatility final 15 minutes!
-        Only halts new entries at 15:57:00 EST (3 minutes before market close)
-        so the algorithm can maximize late-day MOC momentum profit opportunities.
-        """
-        est = pytz.timezone('America/New_York')
-        now_ny = datetime.datetime.now(est)
-        if now_ny.weekday() > 4:
-            return False
-        ny_time = now_ny.hour + now_ny.minute / 60.0 + now_ny.second / 3600.0
-        return 15.95 <= ny_time < 16.0  # 15:57 to 16:00 EST (Only stops 3 mins before bell!)
-
-    def check_and_trigger_eod_close(self, positions_list: list) -> bool:
-        """
-        Final 2.5-minute Close Execution (starts at 15:57:30 EST).
-        Allows trading almost the entire final 15 minutes to capture big profit opportunities,
-        while strictly guaranteeing that by 16:00:00 all positions are closed with zero overnight risk!
-        CRUCIAL: No strict < 16.0 cutoff, so even if clock hits 16:00:02, positions are STILL liquidated!
-        """
-        if not positions_list:
-            return False
-        est = pytz.timezone('America/New_York')
-        now_ny = datetime.datetime.now(est)
-        if now_ny.weekday() > 4:
-            return False
-        ny_time = now_ny.hour + now_ny.minute / 60.0 + now_ny.second / 3600.0
-        
-        # Starts 2.5 minutes before bell: 15:57:30 (15.9583)
-        if ny_time < 15.9583:
-            return False
-
-        # Support continuous liquidation throughout After-Hours (16:00 to 20:00 EST)
-        if ny_time >= 20.0:
-            return False
-
-        today = now_ny.date()
-        last_attempt = getattr(self, "_last_eod_close_attempt_time", 0.0)
-        if time.time() - last_attempt < 10.0:
-            return True
-
-        self._last_eod_close_attempt_time = time.time()
-        if ny_time < 16.0:
-            seconds_left = max(0.0, (16.0 - ny_time) * 3600.0)
-            self.add_log(
-                f"🌇 [EOD Liquidation Countdown 15:57:30] Only {seconds_left:.0f}s until 16:00 close! "
-                f"Canceling all open orders and liquidating positions to ensure flat cash overnight..."
-            )
-        else:
-            self.add_log(
-                f"🌙 [After-Hours Liquidation] Liquidating remaining {len(positions_list)} positions via extended-hours orders to ensure flat cash overnight..."
-            )
-
-        try:
-            if hasattr(self.adapter, "cancel_all_orders"):
-                c_res = self.adapter.cancel_all_orders()
-                self.add_log(f"🧹 [EOD Liquidation 1/2] Cancel orders: {c_res.get('message', 'All pending orders canceled.')}")
-            if hasattr(self.adapter, "close_all_positions"):
-                res = self.adapter.close_all_positions()
-                self.add_log(f"✅ [EOD Liquidation 2/2] Close positions: {res.get('message', 'All positions liquidated.')}")
-            
-            for pos in positions_list:
-                sym = pos.get("ticker")
-                shares = pos.get("shares", 0)
-                if sym and shares != 0:
-                    self.add_trade_action(
-                        action="SELL" if shares > 0 else "COVER",
-                        ticker=sym,
-                        shares=abs(shares),
-                        price=pos.get("current_price", 0.0),
-                        reason="EOD/After-Hours Bell Liquidation (Flat cash overnight)"
-                    )
-            return True
-        except Exception as e:
-            self.add_log(f"⚠️ [EOD liquidation error, retrying]: {str(e)}")
-            return False
-
-    async def _run_loop(self):
-        while self.is_running:
-            try:
-                is_open = self.is_market_open()
-                est = pytz.timezone('America/New_York')
-                now_ny = datetime.datetime.now(est)
-                ny_time = now_ny.hour + now_ny.minute / 60.0 + now_ny.second / 3600.0
-                is_market_opening_window = (now_ny.weekday() <= 4) and (9.50 <= ny_time < 9.75)
-                is_market_closing_window = (now_ny.weekday() <= 4) and (15.75 <= ny_time <= 16.02)
-
-                if is_open:
-                    self._afterhours_scan_logged = False
-                    self._eod_synced_today = False
-                    if is_market_opening_window:
-                        if not getattr(self, "_opening_blitz_logged", False):
-                            self.add_log(f"⚡ [Opening Blitz 9:30-9:45 EST] Fast 3-second scanning across {len(self.active_tickers)} watchlist tickers...")
-                            self._opening_blitz_logged = True
-                    elif is_market_closing_window:
-                        if not getattr(self, "_closing_blitz_logged", False):
-                            self.add_log(f"🔥 [Late Session Sprint 15:45-16:00] Active trading until 15:57, flat cash before 16:00 close...")
-                            self._closing_blitz_logged = True
-                    else:
-                        self._opening_blitz_logged = False
-                        self._closing_blitz_logged = False
-                        if not getattr(self, "_intraday_scan_logged", False):
-                            self.add_log(f"📡 [Market Open Scanning Active] Evaluating watchlist tickers ({len(self.active_tickers)})...")
-                            self._intraday_scan_logged = True
-                else:
-                    self._opening_blitz_logged = False
-                    self._closing_blitz_logged = False
-                    if not getattr(self, "_afterhours_scan_logged", False):
-                        self.add_log(f"🌙 [Off-Hours / Market Closed] 24/7 scanning active (evaluating indicators; live order execution paused outside market hours)...")
-                        self._afterhours_scan_logged = True
-                
-                # Pre-market Catalyst Pre-loader (9:15 - 9:30 EST)
-                if (now_ny.weekday() <= 4) and (9.25 <= ny_time < 9.50) and self.strategy_params.get("dynamic_screener_enabled", False) and not getattr(self, "_premarket_preloaded", False):
-                    user_wl = load_watchlist() or WATCHLIST.copy()
-                    self.active_tickers = self.screener.preload_premarket_catalysts(user_wl)
-                    self._premarket_preloaded = True
-                elif ny_time >= 9.50:
-                    self._premarket_preloaded = False
-                
-                try:
-                    positions_list = self.adapter.get_open_positions()
-                    positions_by_ticker = {pos['ticker']: pos for pos in positions_list if pos.get('ticker')}
-                    active_pos_tickers = set(positions_by_ticker.keys())
-                    
-                    for pos_ticker in active_pos_tickers:
-                        self.unlock_entry(pos_ticker)
-                    for lock_ticker in list(self.pending_exit_locks.keys()):
-                        if lock_ticker not in active_pos_tickers:
-                            self.unlock_exit(lock_ticker)
-
-                    if self.check_and_trigger_eod_close(positions_list):
-                        await asyncio.sleep(10)
-                        continue
-                except Exception as e:
-                    self.add_log(f"⚡ [Alpaca Rate-Limit Backoff] {str(e)} -> Continuing seamlessly with cached positions.")
-                    positions_list = getattr(self, "_last_known_positions_list", [])
-                    positions_by_ticker = {pos['ticker']: pos for pos in positions_list if pos.get('ticker')}
-                    active_pos_tickers = set(positions_by_ticker.keys())
-
-                user_watchlist = load_watchlist()
-                if not user_watchlist:
-                    user_watchlist = WATCHLIST.copy()
-                
-                self.active_tickers = self._refresh_intraday_universe(user_watchlist, active_pos_tickers)
-                scan_passes = 3 if (is_market_opening_window or is_market_closing_window) else 1
-                cycle_new_entries = 0
-                for pass_idx in range(scan_passes):
-                    if not self.is_running:
-                        break
-                    if pass_idx > 0:
-                        await asyncio.sleep(3)
-
-                    if not hasattr(self, "_ticker_df_cache"):
-                        self._ticker_df_cache = {}
-
-                    candidate_entries = []
-                    self.active_tickers.sort(key=lambda sym: self.ticker_scores.get(sym, 0.0), reverse=True)
-                    for ticker in self.active_tickers:
-                        if not self.is_running:
-                            break
-                        try:
-                            df = None
-                            try:
-                                bar_iv = self.strategy_params.get("bar_interval", "5m")
-                                df = fetch_and_prepare_data(ticker, period="5d", interval=bar_iv)
-                                if df is not None and not df.empty and len(df) >= 2:
-                                    self._ticker_df_cache[ticker] = df
-                            except Exception as fetch_err:
-                                if "429" in str(fetch_err) or "rate limit" in str(fetch_err).lower():
-                                    df = self._ticker_df_cache.get(ticker)
-                                    if df is not None:
-                                        self.add_log(f"⚡ [{ticker}] Alpaca Rate-Limit Backoff: Using cached data seamlessly.")
-
-                            if ticker in EXCLUDED_TICKERS:
-                                continue
-                            if df is None or df.empty or len(df) < 2:
-                                continue
-
-                            # Rate-limit safety throttling (1.0s) for calm, comfortable reading pace
-                            await asyncio.sleep(1.0)
-                                
-                            row = df.iloc[-1]
-                            prev_row = df.iloc[-2]
-                            close_price = float(row['Close'])
-                            
-                            alpaca_pos = positions_by_ticker.get(ticker)
-                            current_shares = alpaca_pos['shares'] if alpaca_pos else 0
-                            avg_cost = alpaca_pos['avg_entry_price'] if alpaca_pos else 0.0
-                            
-                            if current_shares > 0:
-                                highest_price = max(
-                                    self.highest_prices.get(ticker, avg_cost),
-                                    close_price
-                                )
-                                self.highest_prices[ticker] = highest_price
-                            else:
-                                highest_price = 0.0
-                                if ticker in self.highest_prices:
-                                    del self.highest_prices[ticker]
-
-                            ema_9 = float(row.get('EMA_9', close_price))
-                            ema_21 = float(row.get('EMA_21', close_price))
-                            rvol = float(row.get('RVOL', 1.0))
-                            atr = float(row.get('ATR', close_price * 0.01))
-                            opportunity = self._build_intraday_opportunity(ticker, df, row, prev_row)
-                            live_score = opportunity["score"]
-                            self.ticker_scores[ticker] = live_score
-                            self.ticker_directions[ticker] = opportunity["direction"]
-                            self.intraday_opportunities[ticker] = {
-                                key: value for key, value in opportunity.items() if not key.startswith("_")
-                            }
-                            action, reason = self._evaluate_aggressive_intraday(
-                                ticker=ticker,
-                                opportunity=opportunity,
-                                current_shares=current_shares,
-                                avg_cost=avg_cost,
-                                open_position_count=len(positions_list),
-                            )
-
-                            allowed_entry_symbols = set(user_watchlist)
-                            if ticker not in allowed_entry_symbols and action in ("BUY", "SHORT"):
-                                action = "HOLD"
-                                reason = f"[{ticker}] Not in active entry watchlist, Exit-Only."
-
-                            if self.is_eod_no_entry_window() and action in ("BUY", "SHORT", "PYRAMID_BUY"):
-                                action = "HOLD"
-                                reason = f"[{ticker}] EOD No-Entry Window (15:57-16:00 EST). Blocked new entry order."
-
-                            if action in ("BUY", "SHORT") and self.is_entry_locked(ticker):
-                                action = "HOLD"
-                                reason = f"[{ticker}] Pending entry order lock active. Blocked duplicate entry."
-                            elif action in ("SELL", "COVER", "PARTIAL_SELL", "PARTIAL_COVER") and self.is_exit_locked(ticker):
-                                action = "HOLD"
-                                reason = f"[{ticker}] Pending exit order lock active. Blocked duplicate exit."
-
-                            vwap   = float(row.get('VWAP',   close_price))
-                            rsi    = float(row.get('RSI',    50.0))
-                            regime = opportunity.get("regime", "RANGE")
-                            trend_icon = "📈" if ema_9 > ema_21 else "📉"
-                            vwap_pos   = "Above VWAP✅" if close_price >= vwap else "Below VWAP⚠️"
-                            ema_gap_pct = abs(ema_9 - ema_21) / max(1e-5, ema_21) * 100
-
-                            if current_shares > 0:
-                                pnl_pct = (close_price - avg_cost) / max(1e-5, avg_cost) * 100
-                                pos_label = f"LONG {current_shares} shs @ ${avg_cost:.2f} | PnL: {'+' if pnl_pct>=0 else ''}{pnl_pct:.2f}%"
-                            elif current_shares < 0:
-                                pnl_pct = (avg_cost - close_price) / max(1e-5, avg_cost) * 100
-                                pos_label = f"SHORT {abs(current_shares)} shs @ ${avg_cost:.2f} | PnL: {'+' if pnl_pct>=0 else ''}{pnl_pct:.2f}%"
-                            else:
-                                pos_label = "📡 [Market Open - Scanning] Real-time scanning & evaluating"
-
-                            alerts = [
-                                f"🎯 {opportunity['direction']} Score:{live_score:.1f}",
-                                f"P_win:{opportunity.get('win_rate_pct', 50):.0f}%",
-                                f"E[R]:{opportunity.get('expected_value_r', 0):+.2f}R",
-                            ]
-                            vwap_dist_pct = abs(close_price - vwap) / max(1e-5, vwap) * 100
-                            ema_cross_dist = abs(ema_9 - ema_21) / max(1e-5, ema_21) * 100
-                            if vwap_dist_pct < 0.15:
-                                alerts.append("🔔 Near VWAP Line")
-                            if ema_cross_dist < 0.08:
-                                alerts.append("⚡ EMA9/21 Near Cross")
-                            if rvol > 1.8:
-                                alerts.append(f"🔥 RVOL={rvol:.1f}x High Vol")
-                            alert_str = " | " + " · ".join(alerts) if alerts else ""
-
-                            if action == "HOLD":
-                                decision_icon = "⏳ WATCH"
-                            elif action in ("BUY", "SHORT"):
-                                decision_icon = f"🚀 TRIGGER {action}"
-                            elif action in ("PYRAMID_BUY", "PYRAMID_SHORT"):
-                                decision_icon = f"📈 {action} (Pyramid Add)"
-                            elif action in ("PARTIAL_SELL", "PARTIAL_COVER"):
-                                decision_icon = f"🟢 PARTIAL EXIT {action}"
-                            else:
-                                decision_icon = f"🔒 FULL EXIT {action}"
-
-                            snapshot = (
-                                f"{trend_icon} [{ticker}] ${close_price:.2f} | "
-                                f"{vwap_pos} | EMA_Diff={ema_gap_pct:.2f}% | RSI={rsi:.0f} | "
-                                f"Regime={regime} | {pos_label}{alert_str} → {decision_icon}"
-                            )
-                            self.add_log(snapshot)
-
-                            if current_shares == 0 and action in ("BUY", "SHORT"):
-                                if not is_open:
-                                    self.add_log(f"🌙 [Off-Hours Analysis] [{ticker}] Triggered {action} signal (AI Score: {live_score:.1f}, P_win: {opportunity.get('win_rate_pct')}%) | Market closed, logged for review.")
-                                else:
-                                    day_move = self._safe_float(opportunity.get("session_move_pct"), 0.0)
-                                    rvol_val = self._safe_float(opportunity.get("rvol"), 1.0)
-                                    p_win = self._safe_float(opportunity.get("win_rate_pct"), 50.0)
-                                    ev_val = self._safe_float(opportunity.get("expected_value_r"), 0.0)
-                                    # Advanced Quant Alpha Leader Ranking:
-                                    # Directly driven by ML Model's expected gain (MFE), net edge %, and RVOL
-                                    pred_mfe = self._safe_float(opportunity.get("expected_mfe_pct"), 1.0)
-                                    net_edge = self._safe_float(opportunity.get("expected_net_edge_pct"), 0.0)
-                                    is_explosive = opportunity.get("is_explosive", False)
-                                    explosive_bonus = 2.0 if is_explosive else 1.0
-                                    leader_score = (p_win / 100.0) * max(0.05, 1.0 + net_edge) * max(0.2, pred_mfe) * min(3.5, max(0.5, rvol_val)) * explosive_bonus
-                                    candidate_entries.append({
-                                        "ticker": ticker,
-                                        "action": action,
-                                        "leader_score": leader_score,
-                                        "opportunity": opportunity,
-                                        "reason": reason,
-                                        "close_price": close_price,
-                                        "live_score": live_score,
-                                        "day_move": day_move,
-                                        "rvol": rvol_val,
-                                        "p_win": p_win,
-                                        "ev_r": ev_val,
-                                    })
-
-                            elif action == "SELL" and current_shares > 0:
-                                pnl = (close_price - avg_cost) * current_shares
-                                client_order_id = f"{ticker}-{int(datetime.datetime.now().timestamp())}-{uuid.uuid4().hex[:8]}-EXIT"
-                                self.lock_exit(ticker)
-                                self.add_log(f"🔔 [{ticker}] SELL signal triggered! Market selling {current_shares} shares (Est. PnL ${pnl:.2f})...")
-                                order_res = self.adapter.submit_market_order(ticker, current_shares, "sell", client_order_id=client_order_id)
-                                if order_res.get("success"):
-                                    self.add_log(f"✅ [{ticker}] SELL order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
-                                    self.add_trade_action(
-                                        "SELL", ticker, current_shares, close_price, reason, pnl=pnl,
-                                        order_id=order_res.get("order_id") or order_res.get("id"),
-                                        client_order_id=client_order_id,
-                                        order_status=order_res.get("status") or "submitted",
-                                    )
-                                    if ticker in self.highest_prices:
-                                        del self.highest_prices[ticker]
-                                    self.last_exit_times[ticker] = time.time()
-                                    self.entry_times.pop(ticker, None)
-                                    self.position_extremes.pop(ticker, None)
-                                    self.staged_entries.pop(ticker, None)
-                                else:
-                                    self.unlock_exit(ticker)
-                                    self.add_log(f"❌ [{ticker}] SELL order failed. Reason: {order_res.get('error')}")
-
-                            elif action == "COVER" and current_shares < 0:
-                                cover_qty = abs(current_shares)
-                                pnl = (avg_cost - close_price) * cover_qty
-                                client_order_id = f"{ticker}-{int(datetime.datetime.now().timestamp())}-{uuid.uuid4().hex[:8]}-EXIT"
-                                self.lock_exit(ticker)
-                                self.add_log(f"🔔 [{ticker}] COVER signal triggered! Market buying {cover_qty} shares (Est. PnL ${pnl:.2f})...")
-                                order_res = self.adapter.submit_market_order(ticker, cover_qty, "buy", client_order_id=client_order_id)
-                                if order_res.get("success"):
-                                    self.add_log(f"✅ [{ticker}] COVER order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
-                                    self.add_trade_action(
-                                        "COVER", ticker, cover_qty, close_price, reason, pnl=pnl,
-                                        order_id=order_res.get("order_id") or order_res.get("id"),
-                                        client_order_id=client_order_id,
-                                        order_status=order_res.get("status") or "submitted",
-                                    )
-                                    self.last_exit_times[ticker] = time.time()
-                                    self.entry_times.pop(ticker, None)
-                                    self.position_extremes.pop(ticker, None)
-                                else:
-                                    self.unlock_exit(ticker)
-                                    self.add_log(f"❌ [{ticker}] COVER order failed. Reason: {order_res.get('error')}")
-
-                            elif action == "PARTIAL_SELL" and current_shares > 0:
-                                sell_qty = max(1, current_shares // 2)
-                                pnl = (close_price - avg_cost) * sell_qty
-                                client_order_id = f"{ticker}-{int(datetime.datetime.now().timestamp())}-{uuid.uuid4().hex[:8]}-PARTIAL"
-                                self.lock_exit(ticker)
-                                self.add_log(f"🟢 [{ticker}] PARTIAL_SELL triggered scaled profit taking! Market selling half {sell_qty} shs (Est profit lock ${pnl:.2f})...")
-                                order_res = self.adapter.submit_market_order(ticker, sell_qty, "sell", client_order_id=client_order_id)
-                                if order_res.get("success"):
-                                    self.partial_tp_done[ticker] = True
-                                    self.add_log(f"✅ [{ticker}] PARTIAL_SELL order submitted! ID: {order_res.get('order_id', order_res.get('id'))}")
-                                    self.add_trade_action(
-                                        "PARTIAL_SELL", ticker, sell_qty, close_price, reason, pnl=pnl,
-                                        order_id=order_res.get("order_id") or order_res.get("id"),
-                                        client_order_id=client_order_id,
-                                        order_status=order_res.get("status") or "submitted",
-                                    )
-                                else:
-                                    self.unlock_exit(ticker)
-                                    self.add_log(f"❌ [{ticker}] PARTIAL_SELL order failed. Reason: {order_res.get('error')}")
-
-                            elif action == "PARTIAL_COVER" and current_shares < 0:
-                                cover_qty = max(1, abs(current_shares) // 2)
-                                pnl = (avg_cost - close_price) * cover_qty
-                                client_order_id = f"{ticker}-{int(datetime.datetime.now().timestamp())}-{uuid.uuid4().hex[:8]}-PARTIAL"
-                                self.lock_exit(ticker)
-                                self.add_log(f"🟢 [{ticker}] PARTIAL_COVER triggered scaled profit taking! Market buying back half {cover_qty} shs (Est profit lock ${pnl:.2f})...")
-                                order_res = self.adapter.submit_market_order(ticker, cover_qty, "buy", client_order_id=client_order_id)
-                                if order_res.get("success"):
-                                    self.partial_tp_done[ticker] = True
-                                    self.add_log(f"✅ [{ticker}] PARTIAL_COVER order submitted! ID: {order_res.get('order_id', order_res.get('id'))}")
-                                    self.add_trade_action(
-                                        "PARTIAL_COVER", ticker, cover_qty, close_price, reason, pnl=pnl,
-                                        order_id=order_res.get("order_id") or order_res.get("id"),
-                                        client_order_id=client_order_id,
-                                        order_status=order_res.get("status") or "submitted",
-                                    )
-                                else:
-                                    self.unlock_exit(ticker)
-                                    self.add_log(f"❌ [{ticker}] PARTIAL_COVER order failed. Reason: {order_res.get('error')}")
-
-                            elif action == "TIER2_ADD_BUY" and current_shares > 0:
-                                # Citadel / Two Sigma Tier 2 Golden Add: Deploy remaining 60% at deep oversold support
-                                if not is_open:
-                                    self.add_log(f"🌙 [Off-Hours] [{ticker}] Tier 2 Golden Add signal (TIER2_ADD_BUY) | Market closed, logged.")
-                                elif self.is_entry_locked(ticker):
-                                    self.add_log(f"⏳ [{ticker}] Tier 2 Golden Add skipped: order lock active")
-                                else:
-                                    account = self.adapter.get_account_summary()
-                                    curr_notional = current_shares * avg_cost
-                                    sizing = self._size_aggressive_entry(
-                                        account, close_price, opportunity, prob_eval=opportunity,
-                                        tier=2, existing_notional=curr_notional
-                                    )
-                                    add_shares = sizing["shares"]
-                                    if add_shares <= 0:
-                                        self.add_log(f"⚠️ [{ticker}] Buying power insufficient for Tier 2 Golden Add.")
-                                    else:
-                                        client_order_id = f"{ticker}-{int(datetime.datetime.now().timestamp())}-{uuid.uuid4().hex[:8]}-TIER2"
-                                        self.lock_entry(ticker)
-                                        self.add_log(
-                                            f"🎯 [{ticker}] TIER2_ADD_BUY (60% Golden Add) triggered! Dipped from entry ${avg_cost:.2f} to ${close_price:.2f} — "
-                                            f"Adding {add_shares} shs @ ${close_price:.2f}, Est Notional ${sizing['notional']:,.0f} "
-                                            f"(Total Combined Notional: ${(curr_notional + sizing['notional']):,.0f})"
-                                        )
-                                        order_res = self.adapter.submit_market_order(ticker, add_shares, "buy", client_order_id=client_order_id)
-                                        if order_res.get("success"):
-                                            if ticker in self.staged_entries:
-                                                self.staged_entries[ticker]["tier"] = 2
-                                                self.staged_entries[ticker]["shares"] = self.staged_entries[ticker].get("shares", current_shares) + add_shares
-                                                self.staged_entries[ticker]["notional"] = self.staged_entries[ticker].get("notional", curr_notional) + sizing["notional"]
-                                            else:
-                                                self.staged_entries[ticker] = {"tier": 2, "shares": current_shares + add_shares, "notional": curr_notional + sizing["notional"]}
-                                            self.add_log(f"✅ [{ticker}] TIER2_ADD_BUY order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
-                                            self.add_trade_action(
-                                                "TIER2_ADD_BUY", ticker, add_shares, close_price, reason,
-                                                order_id=order_res.get("order_id") or order_res.get("id"),
-                                                client_order_id=client_order_id,
-                                                order_status=order_res.get("status") or "submitted",
-                                            )
-                                        else:
-                                            self.unlock_entry(ticker)
-                                            self.add_log(f"❌ [{ticker}] TIER2_ADD_BUY order failed. Reason: {order_res.get('error')}")
-
-                            elif action == "TIER2_ADD_SHORT" and current_shares < 0:
-                                # Citadel / Two Sigma Tier 2 Golden Add Short: Deploy remaining 60% at overbought surge exhaustion
-                                if not is_open:
-                                    self.add_log(f"🌙 [Off-Hours] [{ticker}] Tier 2 Golden Add Short signal (TIER2_ADD_SHORT) | Market closed, logged.")
-                                elif self.is_entry_locked(ticker):
-                                    self.add_log(f"⏳ [{ticker}] Tier 2 Golden Add Short skipped: order lock active")
-                                else:
-                                    account = self.adapter.get_account_summary()
-                                    curr_notional = abs(current_shares) * avg_cost
-                                    sizing = self._size_aggressive_entry(
-                                        account, close_price, opportunity, prob_eval=opportunity,
-                                        tier=2, existing_notional=curr_notional
-                                    )
-                                    add_shares = sizing["shares"]
-                                    if add_shares <= 0:
-                                        self.add_log(f"⚠️ [{ticker}] Buying power insufficient for Tier 2 Golden Add Short.")
-                                    else:
-                                        client_order_id = f"{ticker}-{int(datetime.datetime.now().timestamp())}-{uuid.uuid4().hex[:8]}-TIER2"
-                                        self.lock_entry(ticker)
-                                        self.add_log(
-                                            f"⚡ [{ticker}] TIER2_ADD_SHORT (60% Golden Add) triggered! Surged from entry ${avg_cost:.2f} to ${close_price:.2f} — "
-                                            f"Adding short {add_shares} shs @ ${close_price:.2f}, Est Notional ${sizing['notional']:,.0f} "
-                                            f"(Total Combined Notional: ${(curr_notional + sizing['notional']):,.0f})"
-                                        )
-                                        order_res = self.adapter.submit_market_order(ticker, add_shares, "sell", client_order_id=client_order_id)
-                                        if order_res.get("success"):
-                                            if ticker in self.staged_entries:
-                                                self.staged_entries[ticker]["tier"] = 2
-                                                self.staged_entries[ticker]["shares"] = self.staged_entries[ticker].get("shares", abs(current_shares)) + add_shares
-                                                self.staged_entries[ticker]["notional"] = self.staged_entries[ticker].get("notional", curr_notional) + sizing["notional"]
-                                            else:
-                                                self.staged_entries[ticker] = {"tier": 2, "shares": abs(current_shares) + add_shares, "notional": curr_notional + sizing["notional"]}
-                                            self.add_log(f"✅ [{ticker}] TIER2_ADD_SHORT order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
-                                            self.add_trade_action(
-                                                "TIER2_ADD_SHORT", ticker, add_shares, close_price, reason,
-                                                order_id=order_res.get("order_id") or order_res.get("id"),
-                                                client_order_id=client_order_id,
-                                                order_status=order_res.get("status") or "submitted",
-                                            )
-                                        else:
-                                            self.unlock_entry(ticker)
-                                            self.add_log(f"❌ [{ticker}] TIER2_ADD_SHORT order failed. Reason: {order_res.get('error')}")
-
-                            elif action == "PYRAMID_BUY" and current_shares > 0:
-                                # Pyramiding Buy: Add to a profitable long position
-                                if not is_open:
-                                    self.add_log(f"🌙 [Off-Hours] [{ticker}] Pyramid Buy signal (PYRAMID_BUY) | Market closed, logged for review.")
-                                elif self.is_entry_locked(ticker):
-                                    self.add_log(f"⏳ [{ticker}] Pyramid Buy skipped: order lock active")
-                                else:
-                                    account = self.adapter.get_account_summary()
-                                    pyr_sizing = self._size_pyramid_entry(account, close_price, opportunity)
-                                    pyr_shares = pyr_sizing["shares"]
-                                    if pyr_shares <= 0:
-                                        self.add_log(f"⚠️ [{ticker}] Buying power insufficient for pyramid add, skipping.")
-                                    else:
-                                        pnl_float = (close_price - avg_cost) / avg_cost * 100.0 if avg_cost > 0 else 0.0
-                                        client_order_id = f"{ticker}-{int(datetime.datetime.now().timestamp())}-{uuid.uuid4().hex[:8]}-PYRAMID"
-                                        self.lock_entry(ticker)
-                                        self.add_log(
-                                            f"📈 [{ticker}] PYRAMID_BUY add triggered! Current gain +{pnl_float:.2f}% — Adding {pyr_shares} shs @ ${close_price:.2f}, "
-                                            f"Notional ${pyr_sizing['notional']:,.0f} | Score={live_score:.0f} E[R]={opportunity.get('expected_value_r', 0):+.2f}R"
-                                        )
-                                        order_res = self.adapter.submit_market_order(ticker, pyr_shares, "buy", client_order_id=client_order_id)
-                                        if order_res.get("success"):
-                                            self.pyramid_done[ticker] = True
-                                            self.pyramid_counts[ticker] = self.pyramid_counts.get(ticker, 0) + 1
-                                            self.add_log(f"✅ [{ticker}] PYRAMID_BUY order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
-                                            self.add_trade_action(
-                                                "PYRAMID_BUY", ticker, pyr_shares, close_price, reason,
-                                                order_id=order_res.get("order_id") or order_res.get("id"),
-                                                client_order_id=client_order_id,
-                                                order_status=order_res.get("status") or "submitted",
-                                            )
-                                        else:
-                                            self.unlock_entry(ticker)
-                                            self.add_log(f"❌ [{ticker}] PYRAMID_BUY order failed. Reason: {order_res.get('error')}")
-
-                            elif action == "PYRAMID_SHORT" and current_shares < 0:
-                                # Pyramiding Short: Add to a profitable short position
-                                if not is_open:
-                                    self.add_log(f"🌙 [Off-Hours] [{ticker}] Pyramid Short signal (PYRAMID_SHORT) | Market closed, logged for review.")
-                                elif self.is_entry_locked(ticker):
-                                    self.add_log(f"⏳ [{ticker}] Pyramid Short skipped: order lock active")
-                                else:
-                                    account = self.adapter.get_account_summary()
-                                    pyr_sizing = self._size_pyramid_entry(account, close_price, opportunity)
-                                    pyr_shares = pyr_sizing["shares"]
-                                    if pyr_shares <= 0:
-                                        self.add_log(f"⚠️ [{ticker}] Buying power insufficient for pyramid short, skipping.")
-                                    else:
-                                        pnl_float = (avg_cost - close_price) / avg_cost * 100.0 if avg_cost > 0 else 0.0
-                                        client_order_id = f"{ticker}-{int(datetime.datetime.now().timestamp())}-{uuid.uuid4().hex[:8]}-PYRAMID"
-                                        self.lock_entry(ticker)
-                                        self.add_log(
-                                            f"📉 [{ticker}] PYRAMID_SHORT add triggered! Current gain +{pnl_float:.2f}% — Adding short {pyr_shares} shs @ ${close_price:.2f}, "
-                                            f"Notional ${pyr_sizing['notional']:,.0f} | Score={live_score:.0f} E[R]={opportunity.get('expected_value_r', 0):+.2f}R"
-                                        )
-                                        order_res = self.adapter.submit_market_order(ticker, pyr_shares, "sell", client_order_id=client_order_id)
-                                        if order_res.get("success"):
-                                            self.pyramid_done[ticker] = True
-                                            self.pyramid_counts[ticker] = self.pyramid_counts.get(ticker, 0) + 1
-                                            self.add_log(f"✅ [{ticker}] PYRAMID_SHORT order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
-                                            self.add_trade_action(
-                                                "SHORT", ticker, pyr_shares, close_price, reason,
-                                                order_id=order_res.get("order_id") or order_res.get("id"),
-                                                client_order_id=client_order_id,
-                                                order_status=order_res.get("status") or "submitted",
-                                            )
-                                        else:
-                                            self.unlock_entry(ticker)
-                                            self.add_log(f"❌ [{ticker}] PYRAMID_SHORT order failed. Reason: {order_res.get('error')}")
-                                    
-                        except Exception as ex:
-                            if "429" in str(ex) or "rate limit" in str(ex).lower():
-                                df_cached = self._ticker_df_cache.get(ticker)
-                                if df_cached is not None and not df_cached.empty:
-                                    pass # Smooth silent memory cache fallback
-                            else:
-                                self.add_log(f"⚠️ Error scanning {ticker}: {str(ex)}")
-
-                    # ─── Leader Selection Execution ──────────────────────────────────────
-                    if candidate_entries and is_open:
-                        candidate_entries.sort(key=lambda c: c["leader_score"], reverse=True)
-                        rank_summary = " | ".join([
-                            f"#{i+1} {c['ticker']} (LeaderScore={c['leader_score']:.2f}, Intraday={c['day_move']:+.2f}%, RVOL={c['rvol']:.1f}x, P_win={c['p_win']:.1f}%)"
-                            for i, c in enumerate(candidate_entries)
-                        ])
-                        self.add_log(f"🏆 [Leader Selection] Candidate pool ranked: {rank_summary}")
-
-                        for cand in candidate_entries:
-                            if cycle_new_entries >= 1:
-                                break
-                            cand_ticker = cand["ticker"]
-                            cand_action = cand["action"]
-                            cand_reason = cand["reason"]
-                            cand_close = cand["close_price"]
-                            cand_opp = cand["opportunity"]
-                            cand_score = cand["live_score"]
-
-                            cur_positions = self.adapter.get_open_positions()
-                            max_pos = int(self.strategy_params.get("max_concurrent_positions", 1))
-                            if len(cur_positions) >= max_pos:
-                                self.add_log(f"⏸️ [{cand_ticker}] Current positions ({len(cur_positions)}) reached max limit ({max_pos}), skipping entry.")
-                                break
-
-                            account = self.adapter.get_account_summary()
-                            sizing = self._size_aggressive_entry(account, cand_close, cand_opp, prob_eval=cand_opp, tier=1)
-                            shares = sizing["shares"]
-                            if shares <= 0:
-                                self.add_log(f"⚠️ [{cand_ticker}] Buying power insufficient for 1 share, skipping signal.")
-                                continue
-
-                            client_order_id = f"{cand_ticker}-{int(datetime.datetime.now().timestamp())}-{uuid.uuid4().hex[:8]}-ENTRY"
-                            self.lock_entry(cand_ticker)
-                            self.entry_times[cand_ticker] = datetime.datetime.now()
-
-                            side_str = "buy" if cand_action == "BUY" else "sell"
-                            pos_dir = "LONG" if cand_action == "BUY" else "SHORT"
-                            icon_str = "🛒" if cand_action == "BUY" else "📉"
-                            self.add_log(
-                                f"{icon_str} 👑 [Leader Entry Triggered - Tier 1 40% Starter] [{cand_ticker}] {pos_dir} Score:{cand_score:.1f} (P_win: {cand_opp.get('win_rate_pct')}%, E[R]: {cand_opp.get('expected_value_r'):+.2f}R): "
-                                f"Order {shares} shs @ ${cand_close:.2f}, Est Notional ${sizing['notional']:,.0f} (Buying Power ${sizing['available_buying_power']:,.2f}), Stop Loss {sizing['stop_pct']*100:.2f}%."
-                            )
-                            order_res = self.adapter.submit_market_order(cand_ticker, shares, side_str, client_order_id=client_order_id)
-                            if order_res.get("success"):
-                                cycle_new_entries += 1
-                                self.staged_entries[cand_ticker] = {
-                                    "tier": 1,
-                                    "entry_price": cand_close,
-                                    "shares": shares,
-                                    "notional": sizing["notional"],
-                                    "side": "LONG" if cand_action == "BUY" else "SHORT",
-                                    "entry_time": time.time(),
-                                }
-                                self.add_log(f"✅ [{cand_ticker}] {cand_action} order submitted! Order ID: {order_res.get('order_id', order_res.get('id'))}")
-                                if cand_action == "BUY":
-                                    self.highest_prices[cand_ticker] = cand_close
-                                self.add_trade_action(
-                                    cand_action, cand_ticker, shares, cand_close, cand_reason,
-                                    order_id=order_res.get("order_id") or order_res.get("id"),
-                                    client_order_id=client_order_id,
-                                    order_status=order_res.get("status") or "submitted",
-                                )
-                            else:
-                                self.unlock_entry(cand_ticker)
-                                self.entry_times.pop(cand_ticker, None)
-                                self.staged_entries.pop(cand_ticker, None)
-                                self.add_log(f"❌ [{cand_ticker}] {cand_action} order failed. Reason: {order_res.get('error')}")
-
-                    self._score_warmup_complete = True
-
-                    # EOD HuggingFace Auto-Sync & Autonomous Self-Reflection: Runs once at market close (16:01 - 16:10 EST)
-                    est = pytz.timezone('America/New_York')
-                    now_ny = datetime.datetime.now(est)
-                    ny_time = now_ny.hour + now_ny.minute / 60.0
-                    if 16.01 <= ny_time <= 16.10 and not getattr(self, "_eod_synced_today", False):
-                        self._eod_synced_today = True
-                        threading.Thread(target=self.run_eod_reflection, daemon=True).start()
-                        threading.Thread(target=self.sync_to_huggingface, daemon=True).start()
-
-                loop_delay = 5 if (is_market_opening_window or is_market_closing_window) else 30
-                await asyncio.sleep(loop_delay)
-
-            except asyncio.CancelledError:
-                self.add_log("Background trading loop task cancelled.")
-                break
-            except Exception as e:
-                self.add_log(f"⚠️ Main loop exception: {str(e)}")
-                await asyncio.sleep(30)
 
     def run_eod_reflection(self) -> Dict:
-        """Runs autonomous daily self-reflection, trade attribution, parameter self-tuning, and RL policy update."""
+        """Produce ledger attribution without mutating a fitted research policy."""
         try:
-            from app.ml.auto_reflection_engine import AutoReflectionEngine
-            est = pytz.timezone('America/New_York')
-            today_str = datetime.datetime.now(est).strftime("%Y-%m-%d")
-            self.add_log(f"🧠 [Autonomous Reflection] Running daily trade attribution & RL policy self-tuning for {today_str}...")
-            engine = AutoReflectionEngine()
-            report_path, attribution = engine.run_daily_reflection(today_str)
-            self.add_log(f"✅ [Autonomous Reflection] Completed! Trades: {attribution.get('total_trades', 0)}, Win rate: {attribution.get('win_rate_%', 0)}%, PnL: ${attribution.get('total_pnl', 0):+.2f}. Report: {report_path}")
-            # Reload updated RL agent
-            from app.ml.rl_trading_agent import RLTradingAgent
-            self.rl_agent = RLTradingAgent.load()
+            self.recalculate_trade_pnls()
+            day = datetime.datetime.now(pytz.timezone("America/New_York")).date().isoformat()
+            rows = [row for row in self.trade_history if str(row.get("date") or row.get("time") or "")[:10] == day]
+            closed = [row for row in rows if row.get("matched_closing_qty", 0) > 0 and row.get("pnl_complete")]
+            attribution = {
+                "date": day, "total_trades": len(closed),
+                "total_pnl": round(sum(row["pnl"] for row in closed), 2),
+                "win_rate_%": 100 * sum(row["pnl"] > 0 for row in closed) / len(closed) if closed else None,
+                "unknown_basis_trades": sum(row.get("unknown_basis_qty", 0) > 0 for row in rows),
+                "basis": "Known-basis FIFO realized PnL, before fees; not broker account PnL",
+                "policy_updated": False,
+                "next_research_step": "Refit and compare candidates on prior sessions through the shared causal research pipeline",
+            }
+            report_dir = os.path.abspath(os.path.join(os.path.dirname(self.history_file), "..", "reports", "quant_research_20260913"))
+            os.makedirs(report_dir, exist_ok=True)
+            report_path = os.path.join(report_dir, f"ledger_attribution_{day}.json")
+            with open(report_path, "w", encoding="utf-8") as handle:
+                json.dump(attribution, handle, indent=2, ensure_ascii=False)
             return {"success": True, "report_path": report_path, "attribution": attribution}
-        except Exception as e:
-            err_msg = f"⚠️ [Autonomous Reflection Error] {str(e)}"
-            self.add_log(err_msg)
-            return {"success": False, "error": str(e)}
+        except Exception as exc:
+            return {"success": False, "error": str(exc)}
 
     def sync_to_huggingface(self) -> Dict:
         """Uploads full master trade_history.json and daily partitions to HuggingFace Dataset repository (Ypeng12/quant-ai-trade-history)."""
@@ -2456,4 +1095,3 @@ class LiveTradingRunner:
             err_msg = f"⚠️ [HF Auto-Sync Error] {str(e)}"
             self.add_log(err_msg)
             return {"success": False, "error": str(e)}
-

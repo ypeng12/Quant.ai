@@ -88,15 +88,16 @@ class LOBMicrostructureMLEngine:
         P_micro = (Ask_Size * Bid_Price + Bid_Size * Ask_Price) / (Bid_Size + Ask_Size)
         Drift = (P_micro - P_mid) / P_mid
         
-        When L2 depth (bid_size, ask_size) is present and distinct, computes from book depth.
+        When verified L1 top-of-book sizes are present and distinct, computes from
+        the top of book. L1 is not multi-level L2 depth.
         When absent (e.g. 5m OHLCV bars), uses institutional intra-bar microstructure estimator
         (Wick absorption + body flow & dynamic spread) grounded in market microstructure theory.
         """
-        has_l2_depth = (
+        has_real_l1_quote = (
             "bid_size" in df.columns and "ask_size" in df.columns and 
             not df["bid_size"].equals(df["ask_size"])
         )
-        if has_l2_depth:
+        if has_real_l1_quote:
             bid_p = df["bid_price"] if "bid_price" in df.columns else df["Close"]
             ask_p = df["ask_price"] if "ask_price" in df.columns else df["Close"] * 1.0005
             bid_v = df["bid_size"]
@@ -158,11 +159,11 @@ class LOBMicrostructureMLEngine:
         vol_mean = vol_series.rolling(20, min_periods=1).mean() + 1e-6
         df_feat["feature_vol_accel"] = pd.Series(np.clip((vol_series / vol_mean) - 1.0, -2.0, 5.0), index=df.index).fillna(0.0)
 
-        has_l2_depth = (
+        has_real_l1_quote = (
             "bid_size" in df.columns and "ask_size" in df.columns and 
             not df["bid_size"].equals(df["ask_size"])
         )
-        if has_l2_depth:
+        if has_real_l1_quote:
             bid_v = df["bid_size"]
             ask_v = df["ask_size"]
             df_feat["feature_queue_imbalance"] = pd.Series((bid_v - ask_v) / (bid_v + ask_v + 1e-6), index=df.index).fillna(0.0)

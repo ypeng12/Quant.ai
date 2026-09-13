@@ -1,0 +1,29 @@
+{
+  "status": "passed",
+  "targeted_test_count": 74,
+  "subtests_passed": 8,
+  "tests": [
+    "backend/tests/test_research_execution.py",
+    "backend/tests/test_quant_policy.py",
+    "backend/tests/test_risk_position_sizer.py",
+    "backend/tests/test_data_cache.py",
+    "backend/tests/test_research_lab_data.py",
+    "tests/test_causal_week_replay.py",
+    "tests/test_policy_replay.py",
+    "tests/test_trade_ledger_audit.py",
+    "tests/test_update_policy_artifact.py"
+  ],
+  "independent_research_artifact_checks": 99,
+  "frontend_build": "passed (TypeScript and Vite)",
+  "lab_artifact_reader": "complete; data, model and frozen source hashes verified",
+  "python_compile": "passed",
+  "git_diff_check": "passed",
+  "broker_initialized": false,
+  "service_started": false,
+  "orders_submitted": false,
+  "committed_or_pushed": false,
+  "limitations": [
+    "Targeted offline tests only, not full repository or live market validation.",
+    "Frozen-model refresh does not download data or deploy."
+  ]
+}

@@ -1,0 +1,4 @@
+{
+  "reason": "Research solver changed to same-objective OSQP after 30-symbol SLSQP failure; prior registration has zero observations.",
+  "replacement": "reports/platform_forward_20260913_qp/context_tree"
+}

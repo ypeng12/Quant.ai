@@ -1,0 +1,470 @@
+{
+  "status": "passed",
+  "generated_at": "2026-09-13T04:45:25.288940+00:00",
+  "review_kind": "independent_readonly_arithmetic_provenance_and_artifact_verification",
+  "summary_sha256": "28f7795de2247c8997284c013243954c7f059b50ae8730c842ea876c8cdabb3c",
+  "source_hashes": {
+    "backend/app/quant_policy.py": "70fbd28d68f0906944331113512ad055d0b250f5283a652cb12ff6545fa76bd8",
+    "scripts/run_policy_research.py": "be3beb424826eae73f2ed17c3e17a9c555413406312e6adc2286cb39bae41f0c",
+    "backend/app/research/policy_replay.py": "787f5149f3fd69fdaf70ff45508d3da0620b8c19319fb5edbf246a9df6184135"
+  },
+  "checks_passed": 99,
+  "checks": [
+    {
+      "check": "three_frozen_source_hashes_match_current_files",
+      "passed": true
+    },
+    {
+      "check": "registry_and_summary_source_hashes_identical",
+      "passed": true
+    },
+    {
+      "check": "four_input_data_hashes_match",
+      "passed": true
+    },
+    {
+      "check": "registered_grid_exactly_twelve",
+      "passed": true
+    },
+    {
+      "check": "feature_horizon_risk_grid_complete",
+      "passed": true
+    },
+    {
+      "check": "frozen_spec_matches_summary",
+      "passed": true
+    },
+    {
+      "check": "selected_candidate_maximizes_preperiod_score",
+      "passed": true
+    },
+    {
+      "check": "frozen_selection_precedes_evaluation_boundary",
+      "passed": true
+    },
+    {
+      "check": "target_results_not_used_for_selection",
+      "passed": true
+    },
+    {
+      "check": "trial_01_registered_spec_and_dates",
+      "passed": true
+    },
+    {
+      "check": "trial_01_preperiod_score_recomputed",
+      "passed": true
+    },
+    {
+      "check": "trial_01_freeze_timestamp_order",
+      "passed": true
+    },
+    {
+      "check": "trial_01_models_use_strictly_earlier_sessions",
+      "passed": true
+    },
+    {
+      "check": "trial_01_daily_returns_match_period_summary",
+      "passed": true
+    },
+    {
+      "check": "trial_02_registered_spec_and_dates",
+      "passed": true
+    },
+    {
+      "check": "trial_02_preperiod_score_recomputed",
+      "passed": true
+    },
+    {
+      "check": "trial_02_freeze_timestamp_order",
+      "passed": true
+    },
+    {
+      "check": "trial_02_models_use_strictly_earlier_sessions",
+      "passed": true
+    },
+    {
+      "check": "trial_02_daily_returns_match_period_summary",
+      "passed": true
+    },
+    {
+      "check": "trial_03_registered_spec_and_dates",
+      "passed": true
+    },
+    {
+      "check": "trial_03_preperiod_score_recomputed",
+      "passed": true
+    },
+    {
+      "check": "trial_03_freeze_timestamp_order",
+      "passed": true
+    },
+    {
+      "check": "trial_03_models_use_strictly_earlier_sessions",
+      "passed": true
+    },
+    {
+      "check": "trial_03_daily_returns_match_period_summary",
+      "passed": true
+    },
+    {
+      "check": "trial_04_registered_spec_and_dates",
+      "passed": true
+    },
+    {
+      "check": "trial_04_preperiod_score_recomputed",
+      "passed": true
+    },
+    {
+      "check": "trial_04_freeze_timestamp_order",
+      "passed": true
+    },
+    {
+      "check": "trial_04_models_use_strictly_earlier_sessions",
+      "passed": true
+    },
+    {
+      "check": "trial_04_daily_returns_match_period_summary",
+      "passed": true
+    },
+    {
+      "check": "trial_05_registered_spec_and_dates",
+      "passed": true
+    },
+    {
+      "check": "trial_05_preperiod_score_recomputed",
+      "passed": true
+    },
+    {
+      "check": "trial_05_freeze_timestamp_order",
+      "passed": true
+    },
+    {
+      "check": "trial_05_models_use_strictly_earlier_sessions",
+      "passed": true
+    },
+    {
+      "check": "trial_05_daily_returns_match_period_summary",
+      "passed": true
+    },
+    {
+      "check": "trial_06_registered_spec_and_dates",
+      "passed": true
+    },
+    {
+      "check": "trial_06_preperiod_score_recomputed",
+      "passed": true
+    },
+    {
+      "check": "trial_06_freeze_timestamp_order",
+      "passed": true
+    },
+    {
+      "check": "trial_06_models_use_strictly_earlier_sessions",
+      "passed": true
+    },
+    {
+      "check": "trial_06_daily_returns_match_period_summary",
+      "passed": true
+    },
+    {
+      "check": "trial_07_registered_spec_and_dates",
+      "passed": true
+    },
+    {
+      "check": "trial_07_preperiod_score_recomputed",
+      "passed": true
+    },
+    {
+      "check": "trial_07_freeze_timestamp_order",
+      "passed": true
+    },
+    {
+      "check": "trial_07_models_use_strictly_earlier_sessions",
+      "passed": true
+    },
+    {
+      "check": "trial_07_daily_returns_match_period_summary",
+      "passed": true
+    },
+    {
+      "check": "trial_08_registered_spec_and_dates",
+      "passed": true
+    },
+    {
+      "check": "trial_08_preperiod_score_recomputed",
+      "passed": true
+    },
+    {
+      "check": "trial_08_freeze_timestamp_order",
+      "passed": true
+    },
+    {
+      "check": "trial_08_models_use_strictly_earlier_sessions",
+      "passed": true
+    },
+    {
+      "check": "trial_08_daily_returns_match_period_summary",
+      "passed": true
+    },
+    {
+      "check": "trial_09_registered_spec_and_dates",
+      "passed": true
+    },
+    {
+      "check": "trial_09_preperiod_score_recomputed",
+      "passed": true
+    },
+    {
+      "check": "trial_09_freeze_timestamp_order",
+      "passed": true
+    },
+    {
+      "check": "trial_09_models_use_strictly_earlier_sessions",
+      "passed": true
+    },
+    {
+      "check": "trial_09_daily_returns_match_period_summary",
+      "passed": true
+    },
+    {
+      "check": "trial_10_registered_spec_and_dates",
+      "passed": true
+    },
+    {
+      "check": "trial_10_preperiod_score_recomputed",
+      "passed": true
+    },
+    {
+      "check": "trial_10_freeze_timestamp_order",
+      "passed": true
+    },
+    {
+      "check": "trial_10_models_use_strictly_earlier_sessions",
+      "passed": true
+    },
+    {
+      "check": "trial_10_daily_returns_match_period_summary",
+      "passed": true
+    },
+    {
+      "check": "trial_11_registered_spec_and_dates",
+      "passed": true
+    },
+    {
+      "check": "trial_11_preperiod_score_recomputed",
+      "passed": true
+    },
+    {
+      "check": "trial_11_freeze_timestamp_order",
+      "passed": true
+    },
+    {
+      "check": "trial_11_models_use_strictly_earlier_sessions",
+      "passed": true
+    },
+    {
+      "check": "trial_11_daily_returns_match_period_summary",
+      "passed": true
+    },
+    {
+      "check": "trial_12_registered_spec_and_dates",
+      "passed": true
+    },
+    {
+      "check": "trial_12_preperiod_score_recomputed",
+      "passed": true
+    },
+    {
+      "check": "trial_12_freeze_timestamp_order",
+      "passed": true
+    },
+    {
+      "check": "trial_12_models_use_strictly_earlier_sessions",
+      "passed": true
+    },
+    {
+      "check": "trial_12_daily_returns_match_period_summary",
+      "passed": true
+    },
+    {
+      "check": "selected_artifact_hash_matches",
+      "passed": true
+    },
+    {
+      "check": "artifact_schema_load_and_training_cutoff",
+      "passed": true
+    },
+    {
+      "check": "selected_every_fill_reconciles_signed_cash_cost_quantity",
+      "passed": true,
+      "details": {
+        "cash": 1.6007106751203537e-10,
+        "cost": 3.552713678800501e-15,
+        "notional": 7.275957614183426e-12,
+        "shares": 0.0
+      }
+    },
+    {
+      "check": "selected_ending_holdings_flat",
+      "passed": true
+    },
+    {
+      "check": "selected_total_pnl_cost_turnover_fillcount",
+      "passed": true
+    },
+    {
+      "check": "selected_all_symbol_totals_reconcile",
+      "passed": true
+    },
+    {
+      "check": "selected_daily_pnl_cost_identity",
+      "passed": true
+    },
+    {
+      "check": "selected_daily_capital_continuity",
+      "passed": true
+    },
+    {
+      "check": "selected_daily_symbol_pnl_sum",
+      "passed": true
+    },
+    {
+      "check": "selected_every_mark_matches_real_inventory",
+      "passed": true
+    },
+    {
+      "check": "selected_drawdown_recomputed",
+      "passed": true
+    },
+    {
+      "check": "selected_exposure_peaks_recomputed",
+      "passed": true
+    },
+    {
+      "check": "selected_fixed_5bps_order_cost_identity",
+      "passed": true
+    },
+    {
+      "check": "selected_fixed_stress_path_and_constraints",
+      "passed": true
+    },
+    {
+      "check": "recent_week_reset100k_every_fill_reconciles_signed_cash_cost_quantity",
+      "passed": true,
+      "details": {
+        "cash": 1.3096723705530167e-10,
+        "cost": 3.552713678800501e-15,
+        "notional": 1.4551915228366852e-11,
+        "shares": 0.0
+      }
+    },
+    {
+      "check": "recent_week_reset100k_ending_holdings_flat",
+      "passed": true
+    },
+    {
+      "check": "recent_week_reset100k_total_pnl_cost_turnover_fillcount",
+      "passed": true
+    },
+    {
+      "check": "recent_week_reset100k_all_symbol_totals_reconcile",
+      "passed": true
+    },
+    {
+      "check": "recent_week_reset100k_daily_pnl_cost_identity",
+      "passed": true
+    },
+    {
+      "check": "recent_week_reset100k_daily_capital_continuity",
+      "passed": true
+    },
+    {
+      "check": "recent_week_reset100k_daily_symbol_pnl_sum",
+      "passed": true
+    },
+    {
+      "check": "recent_week_reset100k_every_mark_matches_real_inventory",
+      "passed": true
+    },
+    {
+      "check": "recent_week_reset100k_drawdown_recomputed",
+      "passed": true
+    },
+    {
+      "check": "recent_week_reset100k_exposure_peaks_recomputed",
+      "passed": true
+    },
+    {
+      "check": "recent_week_reset100k_fixed_5bps_order_cost_identity",
+      "passed": true
+    },
+    {
+      "check": "recent_week_reset100k_fixed_stress_path_and_constraints",
+      "passed": true
+    },
+    {
+      "check": "recent_week_slice_starts_from_carried_equity",
+      "passed": true
+    },
+    {
+      "check": "recent_week_slice_per_symbol_reconciles",
+      "passed": true
+    },
+    {
+      "check": "reset_is_same_frozen_spec_without_reselection",
+      "passed": true
+    },
+    {
+      "check": "reset_registration_hashes_match",
+      "passed": true
+    }
+  ],
+  "verified_runs": {
+    "two_week": {
+      "starting_equity": 100000.0,
+      "net_pnl": 4102.048785525694,
+      "costs": 3491.6923643768305,
+      "net_return": 0.041020487855256915,
+      "gross_pnl": 7593.741149902525,
+      "fixed_5bps_net_pnl": -1135.4897610395565,
+      "fill_count": 1326,
+      "base_constraint_breach_marks_including_drift": 53,
+      "stressed_constraint_breach_marks_including_drift": 1021
+    },
+    "recent_week_reset": {
+      "starting_equity": 100000.0,
+      "net_pnl": 1727.4577537324803,
+      "costs": 1496.7910103057861,
+      "net_return": 0.017274577537324864,
+      "gross_pnl": 3224.2487640382665,
+      "fixed_5bps_net_pnl": -517.7287617262045,
+      "fill_count": 559,
+      "base_constraint_breach_marks_including_drift": 23,
+      "stressed_constraint_breach_marks_including_drift": 334
+    }
+  },
+  "recent_week_slice": {
+    "start": "2026-09-08",
+    "end": "2026-09-11",
+    "sessions": 4,
+    "starting_equity": 102223.70197381606,
+    "ending_equity": 104102.0487855257,
+    "net_pnl": 1878.3468117096345,
+    "net_return": 0.018374865862231804,
+    "gross_pnl": 3413.123245239296,
+    "costs": 1534.7764335296617,
+    "turnover_dollars": 7673882.167648315,
+    "fill_count": 561,
+    "max_drawdown": -0.026410306015948293,
+    "max_gross_exposure": 0.9530377195521645,
+    "max_symbol_exposure": 0.7048854560683943,
+    "profitable_sessions": 2
+  },
+  "notes": [
+    "Selected strategy was frozen using five earlier validation sessions; all 12 target results remain diagnostics, and the period is retrospective rather than an untouched holdout.",
+    "Recent-week reset begins with $100000; the recent-week slice carries $102223.70197381606 from the earlier five sessions. Their integer inventory paths differ, so returns are not exact linear rescalings.",
+    "Five-bps stress uses exactly the base fill quantities and reference prices; it is cost sensitivity, not a newly feasible execution replay.",
+    "Reported peak exposures above .95/.70 arise from marked positions moving and execution-cost equity changes; these are disclosed in base and stressed paths.",
+    "This verification did not initialize a broker or runner, change the frozen policy/replay/experiment sources, or rerun candidate optimization."
+  ]
+}

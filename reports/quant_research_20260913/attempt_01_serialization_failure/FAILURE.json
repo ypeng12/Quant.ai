@@ -1,0 +1,6 @@
+{
+  "failure": "NumPy int64 profitable_sessions could not serialize; no target-period results computed",
+  "resolution": "cast summary count to Python int, serialize completely before creating trial file",
+  "candidate_grid_changed": false,
+  "execution_logic_changed": false
+}

@@ -1,0 +1,48 @@
+{
+  "SNDK": {
+    "same_timestamps": true,
+    "max_absolute_ohlcv_difference": 0.0,
+    "rows": 2652
+  },
+  "TSLA": {
+    "same_timestamps": true,
+    "max_absolute_ohlcv_difference": 0.0,
+    "rows": 2652
+  },
+  "MSTR": {
+    "same_timestamps": true,
+    "max_absolute_ohlcv_difference": 0.0,
+    "rows": 2652
+  },
+  "NVDA": {
+    "same_timestamps": true,
+    "max_absolute_ohlcv_difference": 0.0,
+    "rows": 2652
+  },
+  "corporate_actions": {
+    "AAPL": {
+      "Dividends": {
+        "2026-08-10 09:30:00-04:00": 0.27
+      },
+      "Stock Splits": {}
+    },
+    "MSFT": {
+      "Dividends": {
+        "2026-08-20 09:30:00-04:00": 0.91
+      },
+      "Stock Splits": {}
+    },
+    "NVDA": {
+      "Dividends": {
+        "2026-09-10 09:30:00-04:00": 0.25
+      },
+      "Stock Splits": {}
+    },
+    "GOOGL": {
+      "Dividends": {
+        "2026-09-04 09:30:00-04:00": 0.22
+      },
+      "Stock Splits": {}
+    }
+  }
+}

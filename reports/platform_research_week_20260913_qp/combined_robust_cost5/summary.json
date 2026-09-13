@@ -1,0 +1,11 @@
+{
+  "candidate": {
+    "name": "combined_robust",
+    "features": "combined",
+    "model": "ridge",
+    "portfolio": "robust"
+  },
+  "cost_bps": 5,
+  "status": "unavailable",
+  "reason": "Real L1 unavailable for SNDK"
+}

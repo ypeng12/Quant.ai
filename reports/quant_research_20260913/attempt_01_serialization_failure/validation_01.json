@@ -1,0 +1,29 @@
+{
+  "id": 1,
+  "recorded_at": "2026-09-13T04:37:47.376695+00:00",
+  "spec": {
+    "name": "price_h1_g10",
+    "feature_set": "price",
+    "horizon_bars": 1,
+    "ridge_alpha": 10.0,
+    "risk_aversion": 10.0,
+    "cost_bps": 2.0,
+    "gross_limit": 0.95,
+    "symbol_limit": 0.7
+  },
+  "summary": {
+    "start": "2026-08-24",
+    "end": "2026-08-28",
+    "sessions": 5,
+    "starting_equity": 100000.0,
+    "ending_equity": 99372.03170537014,
+    "net_pnl": -627.9682946298562,
+    "net_return": -0.006279682946298548,
+    "gross_pnl": 2209.574958801845,
+    "costs": 2837.543253431701,
+    "turnover_dollars": 14187716.267158508,
+    "fill_count": 780,
+    "max_drawdown": -0.05028466505951179,
+    "max_gross_exposure": 0.9682162423553654,
+    "max_symbol_exposure": 0.7167088364457964,
+    "profitable_sessions": 

@@ -44,13 +44,11 @@ from app.experiment_manager import list_experiments, save_experiment, get_experi
 from app.risk_analyst import generate_risk_report
 from app.execution_algo import ExecutionAlgoEngine
 from app.stat_arb import StatArbEngine
-from app.event_alpha import EventAlphaEngine
 from app.portfolio_optimizer import PortfolioOptimizer
 from app.advanced_metrics import AdvancedMetricsEngine
 from app.udp_market_feed import run_udp_feed_demo
 from app.tcp_order_gateway import run_tcp_gateway_demo
 from app.low_latency_engine import run_memory_profiling_benchmark
-from app.orderbook_ofi import OrderFlowImbalanceEngine
 from app.multi_asset_simulator import MultiAssetPortfolioSimulator
 import time
 
@@ -85,15 +83,7 @@ def auto_start_live_runner():
     后端服务启动时，自动初始化开启 AI 量化托管交易机器人（开盘状态由 Alpaca 官方交易所 API 实时判定）。
     """
     try:
-        live_runner.start(
-            strategy_params={
-                "strategy_mode": "aggressive_intraday",
-                "strategy_version": "aggressive_intraday_v6_max_profit",
-                "allow_shorting": True,
-                "entry_score_min": 78.0,
-                "pullback_entry_enabled": True
-            }
-        )
+        live_runner.start()
         print("[System Startup] 🚀 AI 量化托管交易机器人已在后台自动启动上线（支持多空双向全自动交易）！")
     except Exception as e:
         print(f"[System Startup Warning] 自动启动交易机器人异常: {e}")
@@ -1360,147 +1350,45 @@ def get_intraday_data(ticker: str, date: str):
     except Exception as e:
         return {"success": False, "error": str(e)}
 
-_CACHED_SIMULATION_TRADES = None
-
 @app.get("/api/trade_comparison_data")
 def get_trade_comparison_data(ticker: str = "SNDK", interval: str = "1m"):
-    global _CACHED_SIMULATION_TRADES
-    ticker = ticker.upper()
-    try:
-        from data.generate_trade_comparison_report import run_full_simulation, TODAY_STR
-        if _CACHED_SIMULATION_TRADES is None:
-            _CACHED_SIMULATION_TRADES = run_full_simulation()
-        trades = _CACHED_SIMULATION_TRADES
-        
-        # Filter trades for this ticker
-        ticker_trades = [t for t in trades if t["ticker"] == ticker]
-        
-        # Fetch real intraday candles for this ticker & interval
-        df = fetch_and_prepare_data(ticker, period="5d", interval=interval)
-        candles = []
-        if df is not None and not df.empty:
-            today_df = df[df.index.astype(str).str.contains(TODAY_STR)]
-            if today_df.empty:
-                today_df = df
-            for idx, r in today_df.iterrows():
-                candles.append({
-                    "time": int(idx.timestamp()),
-                    "time_str": str(idx).split()[-1][:5],
-                    "open": round(float(r['Open']), 2),
-                    "high": round(float(r['High']), 2),
-                    "low": round(float(r['Low']), 2),
-                    "close": round(float(r['Close']), 2),
-                    "volume": int(float(r['Volume']))
-                })
-                
-        summary_table = [
-            {"ticker": "SNDK", "trades": 63, "win_rate": "47.6%", "pnl": "+$4,510.56", "positive": True, "desc": "诱多反手做空生效！冲高长上影线+卖压墙触发做空，成功斩获跳水波段"},
-            {"ticker": "MU", "trades": 61, "win_rate": "54.1%", "pnl": "+$2,799.09", "positive": True, "desc": "旧系统大亏 -$946，新系统通过 25% 试探建仓避免追高，反败为胜"},
-            {"ticker": "PLTR", "trades": 68, "win_rate": "51.5%", "pnl": "+$863.38", "positive": True, "desc": "顺势波段小步快跑，平稳获利"},
-            {"ticker": "NVDA", "trades": 58, "win_rate": "51.7%", "pnl": "+$711.06", "positive": True, "desc": "避开了早盘追高砸盘，震荡走高获利"},
-            {"ticker": "TSLA", "trades": 65, "win_rate": "52.3%", "pnl": "-$360.72", "positive": False, "desc": "亏损大幅收窄（旧系统亏 -$565）"},
-            {"ticker": "MSFT", "trades": 64, "win_rate": "45.3%", "pnl": "-$624.48", "positive": False, "desc": "盘中窄幅震荡，小幅摩擦损耗"},
-            {"ticker": "NBIS", "trades": 68, "win_rate": "35.3%", "pnl": "-$1,329.58", "positive": False, "desc": "09:42 试探建仓进场，午盘高位回踩触发信号衰减减仓"},
-            {"ticker": "AMD", "trades": 63, "win_rate": "31.7%", "pnl": "-$1,655.06", "positive": False, "desc": "日内走势反复冲高回落，触及风控止损"}
-        ]
-        
-        return {
-            "success": True,
-            "ticker": ticker,
-            "interval": interval,
-            "candles": candles,
-            "trades": ticker_trades,
-            "summary_table": summary_table,
-            "total_pnl": "+$4,914.25",
-            "total_trades": 450,
-            "overall_win_rate": "46.2%"
-        }
-    except Exception as e:
-        return {"success": False, "error": str(e)}
+    """The retired demonstration cannot serve as measured strategy performance."""
+    return {
+        "success": False, "status": "unavailable", "ticker": ticker.upper(),
+        "interval": interval, "candles": [], "trades": [], "summary_table": [],
+        "total_pnl": None, "total_trades": None, "overall_win_rate": None,
+        "error": "旧比较报告包含固定收益示例，已停用；可核验的逐日研究结果见 /api/research/latest_results。",
+    }
 
 
 @app.get("/api/broker/account")
 def get_broker_account():
-    """
-    获取 Alpaca 账户资金和状态，极速防频刷 (< 5ms)。
-    """
+    """Return broker account evidence; connection failure is not a sample balance."""
+    from app.broker.mock_adapter import MockAlpacaAdapter
+    if isinstance(live_runner.adapter, MockAlpacaAdapter):
+        return {"success": False, "status": "unavailable", "error": "Broker account unavailable; demo balances are not account evidence."}
     try:
         summary = live_runner.get_cached_account_summary()
         if summary and summary.get("success") is not False:
             return summary
     except Exception:
         pass
-
-    from app.config import ALPACA_API_KEY, ALPACA_SECRET_KEY, ALPACA_BASE_URL
-    from app.broker.alpaca_adapter import AlpacaAdapter
-    
-    if ALPACA_API_KEY and "your_paper_api_key_here" not in ALPACA_API_KEY:
-        try:
-            adapter = AlpacaAdapter(
-                api_key=ALPACA_API_KEY,
-                api_secret=ALPACA_SECRET_KEY,
-                base_url=ALPACA_BASE_URL
-            )
-            summary = adapter.get_account_summary()
-            if summary.get("success") is not False:
-                return summary
-        except Exception as e:
-            print(f"[BrokerAccount] Alpaca API Connection failed: {e}.")
-
-    return {
-        "success": True,
-        "account_number": "PA39102938 (Paper)",
-        "status": "ACTIVE",
-        "currency": "USD",
-        "cash": live_runner.get_cached_account_summary().get("cash", 54020.9),
-        "portfolio_value": live_runner.get_cached_account_summary().get("portfolio_value", 54020.9),
-        "buying_power": live_runner.get_cached_account_summary().get("buying_power", 169171.12),
-        "multiplier": 4.0,
-        "shorting_enabled": True,
-        "equity": live_runner.get_cached_account_summary().get("equity", 54020.9),
-        "is_simulated": True
-    }
+    return {"success": False, "status": "unavailable", "error": "Broker account could not be read."}
 
 
 @app.get("/api/broker/positions")
 def get_broker_positions():
-    """
-    获取 Alpaca 真实/模拟盘持仓列表，极速防频刷 (< 5ms)。
-    """
+    """Return actual broker inventory; never substitute invented positions."""
+    from app.broker.mock_adapter import MockAlpacaAdapter
+    if isinstance(live_runner.adapter, MockAlpacaAdapter):
+        return {"success": False, "status": "unavailable", "positions": None, "error": "Broker inventory unavailable."}
     try:
         positions = live_runner.get_cached_open_positions()
-        return {"success": True, "positions": positions}
+        if positions is not None:
+            return {"success": True, "positions": positions}
     except Exception:
         pass
-
-    from app.config import ALPACA_API_KEY, ALPACA_SECRET_KEY, ALPACA_BASE_URL
-    from app.broker.alpaca_adapter import AlpacaAdapter
-    
-    if ALPACA_API_KEY and "your_paper_api_key_here" not in ALPACA_API_KEY:
-        try:
-            adapter = AlpacaAdapter(
-                api_key=ALPACA_API_KEY,
-                api_secret=ALPACA_SECRET_KEY,
-                base_url=ALPACA_BASE_URL
-            )
-            positions = adapter.get_open_positions()
-            return {"success": True, "positions": positions}
-        except Exception as e:
-            print(f"[BrokerPositions] Alpaca API positions fetch failed: {e}.")
-
-    # High-fidelity Simulated Positions fallback
-    simulated_positions = [
-        {
-            "ticker": "NVDA",
-            "shares": 25,
-            "avg_entry_price": 120.50,
-            "current_price": 132.80,
-            "market_value": 3320.0,
-            "unrealized_pnl": 307.50,
-            "unrealized_pnl_pct": 10.21
-        }
-    ]
-    return {"success": True, "positions": simulated_positions}
+    return {"success": False, "status": "unavailable", "positions": None, "error": "Broker inventory could not be read."}
 
 
 @app.get("/api/broker/portfolio_history")
@@ -1689,7 +1577,8 @@ async def websocket_live_feed(websocket: WebSocket):
                     "is_running": live_runner.is_running,
                     "is_market_open": live_runner.is_market_open(),
                     "active_tickers": live_runner.active_tickers,
-                    "ticker_scores": getattr(live_runner, "last_ticker_scores", {})
+                    "quant_policy": getattr(live_runner, "_quant_status", {}),
+                    "intraday_opportunities": list(live_runner.intraday_opportunities.values())
                 }
                 
                 payload = {
@@ -1852,22 +1741,20 @@ def trigger_memory_profiling_benchmark(num_events: int = 500000):
 
 @app.post("/api/orderbook/ofi")
 def calculate_orderbook_ofi():
-    try:
-        np.random.seed(42)
-        n_ticks = 50
-        mid_prices = 150.0 + np.cumsum(np.random.normal(0, 0.02, n_ticks))
-        spreads = np.random.choice([0.01, 0.02], size=n_ticks)
-        bids = np.round(mid_prices - spreads / 2.0, 2)
-        asks = np.round(mid_prices + spreads / 2.0, 2)
-        bid_vols = np.random.randint(100, 2000, n_ticks).astype(float)
-        ask_vols = np.random.randint(100, 2000, n_ticks).astype(float)
+    return {
+        "success": False, "status": "unavailable", "result": [],
+        "error": "This endpoint previously generated random L2 data and is retired. Capture real L1 events before calculating OFI.",
+    }
 
-        df_l2 = pd.DataFrame({'bid_price': bids, 'bid_vol': bid_vols, 'ask_price': asks, 'ask_vol': ask_vols})
-        engine = OrderFlowImbalanceEngine(ofi_lookback=10)
-        res_df = engine.calculate_ofi_series(df_l2)
-        return {"success": True, "result": res_df.tail(20).to_dict(orient="records")}
-    except Exception as e:
-        return {"success": False, "error": str(e)}
+
+@app.get("/api/orderbook/l1_status")
+def get_orderbook_l1_status(ticker: str = "TSLA"):
+    from app.market_data.alpaca_l1_capture import l1_capture_status
+    capture_dir = os.getenv("QUANT_L1_CAPTURE_DIR", os.path.join(_backend_dir, "data", "l1_capture"))
+    try:
+        return l1_capture_status(capture_dir, ticker)
+    except (OSError, ValueError, TypeError) as exc:
+        return {"success": False, "status": "unavailable", "ticker": ticker.upper(), "events": 0, "reason": str(exc)}
 
 
 class MultiAssetBacktestRequest(BaseModel):
@@ -1920,253 +1807,40 @@ def trigger_alpha_research_experiment(req: ResearchExperimentRequest):
 
 @app.get("/api/research/latest_results")
 def get_latest_research_results():
-    """
-    Returns pre-computed out-of-sample quantitative results across 10 years of ETF price data.
-    """
-    results_summary = [
-        {
-            "model_name": "Raw_Momentum_Baseline",
-            "rank_ic": -0.0071,
-            "net_sharpe": 0.65,
-            "max_drawdown": -0.655,
-            "turnover": 0.230,
-            "dsr": 1.00,
-            "sharpe_ci_low": 0.00,
-            "sharpe_ci_high": 0.00,
-            "description": "Standard 20-day return cross-sectional ranking"
-        },
-        {
-            "model_name": "Vol_Adj_Momentum_Baseline",
-            "rank_ic": -0.0112,
-            "net_sharpe": 0.59,
-            "max_drawdown": -0.693,
-            "turnover": 0.215,
-            "dsr": 1.00,
-            "sharpe_ci_low": -0.00,
-            "sharpe_ci_high": 0.00,
-            "description": "Volatility-Adjusted Momentum (Return_20d / Vol_20d)"
-        },
-        {
-            "model_name": "Ridge_Linear",
-            "rank_ic": -0.0386,
-            "net_sharpe": -0.05,
-            "max_drawdown": -0.923,
-            "turnover": 0.340,
-            "dsr": 0.00,
-            "sharpe_ci_low": -0.00,
-            "sharpe_ci_high": 0.00,
-            "description": "L2 Regularized Ridge Linear Model"
-        },
-        {
-            "model_name": "LightGBM_Tree",
-            "rank_ic": 0.0064,
-            "net_sharpe": 0.41,
-            "max_drawdown": -0.851,
-            "turnover": 0.333,
-            "dsr": 0.00,
-            "sharpe_ci_low": -0.00,
-            "sharpe_ci_high": 0.00,
-            "description": "Shallow Tree LightGBM / HistGradientBoosting Regressor"
-        }
-    ]
+    """Return explicit missing status until a verified research artifact is wired in."""
+    from app.research_lab_data import get_latest_research_payload
+    return get_latest_research_payload()
 
-    feature_drift = [
-        {"feature": "cs_z_mom_5d", "psi": 0.0101, "status": "GREEN"},
-        {"feature": "cs_z_mom_20d", "psi": 0.0168, "status": "GREEN"},
-        {"feature": "cs_z_mom_60d", "psi": 0.0154, "status": "GREEN"},
-        {"feature": "cs_z_sortino_mom_20d", "psi": 0.0182, "status": "GREEN"},
-        {"feature": "residual_mom_20d", "psi": 0.0210, "status": "GREEN"}
-    ]
+
+@app.get("/api/research/platform")
+def get_platform_research_results(dataset: str = "four_two_weeks"):
+    """Serve verified offline comparisons without running research or trading."""
+    from app.research.catalog import research_bundle
+    return research_bundle(dataset)
+
 
 @app.get("/api/ml/predict")
 def get_ml_prediction(ticker: str = "TSLA"):
+    """Retire legacy synthetic/proxy ML output from the public API.
+
+    The former route could synthesize feature values and fit a synthetic LOB
+    suite.  Neither is a measurement of a predictive edge, so callers must use
+    the verified policy research artifact or the captured real-L1 research path.
     """
-    Returns real-time ML prediction, probability calibration, HMM regime, and SOR execution decision for a specific stock.
-    Prioritizes pre-computed real ML prediction cache for zero-latency, rate-limit-proof response in HuggingFace Space.
-    """
-    clean_ticker = ticker.strip().upper()
-    
-    # 1. Primary path: Load from pre-computed real ML predictions cache
-    cache_path = os.path.join(os.path.dirname(__file__), "data", "ml_predictions_cache.json")
-    if os.path.exists(cache_path):
-        try:
-            with open(cache_path, "r", encoding="utf-8") as f:
-                cache_dict = json.load(f)
-                if clean_ticker in cache_dict:
-                    return {"success": True, "result": cache_dict[clean_ticker]}
-        except Exception as e:
-            print(f"⚠️ Warning loading ML prediction cache: {e}")
-
-    try:
-        from app.broker.probability_engine import evaluate_mathematical_expectation
-        from app.ml.lob_microstructure_ml import LOBMicrostructureMLSuite
-
-        # Attempt to fetch real market data first
-        df = None
-        try:
-            from app.data_manager import fetch_and_prepare_data
-            df = fetch_and_prepare_data(clean_ticker, period="1mo", interval="1d")
-        except Exception:
-            pass
-
-        # If yfinance is rate-limited on Cloud IP (e.g., HuggingFace Space), use offline dataset or ticker seed
-        if df is not None and not df.empty:
-            row = df.iloc[-1]
-            prev_row = df.iloc[-2] if len(df) >= 2 else row
-            close = float(row.get("Close", 100.0))
-            prev_close = float(prev_row.get("Close", close))
-            vwap = float(row.get("VWAP", close))
-            rvol = float(row.get("RVOL", 1.2))
-            atr = float(row.get("ATR", close * 0.015))
-            atr_pct = (atr / close * 100.0) if close > 0 else 1.5
-
-            base_3 = float(df.iloc[-4]["Close"]) if len(df) >= 4 else prev_close
-            base_10 = float(df.iloc[-11]["Close"]) if len(df) >= 11 else base_3
-
-            momentum_3_pct = ((close / base_3) - 1.0) * 100.0 if base_3 > 0 else 0.0
-            momentum_10_pct = ((close / base_10) - 1.0) * 100.0 if base_10 > 0 else 0.0
-            vwap_dist_pct = ((close - vwap) / vwap) * 100.0 if vwap > 0 else 0.0
-            session_range_pct = float((row.get("High", close) - row.get("Low", close)) / close * 100.0)
-            high_to_now_pct = float((close / row.get("High", close) - 1.0) * 100.0) if row.get("High", close) > 0 else 0.0
-            low_to_now_pct = float((close / row.get("Low", close) - 1.0) * 100.0) if row.get("Low", close) > 0 else 0.0
-        else:
-            # Deterministic per-ticker features for cloud deployment resilience
-            t_seed = sum(ord(c) for c in clean_ticker)
-            close = 100.0 + (t_seed % 400)
-            rvol = 1.0 + (t_seed % 17) * 0.1
-            momentum_3_pct = ((t_seed % 19) - 8) * 0.4
-            momentum_10_pct = ((t_seed % 23) - 10) * 0.5
-            vwap_dist_pct = ((t_seed % 13) - 5) * 0.3
-            atr_pct = 1.2 + (t_seed % 11) * 0.25
-            session_range_pct = 1.5 + (t_seed % 9) * 0.3
-            high_to_now_pct = -((t_seed % 7) * 0.2)
-            low_to_now_pct = (t_seed % 6) * 0.2
-            vwap = close * (1.0 - vwap_dist_pct / 100.0)
-
-        opp = {
-            "ticker": clean_ticker,
-            "direction": direction,
-            "score": 50.0,
-            "rvol": rvol,
-            "vwap_dist_pct": vwap_dist_pct,
-            "momentum_3_pct": momentum_3_pct,
-            "momentum_10_pct": momentum_10_pct,
-            "atr_pct": atr_pct,
-            "session_range_pct": session_range_pct,
-            "high_to_now_pct": high_to_now_pct,
-            "low_to_now_pct": low_to_now_pct,
-            "regime": regime,
-            "_stop_pct": max(0.005, atr_pct / 100.0 * 1.5)
-        }
-
-        # 2. Evaluate Mathematical Expectation & Calibrated ML Probability
-        eval_res = evaluate_mathematical_expectation(opp, {"min_expected_value_r": 0.15})
-        opp["score"] = eval_res.get("win_rate_pct", 50.0)
-
-        # 3. Evaluate Smart Order Router (SOR) for ticker's spread & imbalance
-        sor_suite = LOBMicrostructureMLSuite().fit_synthetic_microstructure()
-        imbalance = 0.4 if direction == "LONG" else -0.4
-        spread_bps = max(0.5, atr_pct * 0.4)
-        sor_res = sor_suite.evaluate_maker_vs_taker_sor({
-            "imbalance": imbalance,
-            "spread_bps": spread_bps,
-            "queue_ahead": 60
-        })
-
-        return {
-            "success": True,
-            "result": {
-                "ticker": clean_ticker,
-                "p_win": eval_res["win_probability"],
-                "win_rate_pct": eval_res["win_rate_pct"],
-                "p_std": eval_res["prediction_uncertainty_std"],
-                "rank_score": eval_res["rank_score"],
-                "hmm_regime": eval_res["hmm_regime"],
-                "volatility_penalty": eval_res["volatility_penalty"],
-                "expected_rr": eval_res["expected_rr"],
-                "expected_value_r": eval_res["expected_value_r"],
-                "kelly_fraction": eval_res["kelly_fraction"],
-                "is_positive_ev": eval_res["is_positive_ev"],
-                "ev_status": eval_res["ev_status"],
-                "sor_decision": sor_res
-            }
-        }
-    except Exception as e:
-        return {"success": False, "error": str(e)}
+    return {
+        "success": False,
+        "status": "unavailable",
+        "ticker": ticker.strip().upper(),
+        "result": None,
+        "error": "Legacy ML predictions used proxy or synthetic features and are retired. Use /api/research/latest_results; real-L1 ML is unavailable until captured data is trained and tested out of sample.",
+    }
 
 
 @app.get("/api/ml/lab_data")
 def get_ml_lab_data(ticker: str = "MSTR"):
-    """
-    Returns real, empirically derived quantitative data points from our actual ML models:
-    - Real scatter coordinates (OFI vs MicroVelocity) from actual 5m bars labeled by trade outcome.
-    - Real 3D Loss Basin contour coordinates based on alpha loss.
-    - Real HMM Market Regime cluster centroids and variance bounds.
-    - Real Platt Sigmoid calibration curve points.
-    - Real PCA factor variance loadings.
-    """
-    clean_ticker = ticker.strip().upper()
-    try:
-        from app.alpha_engine import InstitutionalAlphaEngine
-        from app.ml.market_regime_hmm import MarketRegimeHMM
-
-        engine = InstitutionalAlphaEngine()
-        hmm_classifier = MarketRegimeHMM()
-
-        # Generate deterministic real scatter points based on ticker's actual statistical distribution
-        t_seed = sum(ord(c) for c in clean_ticker)
-        np.random.seed(t_seed)
-
-        # 1. Real OFI vs Microprice Velocity Scatter Points (50 samples)
-        scatter_points = []
-        for i in range(50):
-            # Bullish cluster
-            if i < 25:
-                ofi = float(np.random.normal(0.45, 0.25))
-                vel = float(np.random.normal(0.20, 0.12))
-                win = 1 if (ofi * 0.6 + vel * 1.5) > 0.10 else 0
-            else:
-                # Bearish cluster
-                ofi = float(np.random.normal(-0.40, 0.25))
-                vel = float(np.random.normal(-0.18, 0.12))
-                win = 0 if (ofi * 0.6 + vel * 1.5) < -0.10 else 1
-
-            scatter_points.append({
-                "ofi": round(float(np.clip(ofi, -1.0, 1.0)), 3),
-                "velocity": round(float(np.clip(vel, -0.6, 0.6)), 3),
-                "outcome": win, # 1=Profit (Green), 0=Loss (Red)
-                "action": "LONG" if win == 1 else "SHORT"
-            })
-
-        # 2. Real PCA Factor Loadings for 5 Live Factors
-        pca_factors = [
-            {"factor": "OFI (订单流失衡)", "pc1": 0.48, "pc2": -0.15, "variance_explained": "42.5%"},
-            {"factor": "Microprice Vel (微观速度)", "pc1": 0.52, "pc2": 0.22, "variance_explained": "28.1%"},
-            {"factor": "VPIN (知情交易毒性)", "pc1": -0.38, "pc2": 0.65, "variance_explained": "14.2%"},
-            {"factor": "RVOL (相对成交量)", "pc1": 0.41, "pc2": 0.45, "variance_explained": "9.8%"},
-            {"factor": "VWAP Deviation (偏离度)", "pc1": -0.44, "pc2": -0.56, "variance_explained": "5.4%"}
-        ]
-
-        # 3. Real HMM Market Regime Clusters
-        regime_clusters = [
-            {"regime": "单边牛市 (Trend Bull)", "centroid_mom": "+0.32%", "centroid_vol": "1.2% ATR", "win_rate": "78.4%", "color": "#22c55e"},
-            {"regime": "震荡箱体 (Chop Range)", "centroid_mom": "±0.04%", "centroid_vol": "0.6% ATR", "win_rate": "71.2%", "color": "#f59e0b"},
-            {"regime": "恐慌洗盘 (Panic Crash)", "centroid_mom": "-0.45%", "centroid_vol": "2.4% ATR", "win_rate": "41.0%", "color": "#ef4444"}
-        ]
-
-        return {
-            "success": True,
-            "ticker": clean_ticker,
-            "dataset_rows": 94040,
-            "scatter_points": scatter_points,
-            "pca_factors": pca_factors,
-            "regime_clusters": regime_clusters,
-            "loss_mse_final": 0.0024,
-            "platt_scale_slope": 1.42,
-            "platt_scale_intercept": -0.18
-        }
-    except Exception as e:
-        return {"success": False, "error": str(e)}
+    """Expose research availability without generating fictitious model results."""
+    from app.research_lab_data import get_ml_lab_payload
+    return get_ml_lab_payload(ticker)
 
 
 @app.get("/api/watchlist")
@@ -2212,50 +1886,26 @@ def close_individual_live_position(payload: dict):
 
 @app.get("/api/ml/model_zoo")
 def get_ml_model_zoo_predictions():
-    try:
-        from app.ml.ml_model_zoo import QuantMLModelZoo
-        zoo = QuantMLModelZoo.load_zoo()
-        # Sample joint prediction
-        sample_df = pd.DataFrame([{
-            "feature_rvol": 1.45, "feature_vwap_dist_pct": 0.35, "feature_mom_3_pct": 1.20,
-            "feature_mom_10_pct": 2.10, "feature_atr_pct": 1.80, "feature_high_to_now_pct": -0.5,
-            "feature_low_to_now_pct": 1.2, "feature_session_range_pct": 2.1, "feature_upper_wick_ratio": 0.15,
-            "feature_lower_wick_ratio": 0.25, "feature_mom_decay": 0.05, "feature_vwap_overextension": 0.30
-        }])
-        pred = zoo.predict_joint(sample_df)
-        return {
-            "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
-            "status": "LIVE_ACTIVE",
-            "model_zoo_predictions": pred
-        }
-    except Exception as e:
-        return {"status": "ERROR", "message": str(e)}
+    return {
+        "success": False, "status": "unavailable", "result": None,
+        "error": "The model-zoo endpoint used a fixed example row, not current market data or a verified research artifact.",
+    }
+
 
 @app.get("/api/ml/regime_hmm")
 def get_market_regime_hmm():
-    try:
-        from app.ml.market_regime_hmm import MarketRegimeHMM
-        hmm = MarketRegimeHMM.load()
-        # Return live regime probabilities
-        res = hmm.predict_regime_probabilities(pd.DataFrame())
-        res["timestamp"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
-        res["status"] = "LIVE_ACTIVE"
-        return res
-    except Exception as e:
-        return {"status": "ERROR", "message": str(e)}
+    return {
+        "success": False, "status": "unavailable", "result": None,
+        "error": "A regime cannot be inferred from an empty input frame. Provide a versioned market-data research artifact first.",
+    }
+
 
 @app.get("/api/ml/deflated_sharpe")
 def audit_deflated_sharpe(num_trials: int = Query(50)):
-    try:
-        from app.ml.deflated_sharpe_auditor import DeflatedSharpeAuditor
-        auditor = DeflatedSharpeAuditor(num_trials=num_trials)
-        dummy_ret = np.random.normal(0.001, 0.015, 200)
-        res = auditor.audit_strategy(dummy_ret)
-        res["timestamp"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
-        res["status"] = "LIVE_ACTIVE"
-        return res
-    except Exception as e:
-        return {"status": "ERROR", "message": str(e)}
+    return {
+        "success": False, "status": "unavailable", "result": None,
+        "error": "Deflated Sharpe must be calculated from recorded strategy returns, not random demonstration returns.",
+    }
 
 
 # 静态文件托管（前端 React 构建产物及复盘看板）

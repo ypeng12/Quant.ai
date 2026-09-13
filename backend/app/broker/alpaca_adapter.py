@@ -23,6 +23,26 @@ except ImportError:
     HAS_ALPACA_SDK = False
 
 class AlpacaAdapter:
+    @staticmethod
+    def _submission_error_status(exc) -> str:
+        """Only an unambiguous broker refusal is eligible for a fresh attempt.
+
+        Alpaca documents 40310000 insufficient buying power as rejection, while
+        duplicate client_order_id and transport timeouts require order lookup:
+        https://alpaca.markets/learn/how-to-fix-common-trading-api-errors-at-alpaca
+        """
+        try:
+            from alpaca.common.exceptions import APIError
+            from pydantic import ValidationError
+            if isinstance(exc, ValidationError):
+                return "rejected"  # Local request validation; nothing was sent.
+            if (isinstance(exc, APIError) and exc.status_code == 403
+                    and exc.code == 40310000 and str(exc.message).lower().startswith("insufficient ")):
+                return "rejected"
+        except (ImportError, ValueError, TypeError, KeyError, AttributeError):
+            pass
+        return "submission_unknown"
+
     def __init__(self, api_key: Optional[str] = None, api_secret: Optional[str] = None, base_url: Optional[str] = None):
         # Auto load .env from backend/.env or root .env
         cur_dir = os.path.dirname(os.path.abspath(__file__))
@@ -163,6 +183,7 @@ class AlpacaAdapter:
         except Exception as e:
             return {
                 "success": False,
+                "status": self._submission_error_status(e),
                 "error": str(e),
                 "message": f"Failed to submit market order for {symbol}: {str(e)}"
             }

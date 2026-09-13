@@ -1,0 +1,11 @@
+{
+  "candidate": {
+    "name": "l1_ridge",
+    "features": "l1",
+    "model": "ridge",
+    "portfolio": "joint"
+  },
+  "cost_bps": 5.0,
+  "status": "unavailable",
+  "reason": "Real L1 unavailable for SPY"
+}

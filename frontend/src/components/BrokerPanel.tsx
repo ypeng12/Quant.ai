@@ -32,6 +32,8 @@ interface TradeRecord {
   shares: number;
   price: number;
   pnl: number;
+  matched_closing_qty?: number;
+  pnl_complete?: boolean;
   reason: string;
 }
 
@@ -43,7 +45,8 @@ interface TodaySummary {
   losses: number;
   win_rate: number;
   realized_pnl: number;
-  alpaca_official_pnl: number;
+  alpaca_official_pnl: number | null;
+  unknown_basis_trades?: number;
   unrealized_pnl: number;
   total_pnl: number;
   best_trade: number;
@@ -54,72 +57,33 @@ interface BrokerPanelProps {
   watchlist?: string[];
 }
 
+interface PolicyOpportunity {
+  ticker: string;
+  expected_return_bps: number;
+  target_weight: number;
+  bar_time: string;
+  model: string;
+}
+
 type ActiveTab = 'portfolio' | 'analysis' | 'actions' | 'history' | 'wave';
 
+// Broker BUY/SELL is preserved: a BUY can close a short. Prefer matched lots
+// over the old action label, and never present missing cost basis as zero PnL.
+const isMatchedClose = (trade: TradeRecord) => trade.matched_closing_qty !== undefined
+  ? trade.matched_closing_qty > 0
+  : ['SELL', 'COVER', 'PARTIAL_SELL', 'PARTIAL_COVER'].includes(trade.action);
+const hasKnownClosePnl = (trade: TradeRecord) => isMatchedClose(trade)
+  && trade.pnl_complete !== false && Number.isFinite(trade.pnl);
+
 export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
-  // Read persistent cached account & todaySummary from localStorage on cold startup
-  const getInitialAccount = () => {
-    try {
-      const saved = localStorage.getItem('cached_account');
-      if (saved) return JSON.parse(saved);
-    } catch (e) {}
-    return {
-      success: true,
-      account_number: "PA39102938 (Paper)",
-      status: "ACTIVE",
-      currency: "USD",
-      cash: 54050.33,
-      portfolio_value: 54050.33,
-      buying_power: 216201.32,
-      multiplier: 4.0,
-      shorting_enabled: true,
-      equity: 54050.33,
-      today_pnl: -2262.57,
-      today_pnl_pct: -4.02,
-      is_simulated: true
-    };
-  };
-
-  const getInitialTodaySummary = () => {
-    try {
-      const saved = localStorage.getItem('cached_today_summary');
-      if (saved) return JSON.parse(saved);
-    } catch (e) {}
-    return {
-      date: '2026-08-26',
-      total_trades: 0,
-      closed_trades: 0,
-      wins: 0,
-      losses: 0,
-      win_rate: 0,
-      realized_pnl: -2262.57,
-      alpaca_official_pnl: -2262.57,
-      unrealized_pnl: 0,
-      total_pnl: -2262.57,
-      best_trade: 0,
-      worst_trade: 0
-    };
-  };
-
-  const getInitialPositions = () => {
-    try {
-      const saved = localStorage.getItem('cached_positions');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) return parsed;
-      }
-    } catch (e) {}
-    return [];
-  };
-
-  const [account, setAccount] = useState<any | null>(getInitialAccount);
-  const [positions, setPositions] = useState<BrokerPosition[]>(getInitialPositions);
-  const [isBotRunning, setIsBotRunning] = useState<boolean>(true);
+  const [account, setAccount] = useState<any | null>(null);
+  const [positions, setPositions] = useState<BrokerPosition[]>([]);
+  const [isBotRunning, setIsBotRunning] = useState<boolean>(false);
   const [activeTickers, setActiveTickers] = useState<string[]>([]);
   const [actionFeed, setActionFeed] = useState<string[]>([]);
   const [analysisFeed, setAnalysisFeed] = useState<string[]>([]);
   const [tradeHistory, setTradeHistory] = useState<TradeRecord[]>([]);
-  const [todaySummary, setTodaySummary] = useState<TodaySummary | null>(getInitialTodaySummary);
+  const [todaySummary, setTodaySummary] = useState<TodaySummary | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -131,8 +95,9 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
   const [extPrice, setExtPrice] = useState(300.0);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<ActiveTab>('analysis');
-  const [isMarketOpen, setIsMarketOpen] = useState<boolean>(true);
-  const [tickerScores, setTickerScores] = useState<Record<string, number>>({});
+  const [isMarketOpen, setIsMarketOpen] = useState<boolean>(false);
+  const [opportunities, setOpportunities] = useState<Record<string, PolicyOpportunity>>({});
+  const [policyState, setPolicyState] = useState<{ state: string; reason?: string } | null>(null);
 
   const handleClosePosition = async (ticker: string) => {
     if (!window.confirm(`Are you sure you want to force close position for ${ticker}?`)) {
@@ -179,8 +144,10 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
         if (statusJson && statusJson.success) {
           setIsBotRunning(statusJson.status.is_running);
           if (statusJson.status.is_market_open !== undefined) setIsMarketOpen(statusJson.status.is_market_open);
-          if (statusJson.status.active_tickers) setActiveTickers(statusJson.status.active_tickers);
-          if (statusJson.status.ticker_scores) setTickerScores(statusJson.status.ticker_scores);
+          const monitored = statusJson.status.active_tickers || statusJson.status.monitored_tickers;
+          if (monitored) setActiveTickers(monitored);
+          setOpportunities(Object.fromEntries((statusJson.status.intraday_opportunities || []).map((op: PolicyOpportunity) => [op.ticker, op])));
+          setPolicyState(statusJson.status.quant_policy || null);
         }
       }).catch(e => console.error(e));
 
@@ -383,9 +350,10 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
           </div>
           <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
             {isBotRunning
-              ? 'Evaluating long/short signals every 30s and submitting orders directly to Alpaca.'
+              ? 'Forecasts update on completed 5-minute bars; portfolio targets account for risk and trading costs.'
               : 'Click Start to enable AI execution. Automatically manages trades and risk controls.'}
           </p>
+          {policyState && <p style={{ marginBottom: 0, fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>Policy: {policyState.state}{policyState.reason ? ` · ${policyState.reason}` : ''}</p>}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
           {!isBotRunning ? (
@@ -419,40 +387,21 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
           <span style={{ color: 'var(--color-green)', fontWeight: 700 }}>🎯 AI Live Watchlist:</span>
-          {activeTickers.map((t, idx) => {
-            const score = tickerScores[t] !== undefined ? tickerScores[t] : 0;
-            let badgeBg = 'rgba(255,255,255,0.06)';
-            let badgeBorder = '1px solid rgba(255,255,255,0.12)';
-            let badgeColor = '#888';
-            let labelText = `🔍 ${t}`;
-
-            if (idx === 0) {
-              badgeBg = 'linear-gradient(135deg, rgba(0,200,5,0.25) 0%, rgba(16,185,129,0.3) 100%)';
-              badgeBorder = '1px solid rgba(0,200,5,0.8)';
-              badgeColor = '#fff';
-              labelText = `🔥 ${t}`;
-            } else if (idx === 1) {
-              badgeBg = 'rgba(100, 180, 255, 0.2)';
-              badgeBorder = '1px solid #64b4ff';
-              badgeColor = '#64b4ff';
-              labelText = `⚡ ${t}`;
-            } else if (score >= 35) {
-              badgeBg = 'rgba(255, 193, 7, 0.15)';
-              badgeBorder = '1px solid #ffc107';
-              badgeColor = '#ffc107';
-              labelText = `🔍 ${t}`;
-            }
+          {activeTickers.map((t) => {
+            const op = opportunities[t];
+            const hasForecast = Number.isFinite(op?.expected_return_bps) && Number.isFinite(op?.target_weight);
+            const labelText = hasForecast ? `${t} · ${op.expected_return_bps >= 0 ? '+' : ''}${op.expected_return_bps.toFixed(1)} bps · target ${(op.target_weight * 100).toFixed(1)}%` : t;
 
             return (
               <span
                 key={t}
-                title={`AI Multi-Factor Score: ${score}/100`}
+                title={hasForecast ? `${op.model} · completed bar ${op.bar_time}` : 'No current forecast'}
                 style={{
-                  background: badgeBg,
-                  border: badgeBorder,
+                  background: 'rgba(255,255,255,0.06)',
+                  border: '1px solid rgba(255,255,255,0.12)',
                   padding: '3px 10px',
                   borderRadius: '6px',
-                  color: badgeColor,
+                  color: hasForecast ? '#7dd3fc' : '#888',
                   fontWeight: 800,
                   fontSize: '0.78rem',
                   display: 'inline-flex',
@@ -475,7 +424,7 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
         const curDate = selectedDate || todaySummary?.date || (tradeHistory.length > 0 ? (tradeHistory[0].date || tradeHistory[0].time?.slice(0, 10))?.trim() : new Date().toLocaleDateString('sv-SE'));
         const closedToday = tradeHistory.filter(t => {
           const d = (t.date || t.time?.slice(0, 10))?.trim();
-          return d === curDate && (t.action === 'SELL' || t.action === 'COVER');
+          return d === curDate && hasKnownClosePnl(t);
         });
         const calcWins = closedToday.filter(t => (t.pnl || 0) > 0).length;
         const calcLosses = closedToday.filter(t => (t.pnl || 0) < 0).length;
@@ -484,7 +433,8 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
 
 
         const formatMoney = (val: number | undefined | null, forceSign = true): string => {
-          const num = typeof val === 'number' && isFinite(val) ? val : 0;
+          if (typeof val !== 'number' || !Number.isFinite(val)) return '—';
+          const num = val;
           const absStr = Math.abs(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
           if (num > 0.0001) return forceSign ? `+$${absStr}` : `$${absStr}`;
           if (num < -0.0001) return `-$${absStr}`;
@@ -498,7 +448,7 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
         const winRatePct = (todaySummary?.win_rate !== undefined) ? todaySummary.win_rate : calcWinRate;
         const realizedPnl = todaySummary?.realized_pnl ?? closedToday.reduce((sum, t) => sum + (t.pnl || 0), 0);
         const unrealizedPnl = todaySummary?.unrealized_pnl ?? positions.reduce((sum, p) => sum + (p.unrealized_pnl || 0), 0);
-        // Mathematical Law: Net PnL = Realized PnL + Unrealized PnL exactly
+        // Matched-fill attribution; broker account change is reported separately.
         const netPnlVal = Number((realizedPnl + unrealizedPnl).toFixed(2));
         const alpacaAccountDelta = todaySummary?.alpaca_official_pnl;
 
@@ -514,13 +464,15 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
           <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(5, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
             {/* 1. Today Net PnL */}
             <div className="stat-card" style={{ background: '#09090b', border: `1px solid ${netPnlVal >= 0 ? 'rgba(0,200,5,0.3)' : 'rgba(255,59,48,0.3)'}`, padding: '1.25rem' }}>
-              <span className="stat-label">Today Net PnL</span>
+              <span className="stat-label">Matched PnL + Floating</span>
               <span className="stat-value" style={{ fontSize: '1.4rem', fontWeight: 900, color: netPnlVal >= 0 ? 'var(--color-green)' : 'var(--color-red)' }}>
                 {formatMoney(netPnlVal)}
               </span>
               <div style={{ fontSize: '0.72rem', color: '#888', marginTop: '4px' }}>
                 Realized: <span style={{ color: realizedPnl >= 0 ? '#00c805' : '#ff3b30', fontWeight: 700 }}>{formatMoney(realizedPnl)}</span> | Floating: <span style={{ color: unrealizedPnl >= 0 ? '#00c805' : '#ff3b30', fontWeight: 700 }}>{formatMoney(unrealizedPnl)}</span>
               </div>
+              <div style={{ fontSize: '0.72rem', color: '#888', marginTop: '4px' }}>Broker account change: {formatMoney(alpacaAccountDelta)}</div>
+              {!!todaySummary?.unknown_basis_trades && <div style={{ fontSize: '0.72rem', color: '#fbbf24', marginTop: '4px' }}>{todaySummary.unknown_basis_trades} fills have unknown opening cost; attribution is incomplete.</div>}
             </div>
 
             {/* 2. Win Rate */}
@@ -904,19 +856,14 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
         if (todayStr && !availableDates.includes(todayStr)) {
           availableDates.unshift(todayStr);
         }
-        const displayTrades = [...tradeHistory].filter((t, _idx, arr) => {
+        const displayTrades = [...tradeHistory].filter(t => {
           const d = (t.date || t.time?.slice(0, 10))?.trim();
-          if (d !== effectiveDate) return false;
-          if (t.reason === 'Alpaca Broker Executed Sync') {
-            const hasBotTrade = arr.some(t2 => t2.ticker === t.ticker && t2.shares === t.shares && t2.reason !== 'Alpaca Broker Executed Sync' && (t2.date || t2.time?.slice(0, 10))?.trim() === d);
-            if (hasBotTrade) return false;
-          }
-          return true;
+          return d === effectiveDate;
         }).reverse();
 
         // Calculate metrics for selected date
         const totalTradesCount = displayTrades.length;
-        const closedTrades = displayTrades.filter(t => t.action === 'SELL' || t.action === 'COVER' || t.action === 'PARTIAL_SELL' || t.action === 'PARTIAL_COVER');
+        const closedTrades = displayTrades.filter(hasKnownClosePnl);
         const winsCount = closedTrades.filter(t => (t.pnl || 0) > 0).length;
         const lossesCount = closedTrades.filter(t => (t.pnl || 0) < 0).length;
         const realizedPnl = closedTrades.reduce((sum, t) => sum + (t.pnl || 0), 0);
@@ -928,8 +875,7 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
         displayTrades.forEach(t => {
           if (!tickerMap[t.ticker]) tickerMap[t.ticker] = { trades: [], totalPnl: 0, openAction: null };
           tickerMap[t.ticker].trades.push(t);
-          // Only sum pnl for closed trades (SELL/COVER), not BUY which has pnl=0 but can pollute total
-          if (t.action === 'SELL' || t.action === 'COVER' || t.action === 'PARTIAL_SELL' || t.action === 'PARTIAL_COVER') {
+          if (hasKnownClosePnl(t)) {
             tickerMap[t.ticker].totalPnl += (t.pnl || 0);
           }
           if (t.action === 'BUY' || t.action === 'SHORT') tickerMap[t.ticker].openAction = t.action;
@@ -1041,7 +987,7 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
                           {info.trades.length} trades
                         </div>
                         <div style={{ fontSize: '1.15rem', fontWeight: 900, marginTop: '6px', color: isWin ? 'var(--color-green)' : isLoss ? 'var(--color-red)' : '#666' }}>
-                          {info.totalPnl === 0 ? 'Open...' : `${info.totalPnl > 0 ? '+' : ''}$${info.totalPnl.toFixed(2)}`}
+                          {info.trades.some(hasKnownClosePnl) ? `${info.totalPnl > 0 ? '+' : ''}$${info.totalPnl.toFixed(2)}` : 'Unrealized / unknown'}
                         </div>
                       </div>
                     );
@@ -1064,7 +1010,7 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
                   <tbody>
                     {displayTrades.map((trade: TradeRecord, idx: number) => {
                       const st = getActionStyle(trade.action);
-                      const hasPnl = trade.pnl !== 0;
+                      const hasPnl = hasKnownClosePnl(trade);
                       return (
                         <tr key={idx} style={{ borderLeft: `3px solid ${hasPnl && trade.pnl > 0 ? 'rgba(0,200,5,0.55)' : hasPnl && trade.pnl < 0 ? 'rgba(255,59,48,0.55)' : 'rgba(255,255,255,0.07)'}` }}>
                           <td style={{ color: 'var(--color-text-secondary)', fontSize: '0.75rem', whiteSpace: 'nowrap', paddingLeft: '10px' }}>
@@ -1082,7 +1028,7 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
                             {trade.reason}
                           </td>
                           <td style={{ textAlign: 'right', fontWeight: 900, fontSize: '0.9rem', color: hasPnl ? (trade.pnl >= 0 ? 'var(--color-green)' : 'var(--color-red)') : '#555' }}>
-                            {hasPnl ? `${trade.pnl >= 0 ? '+' : ''}$${trade.pnl.toFixed(2)}` : 'Open'}
+                            {hasPnl ? `${trade.pnl >= 0 ? '+' : ''}$${trade.pnl.toFixed(2)}` : trade.pnl_complete === false ? 'Unknown basis' : 'Open'}
                           </td>
                         </tr>
                       );

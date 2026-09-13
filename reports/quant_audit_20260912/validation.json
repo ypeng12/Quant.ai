@@ -1,0 +1,17 @@
+{
+  "base_commit": "fc6f367",
+  "tests_passed": 27,
+  "subtests_passed": 8,
+  "frontend_build": "passed",
+  "python": "3.11.3",
+  "numpy": "1.26.4",
+  "pandas": "2.3.3",
+  "sklearn": "1.7.2",
+  "script_sha256": {
+    "scripts/audit_trade_ledger.py": "4a65b36e8dc4684f27081e6f859c99dfb37f67e307087a83052d8ef16b56051b",
+    "scripts/run_causal_week_replay.py": "c087c332c492730da1402b4a8fed8247aa0838199e2debde8c1ccb8c4bddcb7c",
+    "backend/app/research/causal_week_replay.py": "b96264a34e9675bcf242a5dbe6881a475176015f34362c1553963b4dd8729011"
+  },
+  "full_repository_test_suite_run": false,
+  "broker_connected": false
+}

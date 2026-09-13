@@ -1,0 +1,17 @@
+{
+  "start": "2026-08-31",
+  "end": "2026-09-11",
+  "sessions": 9,
+  "starting_equity": 100000.0,
+  "ending_equity": 92578.91833559245,
+  "net_pnl": -7421.081664407553,
+  "net_return": -0.07421081664407558,
+  "gross_pnl": 5184.396827699096,
+  "costs": 12605.47849210665,
+  "turnover_dollars": 63027392.46053314,
+  "fill_count": 2966,
+  "max_drawdown": -0.11042297304242843,
+  "max_gross_exposure": 0.9592063780562702,
+  "max_symbol_exposure": 0.705814998517517,
+  "profitable_sessions": 3
+}

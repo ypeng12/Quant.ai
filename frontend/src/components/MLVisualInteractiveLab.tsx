@@ -1,4 +1,15 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
+import { API_BASE } from '../config';
+import { PolicyResearchResults } from './PolicyResearchResults';
+import type { PolicyResearchSummary } from './PolicyResearchResults';
+
+interface LabData {
+  success: boolean;
+  status: 'unavailable' | 'complete';
+  ticker: string;
+  data_provenance: { verification_status: 'unverified' | 'artifact_verified'; reason: string };
+  research?: PolicyResearchSummary;
+}
 
 interface MLCardProps {
   title: string;
@@ -21,6 +32,9 @@ const MLCard: React.FC<MLCardProps> = ({ title, subtitle, tags, description, chi
       transition: 'all 0.2s ease',
     }}>
       {/* Visual Canvas Area */}
+      <div style={{ color: '#fbbf24', fontSize: '0.72rem', marginBottom: '8px' }}>
+        教学示意 · 图形与数值不代表所选股票的模型结果
+      </div>
       <div style={{
         background: '#020617',
         borderRadius: '8px',
@@ -73,40 +87,39 @@ const MLCard: React.FC<MLCardProps> = ({ title, subtitle, tags, description, chi
 
 export const MLVisualInteractiveLab: React.FC = () => {
   const [selectedTicker, setSelectedTicker] = useState<string>('MSTR');
-  const [labData, setLabData] = useState<any>(null);
+  const [labData, setLabData] = useState<LabData | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
-  const [epoch, setEpoch] = useState<number>(25);
+  const [error, setError] = useState<string | null>(null);
+  const [illustrationStep, setIllustrationStep] = useState<number>(25);
 
   useEffect(() => {
-    fetchLabData(selectedTicker);
+    const controller = new AbortController();
+    setLabData(null);
+    setError(null);
+    setLoading(true);
+    const fetchLabData = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/ml/lab_data?ticker=${encodeURIComponent(selectedTicker)}`, { signal: controller.signal });
+        if (!res.ok) throw new Error(`研究数据请求失败 (HTTP ${res.status})`);
+        const data = await res.json();
+        if (!data?.success || data.ticker !== selectedTicker || !['unavailable', 'complete'].includes(data.status) ||
+            !['unverified', 'artifact_verified'].includes(data.data_provenance?.verification_status) ||
+            (data.status === 'complete' && (!data.research?.portfolio || !Array.isArray(data.research?.trials))) ||
+            typeof data.data_provenance?.reason !== 'string') {
+          throw new Error('研究数据来源或响应格式尚未核验。');
+        }
+        if (!controller.signal.aborted) setLabData(data);
+      } catch (e) {
+        if (!controller.signal.aborted) setError(e instanceof Error ? e.message : '研究数据请求失败');
+      } finally {
+        if (!controller.signal.aborted) setLoading(false);
+      }
+    };
+    void fetchLabData();
+    return () => controller.abort();
   }, [selectedTicker]);
 
-  const fetchLabData = async (ticker: string) => {
-    setLoading(true);
-    try {
-      const res = await fetch(`/api/ml/lab_data?ticker=${ticker}`);
-      const data = await res.json();
-      if (data.success) {
-        setLabData(data);
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Auto animation for interactive demo
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setEpoch((prev) => (prev >= 100 ? 1 : prev + 1));
-    }, 150);
-    return () => clearInterval(interval);
-  }, []);
-
-  const scatterPoints = labData?.scatter_points || [];
-  const pcaFactors = labData?.pca_factors || [];
-  const regimeClusters = labData?.regime_clusters || [];
+  const currentData = labData?.ticker === selectedTicker ? labData : null;
 
   return (
     <div style={{ padding: '24px', background: '#090d16', color: '#f8fafc', minHeight: '100vh', fontFamily: 'Inter, system-ui, sans-serif' }}>
@@ -132,7 +145,7 @@ export const MLVisualInteractiveLab: React.FC = () => {
             </h1>
           </div>
           <p style={{ margin: 0, fontSize: '0.9rem', color: '#94a3b8', maxWidth: '800px', lineHeight: '1.5' }}>
-            <strong>100% 真实量化模型数据驱动</strong>：每一个几何点云、超平面和聚类分布均直接提取自 <strong>[{selectedTicker}]</strong> 真实 94,040 行 Tick / K线 与 LightGBM 拟合权重！
+            <strong>机器学习教学示意</strong>：下方图形用于解释模型概念。所选股票的实测点云、PCA、HMM、损失与概率校准结果尚未核验。
           </p>
         </div>
 
@@ -172,11 +185,11 @@ export const MLVisualInteractiveLab: React.FC = () => {
           </div>
 
           <div>
-            <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 700 }}>动态训练迭代 (Epoch)</div>
-            <div style={{ fontSize: '1.2rem', fontWeight: 900, color: '#38bdf8' }}>#{epoch} / 100</div>
+            <label htmlFor="ml-lab-illustration" style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 700 }}>教学图形位置（手动）</label>
+            <input id="ml-lab-illustration" type="range" min={1} max={100} value={illustrationStep} onChange={(e) => setIllustrationStep(Number(e.target.value))} />
           </div>
           <button
-            onClick={() => setEpoch(1)}
+            onClick={() => setIllustrationStep(25)}
             style={{
               background: '#2563eb',
               color: '#fff',
@@ -188,10 +201,17 @@ export const MLVisualInteractiveLab: React.FC = () => {
               cursor: 'pointer'
             }}
           >
-            🔄 重置训练
+            重置示意图
           </button>
         </div>
       </div>
+
+      <div role={error ? 'alert' : 'status'} style={{ padding: '16px', marginBottom: '24px', border: '1px solid #92400e', borderRadius: '8px', color: '#fbbf24' }}>
+        <strong>[{selectedTicker}] 实测研究结果：{loading || (!currentData && !error) ? '查询中' : error ? '读取失败' : currentData?.status === 'complete' ? '历史模拟已完成 / 文件已核对' : '暂不可用 / 未验证'}</strong>
+        <p style={{ marginBottom: 0 }}>{error || currentData?.data_provenance.reason || '正在查询研究数据来源。'}</p>
+      </div>
+
+      {currentData?.status === 'complete' && currentData.research && <PolicyResearchResults research={currentData.research} ticker={selectedTicker} />}
 
       {/* Grid of ML Visualizations (Matching User Reference Image) */}
       <div style={{
@@ -214,12 +234,12 @@ export const MLVisualInteractiveLab: React.FC = () => {
               <line x1="0" y1="140" x2="110" y2="140" stroke="#334155" strokeWidth="1" />
               <line x1="0" y1="10" x2="0" y2="140" stroke="#334155" strokeWidth="1" />
               <path
-                d={`M 0,20 Q 30,${60 + (100 - epoch) * 0.5} 110,${130 - epoch * 0.1}`}
+                d={`M 0,20 Q 30,${60 + (100 - illustrationStep) * 0.5} 110,${130 - illustrationStep * 0.1}`}
                 fill="none"
                 stroke="#ef4444"
                 strokeWidth="2"
               />
-              <circle cx={Math.min(110, epoch * 1.1)} cy={Math.max(20, 130 - epoch * 0.8)} r="3" fill="#ef4444" />
+              <circle cx={Math.min(110, illustrationStep * 1.1)} cy={Math.max(20, 130 - illustrationStep * 0.8)} r="3" fill="#ef4444" />
               <text x="50" y="152" fill="#64748b" fontSize="7">Epoch</text>
             </g>
 
@@ -230,15 +250,15 @@ export const MLVisualInteractiveLab: React.FC = () => {
               {[-30, -15, 0, 15, 30].map((offset, i) => (
                 <path
                   key={i}
-                  d={`M ${30 + offset},${90 + i * 8} Q ${75 + offset},${40 + Math.sin((epoch + i) * 0.2) * 15} ${120 + offset},${100 + i * 8}`}
+                  d={`M ${30 + offset},${90 + i * 8} Q ${75 + offset},${40 + Math.sin((illustrationStep + i) * 0.2) * 15} ${120 + offset},${100 + i * 8}`}
                   fill="none"
                   stroke={i % 2 === 0 ? '#38bdf8' : '#a855f7'}
                   strokeWidth="1.5"
                   opacity={0.7}
                 />
               ))}
-              <circle cx="75" cy={55 + Math.sin(epoch * 0.2) * 10} r="4" fill="#22c55e" />
-              <text x="85" y={58 + Math.sin(epoch * 0.2) * 10} fill="#22c55e" fontSize="7" fontWeight="700">w* Optimal</text>
+              <circle cx="75" cy={55 + Math.sin(illustrationStep * 0.2) * 10} r="4" fill="#22c55e" />
+              <text x="85" y={58 + Math.sin(illustrationStep * 0.2) * 10} fill="#22c55e" fontSize="7" fontWeight="700">w* Optimal</text>
             </g>
           </svg>
         </MLCard>
@@ -248,7 +268,7 @@ export const MLVisualInteractiveLab: React.FC = () => {
           title="Backpropagation (反向传播与梯度下降)"
           subtitle="Optimization of neural network weights with gradient descent"
           tags={['Python', 'NumPy', 'Matplotlib']}
-          description="量化应用：通过链式法则将盘口预测误差反向传播，秒级校正因子权重。"
+          description="教学概念：反向传播计算损失梯度；图中轨迹为示意。"
         >
           <svg width="100%" height="220" viewBox="0 0 320 200">
             {/* 3D Loss Bowl */}
@@ -262,15 +282,15 @@ export const MLVisualInteractiveLab: React.FC = () => {
 
               {/* Gradient Descent Step Path */}
               <path
-                d={`M 40,55 Q ${70 + epoch * 0.4},${65 + epoch * 0.1} ${120 - Math.max(0, 30 - epoch * 0.5)},${85 - Math.max(0, 15 - epoch * 0.25)}`}
+                d={`M 40,55 Q ${70 + illustrationStep * 0.4},${65 + illustrationStep * 0.1} ${120 - Math.max(0, 30 - illustrationStep * 0.5)},${85 - Math.max(0, 15 - illustrationStep * 0.25)}`}
                 fill="none"
                 stroke="#f59e0b"
                 strokeWidth="2"
                 strokeDasharray="3,3"
               />
               <circle
-                cx={Math.min(120, 40 + epoch * 0.8)}
-                cy={Math.min(85, 55 + epoch * 0.3)}
+                cx={Math.min(120, 40 + illustrationStep * 0.8)}
+                cy={Math.min(85, 55 + illustrationStep * 0.3)}
                 r="4"
                 fill="#ef4444"
               />
@@ -325,7 +345,7 @@ export const MLVisualInteractiveLab: React.FC = () => {
           title="Logistic Regression (逻辑回归与 Sigmoid 概率)"
           subtitle="Binary classification using maximum likelihood estimation"
           tags={['Python', 'NumPy', 'Matplotlib']}
-          description="量化应用：LightGBM 与概率引擎通过 Sigmoid 将特征得分校准为真实胜率 P_win。"
+          description="教学概念：Sigmoid 可用于概率校准，预测概率仍需在独立样本上验证。"
         >
           <svg width="100%" height="220" viewBox="0 0 320 200">
             {/* Left: Cross Entropy Loss */}
@@ -380,9 +400,9 @@ export const MLVisualInteractiveLab: React.FC = () => {
               {/* Dynamic Hyperplane w·x + b = 0 */}
               <line
                 x1="40"
-                y1={130 - Math.min(100, epoch)}
+                y1={130 - Math.min(100, illustrationStep)}
                 x2="240"
-                y2={30 + Math.max(0, 100 - epoch) * 0.5}
+                y2={30 + Math.max(0, 100 - illustrationStep) * 0.5}
                 stroke="#f59e0b"
                 strokeWidth="2.5"
               />
@@ -418,7 +438,7 @@ export const MLVisualInteractiveLab: React.FC = () => {
                 <circle key={i} cx={45 + (i * 13) % 60} cy={95 + (i * 17) % 35} r="2.5" fill="#38bdf8" />
               ))}
               <line x1="30" y1="120" x2="115" y2="90" stroke="#f59e0b" strokeWidth="2" />
-              <text x="100" y="85" fill="#f59e0b" fontSize="7" fontWeight="700">PC1 (82% Var)</text>
+              <text x="100" y="85" fill="#f59e0b" fontSize="7" fontWeight="700">PC1（示意）</text>
             </g>
 
             {/* Projected 2D Subspace on Right */}
@@ -440,7 +460,7 @@ export const MLVisualInteractiveLab: React.FC = () => {
           title="K-Means Clustering (无监督聚类与市场体制)"
           subtitle="Implementation of unsupervised clustering algorithm"
           tags={['Python', 'NumPy', 'Matplotlib']}
-          description="量化应用：Stage-1 市场体制分类器将盘面自适应聚类为单边牛市、震荡箱体、恐慌暴跌。"
+          description="教学概念：聚类可用于研究市场状态；此处区域不代表当前市场分类。"
         >
           <svg width="100%" height="220" viewBox="0 0 320 200">
             {/* Left: Elbow Method */}
@@ -450,7 +470,7 @@ export const MLVisualInteractiveLab: React.FC = () => {
               <line x1="0" y1="10" x2="0" y2="140" stroke="#334155" strokeWidth="1" />
               <path d="M 5,20 Q 25,110 90,130" fill="none" stroke="#ef4444" strokeWidth="2" />
               <circle cx="28" cy="110" r="3.5" fill="#f59e0b" />
-              <text x="32" y="105" fill="#f59e0b" fontSize="7" fontWeight="700">K=3 最佳</text>
+              <text x="32" y="105" fill="#f59e0b" fontSize="7" fontWeight="700">K=3 示例</text>
             </g>
 
             {/* Right: 3 Voronoi Cluster Regions */}
@@ -499,7 +519,7 @@ export const MLVisualInteractiveLab: React.FC = () => {
 
               {/* Adam (Fastest) */}
               <path d="M 5,25 Q 20,120 100,135" fill="none" stroke="#22c55e" strokeWidth="2" />
-              <text x="70" y="138" fill="#22c55e" fontSize="6" fontWeight="700">Adam (最优)</text>
+              <text x="70" y="138" fill="#22c55e" fontSize="6" fontWeight="700">Adam 示例</text>
             </g>
 
             {/* Right: 2D Contour Optimization Path */}
@@ -514,13 +534,13 @@ export const MLVisualInteractiveLab: React.FC = () => {
 
               {/* Adam Smooth Trajectory */}
               <path
-                d={`M 30,30 Q ${50 + Math.min(20, epoch * 0.3)},${60 + Math.min(15, epoch * 0.2)} 80,80`}
+                d={`M 30,30 Q ${50 + Math.min(20, illustrationStep * 0.3)},${60 + Math.min(15, illustrationStep * 0.2)} 80,80`}
                 fill="none"
                 stroke="#22c55e"
                 strokeWidth="2"
               />
               <circle cx="80" cy="80" r="3.5" fill="#22c55e" />
-              <text x="80" y="93" fill="#22c55e" fontSize="7" textAnchor="middle" fontWeight="900">GLOBAL MIN</text>
+              <text x="80" y="93" fill="#22c55e" fontSize="7" textAnchor="middle" fontWeight="900">ILLUSTRATION</text>
             </g>
           </svg>
         </MLCard>

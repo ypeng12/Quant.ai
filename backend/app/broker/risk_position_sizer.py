@@ -144,12 +144,7 @@ class RiskPositionSizer:
         tier_risk_ratio = tier1_ratio if tier == 1 else tier2_ratio
         trade_risk_budget = equity * self._safe_float(strategy_params.get("max_trade_risk_pct"), 0.025) * tier_risk_ratio
         vol_parity_shares = int(trade_risk_budget / atr_dollar_risk) if atr_dollar_risk > 0 else shares
-        if vol_parity_shares > 0:
-            shares = min(shares, vol_parity_shares)
-
-        # High-price stock protection: ensure at least 1 share if buying power permits
-        if shares == 0 and close_price > 500.0 and available_bp >= close_price * 0.9:
-            shares = 1
+        shares = min(shares, vol_parity_shares)
 
         return {
             "shares": shares,
@@ -183,9 +178,6 @@ class RiskPositionSizer:
         notional = available_bp * min(utilization, probe_bp_pct)
         stop_pct = max(0.001, self._safe_float(opportunity.get("_stop_pct"), 0.0100))
         shares = int(notional / close_price) if close_price > 0 else 0
-        # High-price stock protection (e.g. SNDK > $500/sh): ensure at least 1 share if buying power permits
-        if shares == 0 and close_price > 500.0 and available_bp >= close_price * 0.9:
-            shares = 1
 
         return {
             "shares": shares,
@@ -225,5 +217,4 @@ class RiskPositionSizer:
             "buying_power_fraction": pyramid_bp_pct,
             "stop_pct": stop_pct,
         }
-
 

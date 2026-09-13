@@ -1,0 +1,27 @@
+{
+  "registered_at": "2026-09-13T04:41:54.837488+00:00",
+  "kind": "user_requested_capital_reset_of_already_frozen_policy",
+  "starting_equity": 100000.0,
+  "dates": [
+    "2026-09-08",
+    "2026-09-09",
+    "2026-09-10",
+    "2026-09-11"
+  ],
+  "spec": {
+    "name": "price_volume_h1_g50",
+    "feature_set": "price_volume",
+    "horizon_bars": 1,
+    "ridge_alpha": 10.0,
+    "risk_aversion": 50.0,
+    "cost_bps": 2.0,
+    "gross_limit": 0.95,
+    "symbol_limit": 0.7
+  },
+  "base_summary_sha256": "e1dd0db1aaa59894d7cb13eb06c33bb1a84c53cb85f11344b31ca3b0af415ace",
+  "frozen_selection_sha256": "bbc912704f2baa630818a9f5af48f582f2b1380b6f621e8d28bbc1bcecebe417",
+  "base_registry_sha256": "339268415d7bbc350fd9368922f1cdb688c4fbdd5c2be4770216e7269b4f0493",
+  "supplemental_source_path": "/Users/yuliangpeng/Desktop/Quant/scripts/run_policy_recent_week_reset.py",
+  "supplemental_source_sha256": "cc8dc3accfd996ae157b4d5570a20dc50d7e589bbda9983c6fbc771ad522d7bc",
+  "parameter_selection_performed": false
+}

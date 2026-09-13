@@ -3,6 +3,9 @@
 *.parquet filter=lfs diff=lfs merge=lfs -text
 *.so filter=lfs diff=lfs merge=lfs -text
 
+# Preserve checksummed research evidence byte-for-byte across platforms.
+reports/** -text
+
 # Exclude generated HTML charts, dashboards, and web build outputs from GitHub Linguist language statistics
 *.html linguist-vendored
 *.htm linguist-vendored

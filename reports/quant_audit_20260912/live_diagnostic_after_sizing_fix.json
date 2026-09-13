@@ -1,0 +1,52 @@
+{
+  "diagnostic_only": true,
+  "meaning": "bug_reproduced=true confirms a defect; it does not indicate a passing correctness test",
+  "source_sha256": {
+    "backend/app/broker/live_runner.py": "12458c2b8b4389a2ae73697fca94516393bafad7e29288135e5aae9b39940261",
+    "backend/app/broker/risk_position_sizer.py": "c72f8527c1f22a41a9f178060038bbf9ca8de580f79543225c90d1bd90e9d276"
+  },
+  "negative_ev_entry": {
+    "input": {
+      "p_win_pct": 35.0,
+      "expected_value_r": -0.8,
+      "position": "flat"
+    },
+    "observed": [
+      "BUY",
+      "[LONG_TREND] LONG | P_win=35.0% | E[PnL]=-0.80R | Session=+0.00% | M3=+0.00% | RVOL=1.00x | OFI=+0.00 | 🚀 Quantitative Alpha Model (P_win=35.0%, E[R]=-0.80R) Submitting Order"
+    ],
+    "bug_reproduced": true,
+    "intended_correction": "Use a coherent expected-return decision, rather than silently ignoring predicted edge."
+  },
+  "displayed_stop_not_executed": {
+    "input": {
+      "entry": 100.0,
+      "price": 90.0,
+      "displayed_stop_pct": 0.008
+    },
+    "observed": [
+      "HOLD",
+      "[LONG_TREND] LONG | P_win=35.0% | E[PnL]=-0.80R | Session=+0.00% | M3=+0.00% | RVOL=1.00x | OFI=+0.00 | LONG trend valid, holding with dynamic trailing stop"
+    ],
+    "bug_reproduced": true,
+    "intended_correction": "The documented per-position stop must match actual execution behavior."
+  },
+  "share_exceeds_existing_budget": {
+    "input": {
+      "equity": 1000.0,
+      "buying_power": 950.0,
+      "price": 1000.0
+    },
+    "observed": {
+      "shares": 0,
+      "notional": 0.0,
+      "available_buying_power": 950.0,
+      "buying_power_fraction": 0.0,
+      "risk_budget": 35.0,
+      "stop_pct": 0.025,
+      "tier": 1
+    },
+    "bug_reproduced": false,
+    "intended_correction": "Return quantities that respect the already configured budget."
+  }
+}

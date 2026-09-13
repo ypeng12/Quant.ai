@@ -1,0 +1,204 @@
+{
+  "schema_version": 1,
+  "created_at": "2026-09-13T04:37:42.314173+00:00",
+  "kind": "predeclared_retrospective_walk_forward_shared_policy_research",
+  "target_dates_previously_inspected_in_prior_research": true,
+  "candidate_count": 12,
+  "candidates": [
+    {
+      "name": "price_h1_g10",
+      "feature_set": "price",
+      "horizon_bars": 1,
+      "ridge_alpha": 10.0,
+      "risk_aversion": 10.0,
+      "cost_bps": 2.0,
+      "gross_limit": 0.95,
+      "symbol_limit": 0.7
+    },
+    {
+      "name": "price_h1_g50",
+      "feature_set": "price",
+      "horizon_bars": 1,
+      "ridge_alpha": 10.0,
+      "risk_aversion": 50.0,
+      "cost_bps": 2.0,
+      "gross_limit": 0.95,
+      "symbol_limit": 0.7
+    },
+    {
+      "name": "price_h3_g10",
+      "feature_set": "price",
+      "horizon_bars": 3,
+      "ridge_alpha": 10.0,
+      "risk_aversion": 10.0,
+      "cost_bps": 2.0,
+      "gross_limit": 0.95,
+      "symbol_limit": 0.7
+    },
+    {
+      "name": "price_h3_g50",
+      "feature_set": "price",
+      "horizon_bars": 3,
+      "ridge_alpha": 10.0,
+      "risk_aversion": 50.0,
+      "cost_bps": 2.0,
+      "gross_limit": 0.95,
+      "symbol_limit": 0.7
+    },
+    {
+      "name": "price_h6_g10",
+      "feature_set": "price",
+      "horizon_bars": 6,
+      "ridge_alpha": 10.0,
+      "risk_aversion": 10.0,
+      "cost_bps": 2.0,
+      "gross_limit": 0.95,
+      "symbol_limit": 0.7
+    },
+    {
+      "name": "price_h6_g50",
+      "feature_set": "price",
+      "horizon_bars": 6,
+      "ridge_alpha": 10.0,
+      "risk_aversion": 50.0,
+      "cost_bps": 2.0,
+      "gross_limit": 0.95,
+      "symbol_limit": 0.7
+    },
+    {
+      "name": "price_volume_h1_g10",
+      "feature_set": "price_volume",
+      "horizon_bars": 1,
+      "ridge_alpha": 10.0,
+      "risk_aversion": 10.0,
+      "cost_bps": 2.0,
+      "gross_limit": 0.95,
+      "symbol_limit": 0.7
+    },
+    {
+      "name": "price_volume_h1_g50",
+      "feature_set": "price_volume",
+      "horizon_bars": 1,
+      "ridge_alpha": 10.0,
+      "risk_aversion": 50.0,
+      "cost_bps": 2.0,
+      "gross_limit": 0.95,
+      "symbol_limit": 0.7
+    },
+    {
+      "name": "price_volume_h3_g10",
+      "feature_set": "price_volume",
+      "horizon_bars": 3,
+      "ridge_alpha": 10.0,
+      "risk_aversion": 10.0,
+      "cost_bps": 2.0,
+      "gross_limit": 0.95,
+      "symbol_limit": 0.7
+    },
+    {
+      "name": "price_volume_h3_g50",
+      "feature_set": "price_volume",
+      "horizon_bars": 3,
+      "ridge_alpha": 10.0,
+      "risk_aversion": 50.0,
+      "cost_bps": 2.0,
+      "gross_limit": 0.95,
+      "symbol_limit": 0.7
+    },
+    {
+      "name": "price_volume_h6_g10",
+      "feature_set": "price_volume",
+      "horizon_bars": 6,
+      "ridge_alpha": 10.0,
+      "risk_aversion": 10.0,
+      "cost_bps": 2.0,
+      "gross_limit": 0.95,
+      "symbol_limit": 0.7
+    },
+    {
+      "name": "price_volume_h6_g50",
+      "feature_set": "price_volume",
+      "horizon_bars": 6,
+      "ridge_alpha": 10.0,
+      "risk_aversion": 50.0,
+      "cost_bps": 2.0,
+      "gross_limit": 0.95,
+      "symbol_limit": 0.7
+    }
+  ],
+  "evaluation_dates": [
+    "2026-08-31",
+    "2026-09-01",
+    "2026-09-02",
+    "2026-09-03",
+    "2026-09-04",
+    "2026-09-08",
+    "2026-09-09",
+    "2026-09-10",
+    "2026-09-11"
+  ],
+  "validation_dates": [
+    "2026-08-24",
+    "2026-08-25",
+    "2026-08-26",
+    "2026-08-27",
+    "2026-08-28"
+  ],
+  "selection_method": "preperiod_5_session_compounded_net_return",
+  "selection_tie_break": "first_candidate_in_declared_order",
+  "execution": {
+    "starting_equity": 100000.0,
+    "slippage_bps": 2.0,
+    "commission_bps": 0.0,
+    "gross_limit": 0.95,
+    "symbol_limit": 0.7
+  },
+  "data_hashes": {
+    "SNDK": "edc7503de4599a0d82563a7500f220b6b428d7feadb77826c6a5f74aea4b98f7",
+    "TSLA": "d3a3a6349e39ff26953bf3d9dc2fdeef0d003f9b0d7993f2535a85109886a1c8",
+    "MSTR": "960731e89bc4668b12ea49335d59e60b13dccef2304fce3017da88f034eb00ab",
+    "NVDA": "f2fb1d7b857ff87494f0eb0995cb8d37ba5bb8cd1942d35519da8971d622b0f4"
+  },
+  "data_paths": {
+    "SNDK": "/Users/yuliangpeng/Desktop/Quant/reports/quant_audit_20260912/bars/SNDK.parquet",
+    "TSLA": "/Users/yuliangpeng/Desktop/Quant/reports/quant_audit_20260912/bars/TSLA.parquet",
+    "MSTR": "/Users/yuliangpeng/Desktop/Quant/reports/quant_audit_20260912/bars/MSTR.parquet",
+    "NVDA": "/Users/yuliangpeng/Desktop/Quant/reports/quant_audit_20260912/bars/NVDA.parquet"
+  },
+  "source_hashes": {
+    "backend/app/quant_policy.py": "70fbd28d68f0906944331113512ad055d0b250f5283a652cb12ff6545fa76bd8",
+    "scripts/run_policy_research.py": "ad51c1abdadb62207f757be7d57fabf3630d6a5397dc29d0f8094f92f9f1641b",
+    "backend/app/research/policy_replay.py": "c6305ba810201fca664392fd3a63bd454a5bfef148309c6334ab985b314f71f4"
+  },
+  "diagnostics_predeclared": [
+    "cash",
+    "equal_weight_session",
+    "rolling_past_5_session_selection",
+    "selected_spec_optimizer_cost_zero_with_identical_execution_cost",
+    "selected_spec_fixed_orderflow_5bps_cost_stress"
+  ],
+  "symbol_execution_order": [
+    "SNDK",
+    "TSLA",
+    "MSTR",
+    "NVDA"
+  ],
+  "assumptions": [
+    "All symbols use one cash account with signed integer shares; starting equity is not multiplied per symbol.",
+    "Each forecast/scaler/covariance is fitted only to complete sessions strictly before its trading day.",
+    "Forecast is signed horizon gross return, not calibrated success probability; near-close stationary-rate scaling is shared with live.",
+    "A completed five-minute bar fixes weights and integer shares at its close prices/equity; unchanged integer intent fills next-open subject to feasibility, without latency.",
+    "Each bar marks actual unchanged shares; changed market weights are inputs to the joint turnover-aware objective.",
+    "Reductions precede additions; additions obey cash, gross=.95 and symbol=.70 after costs; price drift is reported.",
+    "All positions liquidate at the precommitted 15:55 opening reference price; actual live market fills need not equal it.",
+    "Every buy/sell pays explicit per-side slippage and commission, including reductions, reversals and liquidation.",
+    "OHLCV does not reproduce real spreads, liquidity, impact, latency, borrow availability/fees, financing or broker rejections.",
+    "All four stocks are assumed shortable in research; real borrow availability is not inferred from bars.",
+    "Intraday drawdown includes open, close and every modeled fill; within-bar path is unknown and unmodeled.",
+    "Target results for all candidates are diagnostic only; selected fixed spec is chosen solely on 8/31-preceding sessions.",
+    "These target dates were already examined in an earlier report; this is retrospective walk-forward, not untouched holdout.",
+    "Twelve candidates and five validation days imply material selection uncertainty; apparent gains are not established edge.",
+    "Baselines and zero-objective-cost ablation are diagnostics outside the declared candidate selection set.",
+    "Fixed-orderflow cost stress reprices identical quantities, may violate limits, and is not an executable revised strategy."
+  ]
+}

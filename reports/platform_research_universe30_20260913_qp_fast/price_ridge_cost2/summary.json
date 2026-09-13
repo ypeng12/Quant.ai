@@ -1,0 +1,652 @@
+{
+  "candidate": {
+    "name": "price_ridge",
+    "features": "price_volume",
+    "model": "ridge",
+    "portfolio": "joint"
+  },
+  "cost_bps": 2.0,
+  "status": "complete",
+  "summary": {
+    "start": "2026-08-31",
+    "end": "2026-09-11",
+    "sessions": 9,
+    "starting_equity": 100000.0,
+    "ending_equity": 101201.26724343636,
+    "net_pnl": 1201.267243436363,
+    "net_return": 0.012012672434363658,
+    "gross_pnl": 8525.59383678449,
+    "costs": 7324.326593348126,
+    "turnover_dollars": 36621632.96674061,
+    "fill_count": 3692,
+    "max_drawdown": -0.04856057001551617,
+    "max_gross_exposure": 0.9571951031573008,
+    "max_symbol_exposure": 0.7069433390299819,
+    "profitable_sessions": 6
+  },
+  "per_symbol": {
+    "SPY": {
+      "net_pnl": 0.0,
+      "costs": 0
+    },
+    "QQQ": {
+      "net_pnl": 0.0,
+      "costs": 0
+    },
+    "IWM": {
+      "net_pnl": 0.0,
+      "costs": 0
+    },
+    "XLK": {
+      "net_pnl": 0.0,
+      "costs": 0
+    },
+    "SOXX": {
+      "net_pnl": -388.850601245118,
+      "costs": 113.76887517089844
+    },
+    "AAPL": {
+      "net_pnl": 683.2685512390392,
+      "costs": 68.1845432434082
+    },
+    "MSFT": {
+      "net_pnl": 134.6795773437516,
+      "costs": 67.72948027343749
+    },
+    "NVDA": {
+      "net_pnl": -242.94464968870489,
+      "costs": 83.05292605590822
+    },
+    "AMD": {
+      "net_pnl": -264.5210439147513,
+      "costs": 250.0029469909668
+    },
+    "AVGO": {
+      "net_pnl": -1556.903991992118,
+      "costs": 550.0235598632812
+    },
+    "MU": {
+      "net_pnl": -911.809617028795,
+      "costs": 152.48753450927734
+    },
+    "SNDK": {
+      "net_pnl": 1503.2239100586485,
+      "costs": 695.0841954101563
+    },
+    "TSLA": {
+      "net_pnl": 633.9813140503866,
+      "costs": 542.1963592895509
+    },
+    "META": {
+      "net_pnl": 993.1721045898657,
+      "costs": 261.73036123046876
+    },
+    "AMZN": {
+      "net_pnl": 436.0690900573686,
+      "costs": 29.88778860473633
+    },
+    "GOOGL": {
+      "net_pnl": -482.8514952148362,
+      "costs": 194.95855087890627
+    },
+    "NFLX": {
+      "net_pnl": 596.1608138198962,
+      "costs": 68.97849129486083
+    },
+    "ORCL": {
+      "net_pnl": -156.73183208007504,
+      "costs": 36.03688579101562
+    },
+    "PLTR": {
+      "net_pnl": -958.9986482116319,
+      "costs": 351.2206635925292
+    },
+    "COIN": {
+      "net_pnl": -491.78738232720934,
+      "costs": 291.62769909973144
+    },
+    "MSTR": {
+      "net_pnl": 1948.9118010941238,
+      "costs": 508.9810593185425
+    },
+    "MARA": {
+      "net_pnl": -1605.151617553016,
+      "costs": 904.7192321084976
+    },
+    "HOOD": {
+      "net_pnl": -508.88175545495324,
+      "costs": 587.3009677963257
+    },
+    "SMCI": {
+      "net_pnl": 1586.7062353058081,
+      "costs": 281.97603855895994
+    },
+    "INTC": {
+      "net_pnl": 249.35492872320538,
+      "costs": 502.28142381591806
+    },
+    "TSM": {
+      "net_pnl": -37.35298843993223,
+      "costs": 54.79061051025391
+    },
+    "CRM": {
+      "net_pnl": -1295.218133679098,
+      "costs": 629.7594544799805
+    },
+    "UBER": {
+      "net_pnl": 1337.742673985289,
+      "costs": 97.54694546051024
+    },
+    "JPM": {
+      "net_pnl": 0.0,
+      "costs": 0
+    },
+    "XLF": {
+      "net_pnl": 0.0,
+      "costs": 0
+    }
+  },
+  "attribution": {
+    "net_pnl": 1201.267243436363,
+    "gross_pnl": 8525.593836784363,
+    "costs": 7324.326593348122,
+    "reconciled": true,
+    "by_symbol": [
+      {
+        "symbol": "AAPL",
+        "gross_pnl": 751.4530944824219,
+        "costs": 68.1845432434082,
+        "net_pnl": 683.2685512390136
+      },
+      {
+        "symbol": "AMD",
+        "gross_pnl": -14.518096923828125,
+        "costs": 250.0029469909668,
+        "net_pnl": -264.5210439147949
+      },
+      {
+        "symbol": "AMZN",
+        "gross_pnl": 465.9568786621094,
+        "costs": 29.88778860473633,
+        "net_pnl": 436.06909005737305
+      },
+      {
+        "symbol": "AVGO",
+        "gross_pnl": -1006.8804321289062,
+        "costs": 550.0235598632812,
+        "net_pnl": -1556.9039919921875
+      },
+      {
+        "symbol": "COIN",
+        "gross_pnl": -200.15968322753906,
+        "costs": 291.62769909973144,
+        "net_pnl": -491.7873823272705
+      },
+      {
+        "symbol": "CRM",
+        "gross_pnl": -665.4586791992188,
+        "costs": 629.7594544799805,
+        "net_pnl": -1295.2181336791991
+      },
+      {
+        "symbol": "GOOGL",
+        "gross_pnl": -287.8929443359375,
+        "costs": 194.95855087890624,
+        "net_pnl": -482.85149521484374
+      },
+      {
+        "symbol": "HOOD",
+        "gross_pnl": 78.4192123413086,
+        "costs": 587.3009677963257,
+        "net_pnl": -508.88175545501707
+      },
+      {
+        "symbol": "INTC",
+        "gross_pnl": 751.6363525390625,
+        "costs": 502.28142381591795,
+        "net_pnl": 249.35492872314452
+      },
+      {
+        "symbol": "MARA",
+        "gross_pnl": -700.4323854446411,
+        "costs": 904.7192321084976,
+        "net_pnl": -1605.1516175531387
+      },
+      {
+        "symbol": "META",
+        "gross_pnl": 1254.9024658203125,
+        "costs": 261.73036123046876,
+        "net_pnl": 993.1721045898438
+      },
+      {
+        "symbol": "MSFT",
+        "gross_pnl": 202.4090576171875,
+        "costs": 67.7294802734375,
+        "net_pnl": 134.67957734375
+      },
+      {
+        "symbol": "MSTR",
+        "gross_pnl": 2457.8928604125977,
+        "costs": 508.98105931854246,
+        "net_pnl": 1948.9118010940551
+      },
+      {
+        "symbol": "MU",
+        "gross_pnl": -759.3220825195312,
+        "costs": 152.48753450927734,
+        "net_pnl": -911.8096170288086
+      },
+      {
+        "symbol": "NFLX",
+        "gross_pnl": 665.1393051147461,
+        "costs": 68.97849129486085,
+        "net_pnl": 596.1608138198852
+      },
+      {
+        "symbol": "NVDA",
+        "gross_pnl": -159.8917236328125,
+        "costs": 83.0529260559082,
+        "net_pnl": -242.9446496887207
+      },
+      {
+        "symbol": "ORCL",
+        "gross_pnl": -120.6949462890625,
+        "costs": 36.03688579101563,
+        "net_pnl": -156.73183208007814
+      },
+      {
+        "symbol": "PLTR",
+        "gross_pnl": -607.7779846191406,
+        "costs": 351.2206635925293,
+        "net_pnl": -958.9986482116699
+      },
+      {
+        "symbol": "SMCI",
+        "gross_pnl": 1868.682273864746,
+        "costs": 281.97603855895994,
+        "net_pnl": 1586.706235305786
+      },
+      {
+        "symbol": "SNDK",
+        "gross_pnl": 2198.30810546875,
+        "costs": 695.0841954101562,
+        "net_pnl": 1503.2239100585937
+      },
+      {
+        "symbol": "SOXX",
+        "gross_pnl": -275.08172607421875,
+        "costs": 113.76887517089844,
+        "net_pnl": -388.85060124511716
+      },
+      {
+        "symbol": "TSLA",
+        "gross_pnl": 1176.1776733398438,
+        "costs": 542.1963592895507,
+        "net_pnl": 633.981314050293
+      },
+      {
+        "symbol": "TSM",
+        "gross_pnl": 17.4376220703125,
+        "costs": 54.790610510253906,
+        "net_pnl": -37.352988439941406
+      },
+      {
+        "symbol": "UBER",
+        "gross_pnl": 1435.2896194458008,
+        "costs": 97.54694546051026,
+        "net_pnl": 1337.7426739852906
+      }
+    ],
+    "by_direction": [
+      {
+        "direction": "long",
+        "gross_pnl": 8474.154664039612,
+        "costs": 4164.079798086357,
+        "net_pnl": 4310.074865953255
+      },
+      {
+        "direction": "short",
+        "gross_pnl": 51.43917274475098,
+        "costs": 3160.2467952617644,
+        "net_pnl": -3108.8076225170134
+      }
+    ],
+    "by_day": [
+      {
+        "date": "2026-08-31",
+        "gross_pnl": 2624.85267162323,
+        "costs": 860.0886390115738,
+        "net_pnl": 1764.7640326116561
+      },
+      {
+        "date": "2026-09-01",
+        "gross_pnl": -1078.4018507003784,
+        "costs": 683.7005157445908,
+        "net_pnl": -1762.1023664449692
+      },
+      {
+        "date": "2026-09-02",
+        "gross_pnl": -2091.5006551742554,
+        "costs": 718.8843752092362,
+        "net_pnl": -2810.3850303834915
+      },
+      {
+        "date": "2026-09-03",
+        "gross_pnl": 2870.9173221588135,
+        "costs": 833.3828034931183,
+        "net_pnl": 2037.5345186656953
+      },
+      {
+        "date": "2026-09-04",
+        "gross_pnl": 1420.7564640045166,
+        "costs": 750.1159491249084,
+        "net_pnl": 670.6405148796082
+      },
+      {
+        "date": "2026-09-08",
+        "gross_pnl": 1006.6683149337769,
+        "costs": 894.3916508443832,
+        "net_pnl": 112.2766640893936
+      },
+      {
+        "date": "2026-09-09",
+        "gross_pnl": -175.00164890289307,
+        "costs": 905.6421457597733,
+        "net_pnl": -1080.6437946626663
+      },
+      {
+        "date": "2026-09-10",
+        "gross_pnl": 1465.8458280563354,
+        "costs": 755.0748136312485,
+        "net_pnl": 710.771014425087
+      },
+      {
+        "date": "2026-09-11",
+        "gross_pnl": 2481.4573907852173,
+        "costs": 923.0457005292892,
+        "net_pnl": 1558.411690255928
+      }
+    ],
+    "by_hour": [
+      {
+        "hour": 9,
+        "gross_pnl": 1547.1544914245605,
+        "costs": 1132.689972554016,
+        "net_pnl": 414.46451887054445
+      },
+      {
+        "hour": 10,
+        "gross_pnl": 2894.9530181884766,
+        "costs": 1764.7988157829284,
+        "net_pnl": 1130.1542024055482
+      },
+      {
+        "hour": 11,
+        "gross_pnl": -443.2867240905762,
+        "costs": 1144.4105544128417,
+        "net_pnl": -1587.697278503418
+      },
+      {
+        "hour": 12,
+        "gross_pnl": 342.06463718414307,
+        "costs": 871.0360873495102,
+        "net_pnl": -528.9714501653672
+      },
+      {
+        "hour": 13,
+        "gross_pnl": 305.45052433013916,
+        "costs": 789.0385214221955,
+        "net_pnl": -483.5879970920563
+      },
+      {
+        "hour": 14,
+        "gross_pnl": 2232.5856342315674,
+        "costs": 738.862968797493,
+        "net_pnl": 1493.7226654340743
+      },
+      {
+        "hour": 15,
+        "gross_pnl": 1646.6722555160522,
+        "costs": 883.4896730291366,
+        "net_pnl": 763.1825824869156
+      }
+    ]
+  },
+  "fixed_order_stress_5bps": {
+    "kind": "fixed_recorded_integer_orderflow_cost_sensitivity",
+    "slippage_bps_per_side": 5,
+    "commission_bps_per_side": 0.0,
+    "starting_equity": 100000,
+    "ending_equity": 90214.7773534142,
+    "net_pnl": -9785.222646585797,
+    "net_return": -0.097852226465858,
+    "extra_cost": 10986.489890022163,
+    "costs": 18310.816483370298,
+    "max_drawdown": -0.10754408595530152,
+    "constraint_breach_marks_including_market_drift": 2873,
+    "requires_feasibility_review": true,
+    "same_quantities_and_reference_prices": true,
+    "daily": [
+      {
+        "date": "2026-08-31",
+        "extra_cost": 1290.1329585173605,
+        "new_cost": 2150.2215975289346,
+        "SNDK_extra_cost": 201.7338105102539,
+        "CRM_extra_cost": 127.89636120758058,
+        "AVGO_extra_cost": 84.24155245056151,
+        "PLTR_extra_cost": 74.97946066589355,
+        "MSTR_extra_cost": 98.01156593856813,
+        "SMCI_extra_cost": 44.78873508682251,
+        "TSLA_extra_cost": 98.45689479675293,
+        "INTC_extra_cost": 48.63378734207153,
+        "AMD_extra_cost": 34.867566366577144,
+        "NVDA_extra_cost": 9.693907012939453,
+        "MU_extra_cost": 42.52902139892578,
+        "MARA_extra_cost": 85.11168907384874,
+        "MSFT_extra_cost": 31.607918170166016,
+        "GOOGL_extra_cost": 97.28062924804688,
+        "TSM_extra_cost": 50.79700354614258,
+        "HOOD_extra_cost": 69.20921606140138,
+        "META_extra_cost": 16.801960656738284,
+        "AAPL_extra_cost": 13.601515979003903,
+        "COIN_extra_cost": 15.460939100646971,
+        "AMZN_extra_cost": 41.90190509948731,
+        "ORCL_extra_cost": 2.5275188049316406
+      },
+      {
+        "date": "2026-09-01",
+        "extra_cost": 1025.5507736168852,
+        "new_cost": 1709.251289361478,
+        "HOOD_extra_cost": 103.5217873535156,
+        "CRM_extra_cost": 212.19471135864262,
+        "MSFT_extra_cost": 27.72145144042969,
+        "MARA_extra_cost": 115.74556902093889,
+        "MSTR_extra_cost": 73.46203874130251,
+        "PLTR_extra_cost": 43.77420315399171,
+        "TSLA_extra_cost": 42.394061380004885,
+        "AVGO_extra_cost": 79.74009143371583,
+        "UBER_extra_cost": 0.2274764991760254,
+        "AAPL_extra_cost": 21.057237762451173,
+        "INTC_extra_cost": 114.54903540573119,
+        "SNDK_extra_cost": 103.42663612060547,
+        "NVDA_extra_cost": 3.297198051452637,
+        "MU_extra_cost": 36.905955340576156,
+        "META_extra_cost": 19.49375982055664,
+        "ORCL_extra_cost": 1.6210717208862304,
+        "COIN_extra_cost": 8.873848622131346,
+        "AMD_extra_cost": 13.49047869873047,
+        "SMCI_extra_cost": 4.054161692047119
+      },
+      {
+        "date": "2026-09-02",
+        "extra_cost": 1078.3265628138536,
+        "new_cost": 1797.2109380230897,
+        "SNDK_extra_cost": 78.56508874511718,
+        "CRM_extra_cost": 193.6173243713379,
+        "PLTR_extra_cost": 51.7113454788208,
+        "MARA_extra_cost": 99.08333995428083,
+        "UBER_extra_cost": 30.168390243530276,
+        "COIN_extra_cost": 21.498959774780275,
+        "MSTR_extra_cost": 48.34462837600708,
+        "MU_extra_cost": 5.636834765624999,
+        "SMCI_extra_cost": 51.3869084072113,
+        "META_extra_cost": 75.37681583862303,
+        "HOOD_extra_cost": 107.82040640487669,
+        "INTC_extra_cost": 24.602636029815674,
+        "TSLA_extra_cost": 97.49380681457518,
+        "SOXX_extra_cost": 12.609734820556639,
+        "GOOGL_extra_cost": 71.72565843200682,
+        "NVDA_extra_cost": 31.753659274292005,
+        "AAPL_extra_cost": 1.1693880065917968,
+        "TSM_extra_cost": 2.2295325531005856,
+        "AVGO_extra_cost": 64.21442329101562,
+        "AMD_extra_cost": 9.317681231689452
+      },
+      {
+        "date": "2026-09-03",
+        "extra_cost": 1250.0742052396783,
+        "new_cost": 2083.457008732794,
+        "SNDK_extra_cost": 111.1286783935547,
+        "HOOD_extra_cost": 75.01594371643066,
+        "AVGO_extra_cost": 236.3476639343262,
+        "MSTR_extra_cost": 80.57651044921874,
+        "PLTR_extra_cost": 83.61935459747316,
+        "COIN_extra_cost": 80.9104050201416,
+        "TSLA_extra_cost": 56.76889908142089,
+        "MARA_extra_cost": 205.85238062267308,
+        "CRM_extra_cost": 12.081185961914063,
+        "UBER_extra_cost": 8.428257556915282,
+        "INTC_extra_cost": 76.07666649627687,
+        "NVDA_extra_cost": 5.048284437561036,
+        "GOOGL_extra_cost": 16.66067471923828,
+        "AMD_extra_cost": 66.46228973693849,
+        "SMCI_extra_cost": 30.08227957077026,
+        "MU_extra_cost": 10.780531988525391,
+        "NFLX_extra_cost": 41.71672291717529,
+        "ORCL_extra_cost": 24.4241001663208,
+        "MSFT_extra_cost": 28.09337587280273
+      },
+      {
+        "date": "2026-09-04",
+        "extra_cost": 1125.1739236873616,
+        "new_cost": 1875.2898728122682,
+        "SNDK_extra_cost": 109.08821502685544,
+        "COIN_extra_cost": 53.75424606170653,
+        "AVGO_extra_cost": 140.1729210662842,
+        "MSTR_extra_cost": 121.5892976257324,
+        "HOOD_extra_cost": 75.86994964599612,
+        "TSLA_extra_cost": 75.28488526611329,
+        "NFLX_extra_cost": 61.75101402511597,
+        "UBER_extra_cost": 26.934761808013914,
+        "MARA_extra_cost": 110.50901367988588,
+        "AMD_extra_cost": 44.93216366271973,
+        "SMCI_extra_cost": 105.71401806793214,
+        "INTC_extra_cost": 58.246614777374276,
+        "META_extra_cost": 22.150539038085938,
+        "CRM_extra_cost": 16.397595492553712,
+        "NVDA_extra_cost": 11.78573827056885,
+        "MU_extra_cost": 25.2493775390625,
+        "PLTR_extra_cost": 25.90941747894287,
+        "SOXX_extra_cost": 20.820904229736332,
+        "TSM_extra_cost": 19.013250924682616
+      },
+      {
+        "date": "2026-09-08",
+        "extra_cost": 1341.5874762665762,
+        "new_cost": 2235.9791271109593,
+        "AVGO_extra_cost": 114.85007942504885,
+        "UBER_extra_cost": 35.41546801300049,
+        "HOOD_extra_cost": 168.3541021087646,
+        "MU_extra_cost": 40.29344029541016,
+        "MSTR_extra_cost": 81.64563926696779,
+        "MARA_extra_cost": 143.06031948823926,
+        "SNDK_extra_cost": 129.0179296142578,
+        "ORCL_extra_cost": 14.494995492553711,
+        "CRM_extra_cost": 96.46446298828128,
+        "NVDA_extra_cost": 44.8393259628296,
+        "TSLA_extra_cost": 69.80899086914064,
+        "PLTR_extra_cost": 54.94375278625489,
+        "AMD_extra_cost": 95.23074056396484,
+        "INTC_extra_cost": 113.90383122024538,
+        "GOOGL_extra_cost": 28.81273792419433,
+        "COIN_extra_cost": 22.853079913330077,
+        "SMCI_extra_cost": 42.68000978965759,
+        "MSFT_extra_cost": 0.5908769897460937,
+        "AMZN_extra_cost": 1.3885728515625,
+        "META_extra_cost": 42.939120703125
+      },
+      {
+        "date": "2026-09-09",
+        "extra_cost": 1358.463218639659,
+        "new_cost": 2264.1053643994333,
+        "SOXX_extra_cost": 73.03174740600588,
+        "GOOGL_extra_cost": 21.546868945312504,
+        "HOOD_extra_cost": 83.6969907028198,
+        "SMCI_extra_cost": 30.578771585083,
+        "CRM_extra_cost": 93.53243843994142,
+        "MSTR_extra_cost": 36.976158732604986,
+        "MARA_extra_cost": 257.7730024569511,
+        "TSLA_extra_cost": 118.94839712219242,
+        "SNDK_extra_cost": 98.99543122558593,
+        "AAPL_extra_cost": 65.67492017211914,
+        "META_extra_cost": 113.3615377807617,
+        "MU_extra_cost": 31.60696168212891,
+        "PLTR_extra_cost": 97.53505937805177,
+        "COIN_extra_cost": 94.79385287017823,
+        "INTC_extra_cost": 103.3516413734436,
+        "NVDA_extra_cost": 12.925440087890625,
+        "AMD_extra_cost": 6.920860510253906,
+        "AVGO_extra_cost": 9.405580480957031,
+        "TSM_extra_cost": 7.80755768737793
+      },
+      {
+        "date": "2026-09-10",
+        "extra_cost": 1132.6122204468734,
+        "new_cost": 1887.6870340781195,
+        "SNDK_extra_cost": 79.68574874267576,
+        "INTC_extra_cost": 129.12078713150024,
+        "MSTR_extra_cost": 37.039527886962894,
+        "MARA_extra_cost": 137.6922764428139,
+        "HOOD_extra_cost": 79.55515245208738,
+        "META_extra_cost": 102.47180800781251,
+        "CRM_extra_cost": 162.10815509948733,
+        "AVGO_extra_cost": 35.05752908020019,
+        "PLTR_extra_cost": 89.83980542907713,
+        "NVDA_extra_cost": 5.235835986328125,
+        "TSLA_extra_cost": 117.06887408752442,
+        "SMCI_extra_cost": 29.493816700744627,
+        "SOXX_extra_cost": 21.579117590332032,
+        "COIN_extra_cost": 27.52733630218506,
+        "MU_extra_cost": 2.356938006591797,
+        "GOOGL_extra_cost": 1.1900519714355469,
+        "MSFT_extra_cost": 13.580597937011719,
+        "AAPL_extra_cost": 0.773752944946289,
+        "AMD_extra_cost": 16.089044577026364,
+        "UBER_extra_cost": 45.14606407012939
+      },
+      {
+        "date": "2026-09-11",
+        "extra_cost": 1384.5685507939322,
+        "new_cost": 2307.614251323223,
+        "SNDK_extra_cost": 130.98475473632814,
+        "CRM_extra_cost": 30.346946800231933,
+        "MARA_extra_cost": 202.2512574231149,
+        "AVGO_extra_cost": 61.005498632812504,
+        "COIN_extra_cost": 111.76888098449707,
+        "MSTR_extra_cost": 185.8262219604492,
+        "GOOGL_extra_cost": 55.221205078124996,
+        "SMCI_extra_cost": 84.1853569381714,
+        "HOOD_extra_cost": 117.9079032485962,
+        "TSLA_extra_cost": 137.06972951660154,
+        "AMD_extra_cost": 87.69359513854981,
+        "INTC_extra_cost": 84.93713594741823,
+        "MU_extra_cost": 33.372240747070315,
+        "ORCL_extra_cost": 10.987642501831052,
+        "PLTR_extra_cost": 4.518596420288087,
+        "TSM_extra_cost": 2.3385710540771485,
+        "AMZN_extra_cost": 1.5412049560546874,
+        "SOXX_extra_cost": 42.61180870971679
+      }
+    ]
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "candidate": {
+    "name": "cash",
+    "features": "price_volume",
+    "model": "ridge",
+    "portfolio": "cash"
+  },
+  "cost_bps": 5,
+  "status": "complete",
+  "summary": {
+    "start": "2026-08-31",
+    "end": "2026-09-11",
+    "sessions": 9,
+    "starting_equity": 100000.0,
+    "ending_equity": 100000.0,
+    "net_pnl": 0.0,
+    "net_return": 0.0,
+    "gross_pnl": 0.0,
+    "costs": 0.0,
+    "turnover_dollars": 0.0,
+    "fill_count": 0,
+    "max_drawdown": 0.0,
+    "max_gross_exposure": 0.0,
+    "max_symbol_exposure": 0.0,
+    "profitable_sessions": 0
+  },
+  "per_symbol": {
+    "SNDK": {
+      "net_pnl": 0.0,
+      "costs": 0
+    },
+    "TSLA": {
+      "net_pnl": 0.0,
+      "costs": 0
+    },
+    "MSTR": {
+      "net_pnl": 0.0,
+      "costs": 0
+    },
+    "NVDA": {
+      "net_pnl": 0.0,
+      "costs": 0
+    }
+  },
+  "attribution": {
+    "net_pnl": 0.0,
+    "gross_pnl": 0.0,
+    "costs": 0.0,
+    "reconciled": true,
+    "by_symbol": [],
+    "by_direction": [],
+    "by_day": [],
+    "by_hour": []
+  },
+  "fixed_order_stress_5bps": null
+}

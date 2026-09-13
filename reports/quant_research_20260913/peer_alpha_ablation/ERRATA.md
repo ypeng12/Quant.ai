@@ -1,0 +1,2 @@
+> Correction (2026-09-13): the old reoptimized 5 bps runs used 5 bps in the optimizer but **2 bps in the execution ledger**. Those reoptimized numbers are invalid. The original 2 bps and fixed-order repricing are separate calculations. Correctly matched optimizer/ledger comparisons are in `../platform_research_20260913_qp/registry.json`; model fitting also differs, so this is not an exact old-policy reproduction.
+
