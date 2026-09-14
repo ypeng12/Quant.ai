@@ -1,0 +1,1150 @@
+diff --git a/backend/app/alpha/l1_state_models.py b/backend/app/alpha/l1_state_models.py
+new file mode 100644
+index 0000000..994e58c
+--- /dev/null
++++ b/backend/app/alpha/l1_state_models.py
+@@ -0,0 +1,125 @@
++"""Train-only QI logistic and empirical Stoikov state-transition microprice.
++
++Independent implementation of Q/R/g transition equations (author reference:
++https://github.com/sstoikov/microprice). The finite price-change expansion is
++explicit; it is not an assertion that an infinite series converges.
++"""
++from __future__ import annotations
++import json
++from pathlib import Path
++import numpy as np
++import pandas as pd
++from sklearn.linear_model import LogisticRegression
++from .paper_l1_alpha import quote_states, next_move_labels, VERSION
++
++
++def _cutoff(before):
++    cutoff=pd.Timestamp(before)
++    if cutoff.tzinfo is None: raise ValueError("Training cutoff must be timezone-aware")
++    return cutoff
++
++
++def _contract(q):
++    return {k:q.attrs[k] for k in ("symbol","feed","clock","max_gap")}
++
++
++class QueueImbalanceModel:
++    def fit(self,events,*,before,C=1.0,max_gap="30s"):
++        q=quote_states(events,as_of=_cutoff(before),max_gap=max_gap)
++        labels=next_move_labels(q);mask=labels.target.notna()
++        if labels.target[mask].nunique()!=2: raise ValueError("QI needs both observed next-move directions")
++        # Equal weight per next-price-change event reduces quote-burst dominance.
++        counts=labels.loc[mask].groupby("label_end").target.transform("size")
++        weights=1/counts.to_numpy();weights*=len(weights)/weights.sum()
++        model=LogisticRegression(C=C,solver="lbfgs").fit(q.loc[mask,["qi"]],labels.target[mask],sample_weight=weights)
++        self.artifact=dict(schema_version=1,model="qi_logistic",feature_version=VERSION,contract=_contract(q),
++                           trained_before=_cutoff(before).isoformat(),rows=int(mask.sum()),
++                           next_move_events=int(labels.label_end[mask].nunique()),regularization_C=C,
++                           coefficient=float(model.coef_[0,0]),intercept=float(model.intercept_[0]),
++                           interpretation="probability_next_mid_move_up_not_trade_win_rate")
++        return self
++
++    def predict(self,events,*,as_of=None):
++        q=quote_states(events,as_of=as_of,max_gap=self.artifact["contract"]["max_gap"])
++        if _contract(q)!=self.artifact["contract"]: raise ValueError("QI source/clock/symbol contract changed")
++        z=q.qi*self.artifact["coefficient"]+self.artifact["intercept"]
++        p=1/(1+np.exp(-np.clip(z,-700,700)))
++        return p.where(q.index>=pd.Timestamp(self.artifact["trained_before"])).rename("qi_next_move_up_probability")
++
++    def save(self,path): Path(path).write_text(json.dumps(self.artifact,indent=2,allow_nan=False)+"\n")
++
++    @classmethod
++    def load(cls,path):
++        obj=cls();obj.artifact=json.loads(Path(path).read_text())
++        if obj.artifact.get("model")!="qi_logistic" or obj.artifact.get("feature_version")!=VERSION:
++            raise ValueError("Invalid QI artifact")
++        return obj
++
++
++class TransitionMicroprice:
++    def fit(self,events,*,before,tick_size=.01,imbalance_bins=5,spread_ticks=(1,2,3,4,5),
++            price_changes=6,symmetrize=True,max_gap="30s"):
++        if not np.isfinite(tick_size) or tick_size<=0 or type(imbalance_bins) is not int or imbalance_bins<2:
++            raise ValueError("Positive tick size and integer imbalance_bins >= 2 required")
++        if type(price_changes) is not int or price_changes<1 or not spread_ticks or any(type(s) is not int or s<1 for s in spread_ticks):
++            raise ValueError("Explicit spread states and expansion count required")
++        self.artifact=dict(schema_version=1,model="transition_microprice",feature_version=VERSION,
++                           tick_size=tick_size,imbalance_bins=imbalance_bins,spread_ticks=list(spread_ticks),
++                           price_changes=price_changes,symmetrize=symmetrize,trained_before=_cutoff(before).isoformat())
++        q=quote_states(events,as_of=_cutoff(before),max_gap=max_gap)
++        self.artifact["contract"]=_contract(q)
++        states=self._states(q);records=[]
++        for i in range(len(q)-1):
++            a,b=states[i],states[i+1]
++            if a is None or b is None or q.segment.iloc[i]!=q.segment.iloc[i+1]: continue
++            delta=float(q.mid.iloc[i+1]-q.mid.iloc[i])
++            records.append((a,b,delta))
++            if symmetrize:
++                records.append(((a[0],imbalance_bins-1-a[1]),(b[0],imbalance_bins-1-b[1]),-delta))
++        if not records: raise ValueError("No observed microprice state transitions")
++        active=sorted({x for a,b,_ in records for x in (a,b)});lookup={s:i for i,s in enumerate(active)}
++        n=len(active);Q=np.zeros((n,n));R=np.zeros((n,n));g=np.zeros(n);count=np.zeros(n)
++        for a,b,delta in records:
++            i,j=lookup[a],lookup[b];count[i]+=1
++            if abs(delta)<1e-10: Q[i,j]+=1
++            else: R[i,j]+=1;g[i]+=delta
++        if (count==0).any(): raise ValueError("State has no observed outgoing transitions; collect more quotes")
++        Q/=count[:,None];R/=count[:,None];g/=count
++        spectral_radius=float(np.max(np.abs(np.linalg.eigvals(Q))))
++        if spectral_radius>=1-1e-10: raise ValueError("Non-absorbing no-move states; microprice is not identified")
++        A=np.eye(n)-Q
++        first=np.linalg.solve(A,g);B=np.linalg.solve(A,R)
++        correction=first.copy();increment=first.copy()
++        for _ in range(1,price_changes): increment=B@increment;correction+=increment
++        if not np.isfinite(correction).all(): raise ValueError("Nonfinite transition correction")
++        self.artifact.update(states=[list(s) for s in active],state_counts=count.tolist(),Q=Q.tolist(),R=R.tolist(),
++                             immediate_reward=g.tolist(),first_move_correction=first.tolist(),B=B.tolist(),
++                             correction=correction.tolist(),last_increment=increment.tolist(),
++                             no_move_spectral_radius=spectral_radius,rows=len(q),transitions=len(records),
++                             supported_quotes=sum(s is not None for s in states),
++                             finite_expansion=True,interpretation="estimated_mid_after_finite_price_changes_not_fair_value_or_profit")
++        return self
++
++    def _states(self,q):
++        a=self.artifact;n=a["imbalance_bins"];tick=a["tick_size"]
++        ticks=q.spread.to_numpy()/tick;bucket=np.minimum(n-1,np.floor((q.qi.to_numpy()+1)*.5*n).astype(int))
++        return [(int(round(s)),int(b)) if np.isclose(s,round(s),atol=1e-6,rtol=0) and int(round(s)) in a["spread_ticks"] else None for s,b in zip(ticks,bucket)]
++
++    def predict(self,events,*,as_of=None):
++        q=quote_states(events,as_of=as_of,max_gap=self.artifact["contract"]["max_gap"])
++        if _contract(q)!=self.artifact["contract"]: raise ValueError("Microprice source/clock/symbol contract changed")
++        correction=dict(zip(map(tuple,self.artifact["states"]),self.artifact["correction"]))
++        values=np.array([correction.get(s,np.nan) for s in self._states(q)])
++        out=pd.DataFrame({"mid":q.mid,"weighted_mid":q.weighted_mid,"transition_microprice":q.mid+values,
++                          "transition_correction_bps":values/q.mid*10000},index=q.index)
++        out.loc[out.index<pd.Timestamp(self.artifact["trained_before"]),["transition_microprice","transition_correction_bps"]]=np.nan
++        return out
++
++    def save(self,path): Path(path).write_text(json.dumps(self.artifact,indent=2,allow_nan=False)+"\n")
++
++    @classmethod
++    def load(cls,path):
++        obj=cls();obj.artifact=json.loads(Path(path).read_text())
++        if obj.artifact.get("model")!="transition_microprice" or obj.artifact.get("feature_version")!=VERSION:
++            raise ValueError("Invalid microprice artifact")
++        return obj
+diff --git a/backend/app/alpha/paper_bar_alpha.py b/backend/app/alpha/paper_bar_alpha.py
+new file mode 100644
+index 0000000..9fdcfe2
+--- /dev/null
++++ b/backend/app/alpha/paper_bar_alpha.py
+@@ -0,0 +1,129 @@
++"""Small, auditable OHLCV factor library; one engine for training and inference.
++
++Alpha158 definitions: Microsoft Qlib loader.py. Alpha101: arXiv:1601.00991.
++These are five-minute, session-reset adaptations, NOT replications of the daily
++paper experiments. Windows count observed grid slots, including missing slots.
++The fixed input panel is part of the feature contract; ranks never use the future.
++"""
++from __future__ import annotations
++
++from dataclasses import asdict, dataclass
++import numpy as np
++import pandas as pd
++from ..quant_policy import normalize_bars
++
++VERSION = "paper_bar_alpha_v1"
++FAMILIES = ("alpha158_subset", "alpha101_subset", "cross_sectional", "paper_library")
++# Explicit contemporary research universe; not historical constituent membership.
++STOCKS = ("AAPL", "MSFT", "NVDA", "AMD", "AVGO", "MU", "SNDK", "TSLA",
++          "META", "AMZN", "GOOGL", "NFLX", "ORCL", "PLTR", "SMCI", "INTC",
++          "TSM", "CRM", "UBER", "JPM", "BAC")
++REFERENCES = ("SPY", "QQQ", "SOXX")
++PEERS = {**dict.fromkeys(("NVDA", "AMD", "AVGO", "MU", "SNDK", "INTC", "TSM", "SMCI"), "semiconductors"),
++         **dict.fromkeys(("MSFT", "ORCL", "PLTR", "CRM"), "software"),
++         **dict.fromkeys(("META", "GOOGL", "NFLX"), "communication"),
++         **dict.fromkeys(("JPM", "BAC"), "banks")}
++
++
++@dataclass(frozen=True)
++class BarAlphaSpec:
++    family: str = "paper_library"
++    windows: tuple[int, ...] = (5, 20)
++    peer_window: int = 20
++    frequency: str = "5min"
++
++    def __post_init__(self):
++        if self.family not in FAMILIES or self.frequency != "5min":
++            raise ValueError("Supported family and five-minute bars required")
++        if (not self.windows or len(set(self.windows)) != len(self.windows)
++                or any(type(w) is not int or w < 2 for w in self.windows)
++                or type(self.peer_window) is not int or self.peer_window < 2):
++            raise ValueError("Unique integer windows >= 2 required")
++
++
++def _rank(frame):
++    return frame.rank(axis=1, method="average", pct=True)
++
++
++def _alpha158(b, windows):
++    o, h, l, c, v = (b[n] for n in ("open", "high", "low", "close", "volume"))
++    out = {"a158_kmid": (c-o)/o, "a158_klen": (h-l)/o,
++           "a158_kmid2": (c-o)/(h-l+1e-12),
++           "a158_kup": (h-pd.concat([o,c],axis=1).max(axis=1))/o,
++           "a158_klow": (pd.concat([o,c],axis=1).min(axis=1)-l)/o,
++           "a158_ksft": (2*c-h-l)/o}
++    for w in windows:
++        # Qlib ROC is delayed close / current close, not the usual ROC return.
++        out.update({f"a158_roc_{w}": (c.shift(w)/c).where(c.notna().rolling(w+1).sum()==w+1),
++                    f"a158_ma_{w}": c.rolling(w).mean()/c,
++                    f"a158_std_{w}": c.rolling(w).std(ddof=1)/c,
++                    f"a158_rsv_{w}": (c-l.rolling(w).min())/(h.rolling(w).max()-l.rolling(w).min()+1e-12),
++                    f"a158_vma_{w}": v.rolling(w).mean()/(v+1e-12),
++                    f"a158_corr_{w}": c.rolling(w).corr(np.log(v+1))})
++    return pd.DataFrame(out, index=b.index).where(b.notna().all(axis=1), np.nan)
++
++
++def _alpha101(panel):
++    o,h,l,c,v = (panel[n] for n in ("open","high","low","close","volume"))
++    return {
++        "a101_002": -_rank(np.log(v.where(v>0)).diff(2)).rolling(6).corr(_rank((c-o)/o)),
++        "a101_003": -_rank(o).rolling(10).corr(_rank(v)),
++        "a101_004": -_rank(l).rolling(9).rank(method="average",pct=True),
++        "a101_006": -o.rolling(10).corr(v),
++        "a101_012": np.sign(v.diff()) * -c.diff(),
++        "a101_101": (c-o)/(h-l+0.001),
++    }
++
++
++def bar_alpha_panel(frames, spec=BarAlphaSpec(), *, as_of=None, peers=None, rank_symbols=None):
++    """Rows are bar-open timestamps; values become available at bar-close.
++
++    Supply the same symbol panel in training/inference. Reference ETFs are
++    excluded from ranks by default. Missing peers remain missing; no imputation.
++    """
++    bars = {s: normalize_bars(f) for s,f in sorted(frames.items())}
++    if not bars:
++        raise ValueError("An observed OHLCV panel is required")
++    if as_of is not None:
++        cutoff = pd.Timestamp(as_of)
++        if cutoff.tzinfo is None: raise ValueError("as_of must be timezone-aware")
++        bars = {s:b.loc[b.index+pd.Timedelta(spec.frequency)<=cutoff] for s,b in bars.items()}
++    members = tuple(sorted(rank_symbols if rank_symbols is not None else set(bars)-set(REFERENCES)))
++    if not members or not set(members).issubset(bars):
++        raise ValueError("Rank members must be supplied in the panel")
++    groups = PEERS if peers is None else peers
++    chunks = {s:[] for s in bars}
++    days = sorted({d for b in bars.values() for d in b.index.date})
++    for day in days:
++        observed = {s:b.loc[b.index.date==day] for s,b in bars.items()}
++        last = max(b.index[-1] for b in observed.values() if len(b))
++        grid = pd.date_range(pd.Timestamp(day,tz="America/New_York")+pd.Timedelta(hours=9,minutes=30),last,freq=spec.frequency)
++        aligned = {s:b.reindex(grid) for s,b in observed.items()}
++        p = {n:pd.DataFrame({s:b[n] for s,b in aligned.items()}) for n in ("open","high","low","close","volume")}
++        a101 = _alpha101({n:f.loc[:,members] for n,f in p.items()}) if spec.family in ("alpha101_subset","paper_library") else {}
++        returns = p["close"].pct_change(fill_method=None)
++        ranked_return = _rank(returns.loc[:,members])
++        for s,b in aligned.items():
++            result = _alpha158(b,spec.windows) if spec.family in ("alpha158_subset","paper_library") else pd.DataFrame(index=grid)
++            for name,values in a101.items(): result[name] = values[s] if s in values else np.nan
++            if spec.family in ("cross_sectional","paper_library"):
++                others = [t for t in members if t!=s]
++                group = [t for t in others if s in groups and groups.get(t)==groups[s]]
++                own = returns[s]
++                result["xs_return_rank"] = ranked_return[s] if s in ranked_return else np.nan
++                result["xs_peer_return"] = returns[others].mean(axis=1)
++                result["xs_peer_residual"] = own-result.xs_peer_return
++                result["xs_group_residual"] = own-returns[group].mean(axis=1)
++                market = returns["SPY"] if "SPY" in returns and s!="SPY" else pd.Series(np.nan,index=grid)
++                # Beta excludes the current observation. It does not assert neutrality.
++                beta = own.rolling(spec.peer_window).cov(market).shift()/market.rolling(spec.peer_window).var().shift().replace(0,np.nan)
++                result["xs_market_beta"] = beta
++                result["xs_market_residual"] = own-beta*market
++                result["xs_peer_count"] = returns[others].count(axis=1)
++            result = result.replace([np.inf,-np.inf],np.nan).where(b.notna().all(axis=1),np.nan)
++            chunks[s].append(result.reindex(observed[s].index))
++    out = {s:pd.concat(parts) if parts else pd.DataFrame(index=bars[s].index) for s,parts in chunks.items()}
++    for f in out.values():
++        f.attrs.update(feature_version=VERSION,spec={**asdict(spec),"windows":list(spec.windows)},panel_symbols=list(bars),rank_symbols=list(members),
++                       peer_groups=dict(groups),timestamp_convention="bar_open_available_at_end",window_unit="five_minute_bars_within_session")
++    return out
+diff --git a/backend/app/alpha/paper_l1_alpha.py b/backend/app/alpha/paper_l1_alpha.py
+new file mode 100644
+index 0000000..16053d2
+--- /dev/null
++++ b/backend/app/alpha/paper_l1_alpha.py
+@@ -0,0 +1,113 @@
++"""Causal L1 extensions and quote labels, preserving the feed and clock contract."""
++from __future__ import annotations
++import numpy as np
++import pandas as pd
++from .real_l1_alpha import REAL_L1_FEATURES, _require_real_events, _ofi, build_real_l1_features
++
++VERSION = "paper_l1_alpha_v1"
++PAPER_L1_FEATURES = REAL_L1_FEATURES + ("l1_ofi_raw", "l1_mean_half_depth", "l1_ofi_depth",
++                                      "l1_ofi_x_spread", "l1_ofi_x_session_sin", "l1_ofi_x_session_cos")
++
++
++def observed_events(events, *, as_of=None):
++    """Historical exchange clock, or recorded arrival clock for WebSocket events.
++
++    Late out-of-order exchange events are excluded from the arrival-clock
++    experiment, counted explicitly, and never deleted from raw capture files.
++    Historical downloads cannot measure information delivery latency.
++    """
++    _require_real_events(events)
++    out = events.sort_index(kind="stable").copy()
++    sources = out.source.unique()
++    if len(sources)!=1 or "feed" not in out or out.feed.isna().any():
++        raise ValueError("One explicit source and feed per experiment required")
++    dropped = 0
++    if sources[0]=="alpaca_stock_websocket":
++        if "received_at" not in out: raise ValueError("WebSocket events require recorded received_at")
++        arrival = pd.to_datetime(out.received_at,utc=True,errors="coerce",format="mixed")
++        if arrival.isna().any(): raise ValueError("Invalid received_at")
++        out["exchange_timestamp"] = out.index
++        out.index = pd.DatetimeIndex(arrival).tz_convert("America/New_York")
++        out = out.sort_index(kind="stable")
++        order = pd.DatetimeIndex(out.exchange_timestamp).asi8
++        fresh = order>=np.maximum.accumulate(order)
++        dropped = int((~fresh).sum());out = out.loc[fresh]
++        clock = "recorded_arrival"
++    else: clock = "historical_exchange_latency_unverified"
++    if as_of is not None:
++        cutoff = pd.Timestamp(as_of)
++        if cutoff.tzinfo is None: raise ValueError("as_of must be timezone-aware")
++        out = out.loc[out.index<cutoff]
++    out.attrs.update(clock=clock,late_events_excluded=dropped,feature_version=VERSION)
++    return out
++
++
++def quote_states(events, *, as_of=None, max_gap="30s"):
++    observed = observed_events(events,as_of=as_of)
++    q = _require_real_events(observed).copy()
++    depth = q.bid_size+q.ask_size
++    # Locked and empty books do not define the two-sided state models.
++    valid = depth.gt(0)&q.ask_price.gt(q.bid_price)
++    day = pd.Series(q.index.tz_convert("America/New_York").date,index=q.index)
++    gap = q.index.to_series().diff()
++    split = day.ne(day.shift()) | gap.gt(pd.Timedelta(max_gap)) | ~valid | ~valid.shift(fill_value=False)
++    q["segment"] = split.cumsum().to_numpy()
++    q["mid"] = (q.bid_price+q.ask_price)/2
++    q["spread"] = q.ask_price-q.bid_price
++    q["depth"] = depth
++    q["qi"] = (q.bid_size-q.ask_size)/depth.replace(0,np.nan)
++    q["weighted_mid"] = (q.ask_price*q.bid_size+q.bid_price*q.ask_size)/depth.replace(0,np.nan)
++    q["ofi"] = _ofi(q).mask(split,0)
++    q = q.loc[valid]
++    q.attrs.update(observed.attrs,max_gap=max_gap,feed=str(observed.feed.iloc[0]),symbol=str(observed.symbol.iloc[0]))
++    return q
++
++
++def enhanced_l1_features(events, frequency="5min", *, as_of=None, max_gap="30s"):
++    observed = observed_events(events,as_of=as_of)
++    base = build_real_l1_features(observed,frequency,as_of=as_of)
++    q = quote_states(events,as_of=as_of,max_gap=max_gap)
++    res = q.resample(frequency)
++    base["l1_ofi_raw"] = res["ofi"].sum(min_count=1)
++    # Paper depth convention: mean of (bid size + ask size) / 2, in quote units.
++    base["l1_mean_half_depth"] = res["depth"].mean()/2
++    base["l1_ofi_depth"] = base.l1_ofi_raw/base.l1_mean_half_depth.replace(0,np.nan)
++    base["l1_ofi_x_spread"] = base.l1_ofi_depth*base.l1_spread_bps
++    minutes = base.index.tz_convert("America/New_York").hour*60+base.index.tz_convert("America/New_York").minute-570
++    base["l1_ofi_x_session_sin"] = base.l1_ofi_depth*np.sin(2*np.pi*minutes/390)
++    base["l1_ofi_x_session_cos"] = base.l1_ofi_depth*np.cos(2*np.pi*minutes/390)
++    base.attrs.update(q.attrs,timestamp_convention="bucket_open_available_at_end",depth_unit="provider_quote_size_unit")
++    return base.replace([np.inf,-np.inf],np.nan)
++
++
++def next_move_labels(q):
++    """QI target: next different mid, with maturity time; never cross a gap/day."""
++    direction = np.full(len(q),np.nan)
++    maturity = [pd.NaT]*len(q)
++    for positions in q.groupby("segment",sort=False).indices.values():
++        mids = q.mid.iloc[positions].to_numpy()
++        changes = np.flatnonzero(np.diff(mids)!=0)+1
++        start = 0
++        for end in changes:
++            indices = positions[start:end]
++            direction[indices] = float(mids[end]>mids[start])
++            for i in indices: maturity[i] = q.index[positions[end]]
++            start = end
++    return pd.DataFrame({"target":direction,"label_end":pd.to_datetime(maturity,utc=True)},index=q.index)
++
++
++def forward_mid_labels(q, horizon="5s", tolerance="1s"):
++    """Future mark at first quote at/after t+h, bounded by tolerance and segment.
++
++    Mid returns are prediction targets, not executable returns or trading PnL.
++    """
++    h,tol = pd.Timedelta(horizon),pd.Timedelta(tolerance)
++    if h<=pd.Timedelta(0) or tol<pd.Timedelta(0): raise ValueError("Invalid horizon/tolerance")
++    target=np.full(len(q),np.nan);end=[pd.NaT]*len(q)
++    for pos in q.groupby("segment",sort=False).indices.values():
++        times=q.index[pos];at=times.searchsorted(times+h,side="left")
++        for i,j in enumerate(at):
++            if j<len(pos) and times[j]<=times[i]+h+tol:
++                target[pos[i]]=q.mid.iloc[pos[j]]/q.mid.iloc[pos[i]]-1
++                end[pos[i]]=times[j]
++    return pd.DataFrame({"target":target,"label_end":pd.to_datetime(end,utc=True)},index=q.index)
+diff --git a/backend/app/research/paper_catalog.py b/backend/app/research/paper_catalog.py
+new file mode 100644
+index 0000000..fe86b98
+--- /dev/null
++++ b/backend/app/research/paper_catalog.py
+@@ -0,0 +1,37 @@
++"""Read-only Alpha library status; implementation is distinct from validation."""
++from pathlib import Path
++import hashlib
++import json
++
++ROOT=Path(__file__).resolve().parents[3]
++BUNDLE=ROOT/'reports/paper_alpha_library_20260913'
++ENTRIES=(
++    dict(id='alpha158_subset',name='Alpha158 精选',features=18,data='OHLCV',purpose='K 线位置、量能、滚动价格统计',source='https://github.com/microsoft/qlib/blob/main/qlib/contrib/data/loader.py'),
++    dict(id='alpha101_subset',name='Alpha101 精选',features=6,data='同步股票面板 OHLCV',purpose='002 / 003 / 004 / 006 / 012 / 101；保留原公式编号',source='https://arxiv.org/abs/1601.00991'),
++    dict(id='cross_sectional',name='截面与同行残差',features=7,data='同步股票面板 + SPY',purpose='同行收益、同组残差、过去估计的市场 Beta；不宣称完全中性',source=None),
++    dict(id='paper_l1',name='真实 L1 扩展',features=12,data='真实 Quote / Trade',purpose='OFI、深度归一化、价差与时段交互、QI、加权中间价',source='https://arxiv.org/abs/1011.6402'),
++    dict(id='qi_logistic',name='QI Logistic',features=1,data='真实报价 + 下次中间价变动标签',purpose='预测下次中间价向上概率；不是交易胜率',source='https://arxiv.org/abs/1512.03492'),
++    dict(id='transition_microprice',name='状态转移 Microprice',features=None,data='真实报价状态转移样本',purpose='学习 Q / R 转移矩阵及有限次价格变动修正',source='https://github.com/sstoikov/microprice'),
++)
++
++
++def digest(path): return hashlib.sha256(Path(path).read_bytes()).hexdigest()
++
++
++def paper_library_payload(root=None):
++    folder=Path(root) if root is not None else BUNDLE
++    result=dict(success=True,status='implemented',entries=list(ENTRIES),performance_verified=False,
++                report=None,report_status='unavailable',reason='尚未生成数据与训练记录')
++    try:
++        raw=folder/'registry.json'
++        if not raw.exists(): return result
++        if digest(raw)!=(folder/'registry.sha256').read_text().strip(): raise ValueError('Registry hash mismatch')
++        report=json.loads(raw.read_text())
++        if report['status']!='complete': raise ValueError('Incomplete library build')
++        for name,expected in report['artifact_hashes'].items():
++            file=(folder/name).resolve()
++            if not file.is_relative_to(folder.resolve()) or digest(file)!=expected: raise ValueError('Artifact hash mismatch')
++        result.update(report=report,report_status='complete',reason=None)
++    except (OSError,ValueError,KeyError) as exc:
++        result.update(report_status='invalid',reason=str(exc))
++    return result
+diff --git a/backend/app/research/paper_models.py b/backend/app/research/paper_models.py
+new file mode 100644
+index 0000000..daf2bbc
+--- /dev/null
++++ b/backend/app/research/paper_models.py
+@@ -0,0 +1,148 @@
++"""Inspectable Ridge/tree/LightGBM artifacts using the paper feature contract."""
++from __future__ import annotations
++from dataclasses import asdict
++import json
++from pathlib import Path
++import numpy as np
++import pandas as pd
++from sklearn.linear_model import Ridge
++from sklearn.tree import DecisionTreeRegressor
++from ..alpha.paper_bar_alpha import BarAlphaSpec, bar_alpha_panel, VERSION
++from ..quant_policy import PolicySpec, labeled_frame
++
++
++def feature_contract(features):
++    keys=("feature_version","spec","panel_symbols","rank_symbols","peer_groups","timestamp_convention",
++          "window_unit","symbol","feed","clock","max_gap","source","market_depth","required_features")
++    return json.loads(json.dumps({k:v for k,v in features.attrs.items() if k in keys}))
++
++
++def combine_bar_l1(features,events,*,as_of=None):
++    from ..alpha.paper_l1_alpha import enhanced_l1_features,PAPER_L1_FEATURES
++    book=enhanced_l1_features(events,as_of=as_of)
++    combined=features.join(book)
++    combined.attrs.update(features.attrs)
++    combined.attrs.update({k:book.attrs[k] for k in ('symbol','feed','clock','max_gap','source','market_depth') if k in book.attrs})
++    combined.attrs.update(required_features=list(PAPER_L1_FEATURES))
++    return combined
++
++
++class PaperForecast:
++    def fit(self,features,targets,*,label_end,before,estimator="ridge",parameters=None):
++        cutoff=pd.Timestamp(before)
++        if cutoff.tzinfo is None: raise ValueError("Timezone-aware training cutoff required")
++        if not features.index.equals(targets.index) or not features.index.equals(label_end.index):
++            raise ValueError("Targets and maturity timestamps must align exactly")
++        params=parameters or {}
++        valid=(features.index<cutoff)&label_end.lt(cutoff)&targets.notna()&features.notna().any(axis=1)
++        required=features.attrs.get('required_features',[])
++        if required: valid &= features[required].notna().all(axis=1)
++        x=features.loc[valid].replace([np.inf,-np.inf],np.nan);y=targets.loc[valid]
++        names=list(x.columns[x.notna().any()])
++        if len(x)<2 or not names: raise ValueError("No mature, observed training samples")
++        means=x[names].mean().to_numpy();v=x[names].fillna(dict(zip(names,means))).to_numpy()
++        scales=v.std(axis=0);scales[scales==0]=1;z=(v-means)/scales
++        if estimator=="ridge":
++            model=Ridge(**({"alpha":10.,"solver":"svd"}|params)).fit(z,y)
++            state=dict(coefficient=model.coef_.tolist(),intercept=float(model.intercept_))
++        elif estimator=="tree":
++            model=DecisionTreeRegressor(**({"max_depth":3,"min_samples_leaf":40,"random_state":42}|params)).fit(z,y)
++            t=model.tree_
++            state=dict(left=t.children_left.tolist(),right=t.children_right.tolist(),feature=t.feature.tolist(),
++                       threshold=t.threshold.tolist(),value=t.value[:,0,0].tolist())
++        elif estimator=="lightgbm":
++            from lightgbm import LGBMRegressor
++            model=LGBMRegressor(**({"n_estimators":60,"max_depth":3,"num_leaves":7,"min_child_samples":40,
++                                   "learning_rate":.03,"n_jobs":1,"verbosity":-1,"random_state":42}|params)).fit(z,y)
++            state=dict(model_string=model.booster_.model_to_string())
++        else: raise ValueError("Unknown estimator")
++        self.artifact=dict(schema_version=1,kind="paper_forecast",feature_version=VERSION,estimator=estimator,
++                           input_features=list(features.columns),features=names,unused_features=[n for n in features if n not in names],
++                           mean=means.tolist(),scale=scales.tolist(),state=state,parameters=model.get_params(),
++                           trained_before=cutoff.isoformat(),last_label_end=label_end[valid].max().isoformat(),
++                           rows=len(x),sessions=len(set(x.index.date)),feature_contract=feature_contract(features),
++                           deployment="research_only",performance_verified=False)
++        return self
++
++    def predict(self,features):
++        a=self.artifact
++        if list(features.columns)!=a["input_features"]: raise ValueError("Feature schema changed")
++        if feature_contract(features)!=a["feature_contract"]: raise ValueError("Feature source or panel contract changed")
++        v=features[a["features"]].to_numpy(dtype=float);valid=np.isfinite(v).any(axis=1)
++        required=a['feature_contract'].get('required_features',[])
++        if required: valid &= features[required].notna().all(axis=1).to_numpy()
++        z=(np.where(np.isfinite(v),v,a["mean"])-a["mean"])/a["scale"]
++        state=a["state"]
++        if a["estimator"]=="ridge": prediction=z@np.asarray(state["coefficient"])+state["intercept"]
++        elif a["estimator"]=="tree":
++            prediction=np.empty(len(z))
++            for row,values in enumerate(z):
++                node=0
++                while state["left"][node]!=-1:
++                    node=state["left"][node] if values[state["feature"][node]]<=state["threshold"][node] else state["right"][node]
++                prediction[row]=state["value"][node]
++        else:
++            from lightgbm import Booster
++            prediction=Booster(model_str=state["model_string"]).predict(z)
++        prediction[~valid]=np.nan
++        # Training rows are not presented as future predictions.
++        prediction[features.index<pd.Timestamp(a["trained_before"])]=np.nan
++        return pd.Series(prediction,index=features.index,name="expected_return")
++
++    def forecast(self,frames,*,as_of,events=None):
++        """Same builder used by fit_bar_model, suitable for a future live adapter."""
++        a=self.artifact;contract=a["feature_contract"]
++        if sorted(frames)!=contract["panel_symbols"]: raise ValueError("Model requires its complete declared panel")
++        spec=dict(contract["spec"]);spec["windows"]=tuple(spec["windows"])
++        panel=bar_alpha_panel(frames,BarAlphaSpec(**spec),as_of=as_of,
++                              peers=contract["peer_groups"],rank_symbols=contract["rank_symbols"])
++        features=panel[a["symbol"]]
++        if a.get('input_kind')=='bar_plus_real_l1':
++            if events is None: raise ValueError('Real L1 required by this model')
++            features=combine_bar_l1(features,events,as_of=as_of)
++        return self.predict(features)
++
++    def save(self,path):
++        Path(path).write_text(json.dumps(self.artifact,indent=2,allow_nan=False)+"\n")
++
++    @classmethod
++    def load(cls,path):
++        obj=cls();obj.artifact=json.loads(Path(path).read_text())
++        if obj.artifact.get("kind")!="paper_forecast" or obj.artifact.get("feature_version")!=VERSION:
++            raise ValueError("Unsupported paper forecast artifact")
++        # Canonical JSON representation makes tuples/lists consistent after loading.
++        return obj
++
++
++def fit_bar_model(frames,symbol,*,before,spec=BarAlphaSpec(),horizon_bars=1,estimator="ridge",parameters=None):
++    cutoff=pd.Timestamp(before)
++    if cutoff.tzinfo is None: raise ValueError("Timezone-aware cutoff required")
++    features=bar_alpha_panel(frames,spec,as_of=cutoff)[symbol]
++    policy=PolicySpec("paper_library_training",horizon_bars=horizon_bars)
++    _,target=labeled_frame(frames[symbol],policy)
++    target=target.reindex(features.index)
++    end=pd.Series(features.index+pd.Timedelta(minutes=5*(horizon_bars+1)),index=features.index)
++    fitted=PaperForecast().fit(features,target,label_end=end,before=cutoff,estimator=estimator,parameters=parameters)
++    fitted.artifact.update(symbol=symbol,horizon_bars=horizon_bars,target="next_open_to_horizon_close_return")
++    return fitted
++
++
++def l1_event_features(q):
++    from ..alpha.paper_l1_alpha import VERSION as L1_VERSION
++    f=pd.DataFrame({"qi":q.qi,"ofi_depth":q.ofi/(q.depth/2),
++                    "microprice_bps":(q.weighted_mid-q.mid)/q.mid*10000,
++                    "spread_bps":q.spread/q.mid*10000},index=q.index)
++    f["ofi_x_spread"]=f.ofi_depth*f.spread_bps
++    f.attrs.update({k:v for k,v in q.attrs.items() if k!="late_events_excluded"},feature_version=L1_VERSION,
++                   timestamp_convention="observed_quote_event")
++    return f
++
++
++def fit_l1_ridge(events,*,before,horizon="5s",tolerance="1s",parameters=None):
++    from ..alpha.paper_l1_alpha import quote_states,forward_mid_labels
++    q=quote_states(events,as_of=pd.Timestamp(before))
++    target=forward_mid_labels(q,horizon,tolerance)
++    model=PaperForecast().fit(l1_event_features(q),target.target,label_end=target.label_end,
++                             before=before,parameters=parameters)
++    model.artifact.update(horizon=horizon,target="future_mid_return_not_executable_pnl")
++    return model
+diff --git a/backend/app/research/platform.py b/backend/app/research/platform.py
+index 8a4785f..f2da1e6 100644
+--- a/backend/app/research/platform.py
++++ b/backend/app/research/platform.py
+@@ -33,6 +33,19 @@ CANDIDATES = (
+ 
+ 
+ def features_for_panel(frames, family, events=None):
++    from ..alpha.paper_bar_alpha import FAMILIES, BarAlphaSpec, bar_alpha_panel
++    if family in FAMILIES:
++        return bar_alpha_panel(frames,BarAlphaSpec(family=family))
++    if family in ('paper_l1','paper_combined'):
++        from ..alpha.paper_l1_alpha import enhanced_l1_features
++        from .paper_models import combine_bar_l1
++        base = features_for_panel(frames,'paper_library') if family=='paper_combined' else {}
++        for symbol,frame in frames.items():
++            if not events or symbol not in events or events[symbol].empty:
++                raise ValueError(f'Real L1 unavailable for {symbol}')
++            base[symbol]=(combine_bar_l1(base[symbol],events[symbol]) if family=='paper_combined'
++                          else enhanced_l1_features(events[symbol]).reindex(normalize_bars(frame).index))
++        return base
+     bars = {s:normalize_bars(f) for s,f in frames.items()}
+     if family in ('price_volume','price_volume_peer'):
+         return panel_feature_frames(bars, family)
+@@ -75,6 +88,9 @@ class FittedForecast:
+         mask=(features.index.strftime('%Y-%m-%d')<before) & labels.notna()
+         if self.family in ('l1','combined'):
+             mask &= features[list(REAL_L1_FEATURES)].notna().all(axis=1)
++        if self.family in ('paper_l1','paper_combined'):
++            from ..alpha.paper_l1_alpha import PAPER_L1_FEATURES
++            mask &= features[list(PAPER_L1_FEATURES)].notna().all(axis=1)
+         x=features.loc[mask];y=labels.loc[mask]
+         if len(x)<2:raise ValueError('Insufficient mature training labels')
+         self.names=tuple(x.columns)
+@@ -107,6 +123,10 @@ class FittedForecast:
+         if self.family in ('l1','combined'):
+             missing=features[list(REAL_L1_FEATURES)].isna().any(axis=1).to_numpy()
+             pred[missing]=np.nan;error[missing]=np.nan
++        if self.family in ('paper_l1','paper_combined'):
++            from ..alpha.paper_l1_alpha import PAPER_L1_FEATURES
++            missing=features[list(PAPER_L1_FEATURES)].isna().any(axis=1).to_numpy()
++            pred[missing]=np.nan;error[missing]=np.nan
+         return pred,error
+ 
+ 
+diff --git a/backend/main_api.py b/backend/main_api.py
+index 2dadee8..14c457c 100644
+--- a/backend/main_api.py
++++ b/backend/main_api.py
+@@ -1819,6 +1819,13 @@ def get_platform_research_results(dataset: str = "four_two_weeks"):
+     return research_bundle(dataset)
+ 
+ 
++@app.get("/api/research/alpha_library")
++def get_paper_alpha_library():
++    """Implementation, input coverage and trained artifacts; no trading side effects."""
++    from app.research.paper_catalog import paper_library_payload
++    return paper_library_payload()
++
++
+ @app.get("/api/ml/predict")
+ def get_ml_prediction(ticker: str = "TSLA"):
+     """Retire legacy synthetic/proxy ML output from the public API.
+diff --git a/backend/tests/test_paper_alpha_library.py b/backend/tests/test_paper_alpha_library.py
+new file mode 100644
+index 0000000..91b673f
+--- /dev/null
++++ b/backend/tests/test_paper_alpha_library.py
+@@ -0,0 +1,193 @@
++"""Synthetic fixtures exercise causality/contracts, never trading performance."""
++import json
++import numpy as np
++import pandas as pd
++import pytest
++from app.alpha.paper_bar_alpha import BarAlphaSpec,bar_alpha_panel
++from app.alpha.paper_l1_alpha import quote_states,next_move_labels,forward_mid_labels,enhanced_l1_features,observed_events
++from app.alpha.l1_state_models import QueueImbalanceModel,TransitionMicroprice
++from app.research.paper_models import PaperForecast,fit_bar_model,fit_l1_ridge,l1_event_features,combine_bar_l1
++from app.research.paper_catalog import paper_library_payload,digest
++
++
++def bars():
++    rng=np.random.default_rng(72);idx=pd.DatetimeIndex([])
++    idx=pd.date_range('2026-09-01 09:30',periods=60,freq='5min',tz='America/New_York').append([
++        pd.date_range(f'2026-09-0{day} 09:30',periods=60,freq='5min',tz='America/New_York') for day in (2,3)])
++    out={}
++    for i,s in enumerate(('AAA','BBB','CCC','SPY')):
++        o=100+i*20+np.cumsum(rng.normal(0,.1,len(idx)));c=o+rng.normal(0,.1,len(idx))
++        out[s]=pd.DataFrame(dict(open=o,close=c,high=np.maximum(o,c)+.2,low=np.minimum(o,c)-.2,
++                                  volume=rng.integers(1000,10000,len(idx))),index=idx)
++    return out
++
++
++def quotes(n=800):
++    idx=pd.date_range('2026-09-01 09:30',periods=n,freq='s',tz='America/New_York')
++    mid=np.resize([100.,100.,100.01,100.01,100.,100.,100.01,100.01],n)
++    size=np.resize([8,8,2,2,6,6,4,4],n)
++    return pd.DataFrame(dict(event_type='quote',source='alpaca_stock_historical',symbol='AAA',feed='iex',market_depth='L1',
++                             bid_price=mid-.005,ask_price=mid+.005,bid_size=size,ask_size=10-size),index=idx)
++
++
++def test_bar_library_hand_calculation_and_counts():
++    raw=bars();f=bar_alpha_panel(raw)['AAA'];b=raw['AAA'];t=b.index[25]
++    assert len(f.columns)==31
++    assert f.loc[t,'a158_ma_5']==pytest.approx(b.close.iloc[21:26].mean()/b.close.iloc[25])
++    assert f.loc[t,'a158_roc_5']==pytest.approx(b.close.iloc[20]/b.close.iloc[25])
++    assert f.loc[t,'a101_101']==pytest.approx((b.close.iloc[25]-b.open.iloc[25])/(b.high.iloc[25]-b.low.iloc[25]+.001))
++    assert f.loc[t,'a101_012']==pytest.approx(np.sign(b.volume.diff().iloc[25])*-b.close.diff().iloc[25])
++    own=b.close.pct_change().iloc[25]
++    other=np.mean([raw[s].close.pct_change().iloc[25] for s in ('BBB','CCC')])
++    assert f.loc[t,'xs_peer_residual']==pytest.approx(own-other)
++
++
++def test_prefix_invariance_future_mutation_and_closed_bar_boundary():
++    raw=bars();cut=pd.Timestamp('2026-09-02 11:00',tz='America/New_York')
++    baseline=bar_alpha_panel(raw,as_of=cut)
++    changed={s:b.copy() for s,b in raw.items()}
++    for b in changed.values(): b.loc[b.index>=cut,['open','close','high','low']]*=100
++    future=bar_alpha_panel(changed,as_of=cut)
++    prefix=bar_alpha_panel({s:b.loc[b.index<cut] for s,b in raw.items()},as_of=cut)
++    for s in raw:
++        pd.testing.assert_frame_equal(baseline[s],future[s]);pd.testing.assert_frame_equal(baseline[s],prefix[s])
++        assert baseline[s].index.max()+pd.Timedelta('5min')<=cut
++
++
++def test_missing_slots_and_day_reset_do_not_compress_lookbacks():
++    raw=bars();missing=raw['AAA'].index[10];raw['AAA']=raw['AAA'].drop(missing)
++    f=bar_alpha_panel(raw)['AAA']
++    assert np.isnan(f.loc[raw['BBB'].index[12],'a158_ma_5'])
++    assert np.isnan(f.loc[raw['BBB'].index[12],'a158_roc_5'])
++    assert np.isnan(f.loc[pd.Timestamp('2026-09-02 09:30',tz='America/New_York'),'a158_ma_5'])
++
++
++def test_alpha101_cross_section_rank_axis():
++    raw=bars();f=bar_alpha_panel(raw,BarAlphaSpec(family='alpha101_subset'))
++    rank=pd.DataFrame({s:b.low for s,b in raw.items() if s!='SPY'}).rank(axis=1,pct=True)
++    expected=-rank['AAA'].iloc[:9].rank(pct=True).iloc[-1]
++    assert f['AAA'].a101_004.iloc[8]==pytest.approx(expected)
++    assert f['SPY'].isna().all().all()
++
++
++@pytest.mark.parametrize('estimator',['ridge','tree','lightgbm'])
++def test_training_serialization_and_inference_use_same_engine(tmp_path,estimator):
++    raw=bars();before='2026-09-03T09:30:00-04:00'
++    model=fit_bar_model(raw,'AAA',before=before,estimator=estimator)
++    assert pd.Timestamp(model.artifact['last_label_end'])<pd.Timestamp(before)
++    path=tmp_path/'model.json';model.save(path);loaded=PaperForecast.load(path)
++    pd.testing.assert_series_equal(model.forecast(raw,as_of='2026-09-03T14:30:00-04:00'),
++                                   loaded.forecast(raw,as_of='2026-09-03T14:30:00-04:00'))
++    with pytest.raises(ValueError,match='complete declared panel'):
++        loaded.forecast({'AAA':raw['AAA']},as_of=before)
++    altered={s:b.copy() for s,b in raw.items()}
++    for b in altered.values(): b.loc[b.index>=pd.Timestamp(before),['open','close','high','low']]*=100
++    again=fit_bar_model(altered,'AAA',before=before,estimator=estimator)
++    assert again.artifact['state']==model.artifact['state']
++
++
++def test_next_mid_move_target_and_maturity():
++    q=quote_states(quotes(8));labels=next_move_labels(q)
++    assert labels.target.tolist()[:6]==[1,1,0,0,1,1]
++    assert labels.label_end.iloc[0]==q.index[2]
++    assert labels.target.iloc[-2:].isna().all()
++    future=forward_mid_labels(q,'2s','0s')
++    assert future.target.iloc[0]==pytest.approx(.01/100)
++    assert future.label_end.iloc[0]==q.index[2]
++
++
++def test_l1_gaps_do_not_supply_future_labels():
++    raw=quotes(8);raw.index=raw.index[:4].append(raw.index[4:]+pd.Timedelta('2h'))
++    labels=next_move_labels(quote_states(raw))
++    assert labels.target.iloc[2:4].isna().all()
++
++
++def test_arrival_clock_excludes_unseen_and_late_events():
++    raw=quotes(8);raw['source']='alpaca_stock_websocket'
++    raw['received_at']=(raw.index+pd.Timedelta('2s')).astype(str)
++    cutoff=raw.index[4]
++    visible=observed_events(raw,as_of=cutoff)
++    assert len(visible)==2
++    assert visible.index.max()<cutoff
++    raw.iloc[0,raw.columns.get_loc('received_at')]=(raw.index[6]+pd.Timedelta('2s')).isoformat()
++    visible=observed_events(raw)
++    assert visible.attrs['late_events_excluded']==1
++    assert visible.attrs['clock']=='recorded_arrival'
++
++
++def test_enhanced_ofi_formula_and_no_fake_trade_imbalance():
++    raw=quotes(8);q=quote_states(raw);features=enhanced_l1_features(raw,'10s')
++    assert len(features.columns)==12
++    assert features.l1_ofi_raw.iloc[0]==pytest.approx(q.ofi.sum())
++    assert features.l1_ofi_depth.iloc[0]==pytest.approx(q.ofi.sum()/5)
++    assert np.isnan(features.l1_signed_trade_imbalance.iloc[0])
++
++
++def test_qi_and_microprice_artifacts(tmp_path):
++    raw=quotes();before=raw.index[400]
++    qi=QueueImbalanceModel().fit(raw,before=before)
++    assert qi.predict(raw).iloc[:400].isna().all()
++    assert qi.predict(raw).iloc[400:].between(0,1).all()
++    path=tmp_path/'qi.json';qi.save(path)
++    pd.testing.assert_series_equal(qi.predict(raw),QueueImbalanceModel.load(path).predict(raw))
++    model=TransitionMicroprice().fit(raw,before=before)
++    a=model.artifact;Q=np.array(a['Q']);R=np.array(a['R']);g=np.array(a['immediate_reward'])
++    np.testing.assert_allclose((np.eye(len(Q))-Q)@np.array(a['first_move_correction']),g,atol=1e-12)
++    np.testing.assert_allclose((np.eye(len(Q))-Q)@np.array(a['B']),R,atol=1e-12)
++    np.testing.assert_allclose((Q+R).sum(axis=1),1)
++    correction=np.array(a['first_move_correction']);term=correction.copy()
++    for _ in range(a['price_changes']-1): term=np.array(a['B'])@term;correction+=term
++    np.testing.assert_allclose(a['correction'],correction)
++    path=tmp_path/'micro.json';model.save(path)
++    pd.testing.assert_frame_equal(model.predict(raw),TransitionMicroprice.load(path).predict(raw))
++    unsupported=raw.copy();unsupported['ask_price']+=.10
++    assert model.predict(unsupported).transition_microprice.isna().all()
++    wrong=raw.copy();wrong['feed']='sip'
++    with pytest.raises(ValueError,match='contract'): qi.predict(wrong)
++
++
++def test_microprice_unidentified_constant_book():
++    raw=quotes(80);raw[['bid_price','ask_price']]=[99.995,100.005]
++    with pytest.raises(ValueError,match='Non-absorbing'):
++        TransitionMicroprice().fit(raw,before=raw.index[-1])
++
++
++def test_l1_ridge_mature_horizon_and_future_forecast():
++    raw=quotes();before=raw.index[400]
++    model=fit_l1_ridge(raw,before=before,horizon='30s')
++    assert pd.Timestamp(model.artifact['last_label_end'])<before
++    pred=model.predict(l1_event_features(quote_states(raw)))
++    assert pred.iloc[:400].isna().all();assert pred.iloc[400:].notna().all()
++
++
++def test_lab_rejects_tampered_artifact(tmp_path):
++    assert paper_library_payload(tmp_path)['report_status']=='unavailable'
++    data=tmp_path/'features.txt';data.write_text('retained input')
++    r=tmp_path/'registry.json';r.write_text(json.dumps(dict(status='complete',artifact_hashes={'features.txt':digest(data)})))
++    (tmp_path/'registry.sha256').write_text(digest(r))
++    assert paper_library_payload(tmp_path)['report_status']=='complete'
++    data.write_text('changed')
++    assert paper_library_payload(tmp_path)['report_status']=='invalid'
++
++
++def test_combined_model_requires_real_l1_at_inference(tmp_path):
++    raw=bars();events=quotes(3600)
++    trades=events.iloc[::10].copy();trades.index+=pd.Timedelta('500ms')
++    trades['event_type']='trade';trades['price']=trades.ask_price;trades['size']=100
++    events=pd.concat([events,trades]).sort_index(kind='stable')
++    panel=bar_alpha_panel(raw);features=combine_bar_l1(panel['AAA'],events)
++    before=pd.Timestamp('2026-09-01 10:00',tz='America/New_York')
++    target=pd.Series(.001,index=features.index)
++    end=pd.Series(features.index+pd.Timedelta('10min'),index=features.index)
++    model=PaperForecast().fit(features,target,label_end=end,before=before)
++    model.artifact.update(symbol='AAA',input_kind='bar_plus_real_l1')
++    path=tmp_path/'combined.json';model.save(path);model=PaperForecast.load(path)
++    actual=model.forecast(raw,as_of='2026-09-01T10:20:00-04:00',events=events)
++    assert actual.iloc[-1]==pytest.approx(.001)
++    with pytest.raises(ValueError,match='Real L1 required'):
++        model.forecast(raw,as_of='2026-09-01T10:20:00-04:00')
++    wrong=events.copy();wrong['symbol']='BBB'
++    with pytest.raises(ValueError,match='contract changed'):
++        model.forecast(raw,as_of='2026-09-01T10:20:00-04:00',events=wrong)
++    absent=features.copy();absent['l1_ofi_raw']=np.nan
++    assert model.predict(absent).isna().all()
+diff --git a/docs/PAPER_ALPHA_LIBRARY.md b/docs/PAPER_ALPHA_LIBRARY.md
+new file mode 100644
+index 0000000..57c93fb
+--- /dev/null
++++ b/docs/PAPER_ALPHA_LIBRARY.md
+@@ -0,0 +1,73 @@
++# 可复现的 Alpha 候选库
++
++这次实现因子、标签、训练、持久化、推断和 Lab 展示，不进行策略回测或声称收益改善。
++代码实现、输入数据可用、模型已训练、样本外有效是四种不同状态。
++
++## 已实现的范围
++
++| 组件 | 默认输出 | 实现与限制 |
++| --- | --- | --- |
++| Alpha158 精选 | 18 列 | KMID/KLEN/KMID2/KUP/KLOW/KSFT；ROC/MA/STD/RSV/VMA/CORR，窗口 5、20 |
++| Alpha101 精选 | 6 列 | 002、003、004、006、012、101；不依赖缺失的真实 VWAP |
++| 截面/同行 | 7 列 | 同时点收益排名、排除自身的同行收益/残差、同组残差、过去窗口 Beta/市场残差、有效同行数 |
++| 真实 L1 | 12 列 | 保留原六项，新增原始 OFI、平均半深度、OFI/半深度、与价差和时段正余弦的交互 |
++| QI Logistic | 状态模型 | 用 QI 预测下一次不同中间价的向上概率；每次价格变动等权，避免报价密集片段主导训练 |
++| Transition Microprice | 状态模型 | 估计 Q/R、下一次价格变动期望、变动后状态转移；默认累加六次价格变动修正 |
++| OFI Ridge | 五个预测周期 | 真实报价事件的 QI/OFI/加权中间价/价差输入；1s、5s、30s、1min、5min 中间价标签 |
++| 量价 + L1 Ridge | 融合模型 | 相同的五分钟输入与下一根开盘到持有期收盘标签；缺少必需 L1 列时不虚构预测 |
++
++这些输出有相关性，也包含控制变量和数据覆盖诊断。31 个量价输入不等于 31 个独立有效 Alpha。
++Ridge、树模型、LightGBM 均可训练；所有尝试记录在 registry，未按这段历史收益挑出赢家。
++
++## 与原文的区别
++
++- [Qlib Alpha158 定义](https://github.com/microsoft/qlib/blob/main/qlib/contrib/data/loader.py)：独立实现精选公式，未导入整个 Qlib。ROC 保留 `delay(close,w)/close` 定义，标准差采用样本标准差。
++- [Alpha101](https://arxiv.org/abs/1601.00991)：原研究报告的持有期以天计。本项目这里是**五分钟、每日重置的周期适配**，不宣称复现原文效果。截面排名仅含指定研究股票，ETF 参考输入不参与排名；并列值平均排名，归一化到 (0,1]。窗口缺失保持 NaN。
++- [Cont / Kukanov / Stoikov](https://arxiv.org/abs/1011.6402)：新增深度采用区间内 `(bid_size + ask_size)/2` 的平均值。原 `l1_ofi_normalized` 为兼容旧产物仍使用总深度中位数，两个名字不能混淆。报价数量保留供应商单位，不把它与成交股数相加。
++- [Gould / Bonart](https://arxiv.org/abs/1512.03492)：QI 的标签是下一次中间价变动，不能用作交易胜率。此处用带正则项的简单 Logistic 基准，并按下一次变动事件加权，属于明确的实现选择。
++- [Stoikov 作者实现](https://github.com/sstoikov/microprice)：独立实现状态转移方程。状态是价差 tick 数和等宽 QI 桶；默认 5 桶、1–5 tick 价差、6 次价格变动、对称样本，是可配置实验参数。与作者用训练样本分位数划桶有区别。保存完整矩阵、支持样本数、最后增量和 Q 谱半径。没有无限级数收敛保证；未见状态返回缺失，无可识别转移则报告不足。`tick_size=0.01` 必须按标的报价规格核对。
++
++这里的简单加权中间价仍保留，但与状态转移 Microprice 分开命名。两者都不是可成交价格。
++
++## 数据和时间约定
++
++`paper_bar_alpha.bar_alpha_panel()` 是训练和推断共用的量价入口。输入是带时区的五分钟开盘时间戳，必须等 K 线收盘才可用；`as_of` 会排除未完成 K 线。日内网格显式保留缺口，不压缩滚动窗口。不用全样本标准化或未来数据填缺值。均值和尺度只在训练样本拟合；从未观察到的列会被明确记录为 unused。
++
++当前候选研究池为 21 只普通股票加 SPY/QQQ/SOXX 参考，不含 MSTR、COIN、MARA、IBIT。分组表是版本化的人工行业近似，不是历史 GICS 档案。它不改变券商 watchlist；价格至少 $10、过去 20 日平均成交额至少 $5,000 万的已同意准入仍属于已有选股/组合流程。特征构建不会把固定名单直接视为当日可交易名单。
++
++真实 L1 不从 OHLCV 生成。历史输入采用交易所事件时间，不能验证历史送达延迟；WebSocket 输入采用实际留存的 `received_at`，缺失时拒绝建立到达时间实验。晚到的过期交换时间事件在实验中排除并计数，原始落盘不删除。报价标签不跨日期、无效盘口或超过配置值的事件缺口（默认 30 秒），目标到期时间单独保存。
++
++QI 的成熟时间是首次后续中间价变动；固定时间收益标签取 `t+h` 之后容差内的首个报价（默认 1 秒容差），缺失不补。训练严格要求标签成熟时间 `< trained_before`。历史数据能研究信息关系，无法证明真实延迟条件下可盈利。
++
++## 运行
++
++从项目根目录生成特征，并训练截至 9 月 11 日的模型：
++
++```bash
++python3 scripts/build_paper_alpha_library.py \
++  --bars reports/platform_universe30_bars_20260913 \
++  --output reports/paper_alpha_library_20260913 \
++  --train-before '2026-09-12T00:00:00-04:00'
++```
++
++输出目录必须不存在，避免覆盖旧实验。省略 `--train-before` 只构建特征；`--models ridge tree lightgbm` 可以显式选模型。可用 `--symbols` 指定并记录研究面板。缺少文件会列出，不虚构行情。
++
++已有真实 L1 留存后，在命令上加 `--l1-dir <capture-root>` 与 `--l1-symbols SNDK TSLA PLTR NVDA`，输出到另一个新目录，即可同时尝试 QI、Microprice、多期限 OFI Ridge 和量价 + L1 Ridge。缺少样本或无法识别的模型各自记录 unavailable，不冒充训练成功。
++
++产物包含因子 parquet、模型 JSON、数据和代码 SHA256、训练截止时刻、缺失列及状态。模型用可检查的 JSON 保存系数/树结构/LightGBM 文本模型，不使用 pickle。`PaperForecast.load(...).forecast(frames, as_of=...)` 使用与训练相同的特征引擎；融合模型另传 `events=`。必须供给模型声明的同一股票面板。默认只输出训练截止之后的预测。
++
++现有统一实验的 `features_for_panel` 新增 `alpha158_subset`、`alpha101_subset`、`cross_sectional`、`paper_library`、`paper_l1`、`paper_combined` 六个入口。原有实验菜单和历史产物保持可识别，不自动将新模型置换为实盘策略。
++
++Lab 的 `/api/research/alpha_library` 展示实现状态，校验固定构建记录及其文件哈希。构建记录完整不等于策略有效。当前 `live_runner` 无需改订单逻辑来完成这轮研究接入；它仍加载原有策略模型。后续若验证通过，再将具体模型、面板、成本和组合规则一起接入实盘，不能只把新特征塞进旧系数。
++
++## 2026-09-13 实际构建记录
++
++`reports/paper_alpha_library_20260913/registry.json` 已通过完整性校验：20 只股票、3 个参考 ETF，BAC 缺少本地行情。生成 31 列量价/截面联合输入，以及 240 份已训练、待验证的模型 JSON（20 股 × 4 种输入组 × Ridge/树/LightGBM）。341 个文件的哈希、输入来源清单、训练代码快照均核对通过。真实 L1 未提供留存目录，四只默认采集股票都明确记录 unavailable，没有生成盘口数据或冒充训练成功。
++
++新增与相关回归测试共 28 项通过；前端 TypeScript/Vite 构建通过。覆盖未来数据扰动、收盘可用时间、缺口、截面排名、成熟标签、源/股票一致性、序列化前后推断、Microprice 转移方程、缺失 L1 及产物篡改。
++
++原 Desktop 工作区出现 macOS `dataless` 云端占位文件读空/超时，本次从已推送的 `efa2997` 在 `/Users/yuliangpeng/Quant-alpha-work` 建立独立可读副本，修改位于 `feat/paper-alpha-library` 分支。没有覆盖原目录中无法读取的文件。
++
++## 下一步验证
++
++固定同一股票池、日期、资金、标签及成本，比较现有模型、精选量价、加入截面、加入真实 L1 的增量。用过去训练的逐日滚动测试与未来留存数据，查看净收益、按日不确定性、IC、换手和各股票归因。已反复研究的日期只用于开发，不作为未触碰测试集。这份构建记录没有任何盈利结论。
+diff --git a/frontend/src/components/PaperAlphaLibrary.tsx b/frontend/src/components/PaperAlphaLibrary.tsx
+new file mode 100644
+index 0000000..c364f12
+--- /dev/null
++++ b/frontend/src/components/PaperAlphaLibrary.tsx
+@@ -0,0 +1,47 @@
++import { useEffect, useState } from 'react';
++import { API_BASE } from '../config';
++
++type Library = {
++  entries: { id: string; name: string; features: number | null; data: string; purpose: string; source: string | null }[];
++  report_status: string; reason: string | null;
++  report: null | {
++    symbols: string[]; missing_symbols: string[];
++    models: { status: string; symbol: string; family: string; estimator: string }[];
++    l1: Record<string, { status: string; reason?: string }>;
++  };
++};
++
++export function PaperAlphaLibrary() {
++  const [library, setLibrary] = useState<Library | null>(null);
++  const [error, setError] = useState('');
++  useEffect(() => {
++    const controller = new AbortController();
++    fetch(`${API_BASE}/api/research/alpha_library`, { signal: controller.signal })
++      .then(async response => { if (!response.ok) throw new Error(`HTTP ${response.status}`); return response.json(); })
++      .then(setLibrary).catch(e => { if (e.name !== 'AbortError') setError(String(e.message)); });
++    return () => controller.abort();
++  }, []);
++  return <section className="mb-5 rounded-xl border border-slate-700 bg-slate-950/60 p-5 text-sm text-slate-300">
++    <h3 className="font-semibold text-sky-300">Alpha 候选库 · 实现与数据状态</h3>
++    <p className="my-2 text-amber-200">这些是待验证的研究候选。公式数量、训练完成和样本外收益是不同的事情；本次构建不计算盈利。</p>
++    {error && <p role="alert">候选库暂不可用：{error}</p>}
++    {!library && !error && <p role="status">读取候选库…</p>}
++    {library && <>
++      <div className="overflow-x-auto"><table className="w-full text-left text-xs">
++        <thead><tr>{['候选', '输出数量', '所需数据', '用途'].map(h => <th key={h} className="p-2">{h}</th>)}</tr></thead>
++        <tbody>{library.entries.map(entry => <tr key={entry.id} className="border-t border-slate-800">
++          <td className="p-2">{entry.source ? <a href={entry.source} target="_blank" rel="noreferrer" className="text-sky-300 underline">{entry.name}</a> : entry.name}</td>
++          <td className="p-2">{entry.features ?? '状态模型'}</td><td className="p-2">{entry.data}</td><td className="p-2">{entry.purpose}</td>
++        </tr>)}</tbody>
++      </table></div>
++      <p className="mt-3">量价窗口按五分钟 K 线计数，每日重置；这是周期适配，不是原论文日频结果。</p>
++      {library.report_status !== 'complete' && <p className="mt-2 text-amber-200">构建记录：{library.reason}</p>}
++      {library.report && <div className="mt-3 space-y-2">
++        <p>已读取行情：{library.report.symbols.join('、')}</p>
++        {library.report.missing_symbols.length > 0 && <p>缺少行情：{library.report.missing_symbols.join('、')}</p>}
++        <p>已训练、待验证的模型产物：{library.report.models.filter(m => m.status === 'trained_unvalidated').length} 个（按股票、因子组及模型分别计数，不代表这么多个有效 Alpha）。</p>
++        <p>真实 L1：{Object.entries(library.report.l1).map(([s, status]) => `${s}：${status.status === 'unavailable' ? status.reason || '数据不足' : '已生成特征，效果待验证'}`).join('；')}</p>
++      </div>}
++    </>}
++  </section>;
++}
+diff --git a/frontend/src/components/ResearchPlatformResults.tsx b/frontend/src/components/ResearchPlatformResults.tsx
+index 9f42e25..eb161a7 100644
+--- a/frontend/src/components/ResearchPlatformResults.tsx
++++ b/frontend/src/components/ResearchPlatformResults.tsx
+@@ -1,5 +1,6 @@
+ import { useEffect, useState } from 'react';
+ import { API_BASE } from '../config';
++import { PaperAlphaLibrary } from './PaperAlphaLibrary';
+ 
+ type Attribution = { symbol?: string; direction?: string; hour?: number; gross_pnl: number; costs: number; net_pnl: number };
+ type Trial = {
+@@ -73,8 +74,8 @@ export function ResearchPlatformResults() {
+       <option value="direction_two_weeks">四股方向模型修改 · 大盘/行业与多期配仓</option>
+     </select>
+   </label>;
+-  if (error) return <div>{datasetSelector}<p role="alert" className="p-5 text-amber-300">统一研究结果暂不可用：{error}</p></div>;
+-  if (!research) return <div>{datasetSelector}<p role="status" className="p-5 text-slate-400">正在读取并校验研究记录…</p></div>;
++  if (error) return <div><PaperAlphaLibrary />{datasetSelector}<p role="alert" className="p-5 text-amber-300">统一研究结果暂不可用：{error}</p></div>;
++  if (!research) return <div><PaperAlphaLibrary />{datasetSelector}<p role="status" className="p-5 text-slate-400">正在读取并校验研究记录…</p></div>;
+   const trials = research.trials.filter(t => t.cost_bps === cost);
+   const selected = trials.find(t => t.candidate.name === chosen);
+   const groups = selected?.attribution;
+@@ -82,6 +83,7 @@ export function ResearchPlatformResults() {
+     { symbol, net_pnl: row.net_pnl, costs: row.costs, gross_pnl: row.net_pnl + row.costs }
+   ));
+   return <section className="space-y-5 bg-slate-950/60 border border-slate-800 rounded-xl p-5 text-sm text-slate-300">
++    <PaperAlphaLibrary />
+     {datasetSelector}
+     <div>
+       <h3 className="font-semibold text-amber-300">统一研究：预测、组合与成本</h3>
+diff --git a/scripts/build_paper_alpha_library.py b/scripts/build_paper_alpha_library.py
+new file mode 100644
+index 0000000..17d55e8
+--- /dev/null
++++ b/scripts/build_paper_alpha_library.py
+@@ -0,0 +1,138 @@
++#!/usr/bin/env python3
++"""Build actual feature matrices and optional trained artifacts; no PnL or orders."""
++from __future__ import annotations
++import argparse
++import json
++from importlib.metadata import version
++from pathlib import Path
++import sys
++import pandas as pd
++ROOT=Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT/'backend'))
++from app.alpha.paper_bar_alpha import BarAlphaSpec,bar_alpha_panel,STOCKS,REFERENCES,FAMILIES
++from app.alpha.paper_l1_alpha import enhanced_l1_features,PAPER_L1_FEATURES
++from app.alpha.l1_state_models import QueueImbalanceModel,TransitionMicroprice
++from app.market_data.alpaca_l1_capture import load_real_l1_events
++from app.research.paper_models import PaperForecast,fit_l1_ridge,combine_bar_l1
++from app.research.paper_catalog import ENTRIES,digest
++from app.research.data_audit import input_provenance
++from app.quant_policy import PolicySpec,labeled_frame
++
++
++def write(path,value): path.write_text(json.dumps(value,indent=2,ensure_ascii=False,allow_nan=False)+'\n')
++
++
++def run(args):
++    out=Path(args.output);out.mkdir(parents=True,exist_ok=False)
++    requested=tuple(dict.fromkeys(args.symbols+list(REFERENCES)))
++    if any(not s.replace('.','').isalnum() for s in requested): raise ValueError('Invalid symbol')
++    files={s:Path(args.bars)/f'{s}.parquet' for s in requested}
++    missing=[s for s,p in files.items() if not p.exists()]
++    files={s:p for s,p in files.items() if p.exists()}
++    frames={s:pd.read_parquet(p) for s,p in files.items()}
++    sources=[Path(__file__),*[ROOT/'backend/app'/p for p in ('alpha/paper_bar_alpha.py','alpha/paper_l1_alpha.py',
++             'alpha/l1_state_models.py','alpha/real_l1_alpha.py','research/paper_models.py','quant_policy.py',
++             'market_data/alpaca_l1_capture.py','research/data_audit.py')]]
++    source_hashes={str(p.relative_to(ROOT)):digest(p) for p in sources}
++    l1_hashes={str(p.relative_to(args.l1_dir)):digest(p) for p in Path(args.l1_dir).rglob('*.jsonl')} if args.l1_dir else {}
++    report=dict(schema_version=1,status='running',registered_at=pd.Timestamp.now(tz='UTC').isoformat(),
++                task='feature_implementation_and_training_no_backtest',performance_verified=False,selected_for_live=None,
++                library_versions={n:version(n) for n in ('numpy','pandas','scipy','scikit-learn','lightgbm','pyarrow')},
++                entries=list(ENTRIES),requested_symbols=list(requested),symbols=list(files),missing_symbols=missing,
++                data_hashes={s:digest(p) for s,p in files.items()},features={},models=[],l1={},
++                data_provenance=input_provenance(args.bars,list(files)),
++                unverified_assumptions=['因子实现与训练完成不代表样本外 Alpha 或盈利。',
++                    'Alpha158 / Alpha101 是五分钟、日内重置适配，不复制原论文日频收益。',
++                    '固定当前研究池，不代表历史成分股；此命令不选股下单。',
++                    '成本、期初库存、账户净值、入出金仍未以官方账单核验。',
++                    '历史中间价标签不包含报价送达延迟、可成交数量或真实交易成本。'])
++    write(out/'registry.json',report)
++    if not frames: raise ValueError('No local bars. Supply --bars with retained parquet data.')
++    cutoff=pd.Timestamp(args.train_before) if args.train_before else None
++    if cutoff is not None and cutoff.tzinfo is None: raise ValueError('--train-before requires timezone')
++    bar_library=None
++    for family in FAMILIES:
++        panel=bar_alpha_panel(frames,BarAlphaSpec(family=family))
++        if family=='paper_library': bar_library=panel
++        folder=out/family;folder.mkdir();report['features'][family]={}
++        for s,features in panel.items():
++            features.to_parquet(folder/f'{s}.parquet')
++            report['features'][family][s]=dict(rows=len(features),columns=list(features.columns),
++                observed_rows=int(features.notna().any(axis=1).sum()),complete_rows=int(features.notna().all(axis=1).sum()),
++                availability={n:int(features[n].notna().sum()) for n in features},contract=features.attrs)
++            if cutoff is None or s in REFERENCES: continue
++            _,target=labeled_frame(frames[s],PolicySpec('paper_training',horizon_bars=args.horizon_bars))
++            target=target.reindex(features.index)
++            end=pd.Series(features.index+pd.Timedelta(minutes=5*(args.horizon_bars+1)),index=features.index)
++            for estimator in args.models:
++                record=dict(symbol=s,family=family,estimator=estimator)
++                try:
++                    model=PaperForecast().fit(features,target,label_end=end,before=cutoff,estimator=estimator)
++                    model.artifact.update(symbol=s,horizon_bars=args.horizon_bars,target='next_open_to_horizon_close_return')
++                    name=f'{family}/{s}_{estimator}.json';model.save(out/name)
++                    record.update(status='trained_unvalidated',artifact=name,rows=model.artifact['rows'],
++                                  trained_before=model.artifact['trained_before'],unused_features=model.artifact['unused_features'])
++                except (ValueError,ImportError) as exc: record.update(status='unavailable',reason=str(exc))
++                report['models'].append(record)
++        print(f'{family}: feature matrices built',flush=True)
++    for symbol in args.l1_symbols:
++        record=dict(status='unavailable',reason='未提供真实 L1 留存目录；未生成模拟报价')
++        if args.l1_dir:
++            try:
++                events=load_real_l1_events(args.l1_dir,symbol)
++                if events.empty: raise ValueError('No real captured L1 events')
++                folder=out/'l1'/symbol;folder.mkdir(parents=True)
++                book=enhanced_l1_features(events)
++                book.to_parquet(folder/'features_5min.parquet')
++                record=dict(status='features_built',events=len(events),models=[])
++                if cutoff is not None:
++                    tasks=[('qi_logistic',lambda:QueueImbalanceModel().fit(events,before=cutoff)),
++                           ('transition_microprice',lambda:TransitionMicroprice().fit(events,before=cutoff,tick_size=args.tick_size))]
++                    tasks += [(f'ofi_ridge_{h}',lambda h=h:fit_l1_ridge(events,before=cutoff,horizon=h)) for h in ('1s','5s','30s','1min','5min')]
++                    for name,fit in tasks:
++                        try:
++                            fitted=fit();fitted.save(folder/f'{name}.json')
++                            record['models'].append(dict(name=name,status='trained_unvalidated'))
++                        except ValueError as exc: record['models'].append(dict(name=name,status='unavailable',reason=str(exc)))
++                    if symbol in bar_library:
++                        combined=combine_bar_l1(bar_library[symbol],events)
++                        _,target=labeled_frame(frames[symbol],PolicySpec('paper_l1_training',horizon_bars=args.horizon_bars))
++                        target=target.reindex(combined.index)
++                        end=pd.Series(combined.index+pd.Timedelta(minutes=5*(args.horizon_bars+1)),index=combined.index)
++                        try:
++                            fitted=PaperForecast().fit(combined,target,label_end=end,before=cutoff)
++                            fitted.artifact.update(symbol=symbol,horizon_bars=args.horizon_bars,target='next_open_to_horizon_close_return',
++                                                   input_kind='bar_plus_real_l1')
++                            fitted.save(folder/'bar_plus_l1_ridge.json')
++                            record['models'].append(dict(name='bar_plus_l1_ridge',status='trained_unvalidated'))
++                        except ValueError as exc:
++                            record['models'].append(dict(name='bar_plus_l1_ridge',status='unavailable',reason=str(exc)))
++            except (ValueError,OSError) as exc: record=dict(status='unavailable',reason=str(exc))
++        report['l1'][symbol]=record
++    report['l1_input_hashes']={str(p.relative_to(args.l1_dir)):digest(p) for p in Path(args.l1_dir).rglob('*.jsonl')} if args.l1_dir else {}
++    if report['l1_input_hashes']!=l1_hashes:
++        raise ValueError('L1 capture changed during the build; use a frozen copy')
++    report['source_hashes']={str(p.relative_to(ROOT)):digest(p) for p in sources}
++    if report['source_hashes']!=source_hashes:
++        raise ValueError('Source files changed during the build; rerun from a stable checkout')
++    if report['data_hashes']!={s:digest(p) for s,p in files.items()}:
++        raise ValueError('Input files changed during the build')
++    for p in sources:
++        target=out/'source'/p.relative_to(ROOT);target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(p.read_bytes())
++    report.update(status='complete',finished_at=pd.Timestamp.now(tz='UTC').isoformat())
++    report['artifact_hashes']={str(p.relative_to(out)):digest(p) for p in out.rglob('*') if p.is_file() and p.name!='registry.json'}
++    write(out/'registry.json',report);(out/'registry.sha256').write_text(digest(out/'registry.json')+'\n')
++    print(f"{out}: {len(report['models'])} model attempts recorded; no backtest or orders",flush=True)
++    return report
++
++
++if __name__=='__main__':
++    parser=argparse.ArgumentParser(description=__doc__)
++    parser.add_argument('--bars',default=str(ROOT/'reports/platform_universe30_bars_20260913'))
++    parser.add_argument('--symbols',nargs='+',default=list(STOCKS))
++    parser.add_argument('--output',required=True)
++    parser.add_argument('--train-before',help='Exclusive timestamp with timezone; omitted means features only')
++    parser.add_argument('--models',nargs='+',choices=['ridge','tree','lightgbm'],default=['ridge','tree','lightgbm'])
++    parser.add_argument('--horizon-bars',type=int,choices=[1,3,6],default=1)
++    parser.add_argument('--l1-dir');parser.add_argument('--l1-symbols',nargs='+',default=['SNDK','TSLA','PLTR','NVDA'])
++    parser.add_argument('--tick-size',type=float,default=.01)
++    run(parser.parse_args())

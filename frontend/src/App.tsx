@@ -22,6 +22,7 @@ import { PortfolioHistoryChart } from './components/PortfolioHistoryChart';
 import { ReplayAndExperimentsPanel } from './components/ReplayAndExperimentsPanel';
 import { MLAssistantPanel } from './components/MLAssistantPanel';
 import { TradeComparisonPanel } from './components/TradeComparisonPanel';
+import { PaperAlphaDashboard } from './components/PaperAlphaDashboard';
 import { API_BASE } from './config';
 
 interface SummaryData {
@@ -634,7 +635,7 @@ function App() {
               transition: 'all 0.2s ease'
             }}
           >
-            🚀 实时 Alpha 收益大屏
+            🚀 实时 Alpha 候选与微观大屏
           </button>
 
           <button
@@ -803,12 +804,8 @@ function App() {
 
           {/* Live Interactive Alpha Dashboard Tab */}
           {activeTab === 'live_dashboard' && (
-            <div style={{ width: '100%', height: 'calc(100vh - 120px)', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--color-border)' }}>
-              <iframe
-                src="/charts/quant_live_dashboard.html"
-                title="Quant.ai Alpha Live Dashboard"
-                style={{ width: '100%', height: '100%', border: 'none' }}
-              />
+            <div style={{ width: '100%', minHeight: 'calc(100vh - 120px)', borderRadius: '12px', overflow: 'hidden' }}>
+              <PaperAlphaDashboard />
             </div>
           )}
 

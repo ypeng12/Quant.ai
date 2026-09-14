@@ -1831,6 +1831,13 @@ def get_platform_research_results(dataset: str = "four_two_weeks"):
     return research_bundle(dataset)
 
 
+@app.get("/api/research/alpha_library")
+def get_paper_alpha_library():
+    """Implementation, input coverage and trained artifacts; no trading side effects."""
+    from app.research.paper_catalog import paper_library_payload
+    return paper_library_payload()
+
+
 @app.get("/api/ml/predict")
 def get_ml_prediction(ticker: str = "TSLA"):
     """Classic archived model cards, with explicit display provenance."""
