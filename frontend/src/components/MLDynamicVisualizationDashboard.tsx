@@ -178,7 +178,7 @@ export const MLDynamicVisualizationDashboard: React.FC = () => {
               </div>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '0.75rem', color: '#cbd5e1' }}>[{ticker}] 今日实盘净收益</div>
+              <div style={{ fontSize: '0.75rem', color: '#cbd5e1' }}>[{ticker}] 收益情景示例</div>
               <div style={{ fontSize: '1.3rem', color: '#10b981', fontWeight: 900 }}>+$18,517.75 USD (+10.94%)</div>
             </div>
           </div>

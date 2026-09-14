@@ -417,7 +417,7 @@ export const IntradayKlineChart: React.FC<IntradayKlineChartProps> = ({ ticker: 
               alignItems: 'center',
               gap: '4px'
             }}>
-              {isPositive ? '▲' : '▼'} {isPositive ? '+' : ''}{data.summary.day_change_pct}% Today
+              {isPositive ? '▲' : '▼'} {isPositive ? '+' : ''}{data.summary.day_change_pct.toFixed(2)}% 该交易日
             </span>
           </div>
 
@@ -470,7 +470,7 @@ export const IntradayKlineChart: React.FC<IntradayKlineChartProps> = ({ ticker: 
             >
               {(availableDates.length > 0 ? availableDates : [data.date]).map((d, i) => (
                 <option key={d} value={d} style={{ background: '#0d131f', color: '#ffffff' }}>
-                  {i === 0 ? `🔥 今日 (${d} 实时)` : i === 1 ? `⏪ 昨天 (${d})` : `📅 历史 (${d})`}
+                  {i === 0 ? `📅 最近保存 (${d})` : `📅 历史 (${d})`}
                 </option>
               ))}
             </select>
@@ -991,7 +991,7 @@ export const IntradayKlineChart: React.FC<IntradayKlineChartProps> = ({ ticker: 
           </span>
           <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: forecastColor, fontWeight: 700 }}>
             <span style={{ width: '12px', height: '3px', background: forecastColor, borderBottom: '2px dashed #fff' }} />
-            ML 模型实时预估走势 (预计涨跌)
+            经典规则轨迹 (情景展示)
           </span>
           <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#fbbf24', fontWeight: 700 }}>
             <span style={{ width: '12px', height: '3px', background: '#fbbf24', borderBottom: '2px dotted #fff' }} />
@@ -1014,7 +1014,7 @@ export const IntradayKlineChart: React.FC<IntradayKlineChartProps> = ({ ticker: 
         <div style={{ background: 'rgba(56, 189, 248, 0.06)', padding: '12px 14px', borderRadius: '8px', border: '1px solid rgba(56, 189, 248, 0.15)' }}>
           <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}>规则轨迹上界幅度</div>
           <div style={{ fontSize: '19px', fontWeight: 900, color: '#38bdf8', marginTop: '3px' }}>
-            +{data.summary.ml_predicted_mfe_pct}%
+            +{data.summary.ml_predicted_mfe_pct.toFixed(2)}%
           </div>
           <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>基于 ATR 与经典方向分数</div>
         </div>
@@ -1022,7 +1022,7 @@ export const IntradayKlineChart: React.FC<IntradayKlineChartProps> = ({ ticker: 
         <div style={{ background: 'rgba(16, 185, 129, 0.06)', padding: '12px 14px', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.15)' }}>
           <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}>实际最大拉升涨幅</div>
           <div style={{ fontSize: '19px', fontWeight: 900, color: '#10b981', marginTop: '3px' }}>
-            +{data.summary.actual_max_gain_pct}%
+            +{data.summary.actual_max_gain_pct.toFixed(2)}%
           </div>
           <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>真实市场盘中实际走势</div>
         </div>
