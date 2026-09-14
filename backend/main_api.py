@@ -1364,6 +1364,10 @@ def get_trade_comparison_data(ticker: str = "SNDK", interval: str = "1m"):
 @app.get("/api/broker/account")
 def get_broker_account():
     """Return broker account evidence; connection failure is not a sample balance."""
+    from app.broker.account_view import read_configured_account_view
+    account_view = read_configured_account_view("account")
+    if account_view is not None:
+        return account_view
     from app.broker.mock_adapter import MockAlpacaAdapter
     if isinstance(live_runner.adapter, MockAlpacaAdapter):
         return {"success": False, "status": "unavailable", "error": "Broker account unavailable; demo balances are not account evidence."}
@@ -1379,6 +1383,10 @@ def get_broker_account():
 @app.get("/api/broker/positions")
 def get_broker_positions():
     """Return actual broker inventory; never substitute invented positions."""
+    from app.broker.account_view import read_configured_account_view
+    account_view = read_configured_account_view("positions")
+    if account_view is not None:
+        return account_view
     from app.broker.mock_adapter import MockAlpacaAdapter
     if isinstance(live_runner.adapter, MockAlpacaAdapter):
         return {"success": False, "status": "unavailable", "positions": None, "error": "Broker inventory unavailable."}
@@ -1396,6 +1404,10 @@ def get_portfolio_history(period: str = "1M", timeframe: Optional[str] = None):
     """
     暴露给前端渲染与 Alpaca 官方完全相同的 Portfolio 折线图（对应 1D / 1M / 1Y / All）。
     """
+    from app.broker.account_view import read_configured_account_view
+    account_view = read_configured_account_view("history", period, timeframe)
+    if account_view is not None:
+        return account_view
     from app.config import ALPACA_API_KEY, ALPACA_SECRET_KEY, ALPACA_BASE_URL
     from app.broker.alpaca_adapter import AlpacaAdapter
     try:
@@ -1828,19 +1840,12 @@ def get_paper_alpha_library():
 
 @app.get("/api/ml/predict")
 def get_ml_prediction(ticker: str = "TSLA"):
-    """Retire legacy synthetic/proxy ML output from the public API.
-
-    The former route could synthesize feature values and fit a synthetic LOB
-    suite.  Neither is a measurement of a predictive edge, so callers must use
-    the verified policy research artifact or the captured real-L1 research path.
-    """
-    return {
-        "success": False,
-        "status": "unavailable",
-        "ticker": ticker.strip().upper(),
-        "result": None,
-        "error": "Legacy ML predictions used proxy or synthetic features and are retired. Use /api/research/latest_results; real-L1 ML is unavailable until captured data is trained and tested out of sample.",
-    }
+    """Classic archived model cards, with explicit display provenance."""
+    from app.ml.classic_dashboard import ml_snapshot
+    try:
+        return ml_snapshot(ticker)
+    except (ValueError, OSError) as exc:
+        return {"success": False, "status": "unavailable", "ticker": ticker.strip().upper(), "error": str(exc)}
 
 
 @app.get("/api/ml/lab_data")
@@ -1952,7 +1957,7 @@ _wave_history_cache = None
 
 @app.get("/api/wave/live_today")
 async def get_wave_live_today(ticker: str = "TSLA"):
-    """Report captured L1 availability; the retired wave model emits no signals."""
+    """Render the classic wave charts from current-session completed OHLCV bars."""
     try:
         from app.ml.lob_wave_realtime import compute_live_wave_day_data
         return compute_live_wave_day_data(ticker.upper().strip())
@@ -2056,12 +2061,9 @@ def get_single_kline(ticker: str = "TSLA", tf: str = "5m", date: Optional[str] =
 
 @app.get("/api/ml/prediction-trajectory")
 def get_ml_prediction_trajectory(ticker: str = "SNDK", date: Optional[str] = None):
-    """Legacy OHLCV proxy forecasts lack validated win-probability evidence."""
-    return {
-        "success": False, "status": "unavailable", "ticker": ticker.strip().upper(),
-        "date": date, "times": [], "p_win_series": [],
-        "error": "旧预测图使用K线代理盘口和未经验证的胜率变换，已停止展示。请查看Lab中的可复现实验；真实L1增益与概率校准尚待验证。",
-    }
+    """Retained prices and the classic rule trajectory for interactive display."""
+    from app.ml.classic_dashboard import trajectory
+    return trajectory(ticker, date)
 
 @app.get("/charts/dynamic_ml_simulation_replay.html")
 async def get_dynamic_ml_simulation_replay():

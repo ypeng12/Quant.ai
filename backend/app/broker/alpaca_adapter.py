@@ -5,6 +5,7 @@ Wraps official alpaca-py SDK for paper/live trading commands.
 """
 
 import os
+from datetime import datetime, timezone
 from typing import Dict, List, Optional
 from dotenv import load_dotenv
 
@@ -82,6 +83,8 @@ class AlpacaAdapter:
 
         return {
             "success": True,
+            "is_paper": self.is_paper,
+            "observed_at": datetime.now(timezone.utc).isoformat(),
             "account_number": str(account.account_number),
             "status": str(status_str),
             "currency": str(account.currency),

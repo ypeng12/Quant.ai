@@ -1,8 +1,7 @@
 # backend/app/ml/lob_wave_realtime.py
 """
-Read-only availability of captured L1 quotes aligned with recent bars.
-The legacy OHLCV-proxy wave model is retired; this module returns no trading
-probability, synthetic order book, or live wave signal.
+Read-only classic wave display using observed bars and labelled OHLCV rules.
+Real L1 research remains available through its separate capture/feature pipeline.
 """
 
 import os
@@ -18,7 +17,6 @@ if backend_dir not in sys.path:
     sys.path.insert(0, backend_dir)
 
 from app.market_data.history import credentials
-from app.market_data.alpaca_l1_capture import load_real_l1_quotes, real_l1_to_five_minute
 
 
 def fetch_today_bars(ticker: str) -> pd.DataFrame:
@@ -88,51 +86,31 @@ def fetch_today_bars(ticker: str) -> pd.DataFrame:
     return pd.DataFrame()
 
 
-def compute_live_wave_day_data(ticker: str) -> Dict[str, Any]:
-    """Report captured L1 availability without inferring a legacy wave signal.
-
-    The old wave artifact used OHLCV-derived proxy-book fields.  A real quote
-    stream deserves a separate causal, walk-forward training run, so this route
-    does not attach its former probabilities or trade signals to L1 data.
-    """
-    tk = str(ticker).upper().strip()
-    df_raw = fetch_today_bars(tk)
-    if df_raw.empty or len(df_raw) < 2:
-        return {
-            "success": False, "status": "unavailable", "ticker": tk,
-            "error": "No current intraday bars are available to align captured L1 data.",
-        }
-
-    df_5m = df_raw.resample("5min").agg({
-        "Open": "first", "High": "max", "Low": "min", "Close": "last", "Volume": "sum",
-    }).dropna()
-    df_5m = df_5m.between_time("09:30", "16:00")
-    if df_5m.empty:
-        return {
-            "success": False, "status": "unavailable", "ticker": tk,
-            "error": "No regular-session bars are available to align captured L1 data.",
-        }
-
-    l1_dir = os.getenv("QUANT_L1_CAPTURE_DIR", os.path.join(backend_dir, "data", "l1_capture"))
-    session_day = df_5m.index[-1].date().isoformat()
-    raw_quotes = load_real_l1_quotes(l1_dir, tk, session_day)
-    l1_quotes = real_l1_to_five_minute(raw_quotes)
-    real_l1_rows = 0
-    if not l1_quotes.empty:
-        joined = df_5m.join(l1_quotes, how="left")
-        real_l1_rows = int(joined[["bid_price", "bid_size", "ask_price", "ask_size"]].notna().all(axis=1).sum())
-
-    return {
-        "success": False,
-        "status": "unavailable",
-        "ticker": tk,
-        "data_provenance": {
-            "bar_source": df_raw.attrs.get("bar_source", "unavailable"),
-            "lob_source": "captured_alpaca_l1_quotes" if real_l1_rows else None,
-            "market_depth": "L1" if real_l1_rows else None,
-            "real_l1_five_minute_rows": real_l1_rows,
-            "l1_session_date": session_day if real_l1_rows else None,
-            "latest_quote_at": raw_quotes.index.max().isoformat() if not raw_quotes.empty else None,
-        },
-        "error": "The legacy wave model used OHLCV proxy-book features and is retired. Captured real L1 events are reserved for the new walk-forward research pipeline.",
-    }
+def compute_live_wave_day_data(ticker: str, *, now=None) -> Dict[str, Any]:
+    """Classic OHLCV rule view for today's completed bars; never a measured book."""
+    from .classic_dashboard import build_wave_data, symbol_name
+    tk = symbol_name(ticker)
+    cutoff = pd.Timestamp(now) if now is not None else pd.Timestamp.now(tz="America/New_York")
+    if cutoff.tzinfo is None:
+        raise ValueError("Timezone-aware current time required")
+    cutoff = cutoff.tz_convert("America/New_York")
+    raw = fetch_today_bars(tk)
+    if raw.empty:
+        return {"success": False, "status": "unavailable", "ticker": tk, "error": "今日行情暂不可用，可切换历史日期。"}
+    if raw.index.tz is None:
+        raise ValueError("Observed bars require timezone-aware timestamps")
+    raw = raw.tz_convert("America/New_York")
+    raw = raw.loc[(raw.index + pd.Timedelta(minutes=1) <= cutoff) & (raw.index.date == cutoff.date())]
+    if raw.empty:
+        return {"success": False, "status": "unavailable", "ticker": tk, "error": "今日尚无已完成 K 线，可选择历史交易日。"}
+    frame = raw.resample("5min").agg({"Open":"first", "High":"max", "Low":"min", "Close":"last", "Volume":"sum"})
+    counts = raw.Close.resample("5min").count()
+    frame = frame.loc[(counts == 5) & (frame.index + pd.Timedelta(minutes=5) <= cutoff)].dropna().between_time("09:30", "15:55")
+    if frame.empty:
+        return {"success": False, "status": "unavailable", "ticker": tk, "error": "等待完整的五分钟 K 线，可先查看历史展示。"}
+    day = cutoff.date().isoformat()
+    data = build_wave_data(frame, tk, day, raw.attrs.get("bar_source", "observed_1m_bars"))
+    return {"success": True, "status": "current_ohlcv_view", "ticker": tk, "date": day,
+            "is_today": True, "last_updated": cutoff.isoformat(), "data": data,
+            "data_provenance": {**data["data_provenance"], "current_session": True,
+                                "latest_bar_at": frame.index[-1].isoformat()}}

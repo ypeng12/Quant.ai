@@ -1,4 +1,4 @@
-"""The retired wave API must not substitute cached or wrong-day signals."""
+"""Classic wave views must retain dates and never substitute a prior session for today."""
 import ast
 import asyncio
 import datetime
@@ -38,13 +38,14 @@ def test_history_response_identifies_proxy_and_never_substitutes_current_data(mo
     assert not asyncio.run(handler('TSLA', '2026-08-30'))['success']
 
 
-def test_quote_availability_is_dated_and_contains_no_wave_predictions(monkeypatch):
-    index = pd.date_range('2026-09-11 09:30', periods=6, freq='min', tz='America/New_York')
+def test_current_wave_view_uses_completed_bars_and_names_ohlcv(monkeypatch):
+    index = pd.date_range('2026-09-11 09:30', periods=7, freq='min', tz='America/New_York')
     bars = pd.DataFrame({c: 100.0 for c in ['Open', 'High', 'Low', 'Close', 'Volume']}, index=index)
-    quotes = pd.DataFrame({'bid_price': [99.99], 'ask_price': [100.01], 'bid_size': [2.0], 'ask_size': [1.0]}, index=index[:1])
     monkeypatch.setattr(lob_wave_realtime, 'fetch_today_bars', lambda _: bars)
-    monkeypatch.setattr(lob_wave_realtime, 'load_real_l1_quotes', lambda *args: quotes)
-    result = lob_wave_realtime.compute_live_wave_day_data('TSLA')
-    assert result['status'] == 'unavailable' and 'data' not in result
-    assert result['data_provenance']['l1_session_date'] == '2026-09-11'
-    assert result['data_provenance']['latest_quote_at'] == index[0].isoformat()
+    result = lob_wave_realtime.compute_live_wave_day_data('TSLA',now=pd.Timestamp('2026-09-11T09:37:00-04:00'))
+    assert result['success'] and result['is_today']
+    assert result['data']['times']==['09:30']
+    assert result['data_provenance']['feature_source']=='ohlcv_derived'
+    assert 'market_depth' not in result['data_provenance']
+    old = lob_wave_realtime.compute_live_wave_day_data('TSLA',now=pd.Timestamp('2026-09-14T09:37:00-04:00'))
+    assert not old['success'] and 'data' not in old
