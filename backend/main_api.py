@@ -1856,6 +1856,13 @@ def get_dashboard_trades(ticker: str = "TSLA", date: str = ""):
         return {"success": False, "error": str(exc), "fills": []}
 
 
+@app.get("/api/research/alpha_factors")
+def get_ticker_alpha_factors(ticker: str = "TSLA"):
+    """Return ticker-specific 31 Alpha factor values and L1 microstructure metrics."""
+    from app.research.ticker_factors import build_31_factors_for_ticker
+    return build_31_factors_for_ticker(ticker)
+
+
 @app.get("/api/ml/predict")
 def get_ml_prediction(ticker: str = "TSLA"):
     """Classic archived model cards, with explicit display provenance."""
