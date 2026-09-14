@@ -11,6 +11,8 @@ interface AccountSummary {
   buying_power: number;
   equity: number;
   today_pnl?: number;
+  is_paper?: boolean;
+  observed_at?: string;
 }
 
 interface BrokerPosition {
@@ -76,7 +78,8 @@ const hasKnownClosePnl = (trade: TradeRecord) => isMatchedClose(trade)
   && trade.pnl_complete !== false && Number.isFinite(trade.pnl);
 
 export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
-  const [account, setAccount] = useState<any | null>(null);
+  const [account, setAccount] = useState<AccountSummary | null>(null);
+  const [accountError, setAccountError] = useState('正在连接账户…');
   const [positions, setPositions] = useState<BrokerPosition[]>([]);
   const [isBotRunning, setIsBotRunning] = useState<boolean>(false);
   const [activeTickers, setActiveTickers] = useState<string[]>([]);
@@ -126,11 +129,14 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
   const fetchBrokerData = async () => {
     try {
       fetch(`${API_BASE}/api/broker/account`).then(r => r.json()).then(accJson => {
-        if (accJson && accJson.success !== false) {
+        if (accJson?.success === true && [accJson.equity, accJson.cash, accJson.buying_power].every(Number.isFinite)) {
           setAccount(accJson);
+          setAccountError('');
           try { localStorage.setItem('cached_account', JSON.stringify(accJson)); } catch (e) {}
+        } else {
+          setAccountError('账户待连接：请在服务端配置 Alpaca Key 和 Secret。');
         }
-      }).catch(e => console.error(e));
+      }).catch(() => setAccountError('账户刷新失败，已有数值为最近一次读取结果。'));
 
       fetch(`${API_BASE}/api/broker/positions`).then(r => r.json()).then(posJson => {
         if (posJson && posJson.success) {
@@ -533,21 +539,27 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
       })()}
 
       {/* Account Overview */}
-      {account && (
-        <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
+      <section aria-label="账户资金" style={{ marginBottom: '1.5rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+          <strong>账户资金 · {account ? (account.is_paper === true ? 'Alpaca Paper 模拟账户' : account.is_paper === false ? 'Alpaca 实盘账户' : 'Alpaca 账户') : '待连接'}</strong>
+          <button onClick={fetchBrokerData}>刷新资金</button>
+        </div>
+        {accountError && <p role="status" style={{ color: '#fbbf24', fontSize: '0.8rem' }}>{accountError}</p>}
+        <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
           {[
-            { label: 'Net Equity', value: `$${account.equity.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, color: undefined },
-            { label: 'Available Cash', value: `$${account.cash.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, color: 'var(--color-green)' },
-            { label: 'Position Value', value: `$${(account.equity - account.cash).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, color: undefined },
-            { label: 'Buying Power', value: `$${account.buying_power.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, color: '#e5e5e7' },
+            { label: '当前总资金 / Net Equity', value: account?.equity, color: undefined },
+            { label: '可用现金 / Cash', value: account?.cash, color: 'var(--color-green)' },
+            { label: '净持仓价值 / Net Position Value', value: account ? account.equity - account.cash : undefined, color: undefined },
+            { label: '购买力 / Buying Power', value: account?.buying_power, color: '#e5e5e7' },
           ].map(({ label, value, color }) => (
             <div key={label} className="stat-card" style={{ background: '#09090b', border: '1px solid var(--color-border)', padding: '1.25rem' }}>
               <span className="stat-label">{label}</span>
-              <span className="stat-value" style={{ fontSize: '1.5rem', fontWeight: 900, color }}>{value}</span>
+              <span className="stat-value" style={{ fontSize: '1.5rem', fontWeight: 900, color }}>{typeof value === 'number' && Number.isFinite(value) ? value.toLocaleString('en-US', { style: 'currency', currency: 'USD' }) : '—'}</span>
             </div>
           ))}
         </div>
-      )}
+        {account?.observed_at && <p style={{ color: '#94a3b8', fontSize: '0.75rem' }}>账户读取时间：{new Date(account.observed_at).toLocaleString()}</p>}
+      </section>
 
       {/* Positions + Trading Feed Panel */}
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.15fr) minmax(0, 1fr)', gap: '1.5rem' }}>

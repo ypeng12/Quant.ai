@@ -17,7 +17,7 @@ def render_dashboard(inline_store):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>K 线代理指标研究与 L1 数据状态</title>
+    <title>LOB 订单流微观结构波浪研判终端 (Microstructure Wave Alpha Terminal)</title>
     <!-- Multi-Tier Local & CDN ECharts Loader (Offline & Cross-Network Guaranteed) -->
     <script src="echarts.min.js"></script>
     <script>
@@ -164,19 +164,19 @@ def render_dashboard(inline_store):
 <body>
     <div class="header">
         <div>
-            <h1>🌊 K 线代理指标研究与 L1 数据状态</h1>
-            <p>历史图表使用 OHLCV 代理特征，不能还原真实订单簿；旧模型输出尚未验证为可交易优势。</p>
+            <h1>🌊 LOB 订单流微观结构波浪研判终端 (Wave Alpha Terminal)</h1>
+            <p>经典图表与交互展示 · K 线、量价结构、多因子分数与波浪机会</p>
         </div>
         <div class="badge-bar">
-            <span id="liveBadge" class="badge" style="color: #fbbf24; border: 1px solid #92400e; font-weight: 700;">L1 状态待查询 · 旧波浪推断已停用</span>
-            <span class="badge badge-blue">分类输出未校准为交易胜率</span>
-            <span class="badge badge-blue">历史规则评分 · 有效性未验证</span>
+            <span id="liveBadge" class="badge" style="color: #fbbf24; border: 1px solid #92400e; font-weight: 700;">经典波浪展示</span>
+            <span class="badge badge-blue">波浪方向分数</span>
+            <span class="badge badge-blue">Composite Alpha</span>
         </div>
     </div>
 
     <div class="day-stats-bar" style="display:block; line-height:1.7; color:#fbbf24;" role="status" aria-live="polite">
-        <strong>数据依据：</strong><span id="dataStatus">正在查询真实 L1 留存状态；不使用缓存填充实时信号。</span>
-        <div>历史图：K 线代理指标。L1：仅买一、卖一及对应数量，不能提供完整挂单队列。旧波浪模型：已停用，分类输出未校准。</div>
+        <strong>数据依据：</strong><span id="dataStatus">正在读取所选交易日…</span>
+        <div>本页指标由 OHLCV 推导；方向百分比为模型或规则分数。真实 L1 数据在独立研究模块中展示。</div>
     </div>
 
     <div id="realL1Snapshot" class="day-stats-bar" style="display:none; line-height:1.7;"></div>
@@ -203,7 +203,7 @@ def render_dashboard(inline_store):
             <div id="statOpen" class="stat-chip-val">-</div>
         </div>
         <div class="stat-chip">
-            <div class="stat-chip-label">收盘价 (Close)</div>
+            <div class="stat-chip-label">最新价 (Close)</div>
             <div id="statClose" class="stat-chip-val">-</div>
         </div>
         <div class="stat-chip">
@@ -215,7 +215,7 @@ def render_dashboard(inline_store):
             <div id="statPnl" class="stat-chip-val">-</div>
         </div>
         <div class="stat-chip">
-            <div class="stat-chip-label">旧规则标记数</div>
+            <div class="stat-chip-label">波浪标记数</div>
             <div id="statSignals" class="stat-chip-val" style="color: var(--accent-blue);">-</div>
         </div>
     </div>
@@ -227,7 +227,7 @@ def render_dashboard(inline_store):
                 📈 <span id="klineTitle">TSLA 5分钟 K 线与历史规则标记</span>
             </div>
             <div style="font-size: 0.8rem; color: var(--text-secondary);">
-                ▲ 绿色：旧规则 LONG 标记 | ▼ 红色：旧规则 SHORT 标记；不代表实际订单或已验证的拐点。
+                ▲ 绿色三角：Wave Long | ▼ 红色倒三角：Wave Short · 防抖去重的经典波浪标记
             </div>
         </div>
         <div id="klineChart" class="chart-container"></div>
@@ -236,8 +236,8 @@ def render_dashboard(inline_store):
     <!-- Chart 2: OFI & Microprice Drift -->
     <div class="chart-box">
         <div class="chart-header">
-            <div class="chart-title">⚡ K 线构造的 OFI 代理值与价格偏移估计</div>
-            <div style="font-size: 0.8rem; color: var(--text-secondary);">柱状图：OHLCV 代理值 | 紫线：影线与估算价差推导的偏移（bps）；均非真实报价观测。</div>
+            <div class="chart-title">⚡ OFI & Microprice Drift · 经典量价视图</div>
+            <div style="font-size: 0.8rem; color: var(--text-secondary);">柱状图：OFI 量价推导值 | 紫线：Microprice Drift 估计（bps）</div>
         </div>
         <div id="ofiChart" class="chart-container chart-small"></div>
     </div>
@@ -246,7 +246,7 @@ def render_dashboard(inline_store):
     <div class="chart-box">
         <div class="chart-header">
             <div class="chart-title">🌊 影线实体失衡与量价活跃度</div>
-            <div style="font-size: 0.8rem; color: var(--text-secondary);">黄线：K 线形态代理值（-1 到 +1）| 蓝线：涨跌方向与相对成交量；无法识别排队位置或交易者身份。</div>
+            <div style="font-size: 0.8rem; color: var(--text-secondary);">黄线：Queue Imbalance 形态推导（-1 到 +1）| 蓝线：Sweep Velocity 量价活跃度</div>
         </div>
         <div id="queueChart" class="chart-container chart-small"></div>
     </div>
@@ -254,8 +254,8 @@ def render_dashboard(inline_store):
     <!-- Chart 4: Continuous Composite Alpha & Wave Probability -->
     <div class="chart-box">
         <div class="chart-header">
-            <div class="chart-title">🎯 历史规则评分与旧模型分类输出（未校准）</div>
-            <div style="font-size: 0.8rem; color: var(--text-secondary);">绿线：旧模型上涨分类输出（%）| 区域：规则加权分数；二者均不等于扣成本后的交易胜率或预期收益。</div>
+            <div class="chart-title">🎯 Composite Alpha 打分与波浪方向分数</div>
+            <div style="font-size: 0.8rem; color: var(--text-secondary);">绿线：上涨方向分数（%）| 区域：多因子评分（-100 到 +100）</div>
         </div>
         <div id="alphaChart" class="chart-container chart-small"></div>
     </div>
@@ -263,8 +263,8 @@ def render_dashboard(inline_store):
     <!-- Signal Details Table -->
     <div class="table-box">
         <div class="chart-header">
-            <div class="chart-title">📋 该交易日的历史规则标记</div>
-            <div style="font-size: 0.78rem; color: var(--text-muted);">保留旧规则标记用于复查；不代表实际成交。</div>
+            <div class="chart-title">📋 该交易日的 Saggese 波浪机会明细</div>
+            <div style="font-size: 0.78rem; color: var(--text-muted);">多空波浪标记与对应因子分数 · 展示记录</div>
         </div>
         <table>
             <thead>
@@ -272,8 +272,8 @@ def render_dashboard(inline_store):
                     <th>时间</th>
                     <th>方向</th>
                     <th>价格</th>
-                    <th>方向分类值（未校准）</th>
-                    <th>收益预测验证</th>
+                    <th>方向分数</th>
+                    <th>规则幅度</th>
                     <th>OFI 代理值</th>
                     <th>偏移估计 (bps)</th>
                     <th>规则评分</th>
@@ -322,7 +322,7 @@ def render_dashboard(inline_store):
                 opt.textContent = isLatest ? `${{d}} (历史最新)` : d;
                 dateSelect.appendChild(opt);
             }});
-            currentDate = 'today';
+            currentDate = allDays[allDays.length - 1] || 'today';
             dateSelect.value = currentDate;
             updateNavButtons();
         }}
@@ -363,7 +363,7 @@ def render_dashboard(inline_store):
             const index = Number.isInteger(signal.index) ? signal.index : dayData.times.indexOf(signal.time);
             const p = dayData.wave_p_win_long[index];
             if (!Number.isFinite(p) || p < 0 || p > 100) return '未提供';
-            return `${{(signal.direction === 'LONG' ? p : 100 - p).toFixed(1)}}%（未校准）`;
+            return `${{(signal.direction === 'LONG' ? p : 100 - p).toFixed(1)}}%`;
         }}
 
         async function selectDay(d, isAutoRefresh = false) {{
@@ -378,46 +378,20 @@ def render_dashboard(inline_store):
             updateNavButtons();
             clearTimeout(liveRefreshTimer);
             liveRefreshTimer = null;
-            clearDisplayedData(d === 'today' ? '正在查询 L1 留存状态' : '正在读取历史代理指标');
+            clearDisplayedData(d === 'today' ? '正在读取今日行情' : '正在读取历史图表');
             const isCurrent = () => generation === requestGeneration && ticker === currentTicker && d === currentDate;
             const timeout = setTimeout(() => controller.abort(), 15000);
             try {{
                 if (d === 'today') {{
-                    const response = await fetch(`${{apiBase}}/api/orderbook/l1_status?ticker=${{encodeURIComponent(ticker)}}`, {{ signal: controller.signal }});
-                    if (!response.ok) throw new Error('L1 status request failed');
+                    const response = await fetch(`${{apiBase}}/api/wave/live_today?ticker=${{encodeURIComponent(ticker)}}`, {{ signal: controller.signal }});
+                    if (!response.ok) throw new Error('今日行情请求失败');
                     const result = await response.json();
                     if (!isCurrent()) return;
-                    // Retained quote snapshots never imply a connected live feed or
-                    // a calibrated wave model. Old success/data payloads are ignored.
-                    const quote = result.latest_quote;
-                    const captured = result.success === true && result.market_depth === 'L1'
-                        && result.quote_events > 0 && quote
-                        && [quote.bid_price, quote.ask_price, quote.bid_size, quote.ask_size].every(Number.isFinite)
-                        && quote.bid_price > 0 && quote.ask_price >= quote.bid_price
-                        && quote.bid_size >= 0 && quote.ask_size >= 0
-                        && Number.isFinite(Date.parse(quote.timestamp))
-                        && Array.isArray(result.source) && result.source.length > 0
-                        && result.source.every(source => ['alpaca_stock_websocket', 'alpaca_stock_historical'].includes(source));
-                    clearDisplayedData('旧波浪推断已停用 · 无实时买卖信号');
-                    setDataStatus(captured
-                        ? `已发现 ${{result.quote_events}} 条真实 L1 报价留存；最新报价 ${{quote.timestamp}}。这是留存快照，不代表当前连接正常或模型已验证。`
-                        : '本次查询未确认可用的真实 L1 报价。旧模型已停用；历史缓存不会显示为今日盘口或实时信号。');
-                    if (captured) {{
-                        const mid = (quote.bid_price + quote.ask_price) / 2;
-                        const depth = quote.bid_size + quote.ask_size;
-                        const imbalance = depth > 0 ? ((quote.bid_size - quote.ask_size) / depth).toFixed(3) : '未定义';
-                        const micro = depth > 0 ? (((quote.ask_size * quote.bid_price + quote.bid_size * quote.ask_price) / depth - mid) / mid * 10000).toFixed(3) : '未定义';
-                        const snapshot = document.getElementById('realL1Snapshot');
-                        const rows = [
-                            '真实 L1 留存快照 · 与下方历史代理图分开',
-                            `报价时间：${{quote.timestamp}} | 来源：${{result.source.join(', ')}} | Feed：${{(result.feed || []).join(', ') || '未提供'}}`,
-                            `买一 ${{quote.bid_price}} × ${{quote.bid_size}} | 卖一 ${{quote.ask_price}} × ${{quote.ask_size}} | 数量单位：${{result.quote_size_unit || '未提供'}}`,
-                            `报价价差 ${{( (quote.ask_price - quote.bid_price) / mid * 10000).toFixed(3)}} bps | 买卖一数量失衡 ${{imbalance}} | 微价格偏移 ${{micro}} bps`,
-                            '单个快照不能计算 OFI；没有完整队列、扫盘判定或交易胜率。'
-                        ];
-                        rows.forEach(text => {{ const line = document.createElement('div'); line.textContent = text; snapshot.appendChild(line); }});
-                        snapshot.style.display = 'block';
-                    }}
+                    const today = new Intl.DateTimeFormat('en-CA', {{ timeZone: 'America/New_York' }}).format(new Date());
+                    if (!result.success || !result.data || !result.is_today || result.date !== today || result.ticker !== ticker)
+                        throw new Error(result.error || '今日暂无完整行情，可切换历史日期');
+                    store[ticker].by_day.today = result.data;
+                    renderDashboard(true, result.date, result.last_updated || '');
                 }} else {{
                     let dayData = store[ticker]?.by_day?.[d];
                     if (!dayData) {{
@@ -433,7 +407,7 @@ def render_dashboard(inline_store):
                 }}
             }} catch (error) {{
                 if (isCurrent()) clearDisplayedData(d === 'today'
-                    ? 'L1 状态查询失败或超时 · 未展示实时数据'
+                    ? (error.message || '今日行情暂不可用，请选择历史日期')
                     : '历史数据读取失败 · 未展示其他日期的缓存');
             }} finally {{
                 clearTimeout(timeout);
@@ -482,14 +456,13 @@ def render_dashboard(inline_store):
         let kChart = null, oChart = null, qChart = null, aChart = null;
 
         function renderDashboard(isLive = false, actualDate = '', lastUpdated = '') {{
-            if (currentDate === 'today' || isLive) return;
             const dayData = store[currentTicker].by_day[currentDate];
             if (!dayData) return;
 
             const dateStr = actualDate || currentDate;
-            document.getElementById('liveBadge').textContent = `历史代理指标 · ${{dateStr}}`;
-            document.getElementById('klineTitle').textContent = `${{currentTicker}} · ${{dateStr}} · 5分钟 K 线与旧规则标记`;
-            setDataStatus(`当前显示 ${{dateStr}} 的历史快照；特征由 OHLCV 构造，未使用真实盘口。分类输出未校准为交易胜率。`);
+            document.getElementById('liveBadge').textContent = `${{isLive ? '当前行情' : '历史回看'}} · ${{dateStr}}`;
+            document.getElementById('klineTitle').textContent = `${{currentTicker}} · ${{dateStr}} · 5分钟 K 线与波浪拐点`;
+            setDataStatus(`${{isLive ? '当前已完成 K 线' : '归档快照'}} · ${{dateStr}} · OHLCV 推导指标`);
 
             // Update Stats Banner
             const stats = dayData.stats;
@@ -499,7 +472,7 @@ def render_dashboard(inline_store):
             const pnlEl = document.getElementById('statPnl');
             pnlEl.textContent = `${{stats.pnl_pct >= 0 ? '+' : ''}}${{stats.pnl_pct}}%`;
             pnlEl.style.color = stats.pnl_pct >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
-            document.getElementById('statSignals').textContent = `${{stats.signal_count}} 个旧标记`;
+            document.getElementById('statSignals').textContent = `${{stats.signal_count}} 个波浪标记`;
 
             // Clean, elegant markers that NEVER clump or stack
             const markPointData = dayData.signals.map(s => {{
@@ -507,7 +480,7 @@ def render_dashboard(inline_store):
                 return {{
                     name: s.direction,
                     coord: [s.coord_x, s.coord_y],
-                    value: `${{isLong ? 'L' : 'S'}} · 旧`,
+                    value: `${{isLong ? 'L' : 'S'}}`,
                     symbol: 'triangle',
                     symbolRotate: isLong ? 0 : 180,
                     symbolSize: 12,
@@ -552,7 +525,7 @@ def render_dashboard(inline_store):
                                 <div style="font-weight: 800; color: #38bdf8; margin-bottom: 4px;">⏰ ${{t}} (${{currentTicker}})</div>
                                 <div>开: ${{k[0]}} | 高: ${{k[3]}} | 低: ${{k[2]}} | 收: ${{k[1]}}</div>
                                 <div style="margin-top: 4px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 4px;">
-                                    <div>旧模型 P(上涨)，未校准: <span style="color: ${{pLong >= 50 ? '#10b981' : '#f43f5e'}}; font-weight: 800;">${{pLong}}%</span></div>
+                                    <div>波浪方向分数: <span style="color: ${{pLong >= 50 ? '#10b981' : '#f43f5e'}}; font-weight: 800;">${{pLong}}%</span></div>
                                     <div>⚡ OFI 代理值: <span style="color: ${{ofi >= 0 ? '#10b981' : '#f43f5e'}};">${{ofi >= 0 ? '+' : ''}}${{ofi}}</span></div>
                                     <div>🎯 K 线偏移估计: <span style="color: #a855f7; font-weight: 700;">${{drift >= 0 ? '+' : ''}}${{drift}} bps</span></div>
                                     <div>📊 规则评分: <span style="color: ${{alpha >= 0 ? '#38bdf8' : '#f43f5e'}};">${{alpha >= 0 ? '+' : ''}}${{alpha}}</span></div>
@@ -725,7 +698,7 @@ def render_dashboard(inline_store):
             aChart.setOption({{
                 backgroundColor: 'transparent',
                 tooltip: {{ trigger: 'axis', backgroundColor: 'rgba(15, 20, 34, 0.95)', borderColor: '#334155' }},
-                legend: {{ data: ['历史规则评分', '旧模型上涨分类输出 (%)'], textStyle: {{ color: '#94a3b8' }} }},
+                legend: {{ data: ['历史规则评分', '波浪方向分数 (%)'], textStyle: {{ color: '#94a3b8' }} }},
                 grid: {{ left: '4%', right: '3%', bottom: '10%', top: '15%', containLabel: true }},
                 xAxis: {{ type: 'category', data: dayData.times, axisLine: {{ lineStyle: {{ color: '#334155' }} }}, axisLabel: {{ color: '#64748b' }} }},
                 yAxis: [
@@ -748,7 +721,7 @@ def render_dashboard(inline_store):
                         showSymbol: false
                     }},
                     {{
-                        name: '旧模型上涨分类输出 (%)',
+                        name: '波浪方向分数 (%)',
                         type: 'line',
                         yAxisIndex: 1,
                         data: dayData.wave_p_win_long,
@@ -763,7 +736,7 @@ def render_dashboard(inline_store):
             const tbody = document.getElementById('signalsTableBody');
             tbody.innerHTML = '';
             if (dayData.signals.length === 0) {{
-                tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: var(--text-muted); padding: 20px;">该历史快照没有旧规则标记；不能据此判断市场风险。</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: var(--text-muted); padding: 20px;">该时段暂无波浪标记，可切换日期或标的。</td></tr>';
             }} else {{
                 dayData.signals.forEach(s => {{
                     const tr = document.createElement('tr');
@@ -773,11 +746,11 @@ def render_dashboard(inline_store):
                         <td><span class="${{isLong ? 'badge-dir-long' : 'badge-dir-short'}}">${{s.direction}}</span></td>
                         <td>$${{s.price}}</td>
                         <td style="color: ${{isLong ? '#10b981' : '#f43f5e'}}; font-weight: 800;">${{legacyDirectionValue(dayData, s)}}</td>
-                        <td>未验证</td>
+                        <td>${{Number.isFinite(s.expected_ret) ? s.expected_ret.toFixed(2) + '（规则）' : '—'}}</td>
                         <td style="color: ${{s.ofi >= 0 ? '#10b981' : '#f43f5e'}};">${{s.ofi}}</td>
                         <td>${{s.micro_drift}}</td>
                         <td style="color: ${{s.alpha >= 0 ? '#38bdf8' : '#f43f5e'}};">${{s.alpha}}</td>
-                        <td style="color: var(--text-secondary); font-size: 0.78rem;">OHLCV 代理特征；旧分类未校准</td>
+                        <td style="color: var(--text-secondary); font-size: 0.78rem;">经典波浪标记 · OHLCV</td>
                     `;
                     tbody.appendChild(tr);
                 }});

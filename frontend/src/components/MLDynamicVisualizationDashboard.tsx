@@ -98,11 +98,11 @@ export const MLDynamicVisualizationDashboard: React.FC = () => {
           <h2 style={{ margin: 0, fontSize: '1.35rem', color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '10px' }}>
             <span>🏛️ Quant.ai 两级自适应 ML 动态诊断大屏</span>
             <span style={{ fontSize: '0.75rem', background: '#0284c7', color: '#fff', padding: '3px 10px', borderRadius: '4px', fontWeight: 800 }}>
-              Two-Stage Adaptive ML Architecture
+              Two-Stage Adaptive ML · 动画演示
             </span>
           </h2>
           <p style={{ margin: '4px 0 0 0', color: '#94a3b8', fontSize: '0.85rem' }}>
-            Stage-1 市场 Regime 分类 ML (P_Chop vs P_Trend) -&gt; Stage-2 策略模式瞬间自动切换 (震荡高抛低吸 vs 趋势单边追击)
+            经典动画展示 · 数值为情景示例，API 快照为归档；演示 Regime 分类与策略模式切换
           </p>
         </div>
 
@@ -323,10 +323,10 @@ export const MLDynamicVisualizationDashboard: React.FC = () => {
           <div style={{ background: '#111827', padding: '18px', borderRadius: '10px', border: '1px solid rgba(16, 185, 129, 0.4)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
               <h3 style={{ margin: 0, fontSize: '1.05rem', color: '#34d399', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span>💬 当前盘面局势大白话解读器 (一看即懂的实时战况)</span>
+                <span>💬 当前盘面局势大白话解读器 (一看即懂的情景演示)</span>
               </h3>
               <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
-                标的: <strong style={{ color: '#38bdf8' }}>{ticker}</strong> | 状态: 实时解析中
+                标的: <strong style={{ color: '#38bdf8' }}>{ticker}</strong> | 状态: 交互情景演示
               </span>
             </div>
 

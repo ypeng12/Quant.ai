@@ -15,3 +15,9 @@ Always format git commit messages like:
 - **STRICT PROHIBITION ON HARDCODED RESTRICTIONS (永久严禁任何未经同意的硬编码限制)**: NEVER add hardcoded restrictions, veto filters, or artificial roadblocks (如午间时间锁、静态硬门槛、单指标一刀切否决等)，除非用户明确要求并同意。
 - **MANDATORY PRIOR USER REVIEW BEFORE PUSHING `live_runner.py` (修改 live_runner 必须用户亲自审阅同意后方可 push)**: Before modifying and pushing any changes to `live_runner.py`, ALWAYS explicitly present the exact proposed logic changes to the user. You MUST wait for the user to review and explicitly approve before committing and pushing.
 
+
+## Preserve Existing UI/UX
+- The user has invested substantial work in the current interface. Preserve existing layouts, charts, indicators, controls, and interactions by default.
+- Do not remove, hide, disable, or substantially redesign existing UI/UX without the user's explicit authorization for that change. A research or model audit is not authorization to retire a display.
+- Fix model/data problems in the underlying implementation. Where needed, use concise and accurate source/demo labels while retaining functional presentations.
+- The current restoration of the classic wave terminal, ML assistant, and account funds display is explicitly authorized.

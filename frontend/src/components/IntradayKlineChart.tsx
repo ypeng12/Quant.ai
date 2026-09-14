@@ -20,7 +20,7 @@ interface TrajectoryData {
     ml_predicted_mfe_pct: number;
     actual_max_gain_pct: number;
     ml_p_win_pct: number;
-    prediction_accuracy_pct: number;
+    prediction_accuracy_pct: number | null;
   };
   times: string[];
   actual_prices: number[];
@@ -311,7 +311,7 @@ export const IntradayKlineChart: React.FC<IntradayKlineChartProps> = ({ ticker: 
   if (loading) {
     return (
       <div style={{ background: '#0b0f19', padding: '40px', borderRadius: '14px', textAlign: 'center', color: '#00c805' }}>
-        <div style={{ fontSize: '20px', marginBottom: '10px' }}>⚡ 正在装载 [{selectedTicker}] 全天分时与 ML 预估轨迹...</div>
+        <div style={{ fontSize: '20px', marginBottom: '10px' }}>⚡ 正在装载 [{selectedTicker}] 历史分时与经典规则轨迹...</div>
         <div style={{ color: '#94a3b8', fontSize: '13px' }}>美股全天 09:30 - 16:00 固定坐标系构建中...</div>
       </div>
     );
@@ -522,7 +522,7 @@ export const IntradayKlineChart: React.FC<IntradayKlineChartProps> = ({ ticker: 
       }}>
         {/* Left: View Mode Toggle (Robinhood Curve vs Candlestick K-Line) */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 700 }}>展示模式:</span>
+          <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 700 }}>历史研究视图:</span>
           <button
             onClick={() => setViewMode('robinhood')}
             style={{
@@ -995,7 +995,7 @@ export const IntradayKlineChart: React.FC<IntradayKlineChartProps> = ({ ticker: 
           </span>
           <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#fbbf24', fontWeight: 700 }}>
             <span style={{ width: '12px', height: '3px', background: '#fbbf24', borderBottom: '2px dotted #fff' }} />
-            未来 15 分钟前向推演
+            后续 30 分钟情景推演
           </span>
         </div>
 
@@ -1012,11 +1012,11 @@ export const IntradayKlineChart: React.FC<IntradayKlineChartProps> = ({ ticker: 
         marginTop: '14px'
       }}>
         <div style={{ background: 'rgba(56, 189, 248, 0.06)', padding: '12px 14px', borderRadius: '8px', border: '1px solid rgba(56, 189, 248, 0.15)' }}>
-          <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}>ML 模型平均预估涨幅</div>
+          <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}>规则轨迹上界幅度</div>
           <div style={{ fontSize: '19px', fontWeight: 900, color: '#38bdf8', marginTop: '3px' }}>
             +{data.summary.ml_predicted_mfe_pct}%
           </div>
-          <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>基于专属 LightGBM MFE 回归器</div>
+          <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>基于 ATR 与经典方向分数</div>
         </div>
 
         <div style={{ background: 'rgba(16, 185, 129, 0.06)', padding: '12px 14px', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.15)' }}>
@@ -1028,17 +1028,17 @@ export const IntradayKlineChart: React.FC<IntradayKlineChartProps> = ({ ticker: 
         </div>
 
         <div style={{ background: 'rgba(251, 191, 36, 0.06)', padding: '12px 14px', borderRadius: '8px', border: '1px solid rgba(251, 191, 36, 0.15)' }}>
-          <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}>模型方向预测准确率</div>
+          <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}>历史方向一致率</div>
           <div style={{ fontSize: '19px', fontWeight: 900, color: '#fbbf24', marginTop: '3px' }}>
-            {data.summary.prediction_accuracy_pct}%
+            {data.summary.prediction_accuracy_pct === null ? '—' : `${data.summary.prediction_accuracy_pct.toFixed(1)}%`}
           </div>
           <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>15分钟前向突破方向命中</div>
         </div>
 
         <div style={{ background: 'rgba(168, 85, 247, 0.06)', padding: '12px 14px', borderRadius: '8px', border: '1px solid rgba(168, 85, 247, 0.15)' }}>
-          <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}>每日数据自主学习迭代</div>
+          <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}>研究与模型更新</div>
           <div style={{ fontSize: '12px', fontWeight: 800, color: '#c084fc', marginTop: '4px', lineHeight: 1.4 }}>
-            每天对比实盘与预估差距，自动将全量分时数据写入特征库，梯度校准专有模型！
+            归档结果可在 Lab 比较；新模型经训练与验证后单独更新。
           </div>
         </div>
       </div>
