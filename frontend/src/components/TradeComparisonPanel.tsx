@@ -46,7 +46,7 @@ export function TradeComparisonPanel({ watchlist, activeTicker, onSelectTicker }
         alignItems: 'center'
       }}>
         <div style={{ fontWeight: 800, color: '#38bdf8', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          📈 HRT 级 ML 走势预估与真实对比大屏 (Robinhood 风格动态曲线 & 买卖点复盘)
+          📈 历史 SIP 走势与券商成交对照大屏 (Robinhood 风格动态曲线 & 买卖点复盘)
         </div>
         <button
           onClick={handleRefresh}

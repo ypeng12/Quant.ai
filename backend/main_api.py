@@ -1838,6 +1838,24 @@ def get_paper_alpha_library():
     return paper_library_payload()
 
 
+@app.get("/api/dashboard/market_data")
+def get_dashboard_market_data(ticker: str = "TSLA", date: str = "", interval: str = "5m"):
+    from app.ml.dashboard_market import market_data
+    try:
+        return market_data(ticker, date, interval)
+    except (OSError, ValueError, KeyError) as exc:
+        return {"success": False, "error": str(exc)}
+
+
+@app.get("/api/dashboard/trades")
+def get_dashboard_trades(ticker: str = "TSLA", date: str = ""):
+    from app.ml.dashboard_market import archived_fills
+    try:
+        return archived_fills(ticker, date)
+    except (OSError, ValueError, KeyError) as exc:
+        return {"success": False, "error": str(exc), "fills": []}
+
+
 @app.get("/api/ml/predict")
 def get_ml_prediction(ticker: str = "TSLA"):
     """Classic archived model cards, with explicit display provenance."""
