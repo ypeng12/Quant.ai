@@ -1,0 +1,45 @@
+{
+  "status": "complete",
+  "scope": "L1 capture, quality and research training delivery",
+  "data_session": "2026-09-11",
+  "quotes": 1681251,
+  "trades": 51685,
+  "trained_unvalidated_models": 28,
+  "performance_verified": false,
+  "selected_for_live": null,
+  "tests_passed": 55,
+  "orders_submitted": 0,
+  "source_hashes": {
+    "backend/app/market_data/alpaca_l1_capture.py": "ab7fc03535cb3fe068540b19e45ca52dd541a1a916e00bc374e5df949b1bde68",
+    "backend/app/market_data/history.py": "3c6e3b3a83d364cae5451abf83c0d3667d9d776c4d5d0300ddff87b293d64166",
+    "backend/app/market_data/l1_quality.py": "dd54ea4df6f6732f3bfc21d83e8d1f19a15324498869fa778b52fb6bcbf7b3e8",
+    "backend/app/alpha/paper_l1_alpha.py": "040eb5c95e05eb1f97f9f96d92e11d0e07b98e8b73f376d768b02b3bdd2b4b4d",
+    "backend/app/alpha/l1_ridge.py": "f92485dcc4d1101bd7c5fc65edf59f6bac2b8844951411bcea528f1f5c55a3a4",
+    "backend/app/alpha/l1_state_models.py": "fc87b4837b454e7cb20aca36c76e1becf75a89bf505e1e61a255bbf96406537d",
+    "backend/app/research/real_l1_research.py": "eaae298e71930fe391f8676428531bdbf06937b1269cfe1bd67f589178298a60",
+    "scripts/capture_alpaca_l1.py": "4bdab32d36796157a5274a322762e51d30caa33d05a2478c30a2bcf4dd8c9312",
+    "scripts/download_research_history.py": "dfaeb75b53c3b7773476eed345b8ade7f44b3772cde4394618e6fd64513224c2",
+    "scripts/manage_l1_capture.py": "f3232d5cfefb1e3e4ccfce4bdddc16806db65943d96317ddca1e6bf1db0c7aec",
+    "scripts/research_real_l1.py": "08098097ad50551fa7f0f4174f56305a52169838200f00cf2128a09277e871b0"
+  },
+  "live_service": {
+    "loaded": true,
+    "state": "subscribed",
+    "pid": 26980,
+    "events_in_current_run": 0,
+    "symbols": [
+      "NVDA",
+      "PLTR",
+      "SNDK",
+      "TSLA"
+    ]
+  },
+  "unverified_assumptions": [
+    "Model parameters have not been evaluated on held-out or future sessions.",
+    "Future-mid returns are not executable returns or cost-adjusted PnL.",
+    "Historical exchange timestamps do not verify actual arrival latency.",
+    "IEX top-of-book is one venue's L1; it is not consolidated SIP or L2/L3.",
+    "Transition-model spread bins are learned only before the training cutoff; optional exact-tick states remain configurable.",
+    "An IEX microprice is a venue-mid estimate, not an executable NBBO opportunity."
+  ]
+}

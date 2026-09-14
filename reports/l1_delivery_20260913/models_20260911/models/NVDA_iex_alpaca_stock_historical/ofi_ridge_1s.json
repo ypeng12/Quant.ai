@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "model": "ofi_ridge",
+  "feature_version": "paper_l1_alpha_v2",
+  "features": [
+    "qi",
+    "ofi_raw",
+    "ofi_depth",
+    "microprice_bps",
+    "spread_bps",
+    "ofi_x_spread",
+    "ofi_x_session_sin",
+    "ofi_x_session_cos"
+  ],
+  "contract": {
+    "symbol": "NVDA",
+    "feed": "iex",
+    "source": "alpaca_stock_historical",
+    "clock": "historical_exchange_latency_unverified",
+    "max_gap": "30s",
+    "quote_size_unit": "round_lots"
+  },
+  "mean": [
+    -0.019230611525418682,
+    0.07436229012922495,
+    -0.008736289092898867,
+    -0.5421969237585191,
+    8.28499674919859,
+    0.08965193923110322,
+    -0.0032507070023773165,
+    -0.002018259116844577
+  ],
+  "scale": [
+    0.26551985451168775,
+    101.6705135083965,
+    0.7928084150204188,
+    3.6711486970071827,
+    20.636562315445808,
+    15.944503555204808,
+    0.514648132436512,
+    0.60311206669079
+  ],
+  "coefficient": [
+    -1.8839801210797307e-05,
+    -8.097373653747584e-05,
+    7.885051618337642e-05,
+    0.0002799244891456067,
+    5.08955641746652e-05,
+    -0.0002928109254391639,
+    2.233892892934561e-07,
+    -3.097977536165719e-05
+  ],
+  "intercept": 2.798953449583049e-05,
+  "regularization_alpha": 10.0,
+  "horizon": "1s",
+  "tolerance": "1s",
+  "trained_before": "2026-09-11T15:59:59.991560631-04:00",
+  "last_label_end": "2026-09-11T19:59:59.991560630+00:00",
+  "rows": 1221049,
+  "sessions": 1,
+  "deployment": "research_only",
+  "performance_verified": false,
+  "target_feed": "iex",
+  "target": "future_iex_mid_return_not_executable_pnl",
+  "interpretation": "Observed OFI predicts a future feed-specific mid mark; costs and execution are not evaluated",
+  "session_filter": "XNYS official session open <= observation_time < official close"
+}

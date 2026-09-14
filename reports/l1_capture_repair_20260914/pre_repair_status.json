@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "capture_session_id": "95484498e06e4c018f5b7fcdb49cdec2",
+  "pid": 26980,
+  "feed": "iex",
+  "symbols": [
+    "NVDA",
+    "PLTR",
+    "SNDK",
+    "TSLA"
+  ],
+  "status": "subscribed",
+  "authenticated": true,
+  "subscribed": true,
+  "started_at": "2026-09-14T02:02:45.922950+00:00",
+  "stopped_at": null,
+  "connection_id": 13,
+  "reconnects": 12,
+  "events": 138924,
+  "valid_events": 138924,
+  "quarantined_events": 0,
+  "last_received_at": "2026-09-14T14:31:07.178588+00:00",
+  "last_event_at": "2026-09-14T14:31:07.428422543+00:00",
+  "last_event_by_symbol": {
+    "NVDA": {
+      "timestamp": "2026-09-14T14:31:07.428422543+00:00",
+      "received_at": "2026-09-14T14:31:07.178588+00:00",
+      "quality_valid": true
+    },
+    "SNDK": {
+      "timestamp": "2026-09-14T14:31:07.323346497+00:00",
+      "received_at": "2026-09-14T14:31:07.074591+00:00",
+      "quality_valid": true
+    },
+    "TSLA": {
+      "timestamp": "2026-09-14T14:31:07.052274571+00:00",
+      "received_at": "2026-09-14T14:31:06.817726+00:00",
+      "quality_valid": true
+    },
+    "PLTR": {
+      "timestamp": "2026-09-14T14:31:07.275433854+00:00",
+      "received_at": "2026-09-14T14:31:07.026536+00:00",
+      "quality_valid": true
+    }
+  },
+  "counts_by_symbol": {
+    "NVDA": {
+      "quote_events": 95273,
+      "trade_events": 2466,
+      "quarantined_events": 0
+    },
+    "SNDK": {
+      "quote_events": 15418,
+      "trade_events": 482,
+      "quarantined_events": 0
+    },
+    "TSLA": {
+      "quote_events": 4143,
+      "trade_events": 991,
+      "quarantined_events": 0
+    },
+    "PLTR": {
+      "quote_events": 19732,
+      "trade_events": 419,
+      "quarantined_events": 0
+    }
+  },
+  "reconnect_policy": "alpaca_sdk",
+  "updated_at": "2026-09-14T14:18:22.815037+00:00",
+  "subscribed_quotes": [
+    "NVDA",
+    "PLTR",
+    "SNDK",
+    "TSLA"
+  ],
+  "subscribed_trades": [
+    "NVDA",
+    "PLTR",
+    "SNDK",
+    "TSLA"
+  ],
+  "error_type": "ConnectionClosedError"
+}

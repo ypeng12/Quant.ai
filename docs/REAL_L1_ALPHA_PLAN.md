@@ -80,5 +80,5 @@ python3 scripts/audit_l1_capture.py \
 - OFI、Microprice、Quote Imbalance 和 Signed Trade Imbalance 的基础实现已经存在。
 - L1 历史分页下载已存在并已调整为逐页归一化，适合更大的逐笔数据量。
 - 数据质量审计脚本已存在。
-- 当前工作区尚无真实 L1 文件；`backend/.env` 也尚未配置 Alpaca 数据密钥，因此本次没有实际下载历史 SIP 或启动实时 IEX。
+- 2026-09-13更新：已实际验证历史SIP读取权限和实时IEX四股订阅，并启用本机后台采集；已留存真实IEX历史事件。当前可读运行数据、研究命令和停止方法见 [L1_OPERATIONS.md](L1_OPERATIONS.md)。本次完整四股研究使用2026-09-11常规交易时段；历史数据与未来采集分别保存。
 - 当前没有经过样本外验证的 L1 盈利结果，也没有改动 `live_runner.py` 的交易逻辑。

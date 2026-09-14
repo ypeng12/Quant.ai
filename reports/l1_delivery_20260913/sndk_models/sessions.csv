@@ -1,0 +1,3 @@
+symbol,source,feed,session,events,quotes,trades,first_event,last_event
+SNDK,alpaca_stock_historical,iex,2026-09-10,180761,172732,8029,2026-09-10T08:06:39.817807377-04:00,2026-09-10T16:59:48.483186020-04:00
+SNDK,alpaca_stock_historical,iex,2026-09-11,184276,176342,7934,2026-09-11T08:11:31.612190230-04:00,2026-09-11T15:59:59.515689249-04:00

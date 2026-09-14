@@ -1,0 +1,137 @@
+{
+  "schema_version": 2,
+  "status": "partial",
+  "capture_dir": "backend/data/l1_history_iex_20260828_20260911_trades",
+  "requested_symbols": [
+    "SNDK",
+    "TSLA",
+    "PLTR",
+    "NVDA"
+  ],
+  "observed_symbols": [
+    "NVDA",
+    "PLTR",
+    "SNDK",
+    "TSLA"
+  ],
+  "missing_symbols": [],
+  "missing_quote_symbols": [
+    "SNDK",
+    "TSLA",
+    "PLTR",
+    "NVDA"
+  ],
+  "missing_trade_symbols": [],
+  "sessions": [
+    "2026-08-28",
+    "2026-08-31",
+    "2026-09-01",
+    "2026-09-02",
+    "2026-09-03",
+    "2026-09-04",
+    "2026-09-08",
+    "2026-09-09",
+    "2026-09-10",
+    "2026-09-11"
+  ],
+  "expected_sessions": [
+    "2026-08-28",
+    "2026-08-31",
+    "2026-09-01",
+    "2026-09-02",
+    "2026-09-03",
+    "2026-09-04",
+    "2026-09-08",
+    "2026-09-09",
+    "2026-09-10",
+    "2026-09-11"
+  ],
+  "expected_session_count": 10,
+  "session_rows": 40,
+  "events": 767118,
+  "quotes": 0,
+  "trades": 767118,
+  "duplicate_events": 0,
+  "invalid_quotes": 0,
+  "crossed_quotes": 0,
+  "invalid_trades": 0,
+  "rejected_events": 0,
+  "outside_regular_session_events": 1338,
+  "calendar": "XNYS",
+  "calendar_source": "exchange_calendars 4.13.2",
+  "expected_event_types": [
+    "trade"
+  ],
+  "sampling_start": "2026-08-28T09:30:00-04:00",
+  "sampling_end_exclusive": "2026-09-11T16:00:00-04:00",
+  "sampling_bounds_source": "explicit_or_historical_manifest",
+  "full_minute_coverage_sessions_by_symbol": {
+    "SNDK": {
+      "quote": [],
+      "trade": [
+        "2026-09-01",
+        "2026-09-04",
+        "2026-09-09",
+        "2026-09-10",
+        "2026-09-11"
+      ]
+    },
+    "TSLA": {
+      "quote": [],
+      "trade": [
+        "2026-08-28",
+        "2026-08-31",
+        "2026-09-01",
+        "2026-09-02",
+        "2026-09-03",
+        "2026-09-04",
+        "2026-09-08",
+        "2026-09-09",
+        "2026-09-10",
+        "2026-09-11"
+      ]
+    },
+    "PLTR": {
+      "quote": [],
+      "trade": [
+        "2026-08-28",
+        "2026-08-31",
+        "2026-09-01",
+        "2026-09-02",
+        "2026-09-03",
+        "2026-09-04",
+        "2026-09-08",
+        "2026-09-09",
+        "2026-09-10",
+        "2026-09-11"
+      ]
+    },
+    "NVDA": {
+      "quote": [],
+      "trade": [
+        "2026-08-28",
+        "2026-08-31",
+        "2026-09-01",
+        "2026-09-02",
+        "2026-09-03",
+        "2026-09-04",
+        "2026-09-08",
+        "2026-09-09",
+        "2026-09-10",
+        "2026-09-11"
+      ]
+    }
+  },
+  "common_full_minute_coverage_sessions": [
+    "2026-09-01",
+    "2026-09-04",
+    "2026-09-09",
+    "2026-09-10",
+    "2026-09-11"
+  ],
+  "common_full_minute_coverage_session_count": 5,
+  "performance_verified": false,
+  "coverage_interpretation": "Full coverage means at least one observed event in each exchange-session minute for each required event type. It does not establish lossless capture; sparse IEX activity can produce empty minutes without a capture failure. Quotes-only/trades-only downloads expect only their declared event type. Sessions outside the sampling bounds are not inferred.",
+  "interpretation": "Data-quality measurements only; no number of captured sessions establishes predictive Alpha or profitability. Validate future returns and executable costs separately.",
+  "memory_scope": "one_symbol_session; integrity hashes are streamed"
+}

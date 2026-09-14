@@ -1,0 +1,18 @@
+{
+  "checked_at": "2026-09-14T14:40:04.070357+00:00",
+  "test_command": "PYTHONPATH=backend python3 -m pytest backend/tests -q",
+  "test_scope": "L1 stable research workspace; not unrelated application tests",
+  "passed": 127,
+  "errors": 0,
+  "failures": 0,
+  "py_compile_exit_code": 0,
+  "warnings": [
+    "Installed Alpaca SDK imports deprecated websockets.legacy"
+  ],
+  "source_hashes_match_runtime": true,
+  "raw_live_files_rewritten": false,
+  "broker_orders_submitted": 0,
+  "ui_modified": false,
+  "readme_modified": false,
+  "live_runner_modified": false
+}

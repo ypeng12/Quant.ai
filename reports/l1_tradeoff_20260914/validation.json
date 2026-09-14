@@ -1,0 +1,25 @@
+{
+  "checked_at": "2026-09-14T04:54:32.311194+00:00",
+  "pytest": {
+    "command": "PYTHONPATH=backend python3 -m pytest backend/tests/test_l1_policy_overlay.py backend/tests/test_l1_policy_context_cli.py backend/tests/test_l1_tradeoff.py -q",
+    "passed": 42,
+    "failed": 0,
+    "duration_seconds": 7.58
+  },
+  "py_compile": {
+    "files": [
+      "scripts/record_l1_policy_context.py",
+      "backend/app/research/l1_policy_overlay.py",
+      "backend/app/research/l1_tradeoff.py",
+      "scripts/research_l1_tradeoff.py"
+    ],
+    "exit_code": 0
+  },
+  "research_status": "complete",
+  "evaluated_candidates": 100,
+  "source_hashes_match": true,
+  "orders_submitted": 0,
+  "live_runner_modified": false,
+  "ui_modified": false,
+  "readme_modified": false
+}

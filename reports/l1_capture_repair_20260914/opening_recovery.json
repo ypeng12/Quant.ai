@@ -1,0 +1,80 @@
+{
+  "created_at": "2026-09-14T14:29:28.042384+00:00",
+  "purpose": "Recover opening historical data; do not fabricate realtime receipt times",
+  "live_files_unchanged": true,
+  "recovery_source": "alpaca_stock_historical",
+  "feed": "iex",
+  "parts": [
+    {
+      "kind": "quotes",
+      "manifest_path": "/Users/yuliangpeng/.local/share/quant-l1/data/recovery_iex_20260914_open_quotes/manifest.json",
+      "manifest_sha256": "580ce9d0f72c8fc8c9753e288b75238370aa256451457e1914138778340a4f7d",
+      "download_status": "complete",
+      "start": "2026-09-14T09:30:00-04:00",
+      "end": "2026-09-14T10:03:00-04:00",
+      "records": 328356,
+      "symbol_stats": {
+        "SNDK": {
+          "pages": 4,
+          "records": 35072,
+          "first_timestamp": "2026-09-14T13:30:00.024930897Z",
+          "last_timestamp": "2026-09-14T14:02:59.989815318Z"
+        },
+        "TSLA": {
+          "pages": 2,
+          "records": 10418,
+          "first_timestamp": "2026-09-14T13:30:00.013792615Z",
+          "last_timestamp": "2026-09-14T14:02:59.876581303Z"
+        },
+        "PLTR": {
+          "pages": 6,
+          "records": 59987,
+          "first_timestamp": "2026-09-14T13:30:00.028478506Z",
+          "last_timestamp": "2026-09-14T14:02:57.460774307Z"
+        },
+        "NVDA": {
+          "pages": 23,
+          "records": 222879,
+          "first_timestamp": "2026-09-14T13:30:00.007748859Z",
+          "last_timestamp": "2026-09-14T14:02:59.906571098Z"
+        }
+      }
+    },
+    {
+      "kind": "trades",
+      "manifest_path": "/Users/yuliangpeng/.local/share/quant-l1/data/recovery_iex_20260914_open_trades/manifest.json",
+      "manifest_sha256": "d55ecda5a55bca9c7048f78c9d59721db65786d06ee66d56bd6837d339355646",
+      "download_status": "complete",
+      "start": "2026-09-14T09:30:00-04:00",
+      "end": "2026-09-14T10:03:00-04:00",
+      "records": 14552,
+      "symbol_stats": {
+        "SNDK": {
+          "pages": 1,
+          "records": 2534,
+          "first_timestamp": "2026-09-14T13:30:00.25981548Z",
+          "last_timestamp": "2026-09-14T14:02:55.717249509Z"
+        },
+        "TSLA": {
+          "pages": 1,
+          "records": 2601,
+          "first_timestamp": "2026-09-14T13:30:00.093091364Z",
+          "last_timestamp": "2026-09-14T14:02:56.958720517Z"
+        },
+        "PLTR": {
+          "pages": 1,
+          "records": 1143,
+          "first_timestamp": "2026-09-14T13:30:00.116230982Z",
+          "last_timestamp": "2026-09-14T14:02:56.093954031Z"
+        },
+        "NVDA": {
+          "pages": 1,
+          "records": 8274,
+          "first_timestamp": "2026-09-14T13:30:00.112606289Z",
+          "last_timestamp": "2026-09-14T14:02:59.473511226Z"
+        }
+      }
+    }
+  ],
+  "total_recovered_records": 342908
+}

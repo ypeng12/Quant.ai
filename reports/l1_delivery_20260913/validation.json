@@ -1,0 +1,19 @@
+{
+  "status": "passed",
+  "tests": 55,
+  "failures": 0,
+  "elapsed_seconds": 11.81,
+  "command": "PYTHONPATH=backend python3 -m pytest backend/tests/test_l1_service.py backend/tests/test_real_l1_alpha.py backend/tests/test_l1_quality.py backend/tests/test_alpaca_l1_capture.py backend/tests/test_real_l1_research.py -q",
+  "working_directory": "/Users/yuliangpeng/.local/share/quant-l1/research-work",
+  "warnings": [
+    "Installed Alpaca SDK uses deprecated websockets.legacy API"
+  ],
+  "live_iex_bounded_probe": {
+    "authenticated": true,
+    "subscription_acknowledged": true,
+    "controlled_stop": true
+  },
+  "historical_sip_permission_probe_http_status": 200,
+  "orders_submitted": 0,
+  "profitability_verified": false
+}

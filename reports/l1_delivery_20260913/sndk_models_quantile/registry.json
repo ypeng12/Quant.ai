@@ -1,0 +1,136 @@
+{
+  "schema_version": 1,
+  "task": "real_l1_train_only",
+  "feature_version": "paper_l1_alpha_v2",
+  "created_at": "2026-09-14T02:02:46.555797+00:00",
+  "inputs": [
+    "/Users/yuliangpeng/Desktop/Quant/backend/data/l1_history_iex_sndk_complete_20260913_quotes",
+    "/Users/yuliangpeng/Desktop/Quant/backend/data/l1_history_iex_20260828_20260911_trades"
+  ],
+  "requested_symbols": [
+    "SNDK"
+  ],
+  "requested_before": null,
+  "requested_sessions": [
+    "2026-09-10",
+    "2026-09-11"
+  ],
+  "sampling": "none; all retained events within requested sessions",
+  "status": "invalid",
+  "deployment": "research_only",
+  "performance_verified": false,
+  "selected_for_live": null,
+  "models": [
+    {
+      "symbol": "SNDK",
+      "source": null,
+      "feed": null,
+      "model": "qi_logistic",
+      "status": "unavailable",
+      "reason": "Input integrity/format failure; see input_errors",
+      "performance_verified": false
+    },
+    {
+      "symbol": "SNDK",
+      "source": null,
+      "feed": null,
+      "model": "transition_microprice",
+      "status": "unavailable",
+      "reason": "Input integrity/format failure; see input_errors",
+      "performance_verified": false
+    },
+    {
+      "symbol": "SNDK",
+      "source": null,
+      "feed": null,
+      "model": "ofi_ridge_1s",
+      "status": "unavailable",
+      "reason": "Input integrity/format failure; see input_errors",
+      "performance_verified": false
+    },
+    {
+      "symbol": "SNDK",
+      "source": null,
+      "feed": null,
+      "model": "ofi_ridge_5s",
+      "status": "unavailable",
+      "reason": "Input integrity/format failure; see input_errors",
+      "performance_verified": false
+    },
+    {
+      "symbol": "SNDK",
+      "source": null,
+      "feed": null,
+      "model": "ofi_ridge_30s",
+      "status": "unavailable",
+      "reason": "Input integrity/format failure; see input_errors",
+      "performance_verified": false
+    },
+    {
+      "symbol": "SNDK",
+      "source": null,
+      "feed": null,
+      "model": "ofi_ridge_1min",
+      "status": "unavailable",
+      "reason": "Input integrity/format failure; see input_errors",
+      "performance_verified": false
+    },
+    {
+      "symbol": "SNDK",
+      "source": null,
+      "feed": null,
+      "model": "ofi_ridge_5min",
+      "status": "unavailable",
+      "reason": "Input integrity/format failure; see input_errors",
+      "performance_verified": false
+    }
+  ],
+  "datasets": [],
+  "source_files": [
+    {
+      "path": "/Users/yuliangpeng/Desktop/Quant/backend/data/l1_history_iex_sndk_complete_20260913_quotes/2026-09-10/SNDK.jsonl",
+      "bytes": 66861697,
+      "sha256": "388176c83b65798d3cc04c1e3591dc24f4ac30a6ccae3ca1dfbf73d512cf4dc3"
+    },
+    {
+      "path": "/Users/yuliangpeng/Desktop/Quant/backend/data/l1_history_iex_sndk_complete_20260913_quotes/2026-09-11/SNDK.jsonl",
+      "bytes": 68200299,
+      "sha256": "58d6cd5d4770dde4afd0f26ff84e9c11f90293ed11c1319cce5d1c66f8085e21"
+    }
+  ],
+  "input_errors": [
+    {
+      "symbol": "SNDK",
+      "input": "/Users/yuliangpeng/Desktop/Quant/backend/data/l1_history_iex_20260828_20260911_trades",
+      "reason": "[Errno 60] Operation timed out"
+    }
+  ],
+  "unverified_assumptions": [
+    "Model parameters have not been evaluated on held-out or future sessions.",
+    "Future-mid returns are not executable returns or cost-adjusted PnL.",
+    "Historical exchange timestamps do not verify actual arrival latency.",
+    "IEX top-of-book is one venue's L1; it is not consolidated SIP or L2/L3.",
+    "Transition-model spread bins are learned only before the training cutoff; optional exact-tick states remain configurable.",
+    "An IEX microprice is a venue-mid estimate, not an executable NBBO opportunity."
+  ],
+  "parameters": {
+    "horizons": [
+      "1s",
+      "5s",
+      "30s",
+      "1min",
+      "5min"
+    ],
+    "tolerance": "1s",
+    "max_gap": "30s",
+    "ridge_alpha": 10.0,
+    "logistic_c": 1.0,
+    "tick_size": 0.01,
+    "imbalance_bins": 5,
+    "spread_ticks": null,
+    "spread_bins": 5,
+    "price_changes": 6
+  },
+  "trained_models": 0,
+  "unavailable_models": 7
+}

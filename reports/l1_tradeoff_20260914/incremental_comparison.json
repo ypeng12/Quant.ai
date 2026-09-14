@@ -1,0 +1,109 @@
+{
+  "target": "future_iex_mid_return_not_executable_pnl",
+  "evaluation": "intraday_diagnostic",
+  "improved_mse_combinations": 5,
+  "total_combinations": 20,
+  "changes": [
+    {
+      "symbol": "SNDK",
+      "horizon": "1s",
+      "mse_change_pct": -3.22658504880875
+    },
+    {
+      "symbol": "SNDK",
+      "horizon": "5s",
+      "mse_change_pct": -1.0116291410215972
+    },
+    {
+      "symbol": "SNDK",
+      "horizon": "30s",
+      "mse_change_pct": 2.4655187016082047
+    },
+    {
+      "symbol": "SNDK",
+      "horizon": "1min",
+      "mse_change_pct": -0.19688744979982076
+    },
+    {
+      "symbol": "SNDK",
+      "horizon": "5min",
+      "mse_change_pct": 3.652953572234785
+    },
+    {
+      "symbol": "TSLA",
+      "horizon": "1s",
+      "mse_change_pct": 2.7240906015333133
+    },
+    {
+      "symbol": "TSLA",
+      "horizon": "5s",
+      "mse_change_pct": 7.500685817522235
+    },
+    {
+      "symbol": "TSLA",
+      "horizon": "30s",
+      "mse_change_pct": -1.145736829360633
+    },
+    {
+      "symbol": "TSLA",
+      "horizon": "1min",
+      "mse_change_pct": 17.355590684607524
+    },
+    {
+      "symbol": "TSLA",
+      "horizon": "5min",
+      "mse_change_pct": -4.057749941277011
+    },
+    {
+      "symbol": "PLTR",
+      "horizon": "1s",
+      "mse_change_pct": 8.7196892216574
+    },
+    {
+      "symbol": "PLTR",
+      "horizon": "5s",
+      "mse_change_pct": 38.94612089589427
+    },
+    {
+      "symbol": "PLTR",
+      "horizon": "30s",
+      "mse_change_pct": 5.683537599641375
+    },
+    {
+      "symbol": "PLTR",
+      "horizon": "1min",
+      "mse_change_pct": 4.718301630222621
+    },
+    {
+      "symbol": "PLTR",
+      "horizon": "5min",
+      "mse_change_pct": 19.711131701308272
+    },
+    {
+      "symbol": "NVDA",
+      "horizon": "1s",
+      "mse_change_pct": 7.668447336824102
+    },
+    {
+      "symbol": "NVDA",
+      "horizon": "5s",
+      "mse_change_pct": 0.2607496212575944
+    },
+    {
+      "symbol": "NVDA",
+      "horizon": "30s",
+      "mse_change_pct": 5.096007423019655
+    },
+    {
+      "symbol": "NVDA",
+      "horizon": "1min",
+      "mse_change_pct": 3.1196972766894815
+    },
+    {
+      "symbol": "NVDA",
+      "horizon": "5min",
+      "mse_change_pct": 0.8949018188170177
+    }
+  ],
+  "selected_for_live": null
+}

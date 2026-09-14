@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "model": "qi_logistic",
+  "feature_version": "paper_l1_alpha_v2",
+  "contract": {
+    "symbol": "PLTR",
+    "feed": "iex",
+    "source": "alpaca_stock_historical",
+    "clock": "historical_exchange_latency_unverified",
+    "max_gap": "30s",
+    "quote_size_unit": "round_lots"
+  },
+  "trained_before": "2026-09-11T15:59:59.910353689-04:00",
+  "rows": 179984,
+  "next_move_events": 155294,
+  "regularization_C": 1.0,
+  "coefficient": 2.341505738277672,
+  "intercept": -0.005556403600364841,
+  "last_label_end": "2026-09-11T19:59:59.896218809+00:00",
+  "deployment": "research_only",
+  "performance_verified": false,
+  "target_feed": "iex",
+  "target": "next_iex_mid_move_up",
+  "interpretation": "probability_next_feed_mid_move_up_not_trade_win_rate",
+  "session_filter": "XNYS official session open <= observation_time < official close"
+}

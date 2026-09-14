@@ -1,0 +1,57 @@
+{
+  "checked_at": "2026-09-14T14:31:43.862365+00:00",
+  "capture_session_id": "95484498e06e4c018f5b7fcdb49cdec2",
+  "samples": [
+    {
+      "symbol": "SNDK",
+      "first_retained_exchange_at": "2026-09-14T14:02:18.736008738+00:00",
+      "first_observed_at": "2026-09-14T14:02:18.925104+00:00",
+      "file_bytes_at_snapshot": 10607995,
+      "tail_samples": 1000,
+      "last_event_at": "2026-09-14T14:31:43.959437547+00:00",
+      "last_received_at": "2026-09-14T14:31:43.714928+00:00",
+      "signed_observed_minus_exchange_seconds_p50": -0.228096,
+      "signed_observed_minus_exchange_seconds_p95": -0.098079,
+      "tail_first_observed_at": "2026-09-14T14:30:15.469444+00:00"
+    },
+    {
+      "symbol": "TSLA",
+      "first_retained_exchange_at": "2026-09-14T14:02:18.806371320+00:00",
+      "first_observed_at": "2026-09-14T14:02:18.939638+00:00",
+      "file_bytes_at_snapshot": 3564151,
+      "tail_samples": 1000,
+      "last_event_at": "2026-09-14T14:31:43.065305489+00:00",
+      "last_received_at": "2026-09-14T14:31:42.816424+00:00",
+      "signed_observed_minus_exchange_seconds_p50": -0.227172,
+      "signed_observed_minus_exchange_seconds_p95": -0.058913,
+      "tail_first_observed_at": "2026-09-14T14:29:57.069864+00:00"
+    },
+    {
+      "symbol": "PLTR",
+      "first_retained_exchange_at": "2026-09-14T14:02:19.344075033+00:00",
+      "first_observed_at": "2026-09-14T14:02:19.167129+00:00",
+      "file_bytes_at_snapshot": 13574434,
+      "tail_samples": 1000,
+      "last_event_at": "2026-09-14T14:31:43.351850608+00:00",
+      "last_received_at": "2026-09-14T14:31:43.115124+00:00",
+      "signed_observed_minus_exchange_seconds_p50": -0.225421,
+      "signed_observed_minus_exchange_seconds_p95": -0.069508,
+      "tail_first_observed_at": "2026-09-14T14:30:37.677725+00:00"
+    },
+    {
+      "symbol": "NVDA",
+      "first_retained_exchange_at": "2026-09-14T14:02:18.716068650+00:00",
+      "first_observed_at": "2026-09-14T14:02:18.553535+00:00",
+      "file_bytes_at_snapshot": 65256339,
+      "tail_samples": 1000,
+      "last_event_at": "2026-09-14T14:31:44.077130091+00:00",
+      "last_received_at": "2026-09-14T14:31:43.827347+00:00",
+      "signed_observed_minus_exchange_seconds_p50": -0.232464,
+      "signed_observed_minus_exchange_seconds_p95": -0.204993,
+      "tail_first_observed_at": "2026-09-14T14:31:25.865813+00:00"
+    }
+  ],
+  "sampling": "last up to 1000 complete events per symbol from bounded 1MiB tail; not equal-duration windows",
+  "timestamps_adjusted": false,
+  "root_cause_confirmed": false
+}

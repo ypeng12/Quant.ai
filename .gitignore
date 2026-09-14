@@ -38,3 +38,7 @@ cpp_engine/.cache/
 low_latency_network_test
 scratch/
 
+# Retained market events and capture runtime state stay local.
+backend/data/l1_capture
+backend/data/l1_history*/
+backend/data/l1_runtime/

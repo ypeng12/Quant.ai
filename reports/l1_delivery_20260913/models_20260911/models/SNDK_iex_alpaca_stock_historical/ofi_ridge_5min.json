@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "model": "ofi_ridge",
+  "feature_version": "paper_l1_alpha_v2",
+  "features": [
+    "qi",
+    "ofi_raw",
+    "ofi_depth",
+    "microprice_bps",
+    "spread_bps",
+    "ofi_x_spread",
+    "ofi_x_session_sin",
+    "ofi_x_session_cos"
+  ],
+  "contract": {
+    "symbol": "SNDK",
+    "feed": "iex",
+    "source": "alpaca_stock_historical",
+    "clock": "historical_exchange_latency_unverified",
+    "max_gap": "30s",
+    "quote_size_unit": "round_lots"
+  },
+  "mean": [
+    -0.01494648225673244,
+    -0.2789682958584046,
+    -0.006838023883838302,
+    -1.5795419458185789,
+    114.14584477658197,
+    -4.066185063540543,
+    -0.006333450418578575,
+    0.00204723145214841
+  ],
+  "scale": [
+    0.21697393194443368,
+    47.387970766516105,
+    1.0370017795633562,
+    16.860851638198906,
+    117.46017443922295,
+    153.61476008502524,
+    0.6530825664831608,
+    0.8055174156982259
+  ],
+  "coefficient": [
+    8.840729881248765e-05,
+    -0.0026036037768365633,
+    0.0023521028002910084,
+    0.001594311672361849,
+    -0.0009595808295354577,
+    -0.001524689714057665,
+    -6.288904863025694e-05,
+    -0.00010179618092487222
+  ],
+  "intercept": -0.0013299707151536626,
+  "regularization_alpha": 10.0,
+  "horizon": "5min",
+  "tolerance": "1s",
+  "trained_before": "2026-09-11T15:59:59.515689250-04:00",
+  "last_label_end": "2026-09-11T19:59:59.514728853+00:00",
+  "rows": 142095,
+  "sessions": 1,
+  "deployment": "research_only",
+  "performance_verified": false,
+  "target_feed": "iex",
+  "target": "future_iex_mid_return_not_executable_pnl",
+  "interpretation": "Observed OFI predicts a future feed-specific mid mark; costs and execution are not evaluated",
+  "session_filter": "XNYS official session open <= observation_time < official close"
+}

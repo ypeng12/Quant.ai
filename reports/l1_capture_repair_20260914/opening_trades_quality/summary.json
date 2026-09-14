@@ -1,0 +1,78 @@
+{
+  "schema_version": 3,
+  "status": "partial",
+  "capture_dir": "/Users/yuliangpeng/.local/share/quant-l1/data/recovery_iex_20260914_open_trades",
+  "requested_symbols": [
+    "SNDK",
+    "TSLA",
+    "PLTR",
+    "NVDA"
+  ],
+  "observed_symbols": [
+    "NVDA",
+    "PLTR",
+    "SNDK",
+    "TSLA"
+  ],
+  "missing_symbols": [],
+  "missing_quote_symbols": [
+    "SNDK",
+    "TSLA",
+    "PLTR",
+    "NVDA"
+  ],
+  "missing_trade_symbols": [],
+  "sessions": [
+    "2026-09-14"
+  ],
+  "expected_sessions": [
+    "2026-09-14"
+  ],
+  "expected_session_count": 1,
+  "session_rows": 4,
+  "events": 14552,
+  "quotes": 0,
+  "trades": 14552,
+  "duplicate_events": 0,
+  "invalid_quotes": 0,
+  "crossed_quotes": 0,
+  "invalid_trades": 0,
+  "rejected_events": 0,
+  "outside_regular_session_events": 0,
+  "calendar": "XNYS",
+  "calendar_source": "exchange_calendars 4.13.2",
+  "expected_event_types": [
+    "trade"
+  ],
+  "sampling_start": "2026-09-14T09:30:00-04:00",
+  "sampling_end_exclusive": "2026-09-14T10:03:00-04:00",
+  "sampling_bounds_source": "explicit_or_historical_manifest",
+  "full_minute_coverage_sessions_by_symbol": {
+    "SNDK": {
+      "quote": [],
+      "trade": []
+    },
+    "TSLA": {
+      "quote": [],
+      "trade": []
+    },
+    "PLTR": {
+      "quote": [],
+      "trade": []
+    },
+    "NVDA": {
+      "quote": [],
+      "trade": []
+    }
+  },
+  "common_full_minute_coverage_sessions": [],
+  "common_full_minute_coverage_session_count": 0,
+  "performance_verified": false,
+  "observed_delay_samples": 0,
+  "negative_observed_delay_events": 0,
+  "clock_alignment_verified": false,
+  "timing_interpretation": "Legacy latency_ms fields retain unadjusted host-observed time minus exchange time, including negative values. SDK callback observation is not verified network/socket arrival. Neither positive nor negative differences independently measure network latency; clock offset and local processing delay are separate. No timestamps are shifted or clipped.",
+  "coverage_interpretation": "Full coverage means at least one observed event in each exchange-session minute for each required event type. It does not establish lossless capture; sparse IEX activity can produce empty minutes without a capture failure. Quotes-only/trades-only downloads expect only their declared event type. Sessions outside the sampling bounds are not inferred.",
+  "interpretation": "Data-quality measurements only; no number of captured sessions establishes predictive Alpha or profitability. Validate future returns and executable costs separately.",
+  "memory_scope": "one_symbol_session; integrity hashes are streamed"
+}

@@ -1,0 +1,57 @@
+[
+  {
+    "path": "backend/app/market_data/alpaca_l1_capture.py",
+    "sha256": "6e7daa584ab0a9fd700ded9cb912c3843f8252aacd4d292f3606e0dcdf099877",
+    "bytes": 40905
+  },
+  {
+    "path": "backend/app/market_data/l1_quality.py",
+    "sha256": "95412ff7a999726a20681b334585fcc1df2a2a001df1a4488e7c9ca2d1834168",
+    "bytes": 18737
+  },
+  {
+    "path": "backend/tests/test_alpaca_l1_capture.py",
+    "sha256": "347b8dad6edd7053a84205700f8c87087f5fd6860bdbcfa179fd98b695039988",
+    "bytes": 22399
+  },
+  {
+    "path": "backend/tests/test_l1_host_service.py",
+    "sha256": "348807567c115ce6f828b0e1cab03d78025af51a1b11b9831d9cac0b2bee6d0c",
+    "bytes": 4093
+  },
+  {
+    "path": "backend/tests/test_l1_clock_probe.py",
+    "sha256": "04f0cfa728190e89286ba11800ee19f7dc6fc7f255aa9cce5e238fdd3ab320ee",
+    "bytes": 4005
+  },
+  {
+    "path": "backend/tests/test_l1_clock_quality.py",
+    "sha256": "0918ab0c5d205cabe42891e4eda158950b5488a9e45473383f660631e58d658d",
+    "bytes": 1496
+  },
+  {
+    "path": "scripts/manage_l1_capture.py",
+    "sha256": "bf233e82ac6c53a7759d6a32ab8e794cfb5c7e04a9547032773082a674905ec1",
+    "bytes": 9698
+  },
+  {
+    "path": "scripts/probe_l1_clock.py",
+    "sha256": "576aa10d05df84d30cde56d20813bb192302bd152d6bb29a2062ea2ddd2bd467",
+    "bytes": 10333
+  },
+  {
+    "path": "docs/L1_OPERATIONS.md",
+    "sha256": "0f28d714bbf2289fc54ff933d7bd4fde8ca592b054622c3fd6cb0e3d750fb7f0",
+    "bytes": 7442
+  },
+  {
+    "path": "backend/app/market_data/history.py",
+    "sha256": "3c6e3b3a83d364cae5451abf83c0d3667d9d776c4d5d0300ddff87b293d64166",
+    "bytes": 7982
+  },
+  {
+    "path": "backend/app/research/universe.py",
+    "sha256": "38bba1ef8ed219bdbe9e1951c426519bcece8a4186db622db5759c12e4b0c00a",
+    "bytes": 1267
+  }
+]

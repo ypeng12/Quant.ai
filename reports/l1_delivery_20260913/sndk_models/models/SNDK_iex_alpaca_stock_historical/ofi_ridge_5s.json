@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "model": "ofi_ridge",
+  "feature_version": "paper_l1_alpha_v2",
+  "features": [
+    "qi",
+    "ofi_raw",
+    "ofi_depth",
+    "microprice_bps",
+    "spread_bps",
+    "ofi_x_spread",
+    "ofi_x_session_sin",
+    "ofi_x_session_cos"
+  ],
+  "contract": {
+    "symbol": "SNDK",
+    "feed": "iex",
+    "source": "alpaca_stock_historical",
+    "clock": "historical_exchange_latency_unverified",
+    "max_gap": "30s",
+    "quote_size_unit": "round_lots"
+  },
+  "mean": [
+    -0.00027856950371823384,
+    -0.20333958958092374,
+    -0.003395848563330158,
+    -0.8974466967793412,
+    107.28941021457804,
+    -0.016736769573443992,
+    0.003408130836412163,
+    0.003625211181957987
+  ],
+  "scale": [
+    0.2345047089510449,
+    46.49810206400597,
+    1.0044393632706672,
+    17.58941593920483,
+    119.87775146287862,
+    153.74169152713074,
+    0.6311227173145811,
+    0.7813893552209397
+  ],
+  "coefficient": [
+    0.0005276293400996725,
+    -0.0018136798706457186,
+    0.0012703812264258292,
+    -0.0003992985659720819,
+    -0.0007247606454502542,
+    -0.0008291375214241087,
+    -2.90943377354833e-05,
+    -0.0001248609504855857
+  ],
+  "intercept": 0.0002228780986316525,
+  "regularization_alpha": 10.0,
+  "horizon": "5s",
+  "tolerance": "1s",
+  "trained_before": "2026-09-11T15:59:59.515689250-04:00",
+  "last_label_end": "2026-09-11T19:59:59.514728853+00:00",
+  "rows": 288778,
+  "sessions": 2,
+  "deployment": "research_only",
+  "performance_verified": false,
+  "target": "future_mid_return_not_executable_pnl",
+  "interpretation": "Observed OFI predicts a future mid mark; costs and execution are not evaluated"
+}

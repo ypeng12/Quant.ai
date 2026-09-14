@@ -1,0 +1,47 @@
+{
+  "service_loaded": true,
+  "collector": {
+    "schema_version": 1,
+    "capture_session_id": "95484498e06e4c018f5b7fcdb49cdec2",
+    "pid": 26980,
+    "feed": "iex",
+    "symbols": [
+      "NVDA",
+      "PLTR",
+      "SNDK",
+      "TSLA"
+    ],
+    "status": "subscribed",
+    "authenticated": true,
+    "subscribed": true,
+    "started_at": "2026-09-14T02:02:45.922950+00:00",
+    "stopped_at": null,
+    "connection_id": 1,
+    "reconnects": 0,
+    "events": 0,
+    "valid_events": 0,
+    "quarantined_events": 0,
+    "last_received_at": null,
+    "last_event_at": null,
+    "last_event_by_symbol": {},
+    "counts_by_symbol": {},
+    "reconnect_policy": "alpaca_sdk",
+    "updated_at": "2026-09-14T02:02:46.034031+00:00",
+    "subscribed_quotes": [
+      "NVDA",
+      "PLTR",
+      "SNDK",
+      "TSLA"
+    ],
+    "subscribed_trades": [
+      "NVDA",
+      "PLTR",
+      "SNDK",
+      "TSLA"
+    ]
+  },
+  "running_pid": 26980,
+  "collector_process_matches": true,
+  "state_dir": "/Users/yuliangpeng/.local/share/quant-l1",
+  "checked_at": "2026-09-14T04:54:32.311194+00:00"
+}

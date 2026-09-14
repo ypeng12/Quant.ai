@@ -1,0 +1,17 @@
+{
+  "started_at": "2026-09-14T14:36:06.689230+00:00",
+  "old_pid": 26980,
+  "old_capture_session_id": "95484498e06e4c018f5b7fcdb49cdec2",
+  "old_last_event_at": "2026-09-14T14:36:04.671768983+00:00",
+  "old_events": 173371,
+  "backup": "/Users/yuliangpeng/.local/share/quant-l1/backups/capture_pre_repair_20260914",
+  "trading_modules_modified": false,
+  "old_process_exited_at": "2026-09-14T14:36:08.611341+00:00",
+  "status": "deployed",
+  "new_pid": 77777,
+  "new_capture_session_id": "2487b7bb3c794e0eab7726288ef402a0",
+  "new_first_check_at": "2026-09-14T14:36:15.928978+00:00",
+  "flushed_events": 405,
+  "writer_mode": "bounded_single_thread",
+  "sleep_assertion_enabled": false
+}

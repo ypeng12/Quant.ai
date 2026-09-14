@@ -1,0 +1,111 @@
+{
+  "schema_version": 1,
+  "capture_session_id": "2487b7bb3c794e0eab7726288ef402a0",
+  "pid": 77777,
+  "feed": "iex",
+  "symbols": [
+    "NVDA",
+    "PLTR",
+    "SNDK",
+    "TSLA"
+  ],
+  "status": "subscribed",
+  "authenticated": true,
+  "subscribed": true,
+  "started_at": "2026-09-14T14:36:10.640819+00:00",
+  "stopped_at": null,
+  "connection_id": 1,
+  "reconnects": 0,
+  "events": 12604,
+  "valid_events": 12604,
+  "quarantined_events": 0,
+  "last_received_at": "2026-09-14T14:38:01.237946+00:00",
+  "last_event_at": "2026-09-14T14:38:01.511314981+00:00",
+  "last_event_by_symbol": {
+    "NVDA": {
+      "timestamp": "2026-09-14T14:38:01.511314981+00:00",
+      "received_at": "2026-09-14T14:38:01.237946+00:00",
+      "quality_valid": true
+    },
+    "SNDK": {
+      "timestamp": "2026-09-14T14:38:01.455920463+00:00",
+      "received_at": "2026-09-14T14:38:01.187936+00:00",
+      "quality_valid": true
+    },
+    "PLTR": {
+      "timestamp": "2026-09-14T14:38:01.329443893+00:00",
+      "received_at": "2026-09-14T14:38:01.060693+00:00",
+      "quality_valid": true
+    },
+    "TSLA": {
+      "timestamp": "2026-09-14T14:37:59.439798184+00:00",
+      "received_at": "2026-09-14T14:37:59.173513+00:00",
+      "quality_valid": true
+    }
+  },
+  "counts_by_symbol": {
+    "NVDA": {
+      "quote_events": 9815,
+      "trade_events": 137,
+      "quarantined_events": 0
+    },
+    "SNDK": {
+      "quote_events": 914,
+      "trade_events": 48,
+      "quarantined_events": 0
+    },
+    "PLTR": {
+      "quote_events": 1344,
+      "trade_events": 44,
+      "quarantined_events": 0
+    },
+    "TSLA": {
+      "quote_events": 191,
+      "trade_events": 111,
+      "quarantined_events": 0
+    }
+  },
+  "reconnect_policy": "alpaca_sdk",
+  "writer_mode": "bounded_single_thread",
+  "writer_queue_capacity": 8192,
+  "writer_batch_size": 256,
+  "writer_drain_timeout_seconds": 10.0,
+  "observed_events": 12604,
+  "enqueued_events": 12604,
+  "flushed_events": 12604,
+  "queue_high_watermark": 14,
+  "backpressure_events": 0,
+  "backpressure_seconds": 0.0,
+  "last_observed_at": "2026-09-14T14:38:01.237946+00:00",
+  "last_flushed_at": "2026-09-14T14:38:01.238386+00:00",
+  "last_queue_delay_ms": 0.14351199934026226,
+  "max_queue_delay_ms": 42.007698997622356,
+  "last_batch_write_ms": 0.301603002299089,
+  "max_batch_write_ms": 55.99539000104414,
+  "last_exchange_to_observed_ms": -273.36899999999997,
+  "timing_semantics": {
+    "received_at": "sdk_callback_start_after_recv_decode_and_dispatch; not socket receipt",
+    "exchange_to_observed_ms": "signed host_wall_clock_minus_exchange_timestamp; includes clock offset, feed and SDK delays",
+    "queue_delay_ms": "local monotonic time from callback observation to writer processing",
+    "flush": "Python buffers flushed to OS; no per-batch fsync durability guarantee"
+  },
+  "updated_at": "2026-09-14T14:36:10.740017+00:00",
+  "subscribed_quotes": [
+    "NVDA",
+    "PLTR",
+    "SNDK",
+    "TSLA"
+  ],
+  "subscribed_trades": [
+    "NVDA",
+    "PLTR",
+    "SNDK",
+    "TSLA"
+  ],
+  "writer_queue_events": 0,
+  "pending_flush_events": 0,
+  "unaccepted_observed_events": 0,
+  "active_backpressure_seconds": 0.0,
+  "snapshot_at": "2026-09-14T14:38:01.238551+00:00",
+  "writer_alive": true
+}

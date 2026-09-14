@@ -1,0 +1,63 @@
+{
+  "checked_at": "2026-09-14T14:40:03.378671+00:00",
+  "capture_session_id": "2487b7bb3c794e0eab7726288ef402a0",
+  "sample_scope": "last up to 1000 new-session complete events per symbol in a 2MiB file tail; unequal durations",
+  "samples": [
+    {
+      "symbol": "NVDA",
+      "tail_events": 1000,
+      "first_received_at": "2026-09-14T14:39:51.230611+00:00",
+      "last_received_at": "2026-09-14T14:40:03.200667+00:00",
+      "last_exchange_at": "2026-09-14T14:40:03.545416449+00:00",
+      "queue_delay_ms_p50": 0.09436949767405167,
+      "queue_delay_ms_p95": 0.2666529981070198,
+      "sequence_strictly_increasing": true,
+      "sampled_sequence_range": [
+        23022,
+        24253
+      ]
+    },
+    {
+      "symbol": "PLTR",
+      "tail_events": 1000,
+      "first_received_at": "2026-09-14T14:38:04.520819+00:00",
+      "last_received_at": "2026-09-14T14:40:03.185676+00:00",
+      "last_exchange_at": "2026-09-14T14:40:03.529739312+00:00",
+      "queue_delay_ms_p50": 0.10094550088979304,
+      "queue_delay_ms_p95": 0.28694300272036344,
+      "sequence_strictly_increasing": true,
+      "sampled_sequence_range": [
+        13058,
+        24252
+      ]
+    },
+    {
+      "symbol": "SNDK",
+      "tail_events": 1000,
+      "first_received_at": "2026-09-14T14:38:00.300197+00:00",
+      "last_received_at": "2026-09-14T14:40:02.730115+00:00",
+      "last_exchange_at": "2026-09-14T14:40:03.072843736+00:00",
+      "queue_delay_ms_p50": 0.11808049748651683,
+      "queue_delay_ms_p95": 0.2302169959875755,
+      "sequence_strictly_increasing": true,
+      "sampled_sequence_range": [
+        12470,
+        24229
+      ]
+    },
+    {
+      "symbol": "TSLA",
+      "tail_events": 556,
+      "first_received_at": "2026-09-14T14:36:13.128425+00:00",
+      "last_received_at": "2026-09-14T14:40:01.203552+00:00",
+      "last_exchange_at": "2026-09-14T14:40:01.548130512+00:00",
+      "queue_delay_ms_p50": 0.13554250108427368,
+      "queue_delay_ms_p95": 0.24500699510099366,
+      "sequence_strictly_increasing": true,
+      "sampled_sequence_range": [
+        289,
+        24043
+      ]
+    }
+  ]
+}

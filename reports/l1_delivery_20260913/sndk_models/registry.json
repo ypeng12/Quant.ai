@@ -1,0 +1,186 @@
+{
+  "schema_version": 1,
+  "task": "real_l1_train_only",
+  "feature_version": "paper_l1_alpha_v2",
+  "created_at": "2026-09-14T01:53:48.624900+00:00",
+  "inputs": [
+    "/Users/yuliangpeng/Desktop/Quant/backend/data/l1_history_iex_sndk_complete_20260913_quotes",
+    "/Users/yuliangpeng/Desktop/Quant/backend/data/l1_history_iex_20260828_20260911_trades"
+  ],
+  "requested_symbols": [
+    "SNDK"
+  ],
+  "requested_before": null,
+  "requested_sessions": [
+    "2026-09-10",
+    "2026-09-11"
+  ],
+  "sampling": "none; all retained events within requested sessions",
+  "status": "partial",
+  "deployment": "research_only",
+  "performance_verified": false,
+  "selected_for_live": null,
+  "models": [
+    {
+      "symbol": "SNDK",
+      "source": "alpaca_stock_historical",
+      "feed": "iex",
+      "model": "qi_logistic",
+      "performance_verified": false,
+      "status": "trained_unvalidated",
+      "path": "models/SNDK_iex_alpaca_stock_historical/qi_logistic.json",
+      "sha256": "2f284bbf47ad640f039aeba7e4f58c55eabd4d3e230cc9a3086e25f0e094a653",
+      "trained_before": "2026-09-11T15:59:59.515689250-04:00",
+      "last_label_end": "2026-09-11T19:59:59.004591425+00:00",
+      "rows": 349058
+    },
+    {
+      "symbol": "SNDK",
+      "source": "alpaca_stock_historical",
+      "feed": "iex",
+      "model": "transition_microprice",
+      "performance_verified": false,
+      "status": "unavailable",
+      "reason": "No observed microprice state transitions"
+    },
+    {
+      "symbol": "SNDK",
+      "source": "alpaca_stock_historical",
+      "feed": "iex",
+      "model": "ofi_ridge_1s",
+      "performance_verified": false,
+      "status": "trained_unvalidated",
+      "path": "models/SNDK_iex_alpaca_stock_historical/ofi_ridge_1s.json",
+      "sha256": "20ab3303d2ef029025feb31a5010a9734c7f2ec95ce67c6052c4d4d61c90376c",
+      "trained_before": "2026-09-11T15:59:59.515689250-04:00",
+      "last_label_end": "2026-09-11T19:59:59.004591425+00:00",
+      "rows": 295887
+    },
+    {
+      "symbol": "SNDK",
+      "source": "alpaca_stock_historical",
+      "feed": "iex",
+      "model": "ofi_ridge_5s",
+      "performance_verified": false,
+      "status": "trained_unvalidated",
+      "path": "models/SNDK_iex_alpaca_stock_historical/ofi_ridge_5s.json",
+      "sha256": "ee994d044bb9fa044f91bfd9ed0836690f335e997a0660e412bb097b07ec0b3d",
+      "trained_before": "2026-09-11T15:59:59.515689250-04:00",
+      "last_label_end": "2026-09-11T19:59:59.514728853+00:00",
+      "rows": 288778
+    },
+    {
+      "symbol": "SNDK",
+      "source": "alpaca_stock_historical",
+      "feed": "iex",
+      "model": "ofi_ridge_30s",
+      "performance_verified": false,
+      "status": "trained_unvalidated",
+      "path": "models/SNDK_iex_alpaca_stock_historical/ofi_ridge_30s.json",
+      "sha256": "466ab27382177b1c0f0090cea33ce7e00af38bc06e29c47654cfd50cb276f96d",
+      "trained_before": "2026-09-11T15:59:59.515689250-04:00",
+      "last_label_end": "2026-09-11T19:59:59.514728853+00:00",
+      "rows": 285749
+    },
+    {
+      "symbol": "SNDK",
+      "source": "alpaca_stock_historical",
+      "feed": "iex",
+      "model": "ofi_ridge_1min",
+      "performance_verified": false,
+      "status": "trained_unvalidated",
+      "path": "models/SNDK_iex_alpaca_stock_historical/ofi_ridge_1min.json",
+      "sha256": "14fc0eb1f775bc13ddc579f84d4f7f763c861471e70bb86a00685e8fb8effcb6",
+      "trained_before": "2026-09-11T15:59:59.515689250-04:00",
+      "last_label_end": "2026-09-11T19:59:59.514728853+00:00",
+      "rows": 283347
+    },
+    {
+      "symbol": "SNDK",
+      "source": "alpaca_stock_historical",
+      "feed": "iex",
+      "model": "ofi_ridge_5min",
+      "performance_verified": false,
+      "status": "trained_unvalidated",
+      "path": "models/SNDK_iex_alpaca_stock_historical/ofi_ridge_5min.json",
+      "sha256": "f2e1aaa630b1ec2702784bfde70cc0adc4d2d5f17860c736e1f5d21f89e25332",
+      "trained_before": "2026-09-11T15:59:59.515689250-04:00",
+      "last_label_end": "2026-09-11T19:59:59.514728853+00:00",
+      "rows": 279350
+    }
+  ],
+  "datasets": [
+    {
+      "symbol": "SNDK",
+      "source": "alpaca_stock_historical",
+      "feed": "iex",
+      "events": 365037,
+      "quotes": 349074,
+      "trades": 15963,
+      "sessions": [
+        "2026-09-10",
+        "2026-09-11"
+      ],
+      "first_event": "2026-09-10T08:06:39.817807377-04:00",
+      "last_event": "2026-09-11T15:59:59.515689249-04:00",
+      "trained_before": "2026-09-11T15:59:59.515689250-04:00",
+      "clock": "historical_exchange_latency_unverified",
+      "late_events_excluded": 0
+    }
+  ],
+  "source_files": [
+    {
+      "path": "/Users/yuliangpeng/Desktop/Quant/backend/data/l1_history_iex_sndk_complete_20260913_quotes/2026-09-10/SNDK.jsonl",
+      "bytes": 66861697,
+      "sha256": "388176c83b65798d3cc04c1e3591dc24f4ac30a6ccae3ca1dfbf73d512cf4dc3"
+    },
+    {
+      "path": "/Users/yuliangpeng/Desktop/Quant/backend/data/l1_history_iex_sndk_complete_20260913_quotes/2026-09-11/SNDK.jsonl",
+      "bytes": 68200299,
+      "sha256": "58d6cd5d4770dde4afd0f26ff84e9c11f90293ed11c1319cce5d1c66f8085e21"
+    },
+    {
+      "path": "/Users/yuliangpeng/Desktop/Quant/backend/data/l1_history_iex_20260828_20260911_trades/2026-09-10/SNDK.jsonl",
+      "bytes": 2789251,
+      "sha256": "5c691adf8f9696fe84479da471809babc2afe08240344d5e8b639e58f5d0c257"
+    },
+    {
+      "path": "/Users/yuliangpeng/Desktop/Quant/backend/data/l1_history_iex_20260828_20260911_trades/2026-09-11/SNDK.jsonl",
+      "bytes": 2755545,
+      "sha256": "c7b01259dff45241863cf7692944753ef572d2ddededdc4b547d05f6a97211a7"
+    }
+  ],
+  "input_errors": [],
+  "unverified_assumptions": [
+    "Model parameters have not been evaluated on held-out or future sessions.",
+    "Future-mid returns are not executable returns or cost-adjusted PnL.",
+    "Historical exchange timestamps do not verify actual arrival latency.",
+    "IEX top-of-book is one venue's L1; it is not consolidated SIP or L2/L3.",
+    "Transition-model tick size and spread states are explicit research parameters."
+  ],
+  "parameters": {
+    "horizons": [
+      "1s",
+      "5s",
+      "30s",
+      "1min",
+      "5min"
+    ],
+    "tolerance": "1s",
+    "max_gap": "30s",
+    "ridge_alpha": 10.0,
+    "logistic_c": 1.0,
+    "tick_size": 0.01,
+    "imbalance_bins": 5,
+    "spread_ticks": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "price_changes": 6
+  },
+  "trained_models": 6,
+  "unavailable_models": 1
+}

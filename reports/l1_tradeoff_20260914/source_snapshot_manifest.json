@@ -1,0 +1,87 @@
+[
+  {
+    "path": "backend/app/research/l1_policy_overlay.py",
+    "sha256": "00d067ff97067cd0d8f1ed133a4f8d0f4d87ef33565f21e0ffb65fe56e5ee1d7",
+    "bytes": 18809
+  },
+  {
+    "path": "backend/app/research/l1_tradeoff.py",
+    "sha256": "448d47996227b1b3e034d91a038c1d73240ca8f09c766ce51663a85ce2db7999",
+    "bytes": 27066
+  },
+  {
+    "path": "backend/app/research/real_l1_research.py",
+    "sha256": "eaae298e71930fe391f8676428531bdbf06937b1269cfe1bd67f589178298a60",
+    "bytes": 14520
+  },
+  {
+    "path": "backend/app/alpha/paper_l1_alpha.py",
+    "sha256": "040eb5c95e05eb1f97f9f96d92e11d0e07b98e8b73f376d768b02b3bdd2b4b4d",
+    "bytes": 8962
+  },
+  {
+    "path": "backend/app/alpha/real_l1_alpha.py",
+    "sha256": "1c8c51d4356963492ae4e1f6c24b37db17b45c2a59372ed777fab21d4209a9c4",
+    "bytes": 7338
+  },
+  {
+    "path": "backend/app/alpha/l1_ridge.py",
+    "sha256": "f92485dcc4d1101bd7c5fc65edf59f6bac2b8844951411bcea528f1f5c55a3a4",
+    "bytes": 4195
+  },
+  {
+    "path": "backend/app/alpha/l1_state_models.py",
+    "sha256": "fc87b4837b454e7cb20aca36c76e1becf75a89bf505e1e61a255bbf96406537d",
+    "bytes": 10157
+  },
+  {
+    "path": "backend/app/market_data/history.py",
+    "sha256": "3c6e3b3a83d364cae5451abf83c0d3667d9d776c4d5d0300ddff87b293d64166",
+    "bytes": 7982
+  },
+  {
+    "path": "backend/app/market_data/alpaca_l1_capture.py",
+    "sha256": "ab7fc03535cb3fe068540b19e45ca52dd541a1a916e00bc374e5df949b1bde68",
+    "bytes": 27729
+  },
+  {
+    "path": "backend/app/market_data/l1_quality.py",
+    "sha256": "dd54ea4df6f6732f3bfc21d83e8d1f19a15324498869fa778b52fb6bcbf7b3e8",
+    "bytes": 17490
+  },
+  {
+    "path": "backend/app/research/universe.py",
+    "sha256": "38bba1ef8ed219bdbe9e1951c426519bcece8a4186db622db5759c12e4b0c00a",
+    "bytes": 1267
+  },
+  {
+    "path": "scripts/record_l1_policy_context.py",
+    "sha256": "036c5688c85a8929337577519ba866bf507594c95c4053f2e00a05f7ab311e09",
+    "bytes": 7096
+  },
+  {
+    "path": "scripts/research_l1_tradeoff.py",
+    "sha256": "bc3f359a367dbf5e381eeb56dea118475b94060ac12a06c13a0e0a0faef20c43",
+    "bytes": 2319
+  },
+  {
+    "path": "scripts/research_real_l1.py",
+    "sha256": "08098097ad50551fa7f0f4174f56305a52169838200f00cf2128a09277e871b0",
+    "bytes": 3439
+  },
+  {
+    "path": "backend/tests/test_l1_policy_overlay.py",
+    "sha256": "9c840af18991fb4b126ae9852fd3a5c5f561fa81f86e51bfbf890a8b1ad85ac7",
+    "bytes": 12257
+  },
+  {
+    "path": "backend/tests/test_l1_policy_context_cli.py",
+    "sha256": "482f24dc243abf0a1bad2a4415cadd83f3468cd87e64e692872e19254c06af2b",
+    "bytes": 3909
+  },
+  {
+    "path": "backend/tests/test_l1_tradeoff.py",
+    "sha256": "208a04361c71ce05577b6640bfaa3ec1c1682b8eedc3a1f31ab2c72ec511d50b",
+    "bytes": 8345
+  }
+]

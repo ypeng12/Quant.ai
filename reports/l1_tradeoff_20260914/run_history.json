@@ -1,0 +1,13 @@
+{
+  "current_registry_sha256": "1734a8a2580c1bda5d7bd2bf458cb7d51bb91b2213372739aa94b8e0c49eb6e8",
+  "prior_attempt": "/Users/yuliangpeng/.local/share/quant-l1/reports/tradeoff_20260914_attempt1",
+  "prior_registry_sha256": "b55846da45ca05cfd02e4f7c982c4be51631adc9f15addacece34b48a65f188d",
+  "reason_for_repeat": "Engineering corrections only: WebSocket exchange-age and late-invalid handling, missing-session/partial status, dependency and software provenance. Same historical inputs, sampling, split, candidates, horizons, regularization, and cost scenarios. No profit-based tuning.",
+  "metrics_and_prediction_files_identical": true,
+  "code_and_dependency_hashes_verified": true,
+  "evaluated_candidates": 100,
+  "evaluation_kinds": [
+    "intraday_diagnostic"
+  ],
+  "selected_for_live": null
+}

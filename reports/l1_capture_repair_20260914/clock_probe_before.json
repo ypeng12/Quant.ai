@@ -1,0 +1,224 @@
+{
+  "schema_version": 1,
+  "sampled_at_host_utc": "2026-09-14T14:29:01.816042+00:00",
+  "status": "complete",
+  "server_results": [
+    {
+      "server": "time.apple.com",
+      "status": "complete",
+      "requested_samples": 3,
+      "samples": [
+        {
+          "host_received_at": "2026-09-14T14:29:01.781549+00:00",
+          "leap_indicator": 0,
+          "stratum": 1,
+          "server_minus_host_seconds": 0.2518116235733032,
+          "network_round_trip_seconds": 0.011293462373779296,
+          "root_delay_seconds": 0.0,
+          "root_dispersion_seconds": 0.0001678466796875,
+          "wall_vs_monotonic_elapsed_seconds": 1.0677717163086464e-05,
+          "estimated_uncertainty_seconds": 0.005825255583740235,
+          "estimated_offset_interval_seconds": [
+            0.245986367989563,
+            0.2576368791570435
+          ]
+        },
+        {
+          "host_received_at": "2026-09-14T14:29:01.795026+00:00",
+          "leap_indicator": 0,
+          "stratum": 1,
+          "server_minus_host_seconds": 0.2515411376953125,
+          "network_round_trip_seconds": 0.011778156536621094,
+          "root_delay_seconds": 0.0,
+          "root_dispersion_seconds": 0.0001678466796875,
+          "wall_vs_monotonic_elapsed_seconds": 6.396991210936773e-06,
+          "estimated_uncertainty_seconds": 0.006063321939208984,
+          "estimated_offset_interval_seconds": [
+            0.24547781575610353,
+            0.2576044596345215
+          ]
+        },
+        {
+          "host_received_at": "2026-09-14T14:29:01.808830+00:00",
+          "leap_indicator": 0,
+          "stratum": 1,
+          "server_minus_host_seconds": 0.25223004817962646,
+          "network_round_trip_seconds": 0.01219872969946289,
+          "root_delay_seconds": 0.0,
+          "root_dispersion_seconds": 0.0001678466796875,
+          "wall_vs_monotonic_elapsed_seconds": 5.6789461669922575e-06,
+          "estimated_uncertainty_seconds": 0.0062728904755859375,
+          "estimated_offset_interval_seconds": [
+            0.24595715770404053,
+            0.2585029386552124
+          ]
+        }
+      ],
+      "failures": [],
+      "median_server_minus_host_seconds": 0.2518116235733032,
+      "lowest_round_trip_sample": {
+        "host_received_at": "2026-09-14T14:29:01.781549+00:00",
+        "leap_indicator": 0,
+        "stratum": 1,
+        "server_minus_host_seconds": 0.2518116235733032,
+        "network_round_trip_seconds": 0.011293462373779296,
+        "root_delay_seconds": 0.0,
+        "root_dispersion_seconds": 0.0001678466796875,
+        "wall_vs_monotonic_elapsed_seconds": 1.0677717163086464e-05,
+        "estimated_uncertainty_seconds": 0.005825255583740235,
+        "estimated_offset_interval_seconds": [
+          0.245986367989563,
+          0.2576368791570435
+        ]
+      }
+    },
+    {
+      "server": "time.cloudflare.com",
+      "status": "complete",
+      "requested_samples": 3,
+      "samples": [
+        {
+          "host_received_at": "2026-09-14T14:29:01.776052+00:00",
+          "leap_indicator": 0,
+          "stratum": 3,
+          "server_minus_host_seconds": 0.2519572973251343,
+          "network_round_trip_seconds": 0.005763184891845703,
+          "root_delay_seconds": 0.01092529296875,
+          "root_dispersion_seconds": 0.000640869140625,
+          "wall_vs_monotonic_elapsed_seconds": 1.3935698364257558e-05,
+          "estimated_uncertainty_seconds": 0.008999043769287108,
+          "estimated_offset_interval_seconds": [
+            0.24295825355584716,
+            0.2609563410944214
+          ]
+        },
+        {
+          "host_received_at": "2026-09-14T14:29:01.783412+00:00",
+          "leap_indicator": 0,
+          "stratum": 3,
+          "server_minus_host_seconds": 0.2518218755722046,
+          "network_round_trip_seconds": 0.0053721500864257815,
+          "root_delay_seconds": 0.0106964111328125,
+          "root_dispersion_seconds": 0.000640869140625,
+          "wall_vs_monotonic_elapsed_seconds": 6.33463952636696e-06,
+          "estimated_uncertainty_seconds": 0.008681484389770507,
+          "estimated_offset_interval_seconds": [
+            0.24314039118243408,
+            0.2605033599619751
+          ]
+        },
+        {
+          "host_received_at": "2026-09-14T14:29:01.790195+00:00",
+          "leap_indicator": 0,
+          "stratum": 3,
+          "server_minus_host_seconds": 0.25162041187286377,
+          "network_round_trip_seconds": 0.005875585549804688,
+          "root_delay_seconds": 0.0106964111328125,
+          "root_dispersion_seconds": 0.000701904296875,
+          "wall_vs_monotonic_elapsed_seconds": 4.055029418944915e-06,
+          "estimated_uncertainty_seconds": 0.008991957667602538,
+          "estimated_offset_interval_seconds": [
+            0.24262845420526125,
+            0.2606123695404663
+          ]
+        }
+      ],
+      "failures": [],
+      "median_server_minus_host_seconds": 0.2518218755722046,
+      "lowest_round_trip_sample": {
+        "host_received_at": "2026-09-14T14:29:01.783412+00:00",
+        "leap_indicator": 0,
+        "stratum": 3,
+        "server_minus_host_seconds": 0.2518218755722046,
+        "network_round_trip_seconds": 0.0053721500864257815,
+        "root_delay_seconds": 0.0106964111328125,
+        "root_dispersion_seconds": 0.000640869140625,
+        "wall_vs_monotonic_elapsed_seconds": 6.33463952636696e-06,
+        "estimated_uncertainty_seconds": 0.008681484389770507,
+        "estimated_offset_interval_seconds": [
+          0.24314039118243408,
+          0.2605033599619751
+        ]
+      }
+    },
+    {
+      "server": "time.google.com",
+      "status": "complete",
+      "requested_samples": 3,
+      "samples": [
+        {
+          "host_received_at": "2026-09-14T14:29:01.778354+00:00",
+          "leap_indicator": 0,
+          "stratum": 1,
+          "server_minus_host_seconds": 0.2510107755661011,
+          "network_round_trip_seconds": 0.008082999,
+          "root_delay_seconds": 0.0,
+          "root_dispersion_seconds": 0.0001068115234375,
+          "wall_vs_monotonic_elapsed_seconds": 1.3934364868163629e-05,
+          "estimated_uncertainty_seconds": 0.004162245388305664,
+          "estimated_offset_interval_seconds": [
+            0.2468485301777954,
+            0.25517302095440675
+          ]
+        },
+        {
+          "host_received_at": "2026-09-14T14:29:01.786787+00:00",
+          "leap_indicator": 0,
+          "stratum": 1,
+          "server_minus_host_seconds": 0.252363920211792,
+          "network_round_trip_seconds": 0.006732986,
+          "root_delay_seconds": 0.0,
+          "root_dispersion_seconds": 9.1552734375e-05,
+          "wall_vs_monotonic_elapsed_seconds": 4.246208251953293e-06,
+          "estimated_uncertainty_seconds": 0.003462291942626953,
+          "estimated_offset_interval_seconds": [
+            0.24890162826916504,
+            0.2558262121544189
+          ]
+        },
+        {
+          "host_received_at": "2026-09-14T14:29:01.796435+00:00",
+          "leap_indicator": 0,
+          "stratum": 1,
+          "server_minus_host_seconds": 0.2509746551513672,
+          "network_round_trip_seconds": 0.008561424,
+          "root_delay_seconds": 0.0,
+          "root_dispersion_seconds": 0.0001068115234375,
+          "wall_vs_monotonic_elapsed_seconds": 4.4787099609377296e-06,
+          "estimated_uncertainty_seconds": 0.004392002233398438,
+          "estimated_offset_interval_seconds": [
+            0.24658265291796874,
+            0.2553666573847656
+          ]
+        }
+      ],
+      "failures": [],
+      "median_server_minus_host_seconds": 0.2510107755661011,
+      "lowest_round_trip_sample": {
+        "host_received_at": "2026-09-14T14:29:01.786787+00:00",
+        "leap_indicator": 0,
+        "stratum": 1,
+        "server_minus_host_seconds": 0.252363920211792,
+        "network_round_trip_seconds": 0.006732986,
+        "root_delay_seconds": 0.0,
+        "root_dispersion_seconds": 9.1552734375e-05,
+        "wall_vs_monotonic_elapsed_seconds": 4.246208251953293e-06,
+        "estimated_uncertainty_seconds": 0.003462291942626953,
+        "estimated_offset_interval_seconds": [
+          0.24890162826916504,
+          0.2558262121544189
+        ]
+      }
+    }
+  ],
+  "elapsed_seconds": 0.2520096540029044,
+  "median_across_server_offsets_seconds": 0.2518116235733032,
+  "system_clock_modified": false,
+  "event_timestamps_modified": false,
+  "interpretation": "Positive offset means public NTP server UTC is ahead of this host wall clock; this is not broker/exchange latency.",
+  "limitations": [
+    "Public UDP NTP responses are unauthenticated.",
+    "Uncertainty uses measured RTT, wall/monotonic disagreement and server-advertised root delay/dispersion; it is an estimate, not a guarantee.",
+    "A current clock offset cannot safely correct previously captured timestamps."
+  ]
+}
