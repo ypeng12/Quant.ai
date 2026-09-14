@@ -7,7 +7,7 @@ sdk: docker
 app_port: 7860
 pinned: true
 license: mit
-short_description: Institutional ML Trading Platform with C++20 OFI Engine & LOB Alpha
+short_description: Institutional ML Trading with C++20 OFI Engine & LOB Alpha
 tags:
   - quant
   - trading
