@@ -81,6 +81,7 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
   const [account, setAccount] = useState<AccountSummary | null>(null);
   const [accountError, setAccountError] = useState('正在连接账户…');
   const [positions, setPositions] = useState<BrokerPosition[]>([]);
+  const [positionsAvailable, setPositionsAvailable] = useState(false);
   const [isBotRunning, setIsBotRunning] = useState<boolean>(false);
   const [activeTickers, setActiveTickers] = useState<string[]>([]);
   const [actionFeed, setActionFeed] = useState<string[]>([]);
@@ -142,6 +143,7 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
         if (posJson && posJson.success) {
           const newPos = posJson.positions || [];
           setPositions(newPos);
+          setPositionsAvailable(true);
           try { localStorage.setItem('cached_positions', JSON.stringify(newPos)); } catch (e) {}
         }
       }).catch(e => console.error(e));
@@ -453,10 +455,12 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
         const lossesCount = (todaySummary?.losses !== undefined) ? todaySummary.losses : calcLosses;
         const winRatePct = (todaySummary?.win_rate !== undefined) ? todaySummary.win_rate : calcWinRate;
         const realizedPnl = todaySummary?.realized_pnl ?? closedToday.reduce((sum, t) => sum + (t.pnl || 0), 0);
-        const unrealizedPnl = todaySummary?.unrealized_pnl ?? positions.reduce((sum, p) => sum + (p.unrealized_pnl || 0), 0);
+        const unrealizedPnl = positionsAvailable
+          ? positions.reduce((sum, p) => sum + (p.unrealized_pnl || 0), 0)
+          : (todaySummary?.unrealized_pnl ?? 0);
         // Matched-fill attribution; broker account change is reported separately.
         const netPnlVal = Number((realizedPnl + unrealizedPnl).toFixed(2));
-        const alpacaAccountDelta = todaySummary?.alpaca_official_pnl;
+        const alpacaAccountDelta = account?.today_pnl ?? todaySummary?.alpaca_official_pnl;
 
         const bestTradeNum = (todaySummary?.best_trade !== undefined && todaySummary.best_trade !== 0)
           ? todaySummary.best_trade
