@@ -39,6 +39,10 @@ class LiveTradingRunner:
             "buying_power_utilization_pct": 0.95,
             "max_single_position_equity_pct": 0.70,
             "orders_sync_interval_seconds": 2.0,
+            "flatten_before_close_minutes": 5.0,
+            "liquidation_quote_max_age_seconds": 30.0,
+            "liquidation_reprice_seconds": 20.0,
+            "liquidation_quote_feed": "iex",
         }
 
     @classmethod
@@ -72,6 +76,10 @@ class LiveTradingRunner:
         """
         from alpaca.trading.requests import GetOrdersRequest
         from alpaca.trading.enums import QueryOrderStatus
+        account = self.adapter.get_account_summary()
+        if account.get("success") is False:
+            raise ValueError("Authoritative account data unavailable")
+        self._load_liquidation_submissions(account)
         raw_orders = self.adapter.client.get_orders(filter=GetOrdersRequest(status=QueryOrderStatus.OPEN, limit=500))
         orders = [self._serialize_alpaca_order(order) for order in raw_orders]
         by_client = {order["client_order_id"]: order for order in orders}
@@ -101,10 +109,114 @@ class LiveTradingRunner:
                 "current_price": float(self._order_field(position, "current_price")),
                 "avg_entry_price": float(self._order_field(position, "avg_entry_price")),
             })
-        account = self.adapter.get_account_summary()
-        if account.get("success") is False:
-            raise ValueError("Authoritative account data unavailable")
+        current = {p["ticker"]: p["shares"] for p in positions}
+        for submission in self._quant_submissions.values():
+            if submission.get("status") == "filled" and "opening_signed_qty" in submission:
+                if current.get(submission["ticker"], 0) != submission["opening_signed_qty"]:
+                    submission["position_reconciled"] = True
+        self._save_liquidation_submissions()
         return orders, positions, account
+
+    def _load_liquidation_submissions(self, account):
+        from pathlib import Path
+        import hashlib
+        owner = str(account.get("account_number") or "")
+        if not owner:
+            return
+        key = hashlib.sha256((owner + str(getattr(self.adapter, "base_url", ""))).encode()).hexdigest()[:20]
+        if getattr(self, "_liquidation_owner", None) == key:
+            return
+        if getattr(self, "_liquidation_owner", None) is not None:
+            self._quant_submissions = {}
+            self._quant_last_bar = None
+        self._liquidation_saved = None
+        backend = Path(__file__).resolve().parents[2]
+        path = backend / ".runtime_state" / f"liquidation-{key}.json"
+        if path.exists():
+            self._quant_submissions.update(json.loads(path.read_text())["submissions"])
+        self._liquidation_state_file, self._liquidation_owner = path, key
+
+    def _save_liquidation_submissions(self):
+        path = getattr(self, "_liquidation_state_file", None)
+        if path is None:
+            return
+        rows = {k: v for k, v in self._quant_submissions.items() if k.startswith("QP-EXIT-")}
+        content = json.dumps({"submissions": rows}, sort_keys=True)
+        if content == getattr(self, "_liquidation_saved", None):
+            return
+        path.parent.mkdir(parents=True, exist_ok=True)
+        temporary = path.with_suffix(".tmp")
+        with temporary.open("w") as handle:
+            handle.write(content)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary, path)
+        self._liquidation_saved = content
+
+    def _run_intraday_cleanup(self, now, orders, positions):
+        from app.broker.intraday_liquidation import liquidation_plan
+        try:
+            session = self.adapter.get_liquidation_session(now)
+            session = {**session, "quote_feed": self.strategy_params.get("liquidation_quote_feed", "iex")}
+        except Exception as exc:
+            session = {"kind": "closed", "trade_date": str(now.date()), "reason": str(exc)}
+        quotes, quote_errors = {}, {}
+        if session["kind"] in {"premarket", "afterhours", "overnight"}:
+            for position in positions:
+                symbol = position["ticker"]
+                try:
+                    quotes[symbol] = self.adapter.get_liquidation_quote(symbol, session)
+                except Exception as exc:
+                    quote_errors[symbol] = str(exc)
+        if quotes:
+            # Account/calendar/quote reads take time. Validate quote age against
+            # a subsequent broker clock, not the older cycle-start timestamp.
+            refreshed_clock = self.adapter.get_clock()
+            if not refreshed_clock.get("success"):
+                raise ValueError("Exchange clock unavailable after liquidation quote reads")
+            now = pd.Timestamp(refreshed_clock["timestamp"])
+            self._quant_clock = refreshed_clock
+            session = {**self.adapter.get_liquidation_session(now),
+                       "quote_feed": self.strategy_params.get("liquidation_quote_feed", "iex")}
+        plan = liquidation_plan(positions, orders, quotes, now=now, session=session,
+            quote_max_age_seconds=float(self.strategy_params["liquidation_quote_max_age_seconds"]),
+            reprice_seconds=float(self.strategy_params["liquidation_reprice_seconds"]))
+        self._quant_targets = {p["ticker"]: 0 for p in positions}
+        self._quant_status = dict(state="session_flat" if plan["flat_confirmed"] else "session_close_pending",
+                                 session=session, inventory=plan["inventory"], waiting=plan["waiting"],
+                                 quote_errors=quote_errors, target_shares=self._quant_targets,
+                                 exchange_clock=pd.Timestamp(now).isoformat(), cancellation_errors={})
+        for order_id in plan["cancel"]:
+            try:
+                self.adapter.client.cancel_order_by_id(order_id)
+            except Exception as exc:
+                self._quant_status["cancellation_errors"][order_id] = type(exc).__name__
+        for intent in plan["submit"]:
+            base = intent["client_order_id"]
+            prior = next((v for v in reversed(list(self._quant_submissions.values()))
+                          if v.get("base_client_order_id") == base), None)
+            if prior and (not prior.get("resolved") or (prior.get("status") == "filled" and not prior.get("position_reconciled"))):
+                self._quant_status["waiting"][intent["symbol"]] = "awaiting_broker_reconciliation"
+                continue
+            attempt = int(prior.get("attempt", 0)) + 1 if prior else 1
+            client_id = base if attempt == 1 else f"{base[:36]}-{attempt}"
+            submission = dict(client_order_id=client_id, base_client_order_id=base, attempt=attempt,
+                              ticker=intent["symbol"], qty=intent["quantity"], filled_qty=0,
+                              side=intent["side"], type="limit", extended_hours=True,
+                              limit_price=intent["limit_price"], status="submission_unknown",
+                              opening_signed_qty=plan["inventory"][intent["symbol"]])
+            self._quant_submissions[client_id] = submission
+            # Persist the ID before sending: a timeout/restart must be reconciled, not retried blindly.
+            self._save_liquidation_submissions()
+            result = self.adapter.submit_limit_order(intent["symbol"], intent["quantity"], intent["side"],
+                limit_price=intent["limit_price"], extended_hours=True, client_order_id=client_id,
+                position_intent=intent["position_intent"])
+            submission.update(order_id=result.get("order_id"), status=result.get("status") or "submission_unknown")
+            if submission["status"] in TERMINAL_STATUSES:
+                submission["resolved"] = True
+            self._save_liquidation_submissions()
+            self.add_log(f"[Intraday close] {intent['symbol']} {intent['side']} {intent['quantity']}: {submission['status']}; awaiting confirmed flat inventory.")
+        self._quant_status["pending_submissions"] = [dict(v) for v in self._quant_submissions.values() if not v.get("resolved")]
 
     def _quant_model(self):
         from app.quant_policy import PolicyModel
@@ -118,18 +230,26 @@ class LiveTradingRunner:
             self._quant_last_bar = None
         return self._quant_fitted_model
 
+    def _execution_mutex(self):
+        if not hasattr(self, "_quant_execution_lock"):
+            self._quant_execution_lock = threading.RLock()
+        return self._quant_execution_lock
+
     def _run_quant_policy_cycle(self):
+        with self._execution_mutex():
+            return self._run_quant_policy_cycle_unlocked()
+
+    def _run_quant_policy_cycle_unlocked(self):
         from app.quant_policy import integer_targets, target_weights
         if isinstance(self.adapter, MockAlpacaAdapter):
-            self._quant_status = {"state": "unavailable", "reason": "Calibrated execution requires broker snapshots; legacy mock fills are not research evidence."}
+            connection = getattr(self, "_broker_connection", {})
+            self._quant_status = {"state": "unavailable", "reason": connection.get("reason", "Broker connection unavailable"),
+                                  "execution_connected": False}
             return
         clock = self.adapter.get_clock()
         self._quant_clock = clock
         if not clock.get("success"):
             raise ValueError("Exchange clock unavailable")
-        if not clock.get("is_open"):
-            self._quant_status = {**self._quant_status, "state": "market_closed", "clock": clock.get("timestamp")}
-            return
         now = pd.Timestamp(clock["timestamp"])
         close = pd.Timestamp(clock["next_close"])
         orders, positions, account = self._quant_broker_snapshot()
@@ -142,29 +262,43 @@ class LiveTradingRunner:
         if not permitted:
             self._quant_status = {"state": "execution_not_authorized", "reason": "Existing configuration permits paper execution only"}
             return
+        if not clock.get("is_open"):
+            self._run_intraday_cleanup(now, orders, positions)
+            return
         # Keep the existing intraday-flat mandate. The research contract executes
         # at the last 5m interval, based on the exchange calendar (early closes too).
-        flatten = now >= close - pd.Timedelta(minutes=5)
+        flatten = now >= close - pd.Timedelta(minutes=float(self.strategy_params["flatten_before_close_minutes"]))
         prices = {position["ticker"]: position["current_price"] for position in positions}
         model = None
         if flatten:
             # A still-working entry can recreate inventory after a liquidation.
             # Cancel actual broker orders first; their disappearance/terminal state
             # must be reconciled before a same-symbol close can be submitted.
+            active_order_counts = {}
+            for order in orders:
+                if order.get("status") not in TERMINAL_STATUSES:
+                    symbol = order.get("ticker")
+                    active_order_counts[symbol] = active_order_counts.get(symbol, 0) + 1
+            cancellation_errors = {}
             for order in orders:
                 order_id = order.get("order_id")
                 held = next((position["shares"] for position in positions if position["ticker"] == order.get("ticker")), 0)
                 remaining = float(order.get("qty") or 0) - float(order.get("filled_qty") or 0)
                 working_exit = (str(order.get("client_order_id", "")).startswith("QP-EXIT-")
+                                and active_order_counts.get(order.get("ticker")) == 1
                                 and 0 < remaining <= abs(held)
                                 and order.get("side") == ("sell" if held > 0 else "buy"))
                 if working_exit:
                     continue
                 if order_id and order.get("status") not in TERMINAL_STATUSES | {"pending_cancel"}:
-                    self.adapter.client.cancel_order_by_id(order_id)
+                    try:
+                        self.adapter.client.cancel_order_by_id(order_id)
+                    except Exception as exc:
+                        cancellation_errors[order_id] = type(exc).__name__
             self._quant_targets = {position["ticker"]: 0 for position in positions}
             cycle_id = f"{now.date()}:session_close"
-            self._quant_status = {"state": "session_close", "target_shares": self._quant_targets, "exchange_close": close.isoformat()}
+            self._quant_status = {"state": "session_close", "target_shares": self._quant_targets,
+                                  "exchange_close": close.isoformat(), "cancellation_errors": cancellation_errors}
         else:
             try:
                 model = self._quant_model()
@@ -241,6 +375,20 @@ class LiveTradingRunner:
                           if submission.get("base_client_order_id") == intent.client_order_id), None)
             if prior and (not prior.get("resolved") or prior.get("status") == "filled"):
                 continue
+            # Forecast/data work can cross the already-established closing
+            # boundary. Recheck before sending so a late market order cannot
+            # become an unintended next-session entry or queued market exit.
+            sending_clock = self.adapter.get_clock()
+            if not sending_clock.get("success"):
+                raise ValueError("Exchange clock unavailable before order submission")
+            sending_time = pd.Timestamp(sending_clock["timestamp"])
+            sending_close = pd.Timestamp(sending_clock["next_close"])
+            closing_now = sending_time >= sending_close - pd.Timedelta(minutes=float(self.strategy_params["flatten_before_close_minutes"]))
+            if not sending_clock.get("is_open") or (closing_now and not flatten):
+                self._quant_clock = sending_clock
+                self._quant_status = {"state": "session_boundary_recheck", "clock": sending_clock["timestamp"],
+                                      "reason": "Session changed during this cycle; next cycle reconciles inventory before closing"}
+                return
             attempt = int(prior.get("attempt", 0)) + 1 if prior else 1
             client_id = intent.client_order_id if attempt == 1 else f"{intent.client_order_id[:36]}-{attempt}"
             submission = {"client_order_id": client_id, "base_client_order_id": intent.client_order_id,
@@ -248,6 +396,7 @@ class LiveTradingRunner:
                           "qty": intent.quantity, "filled_qty": 0, "side": intent.side,
                           "status": "submission_unknown", "limit_price": execution_marks[intent.symbol]}
             self._quant_submissions[client_id] = submission
+            self._save_liquidation_submissions()
             result = self.adapter.submit_market_order(intent.symbol, intent.quantity, intent.side,
                                                       price=execution_marks[intent.symbol], client_order_id=client_id)
             submission.update(order_id=result.get("order_id"), status=result.get("status") or "submission_unknown")
@@ -256,6 +405,7 @@ class LiveTradingRunner:
             if submission["status"] in TERMINAL_STATUSES:
                 submission["resolved"] = True
             self.add_log(f"[Quant policy] {intent.symbol} {intent.side} {intent.quantity}: {submission['status']}; awaiting broker fill reconciliation.")
+        self._save_liquidation_submissions()
         unresolved = [dict(submission) for submission in self._quant_submissions.values() if not submission.get("resolved")]
         self._quant_status["pending_submissions"] = unresolved
         if any(submission.get("status") == "submission_unknown" for submission in unresolved):
@@ -292,6 +442,7 @@ class LiveTradingRunner:
         self.ticker_directions = {}
         self.loop_task = None
         self.order_sync_thread = None
+        self._quant_execution_lock = threading.RLock()
         self._orders_lock = threading.RLock()
         self._orders_refresh_lock = threading.Lock()
         self._orders_cache = []
@@ -556,39 +707,36 @@ class LiveTradingRunner:
             return {"success": False, "error": str(e)}
 
     def init_alpaca_adapter(self):
+        from app.broker.credentials import resolve_trading_credentials, CredentialConfigurationError
+        self._broker_connection = {"connected": False, "credential_source": None}
         try:
-            api_key, api_secret, base_url = self._get_alpaca_credentials()
-            if self._credential_is_configured(api_key) and self._credential_is_configured(api_secret):
-                self.adapter = AlpacaAdapter(
-                    api_key=api_key,
-                    api_secret=api_secret,
-                    base_url=base_url
-                )
-                self.adapter.get_account_summary()
-            else:
+            credentials = resolve_trading_credentials(os.environ)
+            if credentials is None:
                 self.adapter = MockAlpacaAdapter()
-        except Exception:
+                self._broker_connection["reason"] = "Trading credentials unavailable; account display alone does not establish execution connectivity"
+                return
+            self._broker_connection.update(credentials.public_metadata())
+            adapter = AlpacaAdapter(api_key=credentials.key, api_secret=credentials.secret,
+                                    base_url=credentials.endpoint)
+            summary = adapter.get_account_summary()
+            if summary.get("success") is not True:
+                raise ValueError("Broker account read failed")
+            self.adapter = adapter
+            self._broker_connection.update(connected=True, reason=None,
+                verified_at=datetime.datetime.now(pytz.UTC).isoformat())
+        except CredentialConfigurationError as exc:
             self.adapter = MockAlpacaAdapter()
+            self._broker_connection["reason"] = str(exc)  # Resolver messages contain variable families, never values.
+        except Exception as exc:
+            self.adapter = MockAlpacaAdapter()
+            self._broker_connection["reason"] = f"Broker initialization failed ({type(exc).__name__})"
 
     @staticmethod
     def _get_alpaca_credentials():
-        api_key = (
-            os.getenv("APCA_API_KEY_ID")
-            or os.getenv("ALPACA_API_KEY")
-            or ALPACA_API_KEY
-        )
-        api_secret = (
-            os.getenv("APCA_API_SECRET_KEY")
-            or os.getenv("ALPACA_SECRET_KEY")
-            or ALPACA_SECRET_KEY
-        )
-        base_url = (
-            os.getenv("APCA_API_BASE_URL")
-            or os.getenv("ALPACA_BASE_URL")
-            or ALPACA_BASE_URL
-            or "https://paper-api.alpaca.markets/v2"
-        )
-        return api_key, api_secret, base_url
+        from app.broker.credentials import resolve_trading_credentials, PAPER_ENDPOINT
+        credentials = resolve_trading_credentials(os.environ)
+        return ((credentials.key, credentials.secret, credentials.endpoint)
+                if credentials else (None, None, PAPER_ENDPOINT))
 
     @staticmethod
     def _credential_is_configured(value: Optional[str]) -> bool:
@@ -623,25 +771,15 @@ class LiveTradingRunner:
 
         self.save_runner_config()
         
-        try:
-            api_key, api_secret, base_url = self._get_alpaca_credentials()
-            if self._credential_is_configured(api_key) and self._credential_is_configured(api_secret):
-                self.adapter = AlpacaAdapter(
-                    api_key=api_key,
-                    api_secret=api_secret,
-                    base_url=base_url
-                )
-                self.adapter.get_account_summary()
-                self.add_log("🟢 Successfully connected to Alpaca Paper/Live trading gateway.")
-            else:
-                self.adapter = MockAlpacaAdapter()
-                self.add_log("💡 Alpaca API credentials not detected, operating in local simulated mode.")
-        except Exception as e:
-            self.adapter = MockAlpacaAdapter()
-            self.add_log(f"⚠️ [Alpaca Connection Alert] API configuration exception ({str(e)}), downgraded to local simulation!")
+        self.init_alpaca_adapter()
+        if self._broker_connection["connected"]:
+            mode = "Paper" if self._broker_connection["is_paper"] else "Live"
+            self.add_log(f"Broker {mode} account verified using {self._broker_connection['credential_source']} credentials.")
+        else:
+            self.add_log(f"[Execution disconnected] {self._broker_connection['reason']}")
         self.is_running = True
         self._start_order_sync_worker()
-        self.add_log(f"🤖 [AI Automated Execution Active] Unattended 24/7 scanning enabled across {len(self.active_tickers)} tickers: {self.active_tickers}")
+        self.add_log(f"Execution loop started across {len(self.active_tickers)} tickers; broker_connected={self._broker_connection['connected']}.")
         
         def start_background_loop():
             loop = asyncio.new_event_loop()
@@ -1007,11 +1145,34 @@ class LiveTradingRunner:
             return {"status": "started", "is_running": True, "message": "Manually started AI Quant Trading Bot"}
 
     def submit_extended_hours_order(self, symbol: str, qty: int, side: str, limit_price: float) -> Dict:
+        with self._execution_mutex():
+            return self._submit_extended_hours_order_locked(symbol, qty, side, limit_price)
+
+    def _submit_extended_hours_order_locked(self, symbol: str, qty: int, side: str, limit_price: float) -> Dict:
         try:
+            permitted = (not self.strategy_params.get("paper_only_aggressive", True)
+                         or self.strategy_params.get("allow_aggressive_live", False)
+                         or bool(getattr(self.adapter, "is_paper", False)))
+            if not permitted:
+                return {"success": False, "error": "Existing configuration permits paper execution only"}
+            clock = self.adapter.get_clock()
+            if not clock.get("success"):
+                return {"success": False, "error": "Broker clock unavailable."}
+            closing_only = not clock.get("is_open") or pd.Timestamp(clock["timestamp"]) >= pd.Timestamp(clock["next_close"]) - pd.Timedelta(minutes=float(self.strategy_params["flatten_before_close_minutes"]))
+            intent = None
+            if closing_only:
+                orders, positions, _ = self._quant_broker_snapshot()
+                held = next((p["shares"] for p in positions if p["ticker"] == symbol.upper()), 0)
+                closing_side = "sell" if held > 0 else "buy"
+                if not math.isfinite(float(qty)) or not 0 < float(qty) <= abs(held) or side.lower() != closing_side:
+                    return {"success": False, "error": "日内模式盘外仅可平仓：数量和方向必须减少实际持仓，不能开仓或反手。"}
+                if any(o.get("ticker") == symbol.upper() and o.get("status") not in TERMINAL_STATUSES for o in orders):
+                    return {"success": False, "error": "该股票已有未完成订单，请先核对或撤单，避免重复平仓。"}
+                intent = "sell_to_close" if held > 0 else "buy_to_close"
             if hasattr(self.adapter, "submit_limit_order"):
-                res = self.adapter.submit_limit_order(symbol, qty, side, limit_price=limit_price, extended_hours=True)
+                res = self.adapter.submit_limit_order(symbol, qty, side, limit_price=limit_price, extended_hours=True, position_intent=intent)
             else:
-                res = self.adapter.submit_market_order(symbol, qty, side, price=limit_price)
+                return {"success": False, "error": "Extended-hours limit orders are unavailable on this broker connection."}
                 
             if res.get("success"):
                 action_type = "BUY" if side.lower() == "buy" else "SELL"
@@ -1033,6 +1194,7 @@ class LiveTradingRunner:
         orders_snapshot = self._cached_orders_snapshot()
         return {
             "is_running": self.is_running,
+            "execution_connection": dict(getattr(self, "_broker_connection", {"connected": False})),
             "market_mode": "AUTO_EXCHANGE",
             "is_market_open": self.is_market_open(),
             "ticker_scores": self.ticker_scores,

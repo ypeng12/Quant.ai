@@ -12,6 +12,7 @@ venv/
 .venv/
 env/
 .env
+backend/.runtime_state/
 
 # PDF and documentation binaries (exclude reading packages)
 *.pdf

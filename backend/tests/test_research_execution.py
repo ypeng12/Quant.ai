@@ -2,6 +2,8 @@
 import ast
 import datetime
 import math
+import json
+import threading
 import os
 from pathlib import Path
 from types import SimpleNamespace
@@ -130,10 +132,11 @@ def runner_type():
     # Compile the class only and never execute its auto-starting constructor.
     source = Path(__file__).parents[1] / "app/broker/live_runner.py"
     node = next(item for item in ast.parse(source.read_text()).body if isinstance(item, ast.ClassDef))
-    namespace = {"Dict": Dict, "List": List, "Optional": Optional, "pd": pd,
+    namespace = {"Dict": Dict, "List": List, "Optional": Optional, "pd": pd, "json": json, "threading": threading, "__file__": str(source),
                  "datetime": datetime, "math": math, "os": os, "pytz": pytz,
                  "MockAlpacaAdapter": type("Mock", (), {}), "closed_bars": closed_bars,
                  "plan_rebalance": plan_rebalance, "TERMINAL_STATUSES": {"filled", "rejected", "canceled"},
+                 "recalculate_fifo": recalculate_fifo,
                  "load_watchlist": lambda: ["A"],
                  "fetch_and_prepare_data": lambda *args, **kwargs: bars()}
     exec(compile(ast.Module(body=[node], type_ignores=[]), str(source), "exec"), namespace)
@@ -287,3 +290,55 @@ def test_adapter_distinguishes_known_rejection_from_timeout_and_duplicate():
     assert AlpacaAdapter._submission_error_status(refused) == "rejected"
     assert AlpacaAdapter._submission_error_status(TimeoutError("connection timed out")) == "submission_unknown"
     assert AlpacaAdapter._submission_error_status(duplicate) == "submission_unknown"
+
+
+def test_regular_session_forecast_reaches_targets_and_submission_without_recording_fake_fill(runner_type):
+    from app.quant_policy import PolicySpec
+    submitted = []
+    runner, _ = closing_runner(runner_type, [], [],
+        lambda *a, **k: submitted.append((a, k)) or {"success": True, "status": "accepted"})
+    runner.adapter.get_clock = lambda: dict(success=True, is_open=True, timestamp="2026-09-14T10:10:00-04:00", next_close="2026-09-14T16:00:00-04:00")
+    runner.adapter.client.get_asset = lambda symbol: SimpleNamespace(shortable=True)
+    runner._quant_broker_snapshot = lambda: ([], [], {"equity": 1000., "buying_power": 1000., "shorting_enabled": True})
+    model = SimpleNamespace(symbols=("A",), trained_before="2026-09-12", spec=PolicySpec(name="test", feature_set="price_volume"),
+                            forecast=lambda frames: SimpleNamespace(mu={"A": .02}, covariance=np.array([[.0001]])))
+    runner._quant_model = lambda: model
+    runner._quant_model_key, runner._quant_last_bar = ("fixture", 1), None
+    runner._run_quant_policy_cycle()
+    assert runner._quant_status["state"] == "ready"
+    assert runner._quant_targets["A"] > 0 and len(submitted) == 1
+    assert runner.trade_history == []
+    runner._run_quant_policy_cycle()
+    assert len(submitted) == 1  # Unknown/working order outcome still reserves the intent.
+
+
+def test_old_order_filled_today_is_assigned_to_fill_day(runner_type):
+    runner = runner_type.__new__(runner_type)
+    order = runner._serialize_alpaca_order(dict(id="old", symbol="SNDK", side="buy", qty="17", filled_qty="17", status="filled",
+        submitted_at="2026-09-11T20:00:04+00:00", filled_at="2026-09-14T13:33:40+00:00"))
+    assert order["date"] == "2026-09-14" and order["time"] == "2026-09-14 09:33:40"
+    assert order["filled_qty"] == 17
+
+
+def test_order_sync_updates_partial_fill_without_duplicate_or_limit_price_pnl(runner_type):
+    runner = runner_type.__new__(runner_type)
+    runner.adapter = SimpleNamespace(is_paper=True)
+    runner.trade_history = [dict(order_id="entry", time="2026-09-11 15:00:00", ticker="TSLA",
+                                action="SHORT", shares=10, price=100, order_status="filled")]
+    runner.save_trade_history = lambda: None
+    runner.add_log = lambda message: None
+    order = dict(order_id="cover", client_order_id="QP-EXIT-cover", ticker="TSLA", side="buy",
+                 position_intent="buy_to_close", date="2026-09-14", time="2026-09-14 16:01:00",
+                 status="accepted", filled_qty=0, filled_avg_price=None, limit_price=105)
+    runner.sync_alpaca_orders_to_history(snapshot=dict(success=True, orders=[order]))
+    assert len(runner.trade_history) == 1
+    partial = {**order, "status": "partially_filled", "filled_qty": 3, "filled_avg_price": 90}
+    assert runner.sync_alpaca_orders_to_history(snapshot=dict(success=True, orders=[partial]))["added"] == 1
+    assert runner.trade_history[-1]["pnl"] == 30
+    filled = {**partial, "status": "filled", "filled_qty": 10, "filled_avg_price": 91}
+    runner.sync_alpaca_orders_to_history(snapshot=dict(success=True, orders=[filled]))
+    runner.sync_alpaca_orders_to_history(snapshot=dict(success=True, orders=[filled]))
+    assert len(runner.trade_history) == 2
+    assert runner.trade_history[-1]["shares"] == 10
+    assert runner.trade_history[-1]["price"] == 91
+    assert runner.trade_history[-1]["pnl"] == 90

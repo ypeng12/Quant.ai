@@ -1,0 +1,31 @@
+{
+  "base_commit": "bab6298b4620af898be660ee435e4ac1fbc855fb",
+  "status": "local_review_pending_no_deployment",
+  "tests": {
+    "tests": "75",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "7.315"
+  },
+  "python_compile": "passed",
+  "git_diff_check": "passed",
+  "real_paper_account_read": "passed",
+  "model_forecast_component": "ready",
+  "cloud_order_chain_activated": false,
+  "broker_order_mutations": 0,
+  "live_afterhours_quote_availability": "unavailable_for_held_symbols_at_probe",
+  "alpha_model_changed": false,
+  "ui_changed": false,
+  "source_sha256": {
+    ".gitignore": "2137740bb355739828a4dbbfa6ecd37bcd77b1aa121d9c63237d278199a81ab1",
+    "backend/app/broker/credentials.py": "2f3e10f2f19636611fc6d87b6090aab2b6ae38d618536d1a36fa0d6138c04c00",
+    "backend/app/broker/intraday_liquidation.py": "bec172bb0f5da64c07c93737f3e56f835418883b87f87490f8ef0cc2e2fe0552",
+    "backend/app/broker/alpaca_adapter.py": "1010c9f9d14963dc7636ff4c75a812ef2bf8ceafae1c4e50c024f4ece6d4a15c",
+    "backend/app/broker/live_runner.py": "e6883652a5ceef4ed5cf436fd4980fca446af5a7322aa42344f9a5cf4e3502b1",
+    "backend/tests/test_trading_credentials.py": "29f367abec38099fe675315d1f95b7a5f939a22400327ea3ccb786c732dacfd3",
+    "backend/tests/test_intraday_liquidation.py": "e40f9adf9174541ec8c65a14ae161f07cac3645de3c0ae676607c0c3636eb0e2",
+    "backend/tests/test_research_execution.py": "8de56995012b5bfc8162e7c5b2bdffc3b46647db781cc79a53b3400fb1b1f6f3",
+    "scripts/check_paper_execution.py": "c1a63562f87ecc41083e30956a91ec9521b578fff26344abb7fcc15c921cf5b7"
+  }
+}

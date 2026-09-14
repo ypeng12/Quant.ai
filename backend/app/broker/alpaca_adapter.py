@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 try:
     from alpaca.trading.client import TradingClient
     from alpaca.trading.requests import MarketOrderRequest, LimitOrderRequest
-    from alpaca.trading.enums import OrderSide, TimeInForce, OrderStatus
+    from alpaca.trading.enums import OrderSide, TimeInForce, OrderStatus, PositionIntent
     HAS_ALPACA_SDK = True
 except ImportError:
     TradingClient = None
@@ -21,6 +21,7 @@ except ImportError:
     OrderSide = None
     TimeInForce = None
     OrderStatus = None
+    PositionIntent = None
     HAS_ALPACA_SDK = False
 
 class AlpacaAdapter:
@@ -191,7 +192,7 @@ class AlpacaAdapter:
                 "message": f"Failed to submit market order for {symbol}: {str(e)}"
             }
 
-    def submit_limit_order(self, symbol: str, qty: int, side: str, limit_price: float, extended_hours: bool = True, client_order_id: Optional[str] = None) -> Dict:
+    def submit_limit_order(self, symbol: str, qty: float, side: str, limit_price: float, extended_hours: bool = True, client_order_id: Optional[str] = None, position_intent: Optional[str] = None) -> Dict:
         """
         Submit a Limit order to Alpaca supporting Pre-market (4:00 AM EST) and Post-market (8:00 PM EST).
         Args:
@@ -208,13 +209,15 @@ class AlpacaAdapter:
                 "symbol": symbol.upper(),
                 "qty": qty,
                 "side": order_side,
-                "limit_price": round(limit_price, 2),
+                "limit_price": round(limit_price, 2 if limit_price >= 1 else 4),
                 "time_in_force": TimeInForce.DAY,
                 "extended_hours": extended_hours
             }
             if client_order_id:
                 kwargs["client_order_id"] = client_order_id
 
+            if position_intent:
+                kwargs["position_intent"] = PositionIntent(position_intent)
             order_request = LimitOrderRequest(**kwargs)
             order = self.client.submit_order(order_data=order_request)
             return {
@@ -222,13 +225,14 @@ class AlpacaAdapter:
                 "order_id": str(order.id),
                 "client_order_id": str(getattr(order, 'client_order_id', client_order_id or '')),
                 "status": str(getattr(order.status, 'value', order.status)),
-                "filled_qty": int(getattr(order, 'filled_qty', 0) or 0),
-                "filled_avg_price": float(getattr(order, 'filled_avg_price', limit_price) or limit_price),
+                "filled_qty": float(getattr(order, 'filled_qty', 0) or 0),
+                "filled_avg_price": float(order.filled_avg_price) if getattr(order, "filled_avg_price", None) is not None else None,
                 "message": f"Successfully submitted Extended-Hours LIMIT {side.upper()} order for {qty} shares of {symbol} at ${limit_price:.2f}."
             }
         except Exception as e:
             return {
                 "success": False,
+                "status": self._submission_error_status(e),
                 "error": str(e),
                 "message": f"Failed to submit extended hours limit order: {str(e)}"
             }
@@ -324,6 +328,37 @@ class AlpacaAdapter:
                 "error": str(e),
                 "message": f"Failed to close position for {symbol.upper()}: {str(e)}"
             }
+
+    def get_liquidation_session(self, now):
+        from datetime import timedelta
+        from app.broker.intraday_liquidation import extended_session
+        import pandas as pd
+        day = pd.Timestamp(now).tz_convert("America/New_York").date()
+        if getattr(self, "_liquidation_calendar_day", None) != day:
+            self._liquidation_calendar = self.client.get("/calendar", data={
+                "start": str(day - timedelta(days=1)), "end": str(day + timedelta(days=2))})
+            self._liquidation_calendar_day = day
+        return extended_session(now, self._liquidation_calendar)
+
+    def get_liquidation_quote(self, symbol, session):
+        from alpaca.data.historical import StockHistoricalDataClient
+        from alpaca.data.requests import StockLatestQuoteRequest
+        from alpaca.data.enums import DataFeed
+        overnight = session["kind"] == "overnight"
+        if overnight:
+            asset = self.client.get_asset(symbol)
+            if "overnight_tradable" not in (getattr(asset, "attributes", None) or []):
+                raise ValueError("Asset is not eligible for this overnight session")
+        if not hasattr(self, "_liquidation_data_client"):
+            self._liquidation_data_client = StockHistoricalDataClient(self.api_key, self.api_secret)
+        requested = session.get("quote_feed", "iex")
+        if requested not in {"iex", "sip"}:
+            raise ValueError("Liquidation requires a realtime IEX or entitled SIP quote; delayed SIP is not a live quote")
+        feed = DataFeed.OVERNIGHT if overnight else DataFeed(requested)
+        quote = self._liquidation_data_client.get_stock_latest_quote(
+            StockLatestQuoteRequest(symbol_or_symbols=[symbol], feed=feed))[symbol]
+        return dict(timestamp=quote.timestamp.isoformat(), bid_price=quote.bid_price,
+                    ask_price=quote.ask_price, source=feed.value, indicative=overnight)
 
     def get_clock(self) -> Dict:
         """
