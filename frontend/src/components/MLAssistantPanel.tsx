@@ -6,69 +6,17 @@ import { InstitutionalQuantDashboard } from './InstitutionalQuantDashboard';
 import { MLDynamicVisualizationDashboard } from './MLDynamicVisualizationDashboard';
 import { IntradayKlineChart } from './IntradayKlineChart';
 
-interface MLPredictionResult {
-  ticker: string;
-  p_win: number;
-  win_rate_pct: number;
-  p_win_daytrade?: number;
-  win_rate_daytrade_pct?: number;
-  e_pnl_daytrade_r?: number;
-  p_std: number;
-  rank_score: number;
-  hmm_regime: string;
-  volatility_penalty: number;
-  expected_rr: number;
-  expected_value_r: number;
-  kelly_fraction: number;
-  is_positive_ev: boolean;
-  ev_status: string;
-  sor_decision: {
-    expected_return_bps: number;
-    p_fill_500ms: number;
-    p_adverse_selection: number;
-    ev_maker_bps: number;
-    ev_taker_bps: number;
-    expected_net_edge_bps: number;
-    recommended_order_type: string;
-    decision_reason: string;
-  };
-}
-
-const classicDemo = (selectedTicker: string): MLPredictionResult => ({
-          ticker: selectedTicker,
-          p_win: 0.654,
-          win_rate_pct: 65.4,
-          p_win_daytrade: 0.584,
-          win_rate_daytrade_pct: 58.4,
-          e_pnl_daytrade_r: 0.255,
-          p_std: 0.042,
-          rank_score: 0.852,
-          hmm_regime: "TREND_BULL",
-          volatility_penalty: 1.0,
-          expected_rr: 2.2,
-          expected_value_r: 0.458,
-          kelly_fraction: 0.21,
-          is_positive_ev: true,
-          ev_status: "POSITIVE_EV✅",
-          sor_decision: {
-            expected_return_bps: 1.85,
-            p_fill_500ms: 0.62,
-            p_adverse_selection: 0.21,
-            ev_maker_bps: 0.74,
-            ev_taker_bps: 0.88,
-            expected_net_edge_bps: 0.88,
-            recommended_order_type: "MARKET_TAKER",
-            decision_reason: "EV_taker (0.88 bps) > EV_maker (0.74 bps)"
-          }
-        });
+// Only calibrated, versioned predictions may populate model cards.
+const metric = (v: number | null | undefined, digits = 1, suffix = '') =>
+  typeof v === 'number' && Number.isFinite(v) ? `${v.toFixed(digits)}${suffix}` : '—';
 
 export const MLAssistantPanel: React.FC<{ activeTicker: string }> = ({ activeTicker }) => {
   const [ticker, setTicker] = useState<string>(activeTicker || "TSLA");
   const [horizonMode, setHorizonMode] = useState<'daytrade' | 'swing'>('daytrade');
   const [loading, setLoading] = useState<boolean>(false);
-  const [mlData, setMlData] = useState<MLPredictionResult | null>(null);
+  const [mlData, setMlData] = useState<any>(null);
 
-  const [sourceLabel, setSourceLabel] = useState('经典交互演示');
+  const [sourceLabel, setSourceLabel] = useState('正在读取数据来源…');
   const requestId = useRef(0);
   const [demoOfi, setDemoOfi] = useState(0.45);
   const [demoSpeed, setDemoSpeed] = useState(0.12);
@@ -81,17 +29,12 @@ export const MLAssistantPanel: React.FC<{ activeTicker: string }> = ({ activeTic
       if (!res.ok) throw new Error('Snapshot request failed');
       const json = await res.json();
       if (id !== requestId.current) return;
-      if (json.success && json.result?.ticker === selectedTicker && Number.isFinite(json.result.p_win)) {
-        setMlData(json.result);
-        setSourceLabel(json.data_provenance?.label || '经典展示 · 归档模型输出');
-      } else {
-        setMlData(classicDemo(selectedTicker));
-        setSourceLabel('通用交互演示 · 示例数值，不是所选股票的实时推断');
-      }
+      setMlData(json.status === 'validated_prediction' ? json.result : null);
+      setSourceLabel(json.data_provenance?.label || json.error || '模型指标尚不可用');
     } catch {
       if (id === requestId.current) {
-        setMlData(classicDemo(selectedTicker));
-        setSourceLabel('离线交互演示 · 示例数值');
+        setMlData(null);
+        setSourceLabel('数据请求失败 · 请重试');
       }
     } finally {
       if (id === requestId.current) setLoading(false);
@@ -108,15 +51,9 @@ export const MLAssistantPanel: React.FC<{ activeTicker: string }> = ({ activeTic
     fetchMLInference(ticker);
   }, [ticker]);
 
-  const currentWinRatePct = horizonMode === 'daytrade'
-    ? (mlData?.win_rate_daytrade_pct ?? mlData?.win_rate_pct ?? 58.4)
-    : (mlData?.win_rate_pct ?? 65.4);
-
-  const currentEPnlR = horizonMode === 'daytrade'
-    ? (mlData?.e_pnl_daytrade_r ?? mlData?.expected_value_r ?? 0.255)
-    : (mlData?.expected_value_r ?? 0.458);
-
-  const currentEvStatus = currentEPnlR >= 0.05 ? "POSITIVE_EV✅" : "NEGATIVE_EV⚠️";
+  const currentWinRatePct = horizonMode === 'daytrade' ? mlData?.win_rate_daytrade_pct : mlData?.win_rate_pct;
+  const currentEPnlR = horizonMode === 'daytrade' ? mlData?.e_pnl_daytrade_r : mlData?.expected_value_r;
+  const currentEvStatus = currentEPnlR == null ? '待验证' : (currentEPnlR > 0 ? '正期望' : '非正期望');
 
   return (
     <div style={{ padding: '20px', background: '#0a0a0c', color: '#fff', borderRadius: '12px' }}>
@@ -190,12 +127,12 @@ export const MLAssistantPanel: React.FC<{ activeTicker: string }> = ({ activeTic
         </div>
       </div>
 
-      <div role="status" style={{ fontSize: '0.8rem', color: '#94a3b8', marginBottom: '16px' }}>{sourceLabel} · 百分比展示模型/情景分数</div>
+      <div role="status" style={{ fontSize: '0.8rem', color: '#94a3b8', marginBottom: '16px' }}>{sourceLabel} · — 表示缺少已验证结果</div>
       {loading ? (
         <div style={{ textAlign: 'center', padding: '40px', color: '#38bdf8' }}>
-          🔄 正在读取 [{ticker}] 的经典模型展示...
+          🔄 正在读取 [{ticker}] 的数据...
         </div>
-      ) : mlData ? (
+      ) : (
         <div>
           {/* Dynamic Animated ML Models Visualization Dashboard */}
           <div style={{ marginBottom: '24px' }}>
@@ -212,14 +149,14 @@ export const MLAssistantPanel: React.FC<{ activeTicker: string }> = ({ activeTic
             {/* Card 1: Probability Calibration */}
             <div style={{ background: '#1e293b', padding: '16px', borderRadius: '8px', borderLeft: '4px solid #38bdf8' }}>
               <div style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 700 }}>
-                1. 方向分数 (P_win - {horizonMode === 'daytrade' ? '15m' : '1d'})
+                1. 校准胜率 (P_win - {horizonMode === 'daytrade' ? '15m' : '1d'})
               </div>
               <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#38bdf8', margin: '6px 0' }}>
-                {currentWinRatePct}%
+                {metric(currentWinRatePct, 1, '%')}
               </div>
               <div style={{ fontSize: '0.75rem', color: '#cbd5e1' }}>
-                Brier Score（教学示例）: <strong>{horizonMode === 'daytrade' ? '0.1512' : '0.0603'}</strong> (Platt)<br/>
-                预测标准差 σ: <strong>±{(mlData.p_std * 100).toFixed(1)}%</strong>
+                Brier Score: <strong>—</strong>（待校准）<br/>
+                预测标准差 σ: <strong>±{metric(mlData?.p_std == null ? null : mlData.p_std * 100, 1, '%')}</strong>
               </div>
             </div>
 
@@ -227,11 +164,11 @@ export const MLAssistantPanel: React.FC<{ activeTicker: string }> = ({ activeTic
             <div style={{ background: '#1e293b', padding: '16px', borderRadius: '8px', borderLeft: '4px solid #a855f7' }}>
               <div style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 700 }}>2. LambdaMART 选股得分</div>
               <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#c084fc', margin: '6px 0' }}>
-                {mlData.rank_score}
+                {metric(mlData?.rank_score, 3)}
               </div>
               <div style={{ fontSize: '0.75rem', color: '#cbd5e1' }}>
                 横截面排序结果展示<br/>
-                示例级别: <strong>HIGH_CONVICTION</strong>
+                模型版本: <strong>待验证</strong>
               </div>
             </div>
 
@@ -239,23 +176,23 @@ export const MLAssistantPanel: React.FC<{ activeTicker: string }> = ({ activeTic
             <div style={{ background: '#1e293b', padding: '16px', borderRadius: '8px', borderLeft: '4px solid #22c55e' }}>
               <div style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 700 }}>3. HMM 隐状态市场体制</div>
               <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#4ade80', margin: '6px 0' }}>
-                {mlData.hmm_regime}
+                {mlData?.hmm_regime ?? '待验证'}
               </div>
               <div style={{ fontSize: '0.75rem', color: '#cbd5e1' }}>
-                风险打折系数: <strong>{mlData.volatility_penalty}x</strong><br/>
-                状态展示: <strong>{mlData.hmm_regime}</strong>
+                风险打折系数: <strong>{metric(mlData?.volatility_penalty, 2, 'x')}</strong><br/>
+                状态展示: <strong>{mlData?.hmm_regime ?? '待验证'}</strong>
               </div>
             </div>
 
             {/* Card 4: Mathematical Expectation */}
             <div style={{ background: '#1e293b', padding: '16px', borderRadius: '8px', borderLeft: '4px solid #f59e0b' }}>
-              <div style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 700 }}>4. 情景期望 E[R] & 仓位演示</div>
+              <div style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 700 }}>4. 期望 E[R] & 仓位估计</div>
               <div style={{ fontSize: '1.8rem', fontWeight: 800, color: currentEPnlR >= 0.05 ? '#4ade80' : '#ef4444', margin: '6px 0' }}>
-                {currentEPnlR >= 0 ? '+' : ''}{currentEPnlR} R
+                {metric(currentEPnlR, 3, ' R')}
               </div>
               <div style={{ fontSize: '0.75rem', color: '#cbd5e1' }}>
-                Kelly 情景仓位: <strong>{currentEPnlR >= 0.05 ? (mlData.kelly_fraction * 100).toFixed(1) : '0.0'}%</strong><br/>
-                情景状态: <span style={{ color: currentEPnlR >= 0.05 ? '#4ade80' : '#ef4444', fontWeight: 800 }}>{currentEvStatus}</span>
+                Kelly 仓位: <strong>{metric(mlData?.kelly_fraction == null ? null : mlData.kelly_fraction * 100, 1, '%')}</strong><br/>
+                验证状态: <span style={{ color: currentEPnlR >= 0.05 ? '#4ade80' : '#ef4444', fontWeight: 800 }}>{currentEvStatus}</span>
               </div>
             </div>
           </div>
@@ -263,7 +200,7 @@ export const MLAssistantPanel: React.FC<{ activeTicker: string }> = ({ activeTic
           {/* Section: Reliability Calibration Binning Table */}
           <div style={{ background: '#1e293b', padding: '16px', borderRadius: '8px', marginBottom: '20px' }}>
             <h3 style={{ margin: '0 0 12px 0', fontSize: '1rem', color: '#38bdf8' }}>
-              📊 概率校准分箱教学示例 (Reliability Bin Table - Platt Scaling)
+              📊 概率校准分箱 (Reliability Bin Table - Platt Scaling)
             </h3>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
               <thead>
@@ -276,41 +213,7 @@ export const MLAssistantPanel: React.FC<{ activeTicker: string }> = ({ activeTic
                 </tr>
               </thead>
               <tbody>
-                <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                  <td style={{ padding: '8px' }}>Bin 1 (0.30 - 0.40)</td>
-                  <td>0.364</td>
-                  <td>0.358</td>
-                  <td style={{ color: '#22c55e' }}>-0.006</td>
-                  <td style={{ color: '#38bdf8' }}>[████░░░░░░] 吻合✅</td>
-                </tr>
-                <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                  <td style={{ padding: '8px' }}>Bin 2 (0.40 - 0.50)</td>
-                  <td>0.452</td>
-                  <td>0.449</td>
-                  <td style={{ color: '#22c55e' }}>-0.003</td>
-                  <td style={{ color: '#38bdf8' }}>[█████░░░░░] 吻合✅</td>
-                </tr>
-                <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                  <td style={{ padding: '8px' }}>Bin 3 (0.50 - 0.60)</td>
-                  <td>0.548</td>
-                  <td>0.551</td>
-                  <td style={{ color: '#22c55e' }}>+0.003</td>
-                  <td style={{ color: '#38bdf8' }}>[██████░░░░] 吻合✅ (核心开仓区)</td>
-                </tr>
-                <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                  <td style={{ padding: '8px' }}>Bin 4 (0.60 - 0.70)</td>
-                  <td>0.635</td>
-                  <td>0.641</td>
-                  <td style={{ color: '#22c55e' }}>+0.006</td>
-                  <td style={{ color: '#38bdf8' }}>[███████░░░] 吻合✅ (强烈推仓区)</td>
-                </tr>
-                <tr>
-                  <td style={{ padding: '8px' }}>Bin 5 (0.70 - 0.80)</td>
-                  <td>0.728</td>
-                  <td>0.719</td>
-                  <td style={{ color: '#22c55e' }}>-0.009</td>
-                  <td style={{ color: '#38bdf8' }}>[████████░░] 吻合✅</td>
-                </tr>
+                <tr><td colSpan={5} style={{ padding: '16px', color: '#94a3b8' }}>尚无可核验的样本外校准记录；不显示示例胜率或“吻合”结果。</td></tr>
               </tbody>
             </table>
           </div>
@@ -318,29 +221,29 @@ export const MLAssistantPanel: React.FC<{ activeTicker: string }> = ({ activeTic
           {/* Section: Smart Order Router Decision */}
           <div style={{ background: '#1e293b', padding: '16px', borderRadius: '8px' }}>
             <h3 style={{ margin: '0 0 12px 0', fontSize: '1rem', color: '#f59e0b', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span>⚡ Smart Order Router (SOR) 微观结构报单演示</span>
-              <span style={{ fontSize: '0.75rem', color: '#10b981', fontWeight: 700 }}>条件期望情景演示 (EV &gt; Cost)</span>
+              <span>⚡ Smart Order Router (SOR) 微观结构报单诊断</span>
+              <span style={{ fontSize: '0.75rem', color: '#10b981', fontWeight: 700 }}>等待成交与报价校验</span>
             </h3>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div style={{ background: '#0f172a', padding: '12px', borderRadius: '6px', border: '1px solid rgba(34, 197, 94, 0.3)' }}>
                 <div style={{ color: '#94a3b8', fontSize: '0.8rem' }}>限价被动挂单 Expected Value (EV_maker)</div>
                 <div style={{ fontSize: '1.2rem', color: '#22c55e', fontWeight: 700 }}>
-                  +{(mlData.sor_decision?.ev_maker_bps ?? 4.2).toFixed(1)} bps
+                  {metric(mlData?.sor_decision?.ev_maker_bps, 1, ' bps')}
                 </div>
                 <div style={{ fontSize: '0.75rem', color: '#cbd5e1', marginTop: '4px' }}>
-                  挂单 500ms 成交率 P(Fill): <strong>{((mlData.sor_decision?.p_fill_500ms ?? 0.68) * 100).toFixed(1)}%</strong><br/>
-                  毒性杀跌风险 P(Adverse): <strong style={{ color: '#ef4444' }}>{((mlData.sor_decision?.p_adverse_selection ?? 0.12) * 100).toFixed(1)}%</strong>
+                  挂单 500ms 成交率 P(Fill): <strong>{metric(mlData?.sor_decision?.p_fill_500ms == null ? null : mlData.sor_decision.p_fill_500ms * 100, 1, '%')}</strong><br/>
+                  毒性杀跌风险 P(Adverse): <strong style={{ color: '#ef4444' }}>{metric(mlData?.sor_decision?.p_adverse_selection == null ? null : mlData.sor_decision.p_adverse_selection * 100, 1, '%')}</strong>
                 </div>
               </div>
 
               <div style={{ background: '#0f172a', padding: '12px', borderRadius: '6px', border: '1px solid rgba(56, 189, 248, 0.3)' }}>
                 <div style={{ color: '#94a3b8', fontSize: '0.8rem' }}>市价主动吃单 Expected Value (EV_taker)</div>
                 <div style={{ fontSize: '1.2rem', color: '#38bdf8', fontWeight: 700 }}>
-                  +{(mlData.sor_decision?.ev_taker_bps ?? 2.8).toFixed(1)} bps
+                  {metric(mlData?.sor_decision?.ev_taker_bps, 1, ' bps')}
                 </div>
                 <div style={{ fontSize: '0.75rem', color: '#cbd5e1', marginTop: '4px' }}>
-                  预测未来 500ms 微观涨幅: <strong>+{(mlData.sor_decision?.expected_return_bps ?? 3.5).toFixed(1)} bps</strong><br/>
-                  自动报单建议: <strong style={{ color: '#10b981' }}>{mlData.sor_decision?.recommended_order_type || 'POST_ONLY_LIMIT'}</strong>
+                  预测未来 500ms 微观涨幅: <strong>{metric(mlData?.sor_decision?.expected_return_bps, 1, ' bps')}</strong><br/>
+                  自动报单建议: <strong style={{ color: '#10b981' }}>{mlData?.sor_decision?.recommended_order_type ?? '待验证'}</strong>
                 </div>
               </div>
             </div>
@@ -353,7 +256,7 @@ export const MLAssistantPanel: React.FC<{ activeTicker: string }> = ({ activeTic
                 🎛️ 微观结构 ML 交互操盘沙盒 (ML Feature Interactive Sandbox)
               </h3>
               <span style={{ fontSize: '0.75rem', background: '#0284c7', color: '#fff', padding: '2px 8px', borderRadius: '4px', fontWeight: 700 }}>
-                手动调参 & 实时模拟
+                手动输入 · 非实时盘口
               </span>
             </div>
 
@@ -371,22 +274,11 @@ export const MLAssistantPanel: React.FC<{ activeTicker: string }> = ({ activeTic
                   onChange={(e) => {
                     const v = parseFloat(e.target.value);
                     setDemoOfi(v);
-                    if (mlData) {
-                      setSourceLabel('手动情景演示 · 滑块输入');
-                      setMlData({
-                        ...mlData,
-                        p_win_daytrade: Math.min(0.95, Math.max(0.20, 0.58 + v * 0.25)),
-                        win_rate_daytrade_pct: Math.round(Math.min(95, Math.max(20, (0.58 + v * 0.25) * 100)) * 10) / 10,
-                        p_win: Math.min(0.95, Math.max(0.20, 0.58 + v * 0.25)),
-                        win_rate_pct: Math.round(Math.min(95, Math.max(20, (0.58 + v * 0.25) * 100)) * 10) / 10,
-                        e_pnl_daytrade_r: Math.round((0.25 + v * 0.45) * 100) / 100,
-                        expected_value_r: Math.round((0.25 + v * 0.45) * 100) / 100
-                      });
-                    }
+
                   }}
                 />
                 <div style={{ fontSize: '0.75rem', color: '#38bdf8', marginTop: '4px', textAlign: 'right', fontWeight: 700 }}>
-                  当前 OFI: {demoOfi.toFixed(2)}
+                  输入 OFI: {demoOfi.toFixed(2)}
                 </div>
               </div>
 
@@ -403,14 +295,7 @@ export const MLAssistantPanel: React.FC<{ activeTicker: string }> = ({ activeTic
                   onChange={(e) => {
                     const v = parseFloat(e.target.value);
                     setDemoSpeed(v);
-                    if (mlData) {
-                      setSourceLabel('手动情景演示 · 滑块输入');
-                      setMlData({
-                        ...mlData,
-                        e_pnl_daytrade_r: Math.round((0.25 + v * 0.8) * 100) / 100,
-                        expected_value_r: Math.round((0.25 + v * 0.8) * 100) / 100
-                      });
-                    }
+
                   }}
                 />
                 <div style={{ fontSize: '0.75rem', color: '#a855f7', marginTop: '4px', textAlign: 'right', fontWeight: 700 }}>
@@ -422,7 +307,7 @@ export const MLAssistantPanel: React.FC<{ activeTicker: string }> = ({ activeTic
               <div style={{ background: '#0f172a', padding: '12px', borderRadius: '6px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                 <button
                   onClick={async () => {
-                    alert(`🚀 已基于当前演示参数为 [${ticker}] 手动触发一次模拟买卖评估！\n方向分数 P_win: ${currentWinRatePct}%\n数学期望 E[R]: +${currentEPnlR}R\n最佳智能报单: ${mlData?.sor_decision.recommended_order_type}`);
+                    alert(`🚀 已基于当前演示参数为 [${ticker}] 手动触发一次模拟买卖评估！\n方向分数 P_win: ${metric(currentWinRatePct, 1, '%')}\n数学期望 E[R]: +${currentEPnlR}R\n最佳智能报单: ${mlData?.sor_decision.recommended_order_type}`);
                   }}
                   style={{
                     background: 'linear-gradient(135deg, #10b981, #059669)',
@@ -447,7 +332,7 @@ export const MLAssistantPanel: React.FC<{ activeTicker: string }> = ({ activeTic
             <InstitutionalQuantDashboard />
           </div>
         </div>
-      ) : null}
+      )}
     </div>
   );
 };

@@ -19,16 +19,11 @@ def symbol_name(ticker):
 
 
 def ml_snapshot(ticker,root=ROOT):
-    symbol=symbol_name(ticker)
-    path=Path(root)/'backend/data/ml_predictions_cache.json'
-    data=json.loads(path.read_text()) if path.exists() else {}
-    if symbol not in data:
-        return dict(success=False,status='demo_available',ticker=symbol,result=None,
-                    error='此股票没有归档模型快照，可查看通用交互演示。')
-    return dict(success=True,status='archived_demo',ticker=symbol,result=data[symbol],
-                data_provenance=dict(source='legacy_ml_predictions_cache',as_of=None,
-                                     label='经典模型展示 · 归档数值（日期未记录）',
-                                     score_kind='uncalibrated_legacy_output',is_live=False))
+    from .dashboard_market import observed_snapshot
+    try:
+        return observed_snapshot(symbol_name(ticker), root)
+    except (OSError, ValueError, KeyError) as exc:
+        return dict(success=False, status="unavailable", ticker=symbol_name(ticker), result=None, error=str(exc))
 
 
 def build_wave_data(frame,ticker,date,source):
@@ -74,6 +69,16 @@ def build_wave_data(frame,ticker,date,source):
 def history(ticker,date='',root=ROOT):
     symbol=symbol_name(ticker);root=Path(root)
     if date and not re.fullmatch(r'\d{4}-\d{2}-\d{2}',date): raise ValueError('Explicit historical date required')
+    # Prefer the complete, dated broker history over an intraday archive snapshot.
+    observed_path = root/'backend/data/market_history/dashboard_bars.json'
+    if observed_path.exists():
+        from .dashboard_market import market_data
+        observed = market_data(symbol, date, '5m', root)
+        frame = pd.DataFrame({k: observed[k.lower()] for k in ['Open','High','Low','Close','Volume']},
+                             index=pd.to_datetime(observed['full_time'], utc=True).tz_convert('America/New_York'))
+        data = build_wave_data(frame, symbol, observed['date'], observed['data_provenance']['source'])
+        return dict(success=True, status='historical_proxy', ticker=symbol, date=observed['date'], data=data,
+                    available_dates=observed['available_dates'], data_provenance={**data['data_provenance'], **observed['data_provenance']})
     cache=root/'backend/data/charts/wave_history_cache.json'
     records=json.loads(cache.read_text()).get(symbol,{}) if cache.exists() else {}
     by_day={d:v for d,v in records.get('by_day',{}).items() if re.fullmatch(r'\d{4}-\d{2}-\d{2}',d)}

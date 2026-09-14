@@ -402,7 +402,7 @@ export const IntradayKlineChart: React.FC<IntradayKlineChartProps> = ({ ticker: 
               color: '#38bdf8',
               letterSpacing: '0.8px'
             }}>
-              QUANT.AI 全天分时走势与 ML 预估
+              QUANT.AI 全天分时走势与规则参考
             </span>
             <span style={{ fontSize: '13px', color: '#64748b' }}>• {data.date} (美股全天 09:30-16:00 恒定坐标)</span>
           </div>
@@ -432,11 +432,11 @@ export const IntradayKlineChart: React.FC<IntradayKlineChartProps> = ({ ticker: 
                 <span>收: <strong style={{ color: '#fff' }}>${activeDataPoint.actual}</strong></span>
               </>
             )}
-            <span>🤖 ML 预估价: <strong style={{ color: forecastColor }}>${activeDataPoint?.predicted.toFixed(2)}</strong></span>
+            <span>🤖 规则参考价: <strong style={{ color: forecastColor }}>${activeDataPoint?.predicted.toFixed(2)}</strong></span>
             <span>📊 差距: <strong style={{ color: activeDataPoint && activeDataPoint.gap >= 0 ? '#10b981' : '#f43f5e' }}>
               {activeDataPoint && activeDataPoint.gap >= 0 ? '+' : ''}${activeDataPoint?.gap.toFixed(2)} ({activeDataPoint?.gapPct.toFixed(2)}%)
             </strong></span>
-            <span>🎯 胜率置信度: <strong style={{ color: '#fbbf24' }}>{activeDataPoint?.pwin}%</strong></span>
+            <span>🎯 规则方向分数: <strong style={{ color: '#fbbf24' }}>{activeDataPoint?.pwin} / 100</strong></span>
           </div>
         </div>
 
@@ -782,7 +782,7 @@ export const IntradayKlineChart: React.FC<IntradayKlineChartProps> = ({ ticker: 
                 fontWeight="700"
                 textAnchor="middle"
               >
-                当前分时 ⏱️
+                末根 K 线 ⏱️
               </text>
             </g>
           )}
@@ -1016,7 +1016,7 @@ export const IntradayKlineChart: React.FC<IntradayKlineChartProps> = ({ ticker: 
           <div style={{ fontSize: '19px', fontWeight: 900, color: '#38bdf8', marginTop: '3px' }}>
             +{data.summary.ml_predicted_mfe_pct.toFixed(2)}%
           </div>
-          <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>基于 ATR 与经典方向分数</div>
+          <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>基于 ATR 与经典方向分数（未经校准）</div>
         </div>
 
         <div style={{ background: 'rgba(16, 185, 129, 0.06)', padding: '12px 14px', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.15)' }}>
@@ -1032,7 +1032,7 @@ export const IntradayKlineChart: React.FC<IntradayKlineChartProps> = ({ ticker: 
           <div style={{ fontSize: '19px', fontWeight: 900, color: '#fbbf24', marginTop: '3px' }}>
             {data.summary.prediction_accuracy_pct === null ? '—' : `${data.summary.prediction_accuracy_pct.toFixed(1)}%`}
           </div>
-          <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>15分钟前向突破方向命中</div>
+          <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>规则分数与 15m 收益方向对照（非交易胜率）</div>
         </div>
 
         <div style={{ background: 'rgba(168, 85, 247, 0.06)', padding: '12px 14px', borderRadius: '8px', border: '1px solid rgba(168, 85, 247, 0.15)' }}>
