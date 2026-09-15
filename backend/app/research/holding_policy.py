@@ -33,10 +33,15 @@ class HoldingSpec:
     seasonal_sessions: int = 20
     min_price: float = 10.
     min_adv: float = 50_000_000.
+    forecast_error_risk: bool = False
 
     def __post_init__(self):
-        if self.family not in {'legacy', 'paper', 'context'}:
+        if self.family not in {'legacy', 'paper', 'context', 'session_context', 'support_context'}:
             raise ValueError('Unknown feature family')
+        if not isinstance(self.forecast_error_risk, bool):
+            raise ValueError('forecast_error_risk must be boolean')
+        if self.forecast_error_risk and not self.planning:
+            raise ValueError('Forecast error risk requires a multi-period plan')
         if not self.horizons or tuple(sorted(set(self.horizons))) != tuple(self.horizons):
             raise ValueError('Sorted unique horizons required')
         if any(type(h) is not int or h < 1 or h > 12 for h in self.horizons):
@@ -62,7 +67,7 @@ def holding_features(frames, symbols=DEFAULT_SYMBOLS, spec=HoldingSpec()):
     else:
         panel = bar_alpha_panel(bars, BarAlphaSpec(), rank_symbols=symbols)
         result = {s: panel[s] for s in symbols}
-    if spec.family == 'context':
+    if spec.family in {'context', 'session_context', 'support_context'}:
         for s, f in result.items():
             b = bars[s]
             # Every denominator uses only earlier sessions at the SAME time slot.
@@ -86,9 +91,41 @@ def holding_features(frames, symbols=DEFAULT_SYMBOLS, spec=HoldingSpec()):
             previous = pd.Series(index.date, index=index).map(prior_close)
             f['overnight_gap'] = b.open.groupby(index.date).transform('first') / previous - 1
             f['session_fraction'] = (index.hour * 60 + index.minute - 570) / 390
+    if spec.family == 'session_context':
+        for s, f in result.items():
+            b = bars[s]
+            groups = b.groupby(b.index.date)
+            opening = groups.open.transform('first')
+            high, low = groups.high.cummax(), groups.low.cummin()
+            typical = (b.high + b.low + b.close) / 3
+            vwap_proxy = (typical*b.volume).groupby(index.date).cumsum() / groups.volume.cumsum().replace(0,np.nan)
+            # Intraday OHLCV state, not an order-flow or institutional-identity claim.
+            f['state_open_return'] = b.close/opening-1
+            f['state_high_drawdown'] = b.close/high-1
+            f['state_low_rebound'] = b.close/low-1
+            f['state_range_location'] = (b.close-low)/(high-low).replace(0,np.nan)
+            f['state_bar_vwap_distance'] = b.close/vwap_proxy-1
+            for ref in REFERENCES:
+                r = bars[ref]
+                observed = r.close/r.groupby(index.date).open.transform('first')-1
+                f[f'state_{ref}_open_return'] = observed
+                f[f'state_{ref}_open_residual'] = f.state_open_return-observed
+                f[f'state_{ref}_bar_return'] = r.close/r.open-1
+            # Expose lack of lookback explicitly instead of confusing imputation
+            # with an actually observed neutral market state.
+            f['state_momentum_12_available'] = f.momentum_12.notna().astype(float)
+            f['state_beta_available'] = f.xs_market_beta.notna().astype(float)
+    if spec.family == 'support_context':
+        from ..alpha.support_resistance import support_resistance_features
+        for s, f in result.items():
+            extra=support_resistance_features(bars[s])
+            for name in extra:
+                f[name]=extra[name]
     for f in result.values():
         f.replace([np.inf, -np.inf], np.nan, inplace=True)
-        f.attrs.update(feature_version=VERSION, spec=asdict(spec), panel_symbols=list(bars),
+        feature_spec=asdict(spec)
+        feature_spec.pop('forecast_error_risk')  # Allocation-only; preserve old feature contracts.
+        f.attrs.update(feature_version=VERSION, spec=feature_spec, panel_symbols=list(bars),
                        rank_symbols=list(symbols), timestamp_convention='bar_open_available_at_end',
                        window_unit='5min', peer_groups=PEERS)
     return result
@@ -192,7 +229,13 @@ class HoldingModel:
         eligible = {s: s in allowed and self.eligibility[s]['eligible'] for s in symbols}
         cov = self.covariance[:k*len(symbols), :k*len(symbols)]
         if self.spec.planning:
-            weights, explanation = planned_target(curve, cov, current, symbols, eligible, self.spec,shortable=shortable)
+            error_cov = None
+            if self.spec.forecast_error_risk:
+                if not hasattr(self, 'forecast_error_covariance'):
+                    raise ValueError('Prior prediction error evidence required')
+                error_cov = self.forecast_error_covariance[:k*len(symbols), :k*len(symbols)]
+            weights, explanation = planned_target(curve, cov, current, symbols, eligible, self.spec,
+                shortable=shortable, forecast_error_covariance=error_cov)
         else:
             selected=tuple(s for s in symbols if eligible[s]);indices=[symbols.index(s) for s in selected]
             weights=dict.fromkeys(symbols,0.)
@@ -236,6 +279,9 @@ class HoldingModel:
             covariance=self.covariance.tolist(),eligibility=self.eligibility,
             history={s:dict(index=[t.isoformat() for t in b.index],values=b.to_numpy().tolist()) for s,b in self.history.items()},
             performance_verified=False,deployment='paper_candidate_pending_review')
+        if self.spec.forecast_error_risk:
+            payload.update(forecast_error_covariance=self.forecast_error_covariance.tolist(),
+                           error_training=self.error_training)
         Path(path).write_text(json.dumps(payload,allow_nan=False)+'\n')
 
     @classmethod
@@ -245,6 +291,18 @@ class HoldingModel:
         obj=cls(); spec=a['spec'];spec['horizons']=tuple(spec['horizons']);obj.spec=HoldingSpec(**spec)
         obj.symbols=tuple(a['symbols']);obj.input_symbols=tuple(a['input_symbols'])
         obj.trained_before=a['trained_before'];obj.eligibility=a['eligibility'];obj.covariance=np.array(a['covariance'])
+        if obj.spec.forecast_error_risk:
+            from ..quant_policy import _validated_covariance
+            obj.forecast_error_covariance=_validated_covariance(a['forecast_error_covariance'],max(obj.spec.horizons)*len(obj.symbols))
+            obj.error_training=a['error_training']
+            error_cutoff=pd.Timestamp(obj.trained_before,tz='America/New_York')
+            if pd.Timestamp(obj.error_training['last_label_end'])>=error_cutoff:
+                raise ValueError('Immature forecast error evidence')
+            for fold in obj.error_training['folds']:
+                fold_start=pd.Timestamp(fold['day'],tz='America/New_York')
+                if (fold_start>=error_cutoff or pd.Timestamp(fold['calibrator_last_label_end'])>=fold_start
+                        or pd.Timestamp(obj.error_training['base_trained_before'])>=fold_start):
+                    raise ValueError('Noncausal forecast error fold')
         obj.models={}
         for s,hs in a['models'].items():
             obj.models[s]={}

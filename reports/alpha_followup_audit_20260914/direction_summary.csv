@@ -1,0 +1,7 @@
+model,period,bars,valid,excluded,correct,accuracy
+deployed_expected_5m_bps,opening,12,12,0,6,0.5
+deployed_expected_5m_bps,midday,42,42,0,17,0.40476190476190477
+deployed_expected_5m_bps,closing,24,22,2,11,0.5
+calibrated_context_curve_cal_15m_bps,opening,12,12,0,7,0.5833333333333334
+calibrated_context_curve_cal_15m_bps,midday,42,42,0,23,0.5476190476190477
+calibrated_context_curve_cal_15m_bps,closing,24,20,4,8,0.4

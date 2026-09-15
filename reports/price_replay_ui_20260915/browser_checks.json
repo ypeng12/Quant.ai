@@ -1,0 +1,17 @@
+{
+  "passed": true,
+  "checks": [
+    "source date independence",
+    "all four stocks",
+    "2 dates",
+    "model switch",
+    "reference PnL and fill count",
+    "reset hides future fills",
+    "play/pause/speed",
+    "zoom",
+    "narrow layout"
+  ],
+  "runtime_errors": [],
+  "requests": 10,
+  "scope": "Offline browser harness with portable research payloads; no broker connected"
+}

@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "available_dates": [
+    "2026-09-14",
+    "2026-09-15"
+  ],
+  "variants": [
+    "context",
+    "levels",
+    "levels_error_risk"
+  ],
+  "tickers": [
+    "SNDK",
+    "TSLA",
+    "PLTR",
+    "NVDA"
+  ],
+  "study": "manual_style_research_20260915",
+  "source_registry_sha256": "440c6827502028fb50e50437057c721cd8797733b9c770c72cfbea08bd5d65db",
+  "source_evidence_sha256": "cf5dffeadd99db2940e0135e76cb27a3839a464a34a6ea8ceb396cb0aa0cbb08",
+  "export_script_sha256": "1b2764d22706db56bbbef875a539bcbf7eca2e6e906c07d46b6a22c0d1b45ba8",
+  "files": {
+    "2026-09-14/context/SNDK.json": "880f0973549d0dcfb6adb16b9e5458a10472024751a751bff332ee451638527a",
+    "2026-09-14/context/TSLA.json": "0d2d388a8d4f201ca6815299db47becc996e7f306aed0c993b50f2e1f50c7171",
+    "2026-09-14/context/PLTR.json": "01fd690140fe735115e3407954c62c9260ff5d02eca5e659000bd9711f272a21",
+    "2026-09-14/context/NVDA.json": "7251e71358afbc87aa45325e0303538852a23a7eb32f67be0df07e833fce1b02",
+    "2026-09-14/levels/SNDK.json": "ef9359230f72f9be54ed6c3c3782d7cfa1e8afdcd6463cd6504a93700d76b480",
+    "2026-09-14/levels/TSLA.json": "c5337b6fac8932ef825673dd0908dd75ae2e6be1158632ea815b5ff0bfb312af",
+    "2026-09-14/levels/PLTR.json": "afa0f1cf6d7046f57b4d0adc8a1a4b293ea7092bad6a738a27e47f18d88dae36",
+    "2026-09-14/levels/NVDA.json": "581b783589eaf182dbe74f6442be70684b52007f65e3490565557557fb3386d4",
+    "2026-09-14/levels_error_risk/SNDK.json": "2c21de72c583a9164c408cf8491015b52f610e81b5376c311ef93ed99a25fd08",
+    "2026-09-14/levels_error_risk/TSLA.json": "1c4daae67f47c80e12686db60bee45815fe77dcbc27c4bf2c48dfed13a8815b6",
+    "2026-09-14/levels_error_risk/PLTR.json": "a3d52d4d47a461228b35bdd205ba4320195c43ecf783b89ce9a1033ded25c566",
+    "2026-09-14/levels_error_risk/NVDA.json": "ff0ed8402b2bff74cee2d4f7d0fcc99e35fc4573113aad408257f8bb8add19b5",
+    "2026-09-15/context/SNDK.json": "bae01ef17e0a30226f8cd973fcb2f3f9c597a8d5caee836995477753c3054d7a",
+    "2026-09-15/context/TSLA.json": "210b5ce6998ba8a8889d216d083dec4151d7e35aa362744698791e79ae77e6db",
+    "2026-09-15/context/PLTR.json": "86e824c71c713b333dd81afc8611467ee3624f74f4435880466e5003ed5a40ed",
+    "2026-09-15/context/NVDA.json": "82752b749197cb2aa2a1c1448921131ce0e54d9f928ece5bde15210d80de0321",
+    "2026-09-15/levels/SNDK.json": "33b64b685c80f62bea383fa9b0a9753a64f95d4bfed05a21835f85457ebf392c",
+    "2026-09-15/levels/TSLA.json": "665b53354488e50da9148a8b96be76667cf135bc08cc6a18a0074c4c802e540b",
+    "2026-09-15/levels/PLTR.json": "8f3208ba961de099aa89f30006b0dce2f4069e9a20e251768968e3bf67356edd",
+    "2026-09-15/levels/NVDA.json": "81e42e48bf669c7547a57bd66c9509e4c780a874646d76e9318dba136e869ee5",
+    "2026-09-15/levels_error_risk/SNDK.json": "e64694f35b4d0edc2883802854637dd6a399d72dbb2f586d9b99b1b48bd32a59",
+    "2026-09-15/levels_error_risk/TSLA.json": "5ccd4051e3bde559105a3426872cb2bde2dbbbef1b40b014eb4239aad7c75580",
+    "2026-09-15/levels_error_risk/PLTR.json": "64b18cc639f2073594d07565ec7cb3d08d69d43200024d7e43f0f09a80ed634f",
+    "2026-09-15/levels_error_risk/NVDA.json": "d14f8d4b56f31ccd9d3db54527800f1c0eeeb8137b028244c86c4e4f18972709"
+  }
+}

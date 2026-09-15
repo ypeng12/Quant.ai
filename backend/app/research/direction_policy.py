@@ -55,18 +55,25 @@ def direction_features(frames):
         own[s]=f.replace([np.inf,-np.inf],np.nan)
     return own
 
-def planned_target(forecasts,covariance,current,symbols,eligible,spec,*,shortable=None):
+def planned_target(forecasts,covariance,current,symbols,eligible,spec,*,shortable=None,
+                   forecast_error_covariance=None):
     """Trade only the first step of a fully costed hypothetical holding plan.
 
     Risk uses a covariance matrix of sequential, cross-stock returns estimated
     before the decision date. Intermediate turnover and terminal liquidation
     both cost money. Future weights are plans, never claimed future fills.
+    An optional prior-only forecast-error covariance expresses uncertainty in
+    the return curve in the same interval-by-symbol order and return units.
+    Its quadratic penalty is added to market risk without overriding direction.
     """
     symbols=tuple(symbols);n=len(symbols);mu=np.asarray(forecasts,dtype=float)
     if mu.ndim!=2 or mu.shape[1]!=n or not np.isfinite(mu).all():raise ValueError('Finite horizon-by-symbol forecasts required')
     k=len(mu);m=k*n
     if k<1 or any(v!=0 for s,v in current.items() if s not in symbols):raise ValueError('All current exposure must be budgeted')
     old=np.array([current.get(s,0.) for s in symbols]);cov=_validated_covariance(covariance,m)
+    error_cov = (None if forecast_error_covariance is None else
+                 _validated_covariance(forecast_error_covariance,m))
+    risk_cov = cov if error_cov is None else cov + error_cov
     if not np.isfinite(old).all():raise ValueError('Nonfinite holdings')
     limits=np.tile([spec.symbol_limit if eligible.get(s,False) else 0 for s in symbols],k)
     d=np.eye(m)
@@ -82,8 +89,8 @@ def planned_target(forecasts,covariance,current,symbols,eligible,spec,*,shortabl
     bounds=Bounds(np.r_[lower_weights,np.zeros(2*m)],np.r_[limits,np.full(2*m,np.inf)])
     cost=spec.cost_bps/10000
     terminal=np.r_[np.zeros(m-n),np.full(n,cost)]
-    scale=max(abs(mu).max(),spec.risk_aversion*abs(cov).max(),cost,np.finfo(float).eps)
-    p=sparse.block_diag([spec.risk_aversion*cov/scale,sparse.csc_matrix((2*m,2*m))],format='csc')
+    scale=max(abs(mu).max(),spec.risk_aversion*abs(risk_cov).max(),cost,np.finfo(float).eps)
+    p=sparse.block_diag([spec.risk_aversion*risk_cov/scale,sparse.csc_matrix((2*m,2*m))],format='csc')
     q=np.r_[-mu.ravel(),np.full(m,cost),terminal]/scale
     matrix=sparse.vstack([sparse.csc_matrix(a),sparse.eye(3*m)],format='csc')
     lo=np.r_[lower,bounds.lb];hi=np.r_[np.full(len(lower),np.inf),bounds.ub]
@@ -108,7 +115,10 @@ def planned_target(forecasts,covariance,current,symbols,eligible,spec,*,shortabl
     return dict(zip(symbols,map(float,planned[0]))),dict(solver=solver,planned_steps=k,
         planned_weights=planned.tolist(),forecast_curve_bps=(mu*10000).tolist(),
         estimated_plan_turnover_cost=float(cost*abs(changes).sum()),estimated_terminal_cost=float(cost*abs(planned[-1]).sum()),
-        forecast_portfolio_return=float((mu*planned).sum()),forecast_variance=float(planned.ravel()@cov@planned.ravel()))
+        forecast_portfolio_return=float((mu*planned).sum()),forecast_variance=float(planned.ravel()@cov@planned.ravel()),
+        forecast_error_risk_enabled=error_cov is not None,
+        forecast_error_variance=0. if error_cov is None else float(planned.ravel()@error_cov@planned.ravel()),
+        total_risk_variance=float(planned.ravel()@risk_cov@planned.ravel()))
 
 class DirectionRuntime(LiquidRuntime):
     def __init__(self,*args,**kwargs):

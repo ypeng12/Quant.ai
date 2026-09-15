@@ -1,0 +1,310 @@
+{
+  "status": "complete",
+  "evaluation_day": "2026-09-15",
+  "as_of": "2026-09-15T11:00:00-04:00",
+  "capital": 47958.07,
+  "allowed_symbols": [
+    "SNDK",
+    "TSLA",
+    "NVDA"
+  ],
+  "feature_panel": [
+    "SNDK",
+    "TSLA",
+    "PLTR",
+    "NVDA"
+  ],
+  "references": [
+    "SPY",
+    "QQQ",
+    "SOXX"
+  ],
+  "inputs": {
+    "/Users/yuliangpeng/.local/share/quant-l1/reports/tsla_reversal_20260915/bars_today/runner_yahoo/SNDK.parquet": "b5fa8cd20f876ee3472a4bfe69b9fcdc668fefc4d1010f640ecc520bb1b60e0d",
+    "/Users/yuliangpeng/.local/share/quant-l1/paper-repair-work/reports/holding_today_lab_20260914/bars/SNDK.parquet": "cb726c15d0c769a17a3336e2ae2ec718a1e2046cf2013ed772435fb89c802ffd",
+    "/Users/yuliangpeng/.local/share/quant-l1/reports/tsla_reversal_20260915/bars_today/runner_yahoo/TSLA.parquet": "7adddfbacc5d96d5e6dd0518cfe3b13ab8b4338629c76aebc885c3320ca1ae81",
+    "/Users/yuliangpeng/.local/share/quant-l1/paper-repair-work/reports/holding_today_lab_20260914/bars/TSLA.parquet": "9b0f3dda68e4f97de43cabe8555b96b8ebf354b9c109eea1a51e0a87b2c61233",
+    "/Users/yuliangpeng/.local/share/quant-l1/reports/tsla_reversal_20260915/bars_today/runner_yahoo/PLTR.parquet": "c1d8fc1915258ec9463e4cdbdb5aee8d9ac171a65a959e2dc11073b1eca34047",
+    "/Users/yuliangpeng/.local/share/quant-l1/paper-repair-work/reports/holding_today_lab_20260914/bars/PLTR.parquet": "4a9e338bcf45edb6f82f2d41db9c108ca7723635e66cc037b069c90c129c40dc",
+    "/Users/yuliangpeng/.local/share/quant-l1/reports/tsla_reversal_20260915/bars_today/runner_yahoo/NVDA.parquet": "725340e05a2e0a7d40372b80404cd891ba8fd13bfb1117b8035b115e0b1e8c70",
+    "/Users/yuliangpeng/.local/share/quant-l1/paper-repair-work/reports/holding_today_lab_20260914/bars/NVDA.parquet": "940d1d905a87568de0ce419b6ea9d3e985ce941ee87f2e75fec419b18e984311",
+    "/Users/yuliangpeng/.local/share/quant-l1/reports/tsla_reversal_20260915/bars_today/runner_yahoo/SPY.parquet": "ebe39ee2c64a06c02582a949fb9096fc96af25690857262c266746e7034a7365",
+    "/Users/yuliangpeng/.local/share/quant-l1/paper-repair-work/reports/holding_today_lab_20260914/bars/SPY.parquet": "c4ebb2cefa7c0d32512d707a2878455fac813f7990a902f42459c10c9fd457c5",
+    "/Users/yuliangpeng/.local/share/quant-l1/reports/tsla_reversal_20260915/bars_today/runner_yahoo/QQQ.parquet": "1140de787abca3e3fd19b7c0fdffebc21b764aa995859337c2e5b2f429dd6f47",
+    "/Users/yuliangpeng/.local/share/quant-l1/paper-repair-work/reports/holding_today_lab_20260914/bars/QQQ.parquet": "c2a1e04bcade4c256bb63e3820244288fdeb5d1332d95d9e31d4b828ba4615b9",
+    "/Users/yuliangpeng/.local/share/quant-l1/reports/tsla_reversal_20260915/bars_today/runner_yahoo/SOXX.parquet": "59cbbb27d462f586f13036b51bed2ae3143aea9a625ac78b87e94070c586ec2b",
+    "/Users/yuliangpeng/.local/share/quant-l1/paper-repair-work/reports/holding_today_lab_20260914/bars/SOXX.parquet": "6c80b838c64dd9f79ee2c3de423354b20b461a57ab857aedb2c95200eb297383",
+    "/Users/yuliangpeng/.local/share/quant-l1/reports/tsla_reversal_20260915/bars_today/runner_yahoo/MSTR.parquet": "6539f7a328b1376313160b3387f1aef30ec0b64063c2066c3a5e792f979db575",
+    "/Users/yuliangpeng/.local/share/quant-l1/paper-repair-work/reports/quant_research_20260913/selected_policy.json": "a3f186e60e54e901bd1d22c349e8aa86d5bfa37c8a51c802ba186e55328cf418",
+    "/Users/yuliangpeng/.local/share/quant-l1/paper-repair-work/reports/holding_today_lab_20260914/models/calibrated_context_curve.json": "cbed3257904c8e31a2b3c5e81d764dadb032d5df8fdb42f7db124020ea725463"
+  },
+  "variants": [
+    "frozen_5m",
+    "context_curve",
+    "context_error_curve",
+    "session_context_curve",
+    "session_context_error_curve"
+  ],
+  "new_spec": {
+    "name": "session_context_curve",
+    "family": "session_context",
+    "horizons": [
+      1,
+      3,
+      6,
+      12
+    ],
+    "planning": true,
+    "ridge_alpha": 10.0,
+    "risk_aversion": 50.0,
+    "cost_bps": 2.0,
+    "gross_limit": 0.95,
+    "symbol_limit": 0.7,
+    "seasonal_sessions": 20,
+    "min_price": 10.0,
+    "min_adv": 50000000.0,
+    "forecast_error_risk": true
+  },
+  "actual_broker_fees": null,
+  "execution_friction_bps": 5.0,
+  "limitations": [
+    "Intraday marked simulation, not realized broker profit or a full-session result.",
+    "Today was inspected before this change; it is development evidence, not an untouched holdout.",
+    "Models trained before today; next-bar open assumed executable with full fills and configured friction.",
+    "Forecast risk uses overlapping prior forward errors; not a confidence guarantee.",
+    "All variants trade the same three online symbols. PLTR supplies peer features only; MSTR is input only for legacy parity.",
+    "Yahoo snapshot matches runner provider but may differ from original live fetch; no exact historical decision log available."
+  ],
+  "results": [
+    {
+      "strategy": "frozen_5m",
+      "symbol": "SNDK",
+      "net_pnl": 6.539674011231,
+      "gross_pnl": 16.674926757813033,
+      "assumed_cost": 10.135252746582031,
+      "fills": 5,
+      "ending_shares": 1,
+      "ending_mark": 1542.760009765625
+    },
+    {
+      "strategy": "frozen_5m",
+      "symbol": "TSLA",
+      "net_pnl": -985.9610425720202,
+      "gross_pnl": -924.9832763671862,
+      "assumed_cost": 60.977766204833976,
+      "fills": 8,
+      "ending_shares": 34,
+      "ending_mark": 357.6099853515625
+    },
+    {
+      "strategy": "frozen_5m",
+      "symbol": "PLTR",
+      "net_pnl": 0.0,
+      "gross_pnl": 0.0,
+      "assumed_cost": 0.0,
+      "fills": 0,
+      "ending_shares": 0,
+      "ending_mark": 170.8350067138672
+    },
+    {
+      "strategy": "frozen_5m",
+      "symbol": "NVDA",
+      "net_pnl": 38.81113331604138,
+      "gross_pnl": 50.21914672851696,
+      "assumed_cost": 11.408013412475587,
+      "fills": 5,
+      "ending_shares": -49,
+      "ending_mark": 212.03500366210938
+    },
+    {
+      "strategy": "context_curve",
+      "symbol": "SNDK",
+      "net_pnl": -342.2140222778289,
+      "gross_pnl": -301.6905517578094,
+      "assumed_cost": 40.52347052001953,
+      "fills": 16,
+      "ending_shares": 0,
+      "ending_mark": 1542.760009765625
+    },
+    {
+      "strategy": "context_curve",
+      "symbol": "TSLA",
+      "net_pnl": -718.6441101837181,
+      "gross_pnl": -626.3471984863304,
+      "assumed_cost": 92.2969116973877,
+      "fills": 16,
+      "ending_shares": 0,
+      "ending_mark": 357.6099853515625
+    },
+    {
+      "strategy": "context_curve",
+      "symbol": "PLTR",
+      "net_pnl": 0.0,
+      "gross_pnl": 0.0,
+      "assumed_cost": 0.0,
+      "fills": 0,
+      "ending_shares": 0,
+      "ending_mark": 170.8350067138672
+    },
+    {
+      "strategy": "context_curve",
+      "symbol": "NVDA",
+      "net_pnl": 79.24219103241194,
+      "gross_pnl": 90.31507873535384,
+      "assumed_cost": 11.072887702941895,
+      "fills": 6,
+      "ending_shares": -98,
+      "ending_mark": 212.03500366210938
+    },
+    {
+      "strategy": "context_error_curve",
+      "symbol": "SNDK",
+      "net_pnl": -290.06943035888435,
+      "gross_pnl": -255.78552246093514,
+      "assumed_cost": 34.28390789794921,
+      "fills": 14,
+      "ending_shares": 0,
+      "ending_mark": 1542.760009765625
+    },
+    {
+      "strategy": "context_error_curve",
+      "symbol": "TSLA",
+      "net_pnl": -628.3441504363993,
+      "gross_pnl": -552.6138000488261,
+      "assumed_cost": 75.73035038757324,
+      "fills": 17,
+      "ending_shares": 0,
+      "ending_mark": 357.6099853515625
+    },
+    {
+      "strategy": "context_error_curve",
+      "symbol": "PLTR",
+      "net_pnl": 0.0,
+      "gross_pnl": 0.0,
+      "assumed_cost": 0.0,
+      "fills": 0,
+      "ending_shares": 0,
+      "ending_mark": 170.8350067138672
+    },
+    {
+      "strategy": "context_error_curve",
+      "symbol": "NVDA",
+      "net_pnl": 37.29743248749037,
+      "gross_pnl": 43.364822387697885,
+      "assumed_cost": 6.06738990020752,
+      "fills": 9,
+      "ending_shares": -49,
+      "ending_mark": 212.03500366210938
+    },
+    {
+      "strategy": "session_context_curve",
+      "symbol": "SNDK",
+      "net_pnl": -312.48368511962417,
+      "gross_pnl": -264.9249267578078,
+      "assumed_cost": 47.55875836181641,
+      "fills": 16,
+      "ending_shares": -1,
+      "ending_mark": 1542.760009765625
+    },
+    {
+      "strategy": "session_context_curve",
+      "symbol": "TSLA",
+      "net_pnl": -863.7032547759991,
+      "gross_pnl": -727.6363220214826,
+      "assumed_cost": 136.06693275451659,
+      "fills": 18,
+      "ending_shares": 5,
+      "ending_mark": 357.6099853515625
+    },
+    {
+      "strategy": "session_context_curve",
+      "symbol": "PLTR",
+      "net_pnl": 0.0,
+      "gross_pnl": 0.0,
+      "assumed_cost": 0.0,
+      "fills": 0,
+      "ending_shares": 0,
+      "ending_mark": 170.8350067138672
+    },
+    {
+      "strategy": "session_context_curve",
+      "symbol": "NVDA",
+      "net_pnl": 50.72599494934184,
+      "gross_pnl": 56.27005004882914,
+      "assumed_cost": 5.544055099487304,
+      "fills": 5,
+      "ending_shares": -44,
+      "ending_mark": 212.03500366210938
+    },
+    {
+      "strategy": "session_context_error_curve",
+      "symbol": "SNDK",
+      "net_pnl": -273.08434197997485,
+      "gross_pnl": -233.30627441405687,
+      "assumed_cost": 39.778067565917965,
+      "fills": 15,
+      "ending_shares": -1,
+      "ending_mark": 1542.760009765625
+    },
+    {
+      "strategy": "session_context_error_curve",
+      "symbol": "TSLA",
+      "net_pnl": -732.6578658599792,
+      "gross_pnl": -635.662872314447,
+      "assumed_cost": 96.99499354553221,
+      "fills": 21,
+      "ending_shares": 0,
+      "ending_mark": 357.6099853515625
+    },
+    {
+      "strategy": "session_context_error_curve",
+      "symbol": "PLTR",
+      "net_pnl": 0.0,
+      "gross_pnl": 0.0,
+      "assumed_cost": 0.0,
+      "fills": 0,
+      "ending_shares": 0,
+      "ending_mark": 170.8350067138672
+    },
+    {
+      "strategy": "session_context_error_curve",
+      "symbol": "NVDA",
+      "net_pnl": 27.809396766663667,
+      "gross_pnl": 31.540054321290132,
+      "assumed_cost": 3.7306575546264646,
+      "fills": 7,
+      "ending_shares": -23,
+      "ending_mark": 212.03500366210938
+    }
+  ],
+  "error_training": {
+    "method": "prior_forward_calibrator_path_error_second_moment",
+    "rows": 195,
+    "folds": [
+      {
+        "day": "2026-09-10",
+        "rows": 65,
+        "calibrator_last_label_end": "2026-09-09T15:55:00-04:00"
+      },
+      {
+        "day": "2026-09-11",
+        "rows": 65,
+        "calibrator_last_label_end": "2026-09-10T15:55:00-04:00"
+      },
+      {
+        "day": "2026-09-14",
+        "rows": 65,
+        "calibrator_last_label_end": "2026-09-11T15:55:00-04:00"
+      }
+    ],
+    "last_label_end": "2026-09-14T15:55:00-04:00",
+    "base_trained_before": "2026-09-08T00:00:00-04:00",
+    "overlapping_windows": true
+  },
+  "source_hashes": {
+    "scripts/research_tsla_reversal.py": "cc2c54878ae466bf39b99f3a0a7369c3bd43b0d74feeda474e4b9ee932616f41",
+    "backend/app/research/holding_policy.py": "cfa749a8a2d6a2e065ada18a171bd7fde5de3305958fc4e28857f5cd64dafbb9",
+    "backend/app/research/calibrated_holding.py": "18e9e968eb46b23944e195672909f9c6d18cae1b2680713045a35c52a4f93c1b",
+    "backend/app/research/direction_policy.py": "f94f533bf60ea11292e025882d445035c7a33f6c0610b5a2a77981864a4849fa"
+  }
+}

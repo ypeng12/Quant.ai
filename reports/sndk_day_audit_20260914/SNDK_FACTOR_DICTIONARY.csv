@@ -1,0 +1,71 @@
+feature,description,source_file,data_clock
+a158_kmid,Alpha158风格的因果量价特征；精确定义见 paper_bar_alpha.py,paper_bar_alpha.py / holding_policy.py,completed_5m_bar
+a158_klen,Alpha158风格的因果量价特征；精确定义见 paper_bar_alpha.py,paper_bar_alpha.py / holding_policy.py,completed_5m_bar
+a158_kmid2,Alpha158风格的因果量价特征；精确定义见 paper_bar_alpha.py,paper_bar_alpha.py / holding_policy.py,completed_5m_bar
+a158_kup,Alpha158风格的因果量价特征；精确定义见 paper_bar_alpha.py,paper_bar_alpha.py / holding_policy.py,completed_5m_bar
+a158_klow,Alpha158风格的因果量价特征；精确定义见 paper_bar_alpha.py,paper_bar_alpha.py / holding_policy.py,completed_5m_bar
+a158_ksft,Alpha158风格的因果量价特征；精确定义见 paper_bar_alpha.py,paper_bar_alpha.py / holding_policy.py,completed_5m_bar
+a158_roc_5,Alpha158风格的因果量价特征；精确定义见 paper_bar_alpha.py,paper_bar_alpha.py / holding_policy.py,completed_5m_bar
+a158_ma_5,Alpha158风格的因果量价特征；精确定义见 paper_bar_alpha.py,paper_bar_alpha.py / holding_policy.py,completed_5m_bar
+a158_std_5,Alpha158风格的因果量价特征；精确定义见 paper_bar_alpha.py,paper_bar_alpha.py / holding_policy.py,completed_5m_bar
+a158_rsv_5,Alpha158风格的因果量价特征；精确定义见 paper_bar_alpha.py,paper_bar_alpha.py / holding_policy.py,completed_5m_bar
+a158_vma_5,Alpha158风格的因果量价特征；精确定义见 paper_bar_alpha.py,paper_bar_alpha.py / holding_policy.py,completed_5m_bar
+a158_corr_5,Alpha158风格的因果量价特征；精确定义见 paper_bar_alpha.py,paper_bar_alpha.py / holding_policy.py,completed_5m_bar
+a158_roc_20,Alpha158风格的因果量价特征；精确定义见 paper_bar_alpha.py,paper_bar_alpha.py / holding_policy.py,completed_5m_bar
+a158_ma_20,Alpha158风格的因果量价特征；精确定义见 paper_bar_alpha.py,paper_bar_alpha.py / holding_policy.py,completed_5m_bar
+a158_std_20,Alpha158风格的因果量价特征；精确定义见 paper_bar_alpha.py,paper_bar_alpha.py / holding_policy.py,completed_5m_bar
+a158_rsv_20,Alpha158风格的因果量价特征；精确定义见 paper_bar_alpha.py,paper_bar_alpha.py / holding_policy.py,completed_5m_bar
+a158_vma_20,Alpha158风格的因果量价特征；精确定义见 paper_bar_alpha.py,paper_bar_alpha.py / holding_policy.py,completed_5m_bar
+a158_corr_20,Alpha158风格的因果量价特征；精确定义见 paper_bar_alpha.py,paper_bar_alpha.py / holding_policy.py,completed_5m_bar
+a101_002,Alpha101子集的因果特征；精确定义见 paper_bar_alpha.py,paper_bar_alpha.py / holding_policy.py,completed_5m_bar
+a101_003,Alpha101子集的因果特征；精确定义见 paper_bar_alpha.py,paper_bar_alpha.py / holding_policy.py,completed_5m_bar
+a101_004,Alpha101子集的因果特征；精确定义见 paper_bar_alpha.py,paper_bar_alpha.py / holding_policy.py,completed_5m_bar
+a101_006,Alpha101子集的因果特征；精确定义见 paper_bar_alpha.py,paper_bar_alpha.py / holding_policy.py,completed_5m_bar
+a101_012,Alpha101子集的因果特征；精确定义见 paper_bar_alpha.py,paper_bar_alpha.py / holding_policy.py,completed_5m_bar
+a101_101,Alpha101子集的因果特征；精确定义见 paper_bar_alpha.py,paper_bar_alpha.py / holding_policy.py,completed_5m_bar
+xs_return_rank,参考标的截至当前的日内收益,paper_bar_alpha.py / holding_policy.py,completed_5m_bar
+xs_peer_return,同一已完成时点的四股截面/同行相对特征,paper_bar_alpha.py / holding_policy.py,completed_5m_bar
+xs_peer_residual,同一已完成时点的四股截面/同行相对特征,paper_bar_alpha.py / holding_policy.py,completed_5m_bar
+xs_group_residual,同一已完成时点的四股截面/同行相对特征,paper_bar_alpha.py / holding_policy.py,completed_5m_bar
+xs_market_beta,同一已完成时点的四股截面/同行相对特征,paper_bar_alpha.py / holding_policy.py,completed_5m_bar
+xs_market_residual,同一已完成时点的四股截面/同行相对特征,paper_bar_alpha.py / holding_policy.py,completed_5m_bar
+xs_peer_count,同一已完成时点的四股截面/同行相对特征,paper_bar_alpha.py / holding_policy.py,completed_5m_bar
+seasonal_rvol,当前成交量/过去同一时刻平均成交量-1；分母不含今天,paper_bar_alpha.py / holding_policy.py,completed_5m_bar
+momentum_1,1根5分钟日内动量,paper_bar_alpha.py / holding_policy.py,completed_5m_bar
+SPY_return_1,参考标的截至当前的日内收益,paper_bar_alpha.py / holding_policy.py,completed_5m_bar
+SPY_relative_1,SNDK收益减参考标的同期收益,paper_bar_alpha.py / holding_policy.py,completed_5m_bar
+QQQ_return_1,参考标的截至当前的日内收益,paper_bar_alpha.py / holding_policy.py,completed_5m_bar
+QQQ_relative_1,SNDK收益减参考标的同期收益,paper_bar_alpha.py / holding_policy.py,completed_5m_bar
+SOXX_return_1,参考标的截至当前的日内收益,paper_bar_alpha.py / holding_policy.py,completed_5m_bar
+SOXX_relative_1,SNDK收益减参考标的同期收益,paper_bar_alpha.py / holding_policy.py,completed_5m_bar
+momentum_3,3根5分钟日内动量,paper_bar_alpha.py / holding_policy.py,completed_5m_bar
+SPY_return_3,参考标的截至当前的日内收益,paper_bar_alpha.py / holding_policy.py,completed_5m_bar
+SPY_relative_3,SNDK收益减参考标的同期收益,paper_bar_alpha.py / holding_policy.py,completed_5m_bar
+QQQ_return_3,参考标的截至当前的日内收益,paper_bar_alpha.py / holding_policy.py,completed_5m_bar
+QQQ_relative_3,SNDK收益减参考标的同期收益,paper_bar_alpha.py / holding_policy.py,completed_5m_bar
+SOXX_return_3,参考标的截至当前的日内收益,paper_bar_alpha.py / holding_policy.py,completed_5m_bar
+SOXX_relative_3,SNDK收益减参考标的同期收益,paper_bar_alpha.py / holding_policy.py,completed_5m_bar
+momentum_12,12根5分钟日内动量,paper_bar_alpha.py / holding_policy.py,completed_5m_bar
+SPY_return_12,参考标的截至当前的日内收益,paper_bar_alpha.py / holding_policy.py,completed_5m_bar
+SPY_relative_12,SNDK收益减参考标的同期收益,paper_bar_alpha.py / holding_policy.py,completed_5m_bar
+QQQ_return_12,参考标的截至当前的日内收益,paper_bar_alpha.py / holding_policy.py,completed_5m_bar
+QQQ_relative_12,SNDK收益减参考标的同期收益,paper_bar_alpha.py / holding_policy.py,completed_5m_bar
+SOXX_return_12,参考标的截至当前的日内收益,paper_bar_alpha.py / holding_policy.py,completed_5m_bar
+SOXX_relative_12,SNDK收益减参考标的同期收益,paper_bar_alpha.py / holding_policy.py,completed_5m_bar
+trend_efficiency_12,过去12根净价格变化/路径绝对变化,paper_bar_alpha.py / holding_policy.py,completed_5m_bar
+volume_x_return,同时间量能×最近5分钟收益,paper_bar_alpha.py / holding_policy.py,completed_5m_bar
+volume_x_efficiency,同时间量能×趋势效率,paper_bar_alpha.py / holding_policy.py,completed_5m_bar
+overnight_gap,今日开盘/前一交易日收盘-1,paper_bar_alpha.py / holding_policy.py,completed_5m_bar
+session_fraction,从09:30至当前的交易日进度,paper_bar_alpha.py / holding_policy.py,completed_5m_bar
+l1_spread_bps,IEX买一卖一价差，相对中间价bps,paper_l1_alpha.py,historical_exchange_latency_unverified
+l1_quote_imbalance,(买一数量-卖一数量)/(两边数量和),paper_l1_alpha.py,historical_exchange_latency_unverified
+l1_microprice_bps,盘口数量加权微价相对中间价bps,paper_l1_alpha.py,historical_exchange_latency_unverified
+l1_ofi_normalized,Cont OFI/该桶盘口深度,paper_l1_alpha.py,historical_exchange_latency_unverified
+l1_signed_trade_imbalance,对齐先前报价后的主动成交方向失衡,paper_l1_alpha.py,historical_exchange_latency_unverified
+l1_quote_updates,该5分钟IEX报价更新数,paper_l1_alpha.py,historical_exchange_latency_unverified
+l1_ofi_raw,该5分钟原始OFI和,paper_l1_alpha.py,historical_exchange_latency_unverified
+l1_mean_half_depth,该桶平均单边盘口深度,paper_l1_alpha.py,historical_exchange_latency_unverified
+l1_ofi_depth,原始OFI/平均单边深度,paper_l1_alpha.py,historical_exchange_latency_unverified
+l1_ofi_x_spread,深度归一OFI×价差,paper_l1_alpha.py,historical_exchange_latency_unverified
+l1_ofi_x_session_sin,OFI×日内正弦位置,paper_l1_alpha.py,historical_exchange_latency_unverified
+l1_ofi_x_session_cos,OFI×日内余弦位置,paper_l1_alpha.py,historical_exchange_latency_unverified

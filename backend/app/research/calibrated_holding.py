@@ -4,7 +4,8 @@ import json
 import numpy as np
 import pandas as pd
 from sklearn.linear_model import Ridge
-from .holding_policy import HoldingModel,HoldingSpec,holding_features,executable_labels
+from .holding_policy import HoldingModel,HoldingSpec,holding_features,executable_labels,curve_from_cumulative
+from sklearn.covariance import LedoitWolf
 
 VERSION='calibrated_direction_holding_v1'
 
@@ -37,6 +38,48 @@ class CalibratedHoldingModel(HoldingModel):
                     last_label_end=end.reindex(p.index)[valid].max().isoformat())
             model.calibration[s]=dict(mean=mean.tolist(),scale=scale.tolist(),state=state,
                 validation_days=[str(d) for d in validation_days],base_trained_before=validation_start.isoformat())
+        if spec.forecast_error_risk:
+            # Forward-only second-stage evaluation: earlier base forecasts are
+            # frozen; each calibrator learns exclusively from preceding days.
+            k=max(spec.horizons);blocks=[];folds=[];last_ends=[]
+            labels={s:{h:executable_labels(frames[s],h) for h in spec.horizons} for s in symbols}
+            one={s:executable_labels(frames[s],1) for s in symbols}
+            for day in validation_days[2:]:
+                fold_cutoff=pd.Timestamp(day,tz='America/New_York')
+                estimates={};truth={};ends={};training_ends=[]
+                for s in symbols:
+                    p=pd.DataFrame(predictions[s]);past=p.loc[p.index<fold_cutoff]
+                    mu=past.mean();sd=past.std(ddof=0).replace(0,1)
+                    z=(p-mu)/sd
+                    test_index=p.index[p.index.date==day]
+                    cumulative=[]
+                    for h in spec.horizons:
+                        y,end=labels[s][h];y=y.reindex(p.index);end=end.reindex(p.index)
+                        valid=(p.index<fold_cutoff)&end.lt(fold_cutoff)&y.notna()&np.isfinite(z).all(axis=1)
+                        if valid.sum()<2:raise ValueError('Insufficient forward error calibration labels')
+                        fit=Ridge(alpha=spec.ridge_alpha,solver='svd').fit(z.loc[valid],y.loc[valid])
+                        cumulative.append(fit.predict(z.loc[test_index]))
+                        training_ends.append(end.loc[valid].max())
+                    estimates[s]=pd.DataFrame(np.array(cumulative).T,index=test_index,columns=spec.horizons)
+                    yy,ee=one[s]
+                    yy=yy.loc[yy.index.date==day];ee=ee.reindex(yy.index)
+                    truth[s]=pd.concat([yy.shift(-j) for j in range(k)],axis=1).reindex(test_index)
+                    ends[s]=ee.shift(-(k-1)).reindex(test_index)
+                count=0
+                for stamp in test_index:
+                    actual=np.column_stack([truth[s].loc[stamp].to_numpy() for s in symbols])
+                    if not np.isfinite(actual).all() or any(pd.isna(ends[s].loc[stamp]) or ends[s].loc[stamp]>=cutoff for s in symbols):continue
+                    if any(ends[s].loc[stamp]-stamp!=pd.Timedelta(minutes=5*(k+1)) for s in symbols):continue
+                    cumulative=np.column_stack([estimates[s].loc[stamp].to_numpy() for s in symbols])
+                    blocks.append((actual-curve_from_cumulative(cumulative,spec.horizons,k)).ravel())
+                    last_ends.extend(ends[s].loc[stamp] for s in symbols);count+=1
+                folds.append(dict(day=str(day),rows=count,calibrator_last_label_end=max(training_ends).isoformat()))
+            if len(blocks)<2:raise ValueError('Insufficient prior forward prediction errors')
+            errors=np.array(blocks);fit=LedoitWolf().fit(errors);bias=errors.mean(axis=0)
+            model.forecast_error_covariance=fit.covariance_+np.outer(bias,bias)
+            model.error_training=dict(method='prior_forward_calibrator_path_error_second_moment',
+                rows=len(blocks),folds=folds,last_label_end=max(last_ends).isoformat(),
+                base_trained_before=validation_start.isoformat(),overlapping_windows=True)
         return model
 
     def allocation(self,forecasts,current,stamp,allowed=None,shortable=None,l1_adjustment=None,liquidation_at=None):

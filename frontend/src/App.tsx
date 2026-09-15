@@ -840,7 +840,7 @@ function App() {
           )}
 
           {/* Consolidated Master Dashboard Tab */}
-          {(activeTab === 'replay' || activeTab === 'trade_comparison') && (
+          {activeTab === 'replay' && (
             <TradeComparisonPanel
               watchlist={watchlist}
               activeTicker={activeTicker}

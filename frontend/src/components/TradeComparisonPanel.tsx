@@ -3,6 +3,7 @@
 import React from 'react';
 import { API_BASE } from '../config';
 import { IntradayKlineChart } from './IntradayKlineChart';
+import { PriceActionReplayChart } from './PriceActionReplayChart';
 
 interface TradeComparisonPanelProps {
   watchlist: string[];
@@ -13,6 +14,21 @@ interface TradeComparisonPanelProps {
 export function TradeComparisonPanel({ watchlist, activeTicker, onSelectTicker }: TradeComparisonPanelProps) {
   const [iframeKey, setIframeKey] = React.useState(Date.now());
   const [isRefreshing, setIsRefreshing] = React.useState(false);
+  const [chartView, setChartView] = React.useState<'price' | 'classic'>('price');
+  const iframeRef = React.useRef<HTMLIFrameElement>(null);
+  const iframeQuery = new URLSearchParams({ v: String(iframeKey), ticker: activeTicker || 'TSLA' });
+
+  React.useEffect(() => {
+    const receiveSelection = (event: MessageEvent) => {
+      if (event.origin !== new URL(API_BASE, window.location.href).origin || event.source !== iframeRef.current?.contentWindow) return;
+      if (event.data?.type !== 'quant-replay-selection-change') return;
+      if (typeof event.data.ticker === 'string' && /^[A-Z.]{1,10}$/.test(event.data.ticker)) onSelectTicker(event.data.ticker);
+      // Research and broker archives can cover different dates. Keep each
+      // source's date selector independent while synchronizing the stock.
+    };
+    window.addEventListener('message', receiveSelection);
+    return () => window.removeEventListener('message', receiveSelection);
+  }, [onSelectTicker]);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -46,7 +62,7 @@ export function TradeComparisonPanel({ watchlist, activeTicker, onSelectTicker }
         alignItems: 'center'
       }}>
         <div style={{ fontWeight: 800, color: '#38bdf8', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          📈 历史 SIP 走势与券商成交对照大屏 (Robinhood 风格动态曲线 & 买卖点复盘)
+          📈 价格走势与买卖点复盘 · 研究模拟 / 券商成交
         </div>
         <button
           onClick={handleRefresh}
@@ -67,11 +83,21 @@ export function TradeComparisonPanel({ watchlist, activeTicker, onSelectTicker }
         </button>
       </div>
       <div style={{ padding: '16px' }}>
-        <IntradayKlineChart ticker={activeTicker || 'TSLA'} />
+        <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+          {([{ value: 'price', label: '📈 价格线 · 买卖点 · 持仓与盈亏' }, { value: 'classic', label: '📊 经典规则轨迹与 K 线' }] as const).map(view => <button
+            key={view.value} onClick={() => setChartView(view.value)} aria-pressed={chartView === view.value}
+            style={{ padding: '8px 12px', borderRadius: 7, border: `1px solid ${chartView === view.value ? '#288bb1' : '#2b394d'}`, background: chartView === view.value ? '#12364c' : '#121d2b', color: chartView === view.value ? '#7dd3fc' : '#94a3b8', fontWeight: 700, cursor: 'pointer' }}
+          >{view.label}</button>)}
+        </div>
+        {chartView === 'price' ? <PriceActionReplayChart ticker={activeTicker || 'TSLA'} watchlist={watchlist} onSelectTicker={onSelectTicker} refreshKey={iframeKey} /> : <IntradayKlineChart ticker={activeTicker || 'TSLA'} />}
+      </div>
+      <div style={{ padding: '4px 22px 12px', color: '#94a3b8', fontSize: 12 }}>
+        下方 Dynamic Replay 使用券商归档行情与成交，日期在下方独立选择。
       </div>
       <iframe
+        ref={iframeRef}
         key={iframeKey}
-        src={`${API_BASE}/charts/trade_comparison_dashboard.html?v=${iframeKey}`}
+        src={`${API_BASE}/charts/trade_comparison_dashboard.html?${iframeQuery}`}
         title="Trade Comparison Dashboard"
         style={{
           width: '100%',

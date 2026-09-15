@@ -1,0 +1,31 @@
+.price-replay { color: #e2e8f0; background: linear-gradient(180deg, #0c121c, #080d15); border: 1px solid #243042; border-radius: 14px; padding: 22px; min-width: 0; }
+.price-replay-heading, .price-replay-selectors, .price-replay-toolbar, .price-replay-buttons, .price-replay-readout, .price-replay-legend, .price-replay-context, .price-replay-seek { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+.price-replay-heading { justify-content: space-between; align-items: flex-start; gap: 18px; }
+.price-replay-eyebrow { color: #38bdf8; font-size: 12px; font-weight: 800; letter-spacing: .8px; }
+.price-replay-price { font-size: clamp(28px, 3vw, 42px); line-height: 1.4; font-weight: 800; color: #f8fafc; font-variant-numeric: tabular-nums; }
+.price-replay-price span { font-size: 17px; color: #a5b4c8; margin-left: 8px; }
+.price-replay-subtitle, .price-replay-context, .price-replay-footnote { color: #8d9bb0; font-size: 12px; line-height: 1.7; }
+.price-replay-selectors { justify-content: flex-end; }
+.price-replay-selectors label { display: flex; gap: 8px; align-items: center; font-size: 12px; color: #94a3b8; }
+.price-replay select, .price-replay button { background: #121d2b; border: 1px solid #2b394d; border-radius: 6px; color: #cbd5e1; padding: 7px 10px; font: inherit; font-size: 12px; cursor: pointer; }
+.price-replay button { font-weight: 700; white-space: nowrap; }
+.price-replay button.active { color: #7dd3fc; background: #12364c; border-color: #288bb1; }
+.price-replay button:hover:not(:disabled) { border-color: #38bdf8; color: #fff; }
+.price-replay button:disabled { opacity: .45; cursor: wait; }
+.price-replay button:focus-visible, .price-replay select:focus-visible, .price-replay input:focus-visible { outline: 2px solid #38bdf8; outline-offset: 3px; }
+.price-replay-symbols { display: flex; flex-wrap: wrap; gap: 4px; }
+.price-replay-context { margin-top: 14px; padding: 9px 0; gap: 8px 16px; border-bottom: 1px solid #213044; }
+.price-replay-source { color: #c4b5fd; background: #28213d; padding: 2px 8px; border-radius: 4px; font-weight: 700; }
+.price-replay-toolbar { justify-content: space-between; padding: 13px 0; }
+.price-replay-buttons { gap: 5px; }
+.price-replay-readout { border-radius: 6px; padding: 9px 12px; background: #111b28; color: #8da1ba; font-size: 12px; gap: 8px 20px; font-variant-numeric: tabular-nums; }
+.price-replay-readout b { color: #e2e8f0; margin-left: 5px; }
+.price-replay-legend { font-size: 11px; color: #94a3b8; padding: 14px 0 4px; gap: 8px 20px; }
+.price-replay-canvas { width: 100%; overflow-x: auto; }
+.price-replay-canvas svg { display: block; width: 100%; min-width: 700px; cursor: crosshair; }
+.price-replay-seek { flex-wrap: nowrap; font-size: 12px; color: #94a3b8; padding-top: 10px; white-space: nowrap; }
+.price-replay-seek input { flex: 1; min-width: 50px; accent-color: #38bdf8; cursor: pointer; }
+.price-replay-footnote { padding-top: 10px; }
+.price-replay-message { min-height: 310px; display: grid; place-content: center; color: #7dd3fc; font-size: 14px; text-align: center; }
+.price-replay-message.error { color: #fbbf24; }
+@media (max-width: 800px) { .price-replay { padding: 14px 10px; } .price-replay-selectors { justify-content: flex-start; } .price-replay-toolbar { align-items: flex-start; } .price-replay-context { font-size: 11px; } }

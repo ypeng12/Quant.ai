@@ -1,0 +1,11 @@
+{
+  "source_study": "/Users/yuliangpeng/.local/share/quant-l1/paper-repair-work/reports/manual_style_research_20260915",
+  "source_registry_sha256": "440c6827502028fb50e50437057c721cd8797733b9c770c72cfbea08bd5d65db",
+  "source_evidence_sha256": "cf5dffeadd99db2940e0135e76cb27a3839a464a34a6ea8ceb396cb0aa0cbb08",
+  "purpose": "Post-run inspection; no trading decisions changed",
+  "bar_timing": "bar_open + 5 minutes = completed-bar availability",
+  "shares_timing": "Fill events determine position immediately; not shifted to next close",
+  "options_used": false,
+  "l1_used": false,
+  "export_script_sha256": "862ca678f457e7cec7ae168e786d2bd72690a66a6c8721639dc0cad54a6f06d7"
+}
