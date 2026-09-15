@@ -7,6 +7,7 @@ from collections import defaultdict, deque
 from decimal import Decimal
 import copy
 import hashlib
+import os
 import threading
 import time
 import pandas as pd
@@ -57,7 +58,10 @@ class BrokerFillAccounting:
         self.lock=threading.Lock();self.key=None;self.running=False;self.checked=0;self.rows=None;self.events={};self.error=None
 
     def snapshot(self):
-        c=resolve_trading_credentials()
+        try:
+            c=resolve_trading_credentials(os.environ)
+        except ValueError:
+            return None,'credential_configuration_unavailable'
         if c is None:return None,'credentials_unavailable'
         key=hashlib.sha256((c.endpoint+c.key).encode()).hexdigest()
         with self.lock:

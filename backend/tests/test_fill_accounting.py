@@ -45,3 +45,11 @@ def test_summary_uses_the_same_account_scoped_ledger(monkeypatch):
     monkeypatch.setattr(ACCOUNTING,'snapshot',lambda:(rows,'ready'))
     r=display_summary(dict(date='2026-09-14',unrealized_pnl=0,alpaca_official_pnl=1318.20),[])
     assert r['realized_pnl']==1318.20 and r['wins']==2 and r['reconciliation_difference']==0
+
+
+def test_snapshot_resolves_explicit_environment_and_handles_incomplete_credentials(monkeypatch):
+    import app.broker.fill_accounting as module
+    monkeypatch.setattr(module.os,'environ',{})
+    assert module.BrokerFillAccounting().snapshot()==(None,'credentials_unavailable')
+    monkeypatch.setattr(module.os,'environ',{'ALPACA_API_KEY':'test_key'})
+    assert module.BrokerFillAccounting().snapshot()==(None,'credential_configuration_unavailable')
