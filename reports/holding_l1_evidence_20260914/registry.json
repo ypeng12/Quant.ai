@@ -1,0 +1,378 @@
+{
+  "status": "complete",
+  "registered_at": "2026-09-14",
+  "evaluation_dates": [
+    "2026-09-14"
+  ],
+  "symbols": [
+    "SNDK",
+    "TSLA",
+    "PLTR",
+    "NVDA"
+  ],
+  "traded_symbols": [
+    "SNDK",
+    "TSLA",
+    "PLTR",
+    "NVDA"
+  ],
+  "starting_equity": 47006.42,
+  "cost_bps_per_side": [
+    5
+  ],
+  "trials": [
+    {
+      "candidate": {
+        "name": "holding_l1_base",
+        "features": "bar context",
+        "model": "Ridge",
+        "portfolio": "costed return curve"
+      },
+      "status": "complete",
+      "cost_bps": 5,
+      "summary": {
+        "date": "2026-09-14",
+        "starting_equity": 47006.42,
+        "ending_equity": 45921.766687545896,
+        "net_pnl": -1084.653312454102,
+        "net_return": -0.023074578163027562,
+        "costs": 755.6525189971926,
+        "gross_pnl": -329.0007934569094,
+        "turnover_dollars": 1511305.0379943848,
+        "turnover_equity_multiple": 32.15103464578636,
+        "fill_count": 228,
+        "max_drawdown": -0.025646096242819105,
+        "max_gross_exposure": 0.9487048927495562,
+        "max_abs_net_exposure": 0.9463429047270722,
+        "max_symbol_exposure": 0.6990535903307542,
+        "min_cash": 2496.680851081883,
+        "ending_cash": 45921.766687545896,
+        "ending_gross_exposure": 0.0,
+        "ending_net_exposure": 0.0,
+        "SNDK_net_pnl": -387.6096641845543,
+        "SNDK_costs": 223.74491809082028,
+        "SNDK_fill_count": 68,
+        "TSLA_net_pnl": -438.87039291379733,
+        "TSLA_costs": 167.95395004272467,
+        "TSLA_fill_count": 45,
+        "PLTR_net_pnl": -48.909846488921175,
+        "PLTR_costs": 202.43226165008548,
+        "PLTR_fill_count": 65,
+        "NVDA_net_pnl": -209.26340886685466,
+        "NVDA_costs": 161.52138921356206,
+        "NVDA_fill_count": 50,
+        "missing_l1_decisions": []
+      },
+      "per_symbol": {
+        "SNDK": {
+          "net_pnl": -387.6096641845543,
+          "costs": 223.74491809082028
+        },
+        "TSLA": {
+          "net_pnl": -438.87039291379733,
+          "costs": 167.95395004272467
+        },
+        "PLTR": {
+          "net_pnl": -48.909846488921175,
+          "costs": 202.43226165008548
+        },
+        "NVDA": {
+          "net_pnl": -209.26340886685466,
+          "costs": 161.52138921356206
+        }
+      }
+    },
+    {
+      "candidate": {
+        "name": "holding_l1_plus_l1",
+        "features": "real IEX + bar context",
+        "model": "Ridge with prior-day residual",
+        "portfolio": "costed return curve"
+      },
+      "status": "complete",
+      "cost_bps": 5,
+      "summary": {
+        "date": "2026-09-14",
+        "starting_equity": 47006.42,
+        "ending_equity": 46912.900763542384,
+        "net_pnl": -93.51923645761417,
+        "net_return": -0.0019894992313308304,
+        "costs": 1427.1642102127078,
+        "gross_pnl": 1333.6449737550936,
+        "turnover_dollars": 2854328.420425415,
+        "turnover_equity_multiple": 60.722097543812424,
+        "fill_count": 209,
+        "max_drawdown": -0.02543230703715138,
+        "max_gross_exposure": 0.9492021776836805,
+        "max_abs_net_exposure": 0.9485444764239492,
+        "max_symbol_exposure": 0.7010254193230526,
+        "min_cash": 2443.3734467621252,
+        "ending_cash": 46912.900763542384,
+        "ending_gross_exposure": 0.0,
+        "ending_net_exposure": 0.0,
+        "SNDK_net_pnl": -457.4027098388033,
+        "SNDK_costs": 602.9556883544924,
+        "SNDK_fill_count": 73,
+        "TSLA_net_pnl": -243.51663922115404,
+        "TSLA_costs": 330.7694468383789,
+        "TSLA_fill_count": 47,
+        "PLTR_net_pnl": 476.11633118442376,
+        "PLTR_costs": 337.8464221115113,
+        "PLTR_fill_count": 61,
+        "NVDA_net_pnl": 131.28378141787334,
+        "NVDA_costs": 155.5926529083252,
+        "NVDA_fill_count": 28,
+        "missing_l1_decisions": [
+          {
+            "symbol": "SNDK",
+            "time": "2026-09-14T10:10:00-04:00",
+            "state": "base_only_missing_complete_L1"
+          },
+          {
+            "symbol": "SNDK",
+            "time": "2026-09-14T10:25:00-04:00",
+            "state": "base_only_missing_complete_L1"
+          },
+          {
+            "symbol": "SNDK",
+            "time": "2026-09-14T10:30:00-04:00",
+            "state": "base_only_missing_complete_L1"
+          },
+          {
+            "symbol": "SNDK",
+            "time": "2026-09-14T11:15:00-04:00",
+            "state": "base_only_missing_complete_L1"
+          },
+          {
+            "symbol": "SNDK",
+            "time": "2026-09-14T11:40:00-04:00",
+            "state": "base_only_missing_complete_L1"
+          },
+          {
+            "symbol": "SNDK",
+            "time": "2026-09-14T11:45:00-04:00",
+            "state": "base_only_missing_complete_L1"
+          },
+          {
+            "symbol": "SNDK",
+            "time": "2026-09-14T11:55:00-04:00",
+            "state": "base_only_missing_complete_L1"
+          },
+          {
+            "symbol": "SNDK",
+            "time": "2026-09-14T12:05:00-04:00",
+            "state": "base_only_missing_complete_L1"
+          },
+          {
+            "symbol": "SNDK",
+            "time": "2026-09-14T12:10:00-04:00",
+            "state": "base_only_missing_complete_L1"
+          },
+          {
+            "symbol": "SNDK",
+            "time": "2026-09-14T12:30:00-04:00",
+            "state": "base_only_missing_complete_L1"
+          },
+          {
+            "symbol": "SNDK",
+            "time": "2026-09-14T12:35:00-04:00",
+            "state": "base_only_missing_complete_L1"
+          },
+          {
+            "symbol": "SNDK",
+            "time": "2026-09-14T12:45:00-04:00",
+            "state": "base_only_missing_complete_L1"
+          },
+          {
+            "symbol": "SNDK",
+            "time": "2026-09-14T13:00:00-04:00",
+            "state": "base_only_missing_complete_L1"
+          },
+          {
+            "symbol": "SNDK",
+            "time": "2026-09-14T13:05:00-04:00",
+            "state": "base_only_missing_complete_L1"
+          },
+          {
+            "symbol": "SNDK",
+            "time": "2026-09-14T13:30:00-04:00",
+            "state": "base_only_missing_complete_L1"
+          },
+          {
+            "symbol": "SNDK",
+            "time": "2026-09-14T13:35:00-04:00",
+            "state": "base_only_missing_complete_L1"
+          },
+          {
+            "symbol": "SNDK",
+            "time": "2026-09-14T13:45:00-04:00",
+            "state": "base_only_missing_complete_L1"
+          },
+          {
+            "symbol": "SNDK",
+            "time": "2026-09-14T13:55:00-04:00",
+            "state": "base_only_missing_complete_L1"
+          },
+          {
+            "symbol": "SNDK",
+            "time": "2026-09-14T14:10:00-04:00",
+            "state": "base_only_missing_complete_L1"
+          },
+          {
+            "symbol": "SNDK",
+            "time": "2026-09-14T14:35:00-04:00",
+            "state": "base_only_missing_complete_L1"
+          },
+          {
+            "symbol": "SNDK",
+            "time": "2026-09-14T15:35:00-04:00",
+            "state": "base_only_missing_complete_L1"
+          }
+        ]
+      },
+      "per_symbol": {
+        "SNDK": {
+          "net_pnl": -457.4027098388033,
+          "costs": 602.9556883544924
+        },
+        "TSLA": {
+          "net_pnl": -243.51663922115404,
+          "costs": 330.7694468383789
+        },
+        "PLTR": {
+          "net_pnl": 476.11633118442376,
+          "costs": 337.8464221115113
+        },
+        "NVDA": {
+          "net_pnl": 131.28378141787334,
+          "costs": 155.5926529083252
+        }
+      }
+    }
+  ],
+  "selected_for_live": null,
+  "performance_verified": false,
+  "default_display_candidate": "holding_l1_plus_l1",
+  "cost_description": "\u4e24\u4e2a\u5019\u9009\u540c\u8d44\u91d1\u3001\u540c\u65e5\u671f\uff0c\u5185\u90e8\u89c4\u5212 2 bps\uff0c\u6210\u4ea4\u6a21\u62df 5 bps\uff1b\u5b9e\u9645\u5238\u5546\u8d39\u7528\u672a\u6838\u5b9e\u3002",
+  "unverified_assumptions": [
+    "\u53ea\u6709 9/11 \u4e00\u5929\u8bad\u7ec3\u30019/14 \u4e00\u5929\u8bc4\u4f30\uff0c\u4e0d\u80fd\u8bc1\u660e\u672a\u6765\u76c8\u5229\u3002",
+    "\u771f\u5b9e IEX \u5355\u4ea4\u6613\u6240\u5386\u53f2\u62a5\u4ef7\u4e0e\u6210\u4ea4\uff1b\u5386\u53f2\u4ea4\u6613\u6240\u65f6\u95f4\u6a21\u578b\u4e0d\u80fd\u76f4\u63a5\u5957\u7528\u5b9e\u65f6\u5230\u8fbe\u65f6\u95f4\u3002",
+    "L1 \u884d\u751f\u7279\u5f81\u53ca\u884c\u60c5\u8f93\u5165\u9644\u54c8\u5e0c\uff1b\u539f\u59cb\u9010\u7b14\u6587\u4ef6\u7559\u5b58\u5728\u672c\u5730\uff0c\u6765\u6e90\u54c8\u5e0c\u89c1 result.json\u3002",
+    "\u7f3a\u5931\u5b8c\u6574 L1 \u65f6\u4f7f\u7528\u57fa\u7840\u6a21\u578b\uff1b\u5047\u8bbe\u4e0b\u4e00\u6839\u5f00\u76d8\u5b8c\u5168\u6210\u4ea4\u300115:55 \u5e73\u4ed3\u3001\u671f\u521d\u7a7a\u4ed3\u3002"
+  ],
+  "sources": {
+    "reports/holding_l1_evidence_20260914/source/scripts/research_holding_l1.py": "d24f2f5cfeea802d427d5097d996f3a8391cac28ea556317ae556dde3b1b3450",
+    "reports/holding_l1_evidence_20260914/source/backend/app/research/holding_l1.py": "88579e16af5b863b9e49e18d96d151188a81ac3b193a5da25ec69b36916357da",
+    "reports/holding_l1_evidence_20260914/source/backend/app/research/holding_policy.py": "3fe940c8e880fb6345837fe7b5f51b22a69c1ea0fbeccab4d67507fb0ae8507b",
+    "reports/holding_l1_evidence_20260914/source/backend/app/alpha/paper_l1_alpha.py": "040eb5c95e05eb1f97f9f96d92e11d0e07b98e8b73f376d768b02b3bdd2b4b4d",
+    "reports/holding_l1_evidence_20260914/source/backend/app/research/paper_models.py": "a9a2aba942e16f706e53f7d5864e92ed0daab525a10a939753a83b640d84eb8b"
+  },
+  "data_paths": {
+    "NVDA": "reports/holding_lab_20260914/bars/NVDA.parquet",
+    "SPY": "reports/holding_lab_20260914/bars/SPY.parquet",
+    "QQQ": "reports/holding_lab_20260914/bars/QQQ.parquet",
+    "SNDK": "reports/holding_lab_20260914/bars/SNDK.parquet",
+    "PLTR": "reports/holding_lab_20260914/bars/PLTR.parquet",
+    "TSLA": "reports/holding_lab_20260914/bars/TSLA.parquet",
+    "SOXX": "reports/holding_lab_20260914/bars/SOXX.parquet",
+    "PLTR_2026-09-11_features": "reports/holding_l1_evidence_20260914/PLTR_2026-09-11_features.parquet",
+    "NVDA_2026-09-14_features": "reports/holding_l1_evidence_20260914/NVDA_2026-09-14_features.parquet",
+    "NVDA_2026-09-11_features": "reports/holding_l1_evidence_20260914/NVDA_2026-09-11_features.parquet",
+    "PLTR_2026-09-14_features": "reports/holding_l1_evidence_20260914/PLTR_2026-09-14_features.parquet",
+    "SNDK_2026-09-14_features": "reports/holding_l1_evidence_20260914/SNDK_2026-09-14_features.parquet",
+    "TSLA_2026-09-11_features": "reports/holding_l1_evidence_20260914/TSLA_2026-09-11_features.parquet",
+    "SNDK_2026-09-11_features": "reports/holding_l1_evidence_20260914/SNDK_2026-09-11_features.parquet",
+    "TSLA_2026-09-14_features": "reports/holding_l1_evidence_20260914/TSLA_2026-09-14_features.parquet"
+  },
+  "data_hashes": {
+    "NVDA": "940d1d905a87568de0ce419b6ea9d3e985ce941ee87f2e75fec419b18e984311",
+    "SPY": "c4ebb2cefa7c0d32512d707a2878455fac813f7990a902f42459c10c9fd457c5",
+    "QQQ": "c2a1e04bcade4c256bb63e3820244288fdeb5d1332d95d9e31d4b828ba4615b9",
+    "SNDK": "cb726c15d0c769a17a3336e2ae2ec718a1e2046cf2013ed772435fb89c802ffd",
+    "PLTR": "4a9e338bcf45edb6f82f2d41db9c108ca7723635e66cc037b069c90c129c40dc",
+    "TSLA": "9b0f3dda68e4f97de43cabe8555b96b8ebf354b9c109eea1a51e0a87b2c61233",
+    "SOXX": "6c80b838c64dd9f79ee2c3de423354b20b461a57ab857aedb2c95200eb297383",
+    "PLTR_2026-09-11_features": "516c496535572dd23602b2926be80ecc4ded7eb42cd590894c791abe90e26e73",
+    "NVDA_2026-09-14_features": "71ea7b603ecbc22708b9c8416ab4f3e3036ef826b941459472a121a99a7c4311",
+    "NVDA_2026-09-11_features": "82238443a07e2462566e396219eb2d1f0db1aaa89f9a7f3bbf3bb58c85b3e19b",
+    "PLTR_2026-09-14_features": "6096be1aff3ee0b38156df1c0cfc60933a6ae8c8eac5bf3efc7c13752d75e734",
+    "SNDK_2026-09-14_features": "1eb504c4e71f8a2416e48b3ac5cae5d3000fcb8e5dfe1203c486187ffb8ab379",
+    "TSLA_2026-09-11_features": "3a879794b9f910e3bf73d6f17b8b753db7465e8dbebec3a7b7d4d1d2ee494daa",
+    "SNDK_2026-09-11_features": "f9b17640ab2cc4dcc425bcc3766d582a3e1edcbbedd0f6449b9bad2e013f6453",
+    "TSLA_2026-09-14_features": "a734413c877582b1715a4c42e265287fb4009cff9c75e0d4c313c3defddf6335"
+  },
+  "artifact_hashes": {
+    "PLTR_2026-09-11_features.parquet": "516c496535572dd23602b2926be80ecc4ded7eb42cd590894c791abe90e26e73",
+    "base_fills.csv": "54384dff3380ac4837b7e3351e5e347d04e6218d1b9bf45167a83b7ea4dc306c",
+    "result.json": "463df7fdfd2dab872f719e486291cbb1aaadfb48bebcb0a28f1590b7b0d45eeb",
+    "NVDA_2026-09-14_features.parquet": "71ea7b603ecbc22708b9c8416ab4f3e3036ef826b941459472a121a99a7c4311",
+    "NVDA_2026-09-11_features.parquet": "82238443a07e2462566e396219eb2d1f0db1aaa89f9a7f3bbf3bb58c85b3e19b",
+    "TSLA.json": "65071fa94c146ae055973fb1468d8efea391232ed9ff2346186224746193c04b",
+    "registration.json": "ec4e93bd86302f9064f74e5bd8a0d48ae2518be1f1a6c8f4a3661db3ccd11aa2",
+    "arrival_snapshot_diagnostic.json": "ecb16dcfcedeadbadf2ff19a0e60db0842eb3217c52f9e14c4964ef9fa5da0b9",
+    "PLTR.json": "292aa70c14cdbd547df0a21270089ec8e76ccc60243a052e75f430a7dc22beec",
+    "PLTR_2026-09-14_features.parquet": "6096be1aff3ee0b38156df1c0cfc60933a6ae8c8eac5bf3efc7c13752d75e734",
+    "SNDK.json": "0d3eb9a6c7f5abf5fb69c52bee38936dcff59e89c6ac90bfcb4e212e7a1d0de5",
+    "SNDK_2026-09-14_features.parquet": "1eb504c4e71f8a2416e48b3ac5cae5d3000fcb8e5dfe1203c486187ffb8ab379",
+    "TSLA_2026-09-11_features.parquet": "3a879794b9f910e3bf73d6f17b8b753db7465e8dbebec3a7b7d4d1d2ee494daa",
+    "source_hashes.json": "db4e8ad9092740edc777db72bfb4fe3b301baea8f22f9da40ee329a1138ce505",
+    "SNDK_2026-09-11_features.parquet": "f9b17640ab2cc4dcc425bcc3766d582a3e1edcbbedd0f6449b9bad2e013f6453",
+    "plus_l1_fills.csv": "74a94958c9620a5689e241e3722bc1b7f69b91a0121ade41a8729cb6ca5a4634",
+    "TSLA_2026-09-14_features.parquet": "a734413c877582b1715a4c42e265287fb4009cff9c75e0d4c313c3defddf6335",
+    "NVDA.json": "fced8967bdb5a2fdbe775d248d66ac907bef794f2a83ab75ab01923a2d1e9be7",
+    "bundle_hashes.json": "3ff465f8bf503dd66b7892480b75128447b2ee65dedd79ef4ea70bf654cf1d31",
+    "source/backend/app/research/holding_policy.py": "3fe940c8e880fb6345837fe7b5f51b22a69c1ea0fbeccab4d67507fb0ae8507b",
+    "source/backend/app/research/paper_models.py": "a9a2aba942e16f706e53f7d5864e92ed0daab525a10a939753a83b640d84eb8b",
+    "source/backend/app/research/holding_l1.py": "88579e16af5b863b9e49e18d96d151188a81ac3b193a5da25ec69b36916357da",
+    "source/backend/app/alpha/paper_l1_alpha.py": "040eb5c95e05eb1f97f9f96d92e11d0e07b98e8b73f376d768b02b3bdd2b4b4d",
+    "source/scripts/research_holding_l1.py": "d24f2f5cfeea802d427d5097d996f3a8391cac28ea556317ae556dde3b1b3450"
+  },
+  "metrics": [
+    {
+      "symbol": "SNDK",
+      "train_rows": 57,
+      "test_rows": 55,
+      "base_mse_bps2": 2029.0668080100363,
+      "l1_mse_bps2": 2586.8330600040977,
+      "base_ic": 0.030365523780585577,
+      "l1_ic": 0.05574655619078638
+    },
+    {
+      "symbol": "TSLA",
+      "train_rows": 73,
+      "test_rows": 76,
+      "base_mse_bps2": 461.04731808280485,
+      "l1_mse_bps2": 500.7532617068825,
+      "base_ic": -0.08057017514772448,
+      "l1_ic": 0.1067769896207894
+    },
+    {
+      "symbol": "PLTR",
+      "train_rows": 74,
+      "test_rows": 76,
+      "base_mse_bps2": 660.6394457391411,
+      "l1_mse_bps2": 636.1658278074173,
+      "base_ic": -0.05740218597289947,
+      "l1_ic": 0.21976236495212056
+    },
+    {
+      "symbol": "NVDA",
+      "train_rows": 76,
+      "test_rows": 76,
+      "base_mse_bps2": 210.37845746095218,
+      "l1_mse_bps2": 169.24299940897697,
+      "base_ic": 0.23940914146649114,
+      "l1_ic": 0.454418450996383
+    }
+  ],
+  "registration": {
+    "status": "registered",
+    "days": [
+      "2026-09-11",
+      "2026-09-14"
+    ],
+    "choice": "context_curve plus learned prior-day L1 h1 residual; no tuning",
+    "cost_bps": 5,
+    "actual_fees": null
+  }
+}

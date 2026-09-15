@@ -1,0 +1,83 @@
+{
+  "available_at": "2026-09-14T15:55:00-04:00",
+  "bar_time": "2026-09-14T15:50:00-04:00",
+  "symbols": {
+    "SNDK": {
+      "features": {
+        "l1_spread_bps": 156.6209560256543,
+        "l1_quote_imbalance": 0.0,
+        "l1_microprice_bps": 0.0,
+        "l1_ofi_normalized": 1.0,
+        "l1_signed_trade_imbalance": -1.0,
+        "l1_quote_updates": 13.0,
+        "l1_ofi_raw": 80.0,
+        "l1_mean_half_depth": 46.15384615384615,
+        "l1_ofi_depth": 1.7333333333333334,
+        "l1_ofi_x_spread": 271.47632377780076,
+        "l1_ofi_x_session_sin": -0.27804622015345176,
+        "l1_ofi_x_session_cos": 1.7108871219057156
+      },
+      "contract": {
+        "symbol": "SNDK",
+        "feed": "iex",
+        "source": "alpaca_stock_websocket",
+        "clock": "recorded_arrival",
+        "quote_size_unit": "round_lots",
+        "feature_version": "paper_l1_alpha_v2"
+      }
+    },
+    "TSLA": {
+      "features": {
+        "l1_spread_bps": 77.27393190409212,
+        "l1_quote_imbalance": 0.0,
+        "l1_microprice_bps": 0.0,
+        "l1_ofi_normalized": 2.3333333333333335,
+        "l1_signed_trade_imbalance": 1.0,
+        "l1_quote_updates": 28.0,
+        "l1_ofi_raw": 280.0,
+        "l1_mean_half_depth": 55.0,
+        "l1_ofi_depth": 5.090909090909091,
+        "l1_ofi_x_spread": 393.39456242083264,
+        "l1_ofi_x_session_sin": -0.816639248003145,
+        "l1_ofi_x_session_cos": 5.024983155247556
+      },
+      "contract": {
+        "symbol": "TSLA",
+        "feed": "iex",
+        "source": "alpaca_stock_websocket",
+        "clock": "recorded_arrival",
+        "quote_size_unit": "round_lots",
+        "feature_version": "paper_l1_alpha_v2"
+      }
+    },
+    "NVDA": {
+      "features": {
+        "l1_spread_bps": 23.192521595077935,
+        "l1_quote_imbalance": -0.3333333333333333,
+        "l1_microprice_bps": -3.9436530847258915,
+        "l1_ofi_normalized": 1.5,
+        "l1_signed_trade_imbalance": -1.0,
+        "l1_quote_updates": 257.0,
+        "l1_ofi_raw": 300.0,
+        "l1_mean_half_depth": 125.4863813229572,
+        "l1_ofi_depth": 2.390697674418605,
+        "l1_ofi_x_spread": 55.44630744125609,
+        "l1_ofi_x_session_sin": -0.383494876097158,
+        "l1_ofi_x_session_cos": 2.3597387674227313
+      },
+      "contract": {
+        "symbol": "NVDA",
+        "feed": "iex",
+        "source": "alpaca_stock_websocket",
+        "clock": "recorded_arrival",
+        "quote_size_unit": "round_lots",
+        "feature_version": "paper_l1_alpha_v2"
+      }
+    }
+  },
+  "unavailable": {
+    "PLTR": "Incomplete real L1 features"
+  },
+  "mode": "arrival_replay_diagnostic",
+  "generation_note": "Historical arrival-time diagnostic; prohibited from live decisions."
+}

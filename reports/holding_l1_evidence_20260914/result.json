@@ -1,0 +1,286 @@
+{
+  "status": "complete",
+  "training_day": "2026-09-11",
+  "evaluation_day": "2026-09-14",
+  "metrics": [
+    {
+      "symbol": "SNDK",
+      "train_rows": 57,
+      "test_rows": 55,
+      "base_mse_bps2": 2029.0668080100363,
+      "l1_mse_bps2": 2586.8330600040977,
+      "base_ic": 0.030365523780585577,
+      "l1_ic": 0.05574655619078638
+    },
+    {
+      "symbol": "TSLA",
+      "train_rows": 73,
+      "test_rows": 76,
+      "base_mse_bps2": 461.04731808280485,
+      "l1_mse_bps2": 500.7532617068825,
+      "base_ic": -0.08057017514772448,
+      "l1_ic": 0.1067769896207894
+    },
+    {
+      "symbol": "PLTR",
+      "train_rows": 74,
+      "test_rows": 76,
+      "base_mse_bps2": 660.6394457391411,
+      "l1_mse_bps2": 636.1658278074173,
+      "base_ic": -0.05740218597289947,
+      "l1_ic": 0.21976236495212056
+    },
+    {
+      "symbol": "NVDA",
+      "train_rows": 76,
+      "test_rows": 76,
+      "base_mse_bps2": 210.37845746095218,
+      "l1_mse_bps2": 169.24299940897697,
+      "base_ic": 0.23940914146649114,
+      "l1_ic": 0.454418450996383
+    }
+  ],
+  "results": {
+    "base": {
+      "date": "2026-09-14",
+      "starting_equity": 47006.42,
+      "ending_equity": 45921.766687545896,
+      "net_pnl": -1084.653312454102,
+      "net_return": -0.023074578163027562,
+      "costs": 755.6525189971926,
+      "gross_pnl": -329.0007934569094,
+      "turnover_dollars": 1511305.0379943848,
+      "turnover_equity_multiple": 32.15103464578636,
+      "fill_count": 228,
+      "max_drawdown": -0.025646096242819105,
+      "max_gross_exposure": 0.9487048927495562,
+      "max_abs_net_exposure": 0.9463429047270722,
+      "max_symbol_exposure": 0.6990535903307542,
+      "min_cash": 2496.680851081883,
+      "ending_cash": 45921.766687545896,
+      "ending_gross_exposure": 0.0,
+      "ending_net_exposure": 0.0,
+      "SNDK_net_pnl": -387.6096641845543,
+      "SNDK_costs": 223.74491809082028,
+      "SNDK_fill_count": 68,
+      "TSLA_net_pnl": -438.87039291379733,
+      "TSLA_costs": 167.95395004272467,
+      "TSLA_fill_count": 45,
+      "PLTR_net_pnl": -48.909846488921175,
+      "PLTR_costs": 202.43226165008548,
+      "PLTR_fill_count": 65,
+      "NVDA_net_pnl": -209.26340886685466,
+      "NVDA_costs": 161.52138921356206,
+      "NVDA_fill_count": 50,
+      "missing_l1_decisions": []
+    },
+    "plus_l1": {
+      "date": "2026-09-14",
+      "starting_equity": 47006.42,
+      "ending_equity": 46912.900763542384,
+      "net_pnl": -93.51923645761417,
+      "net_return": -0.0019894992313308304,
+      "costs": 1427.1642102127078,
+      "gross_pnl": 1333.6449737550936,
+      "turnover_dollars": 2854328.420425415,
+      "turnover_equity_multiple": 60.722097543812424,
+      "fill_count": 209,
+      "max_drawdown": -0.02543230703715138,
+      "max_gross_exposure": 0.9492021776836805,
+      "max_abs_net_exposure": 0.9485444764239492,
+      "max_symbol_exposure": 0.7010254193230526,
+      "min_cash": 2443.3734467621252,
+      "ending_cash": 46912.900763542384,
+      "ending_gross_exposure": 0.0,
+      "ending_net_exposure": 0.0,
+      "SNDK_net_pnl": -457.4027098388033,
+      "SNDK_costs": 602.9556883544924,
+      "SNDK_fill_count": 73,
+      "TSLA_net_pnl": -243.51663922115404,
+      "TSLA_costs": 330.7694468383789,
+      "TSLA_fill_count": 47,
+      "PLTR_net_pnl": 476.11633118442376,
+      "PLTR_costs": 337.8464221115113,
+      "PLTR_fill_count": 61,
+      "NVDA_net_pnl": 131.28378141787334,
+      "NVDA_costs": 155.5926529083252,
+      "NVDA_fill_count": 28,
+      "missing_l1_decisions": [
+        {
+          "symbol": "SNDK",
+          "time": "2026-09-14T10:10:00-04:00",
+          "state": "base_only_missing_complete_L1"
+        },
+        {
+          "symbol": "SNDK",
+          "time": "2026-09-14T10:25:00-04:00",
+          "state": "base_only_missing_complete_L1"
+        },
+        {
+          "symbol": "SNDK",
+          "time": "2026-09-14T10:30:00-04:00",
+          "state": "base_only_missing_complete_L1"
+        },
+        {
+          "symbol": "SNDK",
+          "time": "2026-09-14T11:15:00-04:00",
+          "state": "base_only_missing_complete_L1"
+        },
+        {
+          "symbol": "SNDK",
+          "time": "2026-09-14T11:40:00-04:00",
+          "state": "base_only_missing_complete_L1"
+        },
+        {
+          "symbol": "SNDK",
+          "time": "2026-09-14T11:45:00-04:00",
+          "state": "base_only_missing_complete_L1"
+        },
+        {
+          "symbol": "SNDK",
+          "time": "2026-09-14T11:55:00-04:00",
+          "state": "base_only_missing_complete_L1"
+        },
+        {
+          "symbol": "SNDK",
+          "time": "2026-09-14T12:05:00-04:00",
+          "state": "base_only_missing_complete_L1"
+        },
+        {
+          "symbol": "SNDK",
+          "time": "2026-09-14T12:10:00-04:00",
+          "state": "base_only_missing_complete_L1"
+        },
+        {
+          "symbol": "SNDK",
+          "time": "2026-09-14T12:30:00-04:00",
+          "state": "base_only_missing_complete_L1"
+        },
+        {
+          "symbol": "SNDK",
+          "time": "2026-09-14T12:35:00-04:00",
+          "state": "base_only_missing_complete_L1"
+        },
+        {
+          "symbol": "SNDK",
+          "time": "2026-09-14T12:45:00-04:00",
+          "state": "base_only_missing_complete_L1"
+        },
+        {
+          "symbol": "SNDK",
+          "time": "2026-09-14T13:00:00-04:00",
+          "state": "base_only_missing_complete_L1"
+        },
+        {
+          "symbol": "SNDK",
+          "time": "2026-09-14T13:05:00-04:00",
+          "state": "base_only_missing_complete_L1"
+        },
+        {
+          "symbol": "SNDK",
+          "time": "2026-09-14T13:30:00-04:00",
+          "state": "base_only_missing_complete_L1"
+        },
+        {
+          "symbol": "SNDK",
+          "time": "2026-09-14T13:35:00-04:00",
+          "state": "base_only_missing_complete_L1"
+        },
+        {
+          "symbol": "SNDK",
+          "time": "2026-09-14T13:45:00-04:00",
+          "state": "base_only_missing_complete_L1"
+        },
+        {
+          "symbol": "SNDK",
+          "time": "2026-09-14T13:55:00-04:00",
+          "state": "base_only_missing_complete_L1"
+        },
+        {
+          "symbol": "SNDK",
+          "time": "2026-09-14T14:10:00-04:00",
+          "state": "base_only_missing_complete_L1"
+        },
+        {
+          "symbol": "SNDK",
+          "time": "2026-09-14T14:35:00-04:00",
+          "state": "base_only_missing_complete_L1"
+        },
+        {
+          "symbol": "SNDK",
+          "time": "2026-09-14T15:35:00-04:00",
+          "state": "base_only_missing_complete_L1"
+        }
+      ]
+    }
+  },
+  "inputs": [
+    {
+      "path": "/Users/yuliangpeng/.local/share/quant-l1/data/history_iex_20260911_quotes/2026-09-11/SNDK.jsonl",
+      "sha256": "e5f0afc1ba5d060b12b1c93f7751867a9282f25953b93f2b5ddfde6b88b88410"
+    },
+    {
+      "path": "/Users/yuliangpeng/.local/share/quant-l1/data/history_iex_20260911_trades/2026-09-11/SNDK.jsonl",
+      "sha256": "22ff6bc7043e72b07096b2e713fd4df3993ee09ee6ba91a30355277ed754868c"
+    },
+    {
+      "path": "/Users/yuliangpeng/.local/share/quant-l1/data/holding_iex_20260914_quotes/2026-09-14/SNDK.jsonl",
+      "sha256": "c33c4e7d036ddd816c304b98d84b9717dc1eb848774b39031bb1a8467ecb21e9"
+    },
+    {
+      "path": "/Users/yuliangpeng/.local/share/quant-l1/data/holding_iex_20260914_trades/2026-09-14/SNDK.jsonl",
+      "sha256": "e8afc7fc30931bd7aff0797663fe627535aea5b6672c07d49290ce60022b0daa"
+    },
+    {
+      "path": "/Users/yuliangpeng/.local/share/quant-l1/data/history_iex_20260911_quotes/2026-09-11/TSLA.jsonl",
+      "sha256": "4b8ba46cbb101835ee1abbad710c09833dc372d533d75783026025177aa313d7"
+    },
+    {
+      "path": "/Users/yuliangpeng/.local/share/quant-l1/data/history_iex_20260911_trades/2026-09-11/TSLA.jsonl",
+      "sha256": "54131fa46d592bac08c03cef334dd9e232640d2e85ec5a2a876ebb728743d6dd"
+    },
+    {
+      "path": "/Users/yuliangpeng/.local/share/quant-l1/data/holding_iex_20260914_quotes/2026-09-14/TSLA.jsonl",
+      "sha256": "284855c11b131f1b3f4f1ac1fad8fc1b9d973972801eaa0a10c11d8cb1abcfdc"
+    },
+    {
+      "path": "/Users/yuliangpeng/.local/share/quant-l1/data/holding_iex_20260914_trades/2026-09-14/TSLA.jsonl",
+      "sha256": "773fcd2d6d7681edd8c90fd7cd201b05b1f6cd5f02b587c05c10b0f2906fcbf5"
+    },
+    {
+      "path": "/Users/yuliangpeng/.local/share/quant-l1/data/history_iex_20260911_quotes/2026-09-11/PLTR.jsonl",
+      "sha256": "c159119f951572613f8efb108d27c08a27f525d28e9c93adc75138dd4ba85107"
+    },
+    {
+      "path": "/Users/yuliangpeng/.local/share/quant-l1/data/history_iex_20260911_trades/2026-09-11/PLTR.jsonl",
+      "sha256": "0b711eb532ba978faac29518152a60b38eddb19e09ae442ecabe0977e709ad60"
+    },
+    {
+      "path": "/Users/yuliangpeng/.local/share/quant-l1/data/holding_iex_20260914_quotes/2026-09-14/PLTR.jsonl",
+      "sha256": "a28bf088b191b9d1ef3be2bdfe4d9380b400385425c21023d85b17905f684766"
+    },
+    {
+      "path": "/Users/yuliangpeng/.local/share/quant-l1/data/holding_iex_20260914_trades/2026-09-14/PLTR.jsonl",
+      "sha256": "ccefcd9ef9c7f30a3337c7464a6b2ec8e523c469fc4bfcca24ed40a3dc585685"
+    },
+    {
+      "path": "/Users/yuliangpeng/.local/share/quant-l1/data/history_iex_20260911_quotes/2026-09-11/NVDA.jsonl",
+      "sha256": "e77a422d3ed1ef1fb069bd3a213dbd76bb9d83f2a9e711b33cd5c7b0e73bc847"
+    },
+    {
+      "path": "/Users/yuliangpeng/.local/share/quant-l1/data/history_iex_20260911_trades/2026-09-11/NVDA.jsonl",
+      "sha256": "cacba655af136e963b45381abc6ca34d22e68ebffc3ef9cb68b3a10397f1a7ec"
+    },
+    {
+      "path": "/Users/yuliangpeng/.local/share/quant-l1/data/holding_iex_20260914_quotes/2026-09-14/NVDA.jsonl",
+      "sha256": "6f7e284f4360381280a9e64eb825606a6a1f8d3744581a4774d7c96888c30dcf"
+    },
+    {
+      "path": "/Users/yuliangpeng/.local/share/quant-l1/data/holding_iex_20260914_trades/2026-09-14/NVDA.jsonl",
+      "sha256": "ed8d882fb591435f649ff37c118c3ee844cf0439bef199cabff416bb29f4b035"
+    }
+  ],
+  "performance_verified": false,
+  "selected_for_live": null,
+  "limitation": "Only one training and one test session; historical IEX exchange-clock artifacts are incompatible with live arrival-clock packets."
+}

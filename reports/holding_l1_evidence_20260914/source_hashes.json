@@ -1,0 +1,7 @@
+{
+  "scripts/research_holding_l1.py": "d24f2f5cfeea802d427d5097d996f3a8391cac28ea556317ae556dde3b1b3450",
+  "backend/app/research/holding_l1.py": "88579e16af5b863b9e49e18d96d151188a81ac3b193a5da25ec69b36916357da",
+  "backend/app/research/holding_policy.py": "3fe940c8e880fb6345837fe7b5f51b22a69c1ea0fbeccab4d67507fb0ae8507b",
+  "backend/app/alpha/paper_l1_alpha.py": "040eb5c95e05eb1f97f9f96d92e11d0e07b98e8b73f376d768b02b3bdd2b4b4d",
+  "backend/app/research/paper_models.py": "a9a2aba942e16f706e53f7d5864e92ed0daab525a10a939753a83b640d84eb8b"
+}

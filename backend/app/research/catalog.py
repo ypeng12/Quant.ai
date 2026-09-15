@@ -13,6 +13,9 @@ BUNDLES={
     'conditional_two_weeks':'conditional_research_20260913',
     'incremental_two_weeks':'incremental_research_20260913_v2',
     'incremental_earlier':'incremental_earlier_20260913_v2',
+    'holding_two_weeks':'holding_lab_20260914',
+    'holding_today':'holding_today_lab_20260914',
+    'holding_l1_today':'holding_l1_evidence_20260914',
 }
 
 

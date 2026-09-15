@@ -225,7 +225,16 @@ class LiveTradingRunner:
         path = path if os.path.isabs(path) else os.path.join(backend_dir, path)
         modified = os.stat(path).st_mtime_ns
         if getattr(self, "_quant_model_key", None) != (path, modified):
-            self._quant_fitted_model = PolicyModel.load(path)
+            with open(path) as handle:
+                kind = json.load(handle).get("kind")
+            if kind == "calibrated_direction_holding_v1":
+                from app.research.calibrated_holding import CalibratedHoldingModel
+                self._quant_fitted_model = CalibratedHoldingModel.load(path)
+            elif kind == "direction_holding_v1":
+                from app.research.holding_policy import HoldingModel
+                self._quant_fitted_model = HoldingModel.load(path)
+            else:
+                self._quant_fitted_model = PolicyModel.load(path)
             self._quant_model_key = (path, modified)
             self._quant_last_bar = None
         return self._quant_fitted_model
@@ -234,6 +243,33 @@ class LiveTradingRunner:
         if not hasattr(self, "_quant_execution_lock"):
             self._quant_execution_lock = threading.RLock()
         return self._quant_execution_lock
+
+    def _holding_l1_adjustment(self, model, weights, diagnostics, current, now, allowed, shortable, liquidation_at=None):
+        """Optional learned L1 residual; incompatible data preserves base decisions."""
+        directory = os.environ.get("QUANT_L1_RESIDUAL_DIR")
+        snapshot = os.environ.get("QUANT_L1_SNAPSHOT_PATH")
+        if not directory or not snapshot:
+            diagnostics["l1_state"] = "base_only_no_configured_residual_and_snapshot"
+            return weights, diagnostics
+        try:
+            from app.research.holding_l1 import HoldingL1Residual, packet_books, apply_residuals, base_model_contract
+            with open(snapshot) as handle:
+                books = packet_books(json.load(handle), now)
+            models = {}
+            for symbol in model.symbols:
+                path = os.path.join(directory, symbol + ".json")
+                if os.path.isfile(path): models[symbol] = HoldingL1Residual.load(path)
+            adjustment, status = apply_residuals(models, books, now, model.symbols, base_model_contract(model))
+            if any(row["state"] == "applied" for row in status.values()):
+                base_curve = diagnostics.get("raw_cumulative_forecast_bps", diagnostics["cumulative_forecast_bps"])
+                forecasts = {s: {h: base_curve[s][str(h*5)] / 10000
+                                  for h in model.spec.horizons} for s in model.symbols}
+                stamp = now.floor("5min") - pd.Timedelta(minutes=5)
+                weights, diagnostics = model.allocation(forecasts, current, stamp, allowed, shortable, adjustment, liquidation_at)
+            diagnostics["l1_state"] = status
+        except (OSError, ValueError, TypeError, KeyError) as exc:
+            diagnostics["l1_state"] = "base_only_" + type(exc).__name__
+        return weights, diagnostics
 
     def _run_quant_policy_cycle(self):
         with self._execution_mutex():
@@ -308,9 +344,11 @@ class LiveTradingRunner:
                 watchlist = set(load_watchlist())
                 allowed_symbols = tuple(symbol for symbol in symbols if symbol in watchlist)
                 self.active_tickers = list(allowed_symbols)
-                frames = {symbol: closed_bars(fetch_and_prepare_data(symbol, period="5d", interval="5m"), now) for symbol in symbols}
+                inputs = tuple(getattr(model, "input_symbols", symbols))
+                frames = {symbol: closed_bars(fetch_and_prepare_data(symbol, period="5d", interval="5m"), now) for symbol in inputs}
                 session_date = now.tz_convert("America/New_York").date()
-                frames = {symbol: frame.loc[frame.index.tz_convert("America/New_York").date == session_date] for symbol, frame in frames.items()}
+                if not hasattr(model, "live_target"):
+                    frames = {symbol: frame.loc[frame.index.tz_convert("America/New_York").date == session_date] for symbol, frame in frames.items()}
                 timestamps = {frame.index[-1] for frame in frames.values()}
                 if len(timestamps) != 1:
                     raise ValueError("The portfolio requires synchronized completed bars")
@@ -326,14 +364,26 @@ class LiveTradingRunner:
                     for symbol in symbols:
                         asset = self.adapter.client.get_asset(symbol)
                         shortable[symbol] = bool(self.strategy_params["allow_shorting"] and account.get("shorting_enabled") and self._order_field(asset, "shortable", False))
-                    forecast = model.forecast(frames)
-                    indices = [symbols.index(symbol) for symbol in allowed_symbols]
-                    weights = dict.fromkeys(symbols, 0.0)
-                    weights.update(target_weights(
-                        {symbol: forecast.mu[symbol] for symbol in allowed_symbols},
-                        forecast.covariance.take(indices, axis=0).take(indices, axis=1),
-                        {symbol: current[symbol] for symbol in allowed_symbols},
-                        model.spec, shortable=shortable, symbols=allowed_symbols))
+                    if hasattr(model, "live_target"):
+                        liquidation_at = close - pd.Timedelta(minutes=float(self.strategy_params["flatten_before_close_minutes"]))
+                        weights, diagnostics = model.live_target(frames, current, allowed=allowed_symbols,
+                            shortable=shortable, as_of=now, liquidation_at=liquidation_at)
+                        weights, diagnostics = self._holding_l1_adjustment(model, weights, diagnostics,
+                            current, now, allowed_symbols, shortable, liquidation_at)
+                        forecast_mu = {s: diagnostics["cumulative_forecast_bps"][s]["5"] / 10000 for s in symbols}
+                    else:
+                        forecast = model.forecast(frames)
+                        forecast_mu = forecast.mu
+                        indices = [symbols.index(symbol) for symbol in allowed_symbols]
+                        weights = dict.fromkeys(symbols, 0.0)
+                        weights.update(target_weights(
+                            {symbol: forecast.mu[symbol] for symbol in allowed_symbols},
+                            forecast.covariance.take(indices, axis=0).take(indices, axis=1),
+                            {symbol: current[symbol] for symbol in allowed_symbols},
+                            model.spec, shortable=shortable, symbols=allowed_symbols))
+                        diagnostics = {"feature_family": model.spec.feature_set, "l1_contributes": False,
+                                       "cost_assumption_bps": model.spec.cost_bps, "cost_verified": False}
+                    self._quant_decision_diagnostics = diagnostics
                     # User account concentration settings may be tighter than the
                     # validated artifact, never wider. No extra score multiplier.
                     cap = float(self.strategy_params["max_single_position_equity_pct"])
@@ -344,8 +394,9 @@ class LiveTradingRunner:
                     self.ticker_directions = {symbol: "LONG" if weight > 0 else "SHORT" if weight < 0 else "FLAT" for symbol, weight in weights.items()}
                     self.intraday_opportunities = {
                         symbol: {"ticker": symbol, "direction": self.ticker_directions[symbol],
-                                 "expected_return_bps": float(forecast.mu[symbol]) * 10000,
+                                 "expected_return_bps": float(forecast_mu[symbol]) * 10000,
                                  "round_trip_cost_bps": 2 * model.spec.cost_bps,
+                                 "cost_kind": "unverified_execution_assumption_not_broker_fee",
                                  "target_weight": weights[symbol], "bar_time": bar.isoformat(),
                                  "model": model.spec.name, "status": "model_forecast"}
                         for symbol in allowed_symbols
@@ -354,6 +405,7 @@ class LiveTradingRunner:
                                       "trained_before": model.trained_before,
                                       "bar_time": bar.isoformat(), "target_shares": dict(self._quant_targets),
                                       "unmodeled_watchlist_symbols": sorted(watchlist.difference(symbols)),
+                                      "decision_diagnostics": dict(getattr(self, "_quant_decision_diagnostics", {})),
                                       "gross_limit": model.spec.gross_limit}
             except Exception as exc:
                 self.ticker_scores = {}

@@ -5,7 +5,8 @@ type Attribution = { symbol?: string; direction?: string; hour?: number; gross_p
 type Trial = {
   candidate: { name: string; features: string; model: string; portfolio: string };
   cost_bps: number; status: string; reason?: string;
-  summary?: { net_pnl: number; gross_pnl: number; costs: number; max_drawdown: number; fill_count: number };
+  summary?: { net_pnl: number; gross_pnl: number; costs: number; max_drawdown: number; fill_count: number;
+    direction_switches?: number; mean_holding_minutes?: number | null };
   per_symbol?: Record<string, { net_pnl: number; costs: number }>;
   attribution?: { by_symbol: Attribution[]; by_direction: Attribution[]; by_hour: Attribution[] };
   fixed_order_stress_5bps?: { net_pnl?: number };
@@ -13,7 +14,7 @@ type Trial = {
 type Research = { evaluation_dates: string[]; symbols: string[]; starting_equity: number; cost_bps_per_side: number[];
   trials: Trial[]; selected_for_live: string | null; registered_at: string; source_matches_workspace: Record<string, boolean>;
   unverified_assumptions?: string[]; selected_for_future_paper?: string; retrospective_best?: string;
-  traded_symbols?: string[];
+  traded_symbols?: string[]; default_display_candidate?: string; cost_description?: string;
   stock_selection?: { day: string; validation_dates: string[]; selections: Record<string, { model: string; scores_mse_bps2: Record<string, number> }> }[];
   liquidity_rules?: { min_price: number; min_adv: number; min_market_cap: number; lookback_sessions: number };
   universe_admission?: { day: string; stocks: Record<string, { eligible: boolean; reason: string; last_price: number | null; adv: number | null; market_cap: number | null }> } };
@@ -39,6 +40,12 @@ const names: Record<string, string> = {
   incremental_equal: '日内等权对照', incremental_control: '原条件 Ridge · 冻结对照',
   incremental_slot: '加入历史同一时段收益', incremental_gap: '加入隔夜与日内交互',
   incremental_range: '加入区间结构与方向波动', incremental_all: '三组新增信息合并',
+  legacy_refit_h1: '旧量价特征 · 统一标签重训对照', paper31_h1: '31 特征 · 五分钟',
+  context_h1: '31 特征＋市场与时段 · 五分钟', context_curve: '多周期方向与持仓规划 · 未校准',
+  calibrated_legacy_curve: '量价多周期 · 过去五日预测校准', calibrated_context_curve: '扩展多周期 · 过去五日预测校准',
+  calibrated_legacy_curve_policy_cost5: '量价多周期校准 · 规划 5 bps',
+  holding_l1_base: '量价与市场多周期 · L1 对照基线', holding_l1_plus_l1: '同一基线＋真实 IEX 残差 · 单日诊断',
+  equal_weight_hold: '开盘等权持有 · 15:55 平仓', simple_trend: '相对开盘价方向 · 简单对照',
 };
 
 export function ResearchPlatformResults() {
@@ -56,7 +63,7 @@ export function ResearchPlatformResults() {
         if (!data.success || data.status !== 'complete') throw new Error(data.reason || '研究产物未通过校验');
         setResearch(data.research);
         setCost(data.research.cost_bps_per_side.includes(5) ? 5 : data.research.cost_bps_per_side[0]);
-        setChosen(data.research.selected_for_future_paper || (dataset.startsWith('incremental_') ? 'incremental_control' : dataset === 'conditional_two_weeks' ? 'conditional_state_h1' : dataset === 'noncrypto_two_weeks' ? 'noncrypto_stock_selector' : dataset === 'direction_two_weeks' ? 'market_curve_ridge' : data.research.liquidity_rules ? (data.research.liquidity_rules.min_market_cap === 0 ? 'liquid_dynamic_70' : 'largecap_integrated') : 'context_robust'));
+        setChosen(data.research.default_display_candidate || data.research.selected_for_future_paper || (dataset.startsWith('incremental_') ? 'incremental_control' : dataset === 'conditional_two_weeks' ? 'conditional_state_h1' : dataset === 'noncrypto_two_weeks' ? 'noncrypto_stock_selector' : dataset === 'direction_two_weeks' ? 'market_curve_ridge' : data.research.liquidity_rules ? (data.research.liquidity_rules.min_market_cap === 0 ? 'liquid_dynamic_70' : 'largecap_integrated') : 'context_robust'));
       }).catch(e => { if (e.name !== 'AbortError') setError(e.message); });
     return () => controller.abort();
   }, [dataset]);
@@ -71,6 +78,9 @@ export function ResearchPlatformResults() {
       <option value="largecap_two_weeks">主流大市值股票 · 动态配仓 · 两周</option>
       <option value="active_two_weeks">积极配仓与单股集中对照 · 两周</option>
       <option value="direction_two_weeks">四股方向模型修改 · 大盘/行业与多期配仓</option>
+      <option value="holding_two_weeks">方向与持仓改进 · 全部候选及失败结果 · 8/31—9/14</option>
+      <option value="holding_today">方向与持仓改进 · 9/14 同资金独立回放</option>
+      <option value="holding_l1_today">真实 IEX 增量 · 9/11 训练、9/14 单日诊断</option>
     </select>
   </label>;
   if (error) return <div>{datasetSelector}<p role="alert" className="p-5 text-amber-300">统一研究结果暂不可用：{error}</p></div>;
@@ -99,12 +109,12 @@ export function ResearchPlatformResults() {
         <tbody>{Object.entries(research.universe_admission.stocks).map(([s, r]) => <tr key={s}><td className="p-2">{s}</td><td className="p-2">{r.eligible ? '符合条件' : ({ small_or_unknown_market_cap: '市值不足或未知', low_price: '股价不足', low_dollar_volume: '成交额不足', incomplete_prior_sessions: '历史数据不完整' }[r.reason] || r.reason)}</td><td className="p-2">{r.last_price === null ? '缺数据' : money(r.last_price)}</td><td className="p-2">{r.adv === null ? '缺数据' : money(r.adv)}</td><td className="p-2">{r.market_cap === null ? '缺数据' : money(r.market_cap)}</td></tr>)}</tbody>
       </table></div>
     </details>}
-    <label className="flex items-center gap-3">每笔单边成本
+    <label className="flex items-center gap-3">每笔单边模拟成本（非已核实手续费）
       <select aria-label="每笔单边成本" value={cost} onChange={e => setCost(Number(e.target.value))} className="bg-slate-900 border border-slate-700 rounded p-2">
         {research.cost_bps_per_side.map(c => <option key={c} value={c}>{c} bps（{(c / 100).toFixed(2)}%）</option>)}
       </select>
     </label>
-    <p className="text-xs text-slate-400">每档成本都重新计算仓位并实际扣减同档成本，因此订单路径可能改变；高成本下收益更高不代表成本能创造收益。</p>
+    <p className="text-xs text-slate-400">{research.cost_description || '每档成本都重新计算仓位并实际扣减同档成本，因此订单路径可能改变；高成本下收益更高不代表成本能创造收益。'}</p>
     <div className="overflow-x-auto"><table className="w-full text-left text-xs">
       <thead><tr>{['候选', '毛盈亏', '成本', '净盈亏', '最大回撤', '成交笔数'].map(h => <th key={h} className="p-3 border-b border-slate-700">{h}</th>)}</tr></thead>
       <tbody>{trials.map(t => <tr key={t.candidate.name} className={chosen === t.candidate.name ? 'bg-slate-800/60' : ''}>
@@ -116,6 +126,10 @@ export function ResearchPlatformResults() {
         </> : <td colSpan={5} className="p-3 text-amber-300">无法评估：{t.reason}</td>}
       </tr>)}</tbody>
     </table></div>
+    {selected?.summary?.direction_switches !== undefined && <p className="text-xs text-slate-300">
+      当前候选：方向切换 {selected.summary.direction_switches} 次；平均持仓时长 {selected.summary.mean_holding_minutes?.toFixed(1) ?? '—'} 分钟。
+      这些是模拟持仓统计，不代表实际券商成交；无固定最低持仓时间。
+    </p>}
     {chosen === 'noncrypto_stock_selector' && research.stock_selection && <details open>
       <summary className="cursor-pointer text-sky-300">逐日逐股模型选择依据</summary>
       <p className="mt-2 text-xs text-slate-400">每只股票独立比较前三种模型在此前五个交易日的样本外预测误差，选日均平方误差最低者。不是按当天或两周事后利润挑选；误差更低也不保证净收益更高。</p>

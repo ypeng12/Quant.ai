@@ -21,3 +21,10 @@ Always format git commit messages like:
 - Do not remove, hide, disable, or substantially redesign existing UI/UX without the user's explicit authorization for that change. A research or model audit is not authorization to retire a display.
 - Fix model/data problems in the underlying implementation. Where needed, use concise and accurate source/demo labels while retaining functional presentations.
 - The current restoration of the classic wave terminal, ML assistant, and account funds display is explicitly authorized.
+
+## Trading Cost Evidence and Labels — User Requirement 2026-09-14
+- Never describe assumed backtest slippage (including 2/5 bps) as an actual Alpaca fee or account deduction. Label assumed costs explicitly in reports, UI and explanations.
+- Separate broker commission, regulatory fees, borrowing/financing charges, spread and slippage. Unverified actual charges are unknown, not confirmed zero and not a fixed bps deduction.
+- Report gross simulated PnL and net PnL under clearly named cost scenarios separately from actual account PnL. Do not subtract modeled slippage again from actual broker fill prices.
+- Calibrate execution assumptions against timestamped quotes and actual fills, and reconcile explicit charges with broker activity/statement evidence before claiming verified costs.
+- Track the requested future changes in `docs/COST_ACCOUNTING_FOLLOWUP.md`. Preserve existing UI/UX and historical experiment provenance when implementing them.
