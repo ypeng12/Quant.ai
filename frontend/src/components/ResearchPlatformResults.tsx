@@ -49,7 +49,7 @@ const names: Record<string, string> = {
 };
 
 export function ResearchPlatformResults() {
-  const [dataset, setDataset] = useState('noncrypto_two_weeks');
+  const [dataset, setDataset] = useState('holding_today');
   const [research, setResearch] = useState<Research | null>(null);
   const [error, setError] = useState('');
   const [cost, setCost] = useState(5);

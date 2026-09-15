@@ -1530,15 +1530,20 @@ def get_action_feed(limit: int = 100):
 
 @app.get("/api/live/trade_history")
 def get_trade_history():
-    """直接返回 trade_history.json 原始文件，零中间层。"""
+    """Preserve archives; reconcile today's display against current-account fills."""
+    from app.broker.fill_accounting import display_history
     history_file = os.path.join(os.path.dirname(__file__), "trade_history.json")
-    return FileResponse(history_file, media_type="application/json")
+    if not os.path.isfile(history_file):
+        return display_history({'trade_history': []})
+    with open(history_file, encoding='utf-8') as handle:
+        return display_history(json.load(handle))
 
 
 @app.get("/api/live/today_summary")
 def get_today_summary():
     """Returns today's win/loss/PnL summary for the live trading bot."""
-    summary = live_runner.get_today_summary()
+    from app.broker.fill_accounting import display_summary
+    summary = display_summary(live_runner.get_today_summary(),live_runner.trade_history)
     return {"success": True, "summary": summary}
 
 
