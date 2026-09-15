@@ -1,0 +1,9 @@
+{
+  "sndk_positive_mark_pnl": 1359.7403564453125,
+  "sndk_negative_mark_pnl": 1143.8912353515625,
+  "mark_event_gross_profit_factor": 1.1886972418557007,
+  "gross_pnl": 215.84912109375,
+  "assumed_cost": 108.1937410888672,
+  "net_pnl": 107.65538000488283,
+  "interpretation": "Gross mark-event profit factor, not closed-trade PF or average win/loss ratio."
+}

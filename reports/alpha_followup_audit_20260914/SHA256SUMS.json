@@ -1,0 +1,20 @@
+{
+  "TSLA_trade_classification.csv": "21a8b3b3d327c22d7e47e4bc97da668abf977056e2bc779cad458c8829bae549",
+  "direction_rows.csv": "8dcef830d2b8e14668a971d676d6ca18e8f78859e89af7a0e828757c20e7fb28",
+  "registry.json": "0f97f3b9bcb4280b601ce6ac52ba712f052a6665f448d6ffeed26727acd9440e",
+  "quality_summary.csv": "bdc1aacb07f3b0ae0f915392706c1f1364bb74b7212afb07b2e30afa677b540c",
+  "SNDK_trade_classification.csv": "2c28750b6b1c3eff3aadb1b5b9bde98ae7548faec1b7dac3fe4c2af4e0737d0b",
+  "l1_incremental_attribution.csv": "1e2062da35ed8dbf6ff6a1e73e45b659ff2c536bb432a7da731e24f828bf91e0",
+  "REPORT.md": "04c396c541dfc8933de246b9a0171b3c8137299ad43b5b0375e0510116e2c0f5",
+  "PLTR_quote_quality.csv": "b4bbead256f3714acb0e129c7461f752b3aed117a2dad6bd46c0f59409ecf774",
+  "SNDK_quote_quality.csv": "d4cfe3afb1a5be7c69a4e573e4fb888c3a043960896828af480ead0659e6eb3c",
+  "TSLA_quote_quality.csv": "4e429ab249ad1ec2403ce009ed19dc7029de8ff2a57a10e035ae74983bda03fd",
+  "NVDA_quote_quality.csv": "c852c3fffd79416855393c723cf598dc142f00ee4d17cbcbb8fb92f4eec1bc40",
+  "NVDA_trade_classification.csv": "9e1fc4de87c4944cca4acfdcb4765eff914b031bece9e8f4d9100556aabb613c",
+  "direction_summary.csv": "789133febfa71dd38197a49186fd530cc2178c304894b12c00c22980e135bbf4",
+  "filled_position_intervals.csv": "5fbab29c0e8004a1ee7f89308554f62008a284f0b2c1a6e0f9a35a37972dcea2",
+  "context_hourly_attribution.csv": "1952dbaff212f49fe77133fbec8f6ceba1dc65ac579aea70807db00c998a74a1",
+  "context_profit_factor.json": "1640d5104d1f84368c8454a0a48ebc55dcb872cef44c44723b5a62293aba8794",
+  "pnl_summary.csv": "10eb7778eef8864beb0947be13301543d162d45c242268aaec179dc3f7336539",
+  "PLTR_trade_classification.csv": "a1af422da402f3eea2a8e28b7659786f38e2bfa1379b5fee862d204cf84ad2a5"
+}

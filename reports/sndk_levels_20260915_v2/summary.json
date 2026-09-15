@@ -1,0 +1,16 @@
+{
+  "symbol": "SNDK",
+  "day": "2026-09-15",
+  "as_of": "2026-09-15T11:50:00-04:00",
+  "last_completed_close": 1536.8563232421875,
+  "vwap_ohlcv_proxy": 1554.7939261921524,
+  "first_close_below_opening_low": "2026-09-15T10:55:00-04:00",
+  "source": "Yahoo OHLCV via project data_manager; saved provider snapshot, not consolidated tick VWAP",
+  "source_sha256": "dde54b65789331b5d4ac2dee2cff6aa008fb15c4f54de4f81e7b626a22680563",
+  "pivot_confirmation": "2 observed bars each side; confirmed at rightmost bar close; descriptive convention",
+  "tests": [
+    "prefix reference availability equality",
+    "prefix causal context equality"
+  ],
+  "strategy_modified": false
+}

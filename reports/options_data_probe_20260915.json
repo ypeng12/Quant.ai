@@ -1,0 +1,339 @@
+{
+  "created_at_utc": "2026-09-15T19:54:25.810103+00:00",
+  "source": "Alpaca read-only authenticated APIs",
+  "snapshots_not_historical": true,
+  "symbols": {
+    "SNDK": {
+      "contract_metadata": {
+        "http_status": 200,
+        "query": {
+          "underlying_symbols": "SNDK",
+          "expiration_date": "2026-09-18",
+          "strike_price_gte": 1500,
+          "strike_price_lte": 1600,
+          "type": "call",
+          "limit": 1
+        },
+        "contracts": [
+          {
+            "symbol": "SNDK260918C01500000",
+            "underlying_symbol": "SNDK",
+            "expiration_date": "2026-09-18",
+            "strike_price": "1500",
+            "type": "call",
+            "size": "100",
+            "open_interest": "1631",
+            "open_interest_date": "2026-09-11",
+            "close_price": "76.1",
+            "close_price_date": "2026-09-14",
+            "tradable": true
+          }
+        ],
+        "has_more": true
+      },
+      "latest_indicative_snapshot": {
+        "query": {
+          "symbols": "SNDK260918C01500000",
+          "feed": "indicative"
+        },
+        "http_status": 200,
+        "data": {
+          "next_page_token": null,
+          "snapshots": {
+            "SNDK260918C01500000": {
+              "dailyBar": {
+                "c": 57.55,
+                "h": 94.9,
+                "l": 48,
+                "n": 305,
+                "o": 83.3,
+                "t": "2026-09-15T04:00:00Z",
+                "v": 445,
+                "vw": 60.684607
+              },
+              "greeks": {
+                "delta": 0.6443,
+                "gamma": 0.0036,
+                "rho": 0.0763,
+                "theta": -6.5122,
+                "vega": 0.5181
+              },
+              "impliedVolatility": 0.7429,
+              "latestQuote": {
+                "ap": 61.33,
+                "as": 18,
+                "ax": "C",
+                "bp": 59.07,
+                "bs": 37,
+                "bx": "E",
+                "c": "A",
+                "t": "2026-09-15T19:54:25.162405172Z"
+              },
+              "latestTrade": {
+                "c": "I",
+                "p": 56.89,
+                "s": 1,
+                "t": "2026-09-15T19:37:53.043785787Z",
+                "x": "I"
+              },
+              "minuteBar": {
+                "c": 57.55,
+                "h": 57.55,
+                "l": 57.55,
+                "n": 1,
+                "o": 57.55,
+                "t": "2026-09-15T19:39:00Z",
+                "v": 1,
+                "vw": 57.55
+              },
+              "prevDailyBar": {
+                "c": 76.1,
+                "h": 100,
+                "l": 57.2,
+                "n": 553,
+                "o": 75,
+                "t": "2026-09-14T04:00:00Z",
+                "v": 1129,
+                "vw": 78.118175
+              }
+            }
+          }
+        }
+      },
+      "historical_bars_permission_sample": {
+        "query": {
+          "symbols": "SNDK260918C01500000",
+          "timeframe": "5Min",
+          "start": "2026-09-14T13:30:00Z",
+          "end": "2026-09-15T19:30:00Z",
+          "limit": 5,
+          "sort": "desc"
+        },
+        "http_status": 200,
+        "data": {
+          "bars": {
+            "SNDK260918C01500000": [
+              {
+                "c": 57.64,
+                "h": 57.64,
+                "l": 52.5,
+                "n": 7,
+                "o": 52.5,
+                "t": "2026-09-15T19:30:00Z",
+                "v": 7,
+                "vw": 55.542857
+              },
+              {
+                "c": 51,
+                "h": 52,
+                "l": 51,
+                "n": 4,
+                "o": 51.6,
+                "t": "2026-09-15T19:25:00Z",
+                "v": 8,
+                "vw": 51.2
+              },
+              {
+                "c": 49.92,
+                "h": 49.92,
+                "l": 49,
+                "n": 2,
+                "o": 49,
+                "t": "2026-09-15T19:15:00Z",
+                "v": 3,
+                "vw": 49.306667
+              },
+              {
+                "c": 50.07,
+                "h": 50.81,
+                "l": 50.07,
+                "n": 4,
+                "o": 50.5,
+                "t": "2026-09-15T19:10:00Z",
+                "v": 4,
+                "vw": 50.445
+              },
+              {
+                "c": 51.65,
+                "h": 51.66,
+                "l": 49.9,
+                "n": 5,
+                "o": 49.9,
+                "t": "2026-09-15T19:05:00Z",
+                "v": 7,
+                "vw": 51.27
+              }
+            ]
+          },
+          "next_page_token": "U05ESzI2MDkxOEMwMTUwMDAwMHxNfDE3ODk0OTg5ODAwMDAwMDAwMDA="
+        }
+      }
+    },
+    "TSLA": {
+      "contract_metadata": {
+        "http_status": 200,
+        "query": {
+          "underlying_symbols": "TSLA",
+          "expiration_date": "2026-09-18",
+          "strike_price_gte": 350,
+          "strike_price_lte": 370,
+          "type": "call",
+          "limit": 1
+        },
+        "contracts": [
+          {
+            "symbol": "TSLA260918C00350000",
+            "underlying_symbol": "TSLA",
+            "expiration_date": "2026-09-18",
+            "strike_price": "350",
+            "type": "call",
+            "size": "100",
+            "open_interest": "5812",
+            "open_interest_date": "2026-09-11",
+            "close_price": "12.28",
+            "close_price_date": "2026-09-14",
+            "tradable": true
+          }
+        ],
+        "has_more": true
+      },
+      "latest_indicative_snapshot": {
+        "query": {
+          "symbols": "TSLA260918C00350000",
+          "feed": "indicative"
+        },
+        "http_status": 200,
+        "data": {
+          "next_page_token": null,
+          "snapshots": {
+            "TSLA260918C00350000": {
+              "dailyBar": {
+                "c": 8.84,
+                "h": 14.44,
+                "l": 8.65,
+                "n": 1292,
+                "o": 11.31,
+                "t": "2026-09-15T04:00:00Z",
+                "v": 4236,
+                "vw": 12.658789
+              },
+              "greeks": {
+                "delta": 0.653,
+                "gamma": 0.0235,
+                "rho": 0.0183,
+                "theta": -0.991,
+                "vega": 0.1191
+              },
+              "impliedVolatility": 0.4876,
+              "latestQuote": {
+                "ap": 9.59,
+                "as": 80,
+                "ax": "M",
+                "bp": 9.49,
+                "bs": 51,
+                "bx": "E",
+                "c": "A",
+                "t": "2026-09-15T19:54:25.861224896Z"
+              },
+              "latestTrade": {
+                "c": "a",
+                "p": 9.28,
+                "s": 1,
+                "t": "2026-09-15T19:39:19.450311538Z",
+                "x": "B"
+              },
+              "minuteBar": {
+                "c": 8.84,
+                "h": 8.95,
+                "l": 8.65,
+                "n": 9,
+                "o": 8.95,
+                "t": "2026-09-15T19:39:00Z",
+                "v": 33,
+                "vw": 8.742121
+              },
+              "prevDailyBar": {
+                "c": 12.28,
+                "h": 19.65,
+                "l": 11.25,
+                "n": 1153,
+                "o": 13,
+                "t": "2026-09-14T04:00:00Z",
+                "v": 3848,
+                "vw": 14.135317
+              }
+            }
+          }
+        }
+      },
+      "historical_bars_permission_sample": {
+        "query": {
+          "symbols": "TSLA260918C00350000",
+          "timeframe": "5Min",
+          "start": "2026-09-14T13:30:00Z",
+          "end": "2026-09-15T19:30:00Z",
+          "limit": 5,
+          "sort": "desc"
+        },
+        "http_status": 200,
+        "data": {
+          "bars": {
+            "TSLA260918C00350000": [
+              {
+                "c": 9.46,
+                "h": 9.75,
+                "l": 9.46,
+                "n": 16,
+                "o": 9.75,
+                "t": "2026-09-15T19:30:00Z",
+                "v": 20,
+                "vw": 9.6355
+              },
+              {
+                "c": 9.66,
+                "h": 9.95,
+                "l": 9.66,
+                "n": 10,
+                "o": 9.95,
+                "t": "2026-09-15T19:20:00Z",
+                "v": 46,
+                "vw": 9.777174
+              },
+              {
+                "c": 10.15,
+                "h": 10.2,
+                "l": 9.9,
+                "n": 7,
+                "o": 9.97,
+                "t": "2026-09-15T19:15:00Z",
+                "v": 73,
+                "vw": 10.011781
+              },
+              {
+                "c": 9.8,
+                "h": 10.25,
+                "l": 9.8,
+                "n": 10,
+                "o": 10.25,
+                "t": "2026-09-15T19:10:00Z",
+                "v": 30,
+                "vw": 9.955667
+              },
+              {
+                "c": 10.52,
+                "h": 10.54,
+                "l": 10.45,
+                "n": 5,
+                "o": 10.5,
+                "t": "2026-09-15T19:05:00Z",
+                "v": 23,
+                "vw": 10.516087
+              }
+            ]
+          },
+          "next_page_token": "VFNMQTI2MDkxOEMwMDM1MDAwMHxNfDE3ODk0OTkwNDAwMDAwMDAwMDA="
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,5 @@
+time,ticker,action,shares,price,pnl,pnl_complete,accounting_basis
+2026-09-14 09:32:59,SNDK,BUY,18.0,1523.925,0.0,True,All available account FILL activities; inventory reconciled; before unverified explicit fees
+2026-09-14 09:33:40,SNDK,BUY,17.0,1526.6088235294117,0.0,True,All available account FILL activities; inventory reconciled; before unverified explicit fees
+2026-09-14 20:00:01,TSLA,COVER,10.0,360.36,1.1,True,All available account FILL activities; inventory reconciled; before unverified explicit fees
+2026-09-14 20:00:09,SNDK,SELL,35.0,1562.86,1317.1,True,All available account FILL activities; inventory reconciled; before unverified explicit fees

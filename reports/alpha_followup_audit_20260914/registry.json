@@ -1,0 +1,38 @@
+{
+  "status": "complete",
+  "evaluation_day": "2026-09-14",
+  "inputs": {
+    "/Users/yuliangpeng/.local/share/quant-l1/paper-repair-work/reports/sndk_day_audit_20260914/SNDK_20260914_COMPLETE_TIMELINE.csv": "7d49b0e5960eab2c0fd078837babe28da183176f9a65e57b55851d00c89c86b2",
+    "/Users/yuliangpeng/.local/share/quant-l1/paper-repair-work/reports/holding_today_lab_20260914/bars/SNDK.parquet": "cb726c15d0c769a17a3336e2ae2ec718a1e2046cf2013ed772435fb89c802ffd",
+    "/Users/yuliangpeng/.local/share/quant-l1/paper-repair-work/reports/holding_l1_evidence_20260914/result.json": "463df7fdfd2dab872f719e486291cbb1aaadfb48bebcb0a28f1590b7b0d45eeb",
+    "/Users/yuliangpeng/.local/share/quant-l1/data/holding_iex_20260914_quotes/2026-09-14/SNDK.jsonl": "c33c4e7d036ddd816c304b98d84b9717dc1eb848774b39031bb1a8467ecb21e9",
+    "/Users/yuliangpeng/.local/share/quant-l1/data/holding_iex_20260914_trades/2026-09-14/SNDK.jsonl": "e8afc7fc30931bd7aff0797663fe627535aea5b6672c07d49290ce60022b0daa",
+    "/Users/yuliangpeng/.local/share/quant-l1/paper-repair-work/reports/holding_l1_evidence_20260914/SNDK_2026-09-14_features.parquet": "1eb504c4e71f8a2416e48b3ac5cae5d3000fcb8e5dfe1203c486187ffb8ab379",
+    "/Users/yuliangpeng/.local/share/quant-l1/data/holding_iex_20260914_quotes/2026-09-14/TSLA.jsonl": "284855c11b131f1b3f4f1ac1fad8fc1b9d973972801eaa0a10c11d8cb1abcfdc",
+    "/Users/yuliangpeng/.local/share/quant-l1/data/holding_iex_20260914_trades/2026-09-14/TSLA.jsonl": "773fcd2d6d7681edd8c90fd7cd201b05b1f6cd5f02b587c05c10b0f2906fcbf5",
+    "/Users/yuliangpeng/.local/share/quant-l1/paper-repair-work/reports/holding_l1_evidence_20260914/TSLA_2026-09-14_features.parquet": "a734413c877582b1715a4c42e265287fb4009cff9c75e0d4c313c3defddf6335",
+    "/Users/yuliangpeng/.local/share/quant-l1/data/holding_iex_20260914_quotes/2026-09-14/PLTR.jsonl": "a28bf088b191b9d1ef3be2bdfe4d9380b400385425c21023d85b17905f684766",
+    "/Users/yuliangpeng/.local/share/quant-l1/data/holding_iex_20260914_trades/2026-09-14/PLTR.jsonl": "ccefcd9ef9c7f30a3337c7464a6b2ec8e523c469fc4bfcca24ed40a3dc585685",
+    "/Users/yuliangpeng/.local/share/quant-l1/paper-repair-work/reports/holding_l1_evidence_20260914/PLTR_2026-09-14_features.parquet": "6096be1aff3ee0b38156df1c0cfc60933a6ae8c8eac5bf3efc7c13752d75e734",
+    "/Users/yuliangpeng/.local/share/quant-l1/data/holding_iex_20260914_quotes/2026-09-14/NVDA.jsonl": "6f7e284f4360381280a9e64eb825606a6a1f8d3744581a4774d7c96888c30dcf",
+    "/Users/yuliangpeng/.local/share/quant-l1/data/holding_iex_20260914_trades/2026-09-14/NVDA.jsonl": "ed8d882fb591435f649ff37c118c3ee844cf0439bef199cabff416bb29f4b035",
+    "/Users/yuliangpeng/.local/share/quant-l1/paper-repair-work/reports/holding_l1_evidence_20260914/NVDA_2026-09-14_features.parquet": "71ea7b603ecbc22708b9c8416ab4f3e3036ef826b941459472a121a99a7c4311",
+    "/Users/yuliangpeng/.local/share/quant-l1/paper-repair-work/reports/holding_today_lab_20260914/calibrated_context_curve/fills.csv": "01fcf2df9f64c849643ca0e1fc127cd346a39945be7bb10dae149795e2343da0",
+    "/Users/yuliangpeng/.local/share/quant-l1/paper-repair-work/reports/holding_today_lab_20260914/equal_weight_hold/fills.csv": "6e2ced9338debbeeaacb0b3c7d437de66f6200791093d3452a2e9f19e1dba1ef",
+    "/Users/yuliangpeng/.local/share/quant-l1/paper-repair-work/reports/holding_l1_evidence_20260914/base_fills.csv": "54384dff3380ac4837b7e3351e5e347d04e6218d1b9bf45167a83b7ea4dc306c",
+    "/Users/yuliangpeng/.local/share/quant-l1/paper-repair-work/reports/holding_l1_evidence_20260914/plus_l1_fills.csv": "74a94958c9620a5689e241e3722bc1b7f69b91a0121ade41a8729cb6ca5a4634",
+    "/Users/yuliangpeng/.local/share/quant-l1/paper-repair-work/reports/holding_today_lab_20260914/calibrated_context_curve/attribution.csv": "0d4576779d671a32d33c2d16d38dd2d60caf5c7817cd3bad95acf6b2a773e476",
+    "/Users/yuliangpeng/.local/share/quant-l1/paper-repair-work/scripts/audit_alpha_followup.py": "8ea538baa57eb314cbab16c74bfb365dfbaea3a2a0ab7da9db38d98449048121"
+  },
+  "actual_broker_fees_verified": false,
+  "live_model_changed": false,
+  "performance_verified": false,
+  "checks": [
+    "recomputed forward labels",
+    "raw source hashes",
+    "raw feature equality",
+    "signed trade equality",
+    "position inventory",
+    "cashflow reconciliation"
+  ]
+}

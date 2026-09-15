@@ -1852,6 +1852,13 @@ def get_dashboard_market_data(ticker: str = "TSLA", date: str = "", interval: st
         return {"success": False, "error": str(exc)}
 
 
+@app.get("/api/dashboard/price_replay")
+def get_dashboard_price_replay(ticker: str = "SNDK", date: str = "", variant: str = "levels_error_risk"):
+    """Read saved price, simulated fills and ledger; never run research or trade."""
+    from app.dashboard.price_replay import price_replay
+    return price_replay(ticker, date, variant)
+
+
 @app.get("/api/dashboard/trades")
 def get_dashboard_trades(ticker: str = "TSLA", date: str = ""):
     from app.ml.dashboard_market import archived_fills
