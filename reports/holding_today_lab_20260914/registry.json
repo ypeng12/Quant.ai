@@ -23,7 +23,7 @@
   "cost_bps_per_side": [
     5
   ],
-  "cost_description": "\u7b56\u7565\u89c4\u5212\u6cbf\u7528\u5355\u8fb9 2 bps \u5047\u8bbe\uff1b\u6210\u4ea4\u8d26\u672c\u6309\u5355\u8fb9 5 bps \u538b\u529b\u60c5\u666f\u6263\u51cf\u3002\u4e24\u8005\u5747\u975e\u5238\u5546\u5b9e\u9645\u624b\u7eed\u8d39\u3002",
+  "cost_description": "\u6210\u4ea4\u8d26\u672c\u7edf\u4e00\u6309\u5355\u8fb9 5 bps \u6a21\u62df\u3002\u9ed8\u8ba4\u5019\u9009\u5185\u90e8\u89c4\u5212\u6210\u672c\u4e3a 2 bps\uff1b\u6807\u6ce8\u201c\u89c4\u5212 5 bps\u201d\u7684\u5019\u9009\u540c\u65f6\u6309 5 bps \u89c4\u5212\u3002\u4e24\u8005\u5747\u975e\u5238\u5546\u5b9e\u9645\u624b\u7eed\u8d39\u3002",
   "trials": [
     {
       "candidate": {
@@ -240,7 +240,7 @@
         }
       },
       "experiment_registry": "experiments/0/registry.json",
-      "policy_cost_bps": 2
+      "policy_cost_bps": 2.0
     },
     {
       "candidate": {
@@ -457,7 +457,7 @@
         }
       },
       "experiment_registry": "experiments/0/registry.json",
-      "policy_cost_bps": 2
+      "policy_cost_bps": 2.0
     },
     {
       "candidate": {
@@ -884,6 +884,223 @@
       },
       "experiment_registry": "experiments/0/registry.json",
       "policy_cost_bps": null
+    },
+    {
+      "candidate": {
+        "name": "calibrated_legacy_curve_policy_cost5",
+        "features": "legacy",
+        "model": "Ridge with prior calibration",
+        "portfolio": "costed return curve"
+      },
+      "status": "complete",
+      "cost_bps": 5,
+      "summary": {
+        "start": "2026-09-14",
+        "end": "2026-09-14",
+        "sessions": 1,
+        "starting_equity": 47006.42,
+        "ending_equity": 46663.90979837807,
+        "net_pnl": -342.5102016219316,
+        "net_return": -0.007286455799482949,
+        "gross_pnl": -229.40812683097707,
+        "costs": 113.10207479095456,
+        "turnover_dollars": 226204.14958190918,
+        "fill_count": 170,
+        "max_drawdown": -0.011664357132628811,
+        "max_gross_exposure": 0.9497697879485587,
+        "max_symbol_exposure": 0.7032416837393467,
+        "profitable_sessions": 0,
+        "direction_switches": 1,
+        "position_episodes": 10,
+        "mean_holding_minutes": 127.0,
+        "cost_scenarios": [
+          {
+            "one_way_bps": 0.0,
+            "assumed_execution_friction": 0.0,
+            "gross_pnl": -229.40812683097707,
+            "net_under_assumption": -229.40812683097707,
+            "commission_assumption": 0.0,
+            "actual_broker_fees": null,
+            "cost_verified": false,
+            "kind": "fixed_orderflow_sensitivity_not_actual_broker_deduction"
+          },
+          {
+            "one_way_bps": 2.0,
+            "assumed_execution_friction": 45.240829916381834,
+            "gross_pnl": -229.40812683097707,
+            "net_under_assumption": -274.6489567473589,
+            "commission_assumption": 0.0,
+            "actual_broker_fees": null,
+            "cost_verified": false,
+            "kind": "fixed_orderflow_sensitivity_not_actual_broker_deduction"
+          },
+          {
+            "one_way_bps": 5.0,
+            "assumed_execution_friction": 113.10207479095459,
+            "gross_pnl": -229.40812683097707,
+            "net_under_assumption": -342.5102016219316,
+            "commission_assumption": 0.0,
+            "actual_broker_fees": null,
+            "cost_verified": false,
+            "kind": "fixed_orderflow_sensitivity_not_actual_broker_deduction"
+          }
+        ],
+        "latest_day": {
+          "date": "2026-09-14",
+          "starting_equity": 47006.42,
+          "ending_equity": 46663.90979837807,
+          "net_pnl": -342.5102016219316,
+          "net_return": -0.007286455799482956,
+          "costs": 113.10207479095456,
+          "gross_pnl": -229.40812683097707,
+          "turnover_dollars": 226204.14958190918,
+          "turnover_equity_multiple": 4.812196920801652,
+          "fill_count": 170,
+          "max_drawdown": -0.011664357132628811,
+          "max_gross_exposure": 0.9497697879485587,
+          "max_abs_net_exposure": 0.9449792098587303,
+          "max_symbol_exposure": 0.7032416837393467,
+          "min_cash": 46663.90979837807,
+          "ending_cash": 46663.90979837807,
+          "ending_gross_exposure": 0.0,
+          "ending_net_exposure": 0.0,
+          "SNDK_net_pnl": 10.453059631350698,
+          "SNDK_costs": 26.278996032714844,
+          "SNDK_fill_count": 28,
+          "TSLA_net_pnl": 91.02994692993843,
+          "TSLA_costs": 29.342611663818357,
+          "TSLA_fill_count": 47,
+          "PLTR_net_pnl": -89.62045988464206,
+          "PLTR_costs": 12.339576095581052,
+          "PLTR_fill_count": 37,
+          "NVDA_net_pnl": -354.37274829865055,
+          "NVDA_costs": 45.14089099884032,
+          "NVDA_fill_count": 58
+        },
+        "feature_count": 12
+      },
+      "attribution": {
+        "net_pnl": -342.5102016219316,
+        "gross_pnl": -229.40812683105491,
+        "costs": 113.10207479095459,
+        "reconciled": true,
+        "by_symbol": [
+          {
+            "symbol": "NVDA",
+            "gross_pnl": -309.23185729980474,
+            "costs": 45.14089099884033,
+            "net_pnl": -354.3727482986451
+          },
+          {
+            "symbol": "PLTR",
+            "gross_pnl": -77.2808837890625,
+            "costs": 12.339576095581053,
+            "net_pnl": -89.62045988464355
+          },
+          {
+            "symbol": "SNDK",
+            "gross_pnl": 36.7320556640625,
+            "costs": 26.278996032714844,
+            "net_pnl": 10.453059631347656
+          },
+          {
+            "symbol": "TSLA",
+            "gross_pnl": 120.37255859374983,
+            "costs": 29.342611663818357,
+            "net_pnl": 91.02994692993147
+          }
+        ],
+        "by_direction": [
+          {
+            "direction": "long",
+            "gross_pnl": -24.240570068359546,
+            "costs": 44.02168849182129,
+            "net_pnl": -68.26225856018084
+          },
+          {
+            "direction": "short",
+            "gross_pnl": -205.16755676269537,
+            "costs": 69.0803862991333,
+            "net_pnl": -274.24794306182866
+          }
+        ],
+        "by_day": [
+          {
+            "date": "2026-09-14",
+            "gross_pnl": -229.40812683105491,
+            "costs": 113.10207479095457,
+            "net_pnl": -342.5102016220095
+          }
+        ],
+        "by_hour": [
+          {
+            "hour": 9,
+            "gross_pnl": -60.92314147949364,
+            "costs": 25.205470726013182,
+            "net_pnl": -86.12861220550681
+          },
+          {
+            "hour": 10,
+            "gross_pnl": 73.77897644043122,
+            "costs": 16.44846659851074,
+            "net_pnl": 57.33050984192048
+          },
+          {
+            "hour": 11,
+            "gross_pnl": -203.751617431641,
+            "costs": 20.81877266693115,
+            "net_pnl": -224.57039009857215
+          },
+          {
+            "hour": 12,
+            "gross_pnl": 4.023513793946734,
+            "costs": 13.983987068176269,
+            "net_pnl": -9.960473274229535
+          },
+          {
+            "hour": 13,
+            "gross_pnl": -84.6576843261731,
+            "costs": 6.917077117919921,
+            "net_pnl": -91.57476144409301
+          },
+          {
+            "hour": 14,
+            "gross_pnl": 4.726455688472299,
+            "costs": 7.12778448486328,
+            "net_pnl": -2.401328796390981
+          },
+          {
+            "hour": 15,
+            "gross_pnl": 37.39537048340256,
+            "costs": 22.600516128540036,
+            "net_pnl": 14.794854354862522
+          }
+        ]
+      },
+      "per_symbol": {
+        "NVDA": {
+          "gross_pnl": -309.23185729980474,
+          "costs": 45.14089099884033,
+          "net_pnl": -354.3727482986451
+        },
+        "PLTR": {
+          "gross_pnl": -77.2808837890625,
+          "costs": 12.339576095581053,
+          "net_pnl": -89.62045988464355
+        },
+        "SNDK": {
+          "gross_pnl": 36.7320556640625,
+          "costs": 26.278996032714844,
+          "net_pnl": 10.453059631347656
+        },
+        "TSLA": {
+          "gross_pnl": 120.37255859374983,
+          "costs": 29.342611663818357,
+          "net_pnl": 91.02994692993147
+        }
+      },
+      "experiment_registry": "experiments/1/registry.json",
+      "policy_cost_bps": 5.0
     }
   ],
   "selected_for_live": null,
@@ -903,7 +1120,13 @@
     "reports/holding_today_lab_20260914/experiments/0/source/backend/app/research/calibrated_holding.py": "db7632e3afe0cb813740a41f1b73a68541896a50e6b026940e30e0ada01d6702",
     "reports/holding_today_lab_20260914/experiments/0/source/backend/app/research/direction_policy.py": "7ffcd2d378027811330e735c9b061777fcc98aee26626dcdf8d4b49bd0f01145",
     "reports/holding_today_lab_20260914/experiments/0/source/backend/app/alpha/paper_bar_alpha.py": "7cc029022b617f36696f3a526701ed3f0e11fb11bd16618e1be36c97b5df39f1",
-    "reports/holding_today_lab_20260914/experiments/0/source/backend/app/research/paper_models.py": "a9a2aba942e16f706e53f7d5864e92ed0daab525a10a939753a83b640d84eb8b"
+    "reports/holding_today_lab_20260914/experiments/0/source/backend/app/research/paper_models.py": "a9a2aba942e16f706e53f7d5864e92ed0daab525a10a939753a83b640d84eb8b",
+    "reports/holding_today_lab_20260914/experiments/1/source/scripts/research_direction_holding.py": "4a2b99c5e952bde3ccec6968f569a98e749961da82fad5f5cb63e749d1900b6c",
+    "reports/holding_today_lab_20260914/experiments/1/source/backend/app/research/holding_policy.py": "d3d9ced1355403ec3fb904e77484064deb2a0d323b5e078b9da785a34cb800d9",
+    "reports/holding_today_lab_20260914/experiments/1/source/backend/app/research/calibrated_holding.py": "f499cb827f5f1aa2c184d2541885da7805bbe73aef218b81569fa46bfd23ebfc",
+    "reports/holding_today_lab_20260914/experiments/1/source/backend/app/research/direction_policy.py": "7ffcd2d378027811330e735c9b061777fcc98aee26626dcdf8d4b49bd0f01145",
+    "reports/holding_today_lab_20260914/experiments/1/source/backend/app/alpha/paper_bar_alpha.py": "7cc029022b617f36696f3a526701ed3f0e11fb11bd16618e1be36c97b5df39f1",
+    "reports/holding_today_lab_20260914/experiments/1/source/backend/app/research/paper_models.py": "a9a2aba942e16f706e53f7d5864e92ed0daab525a10a939753a83b640d84eb8b"
   },
   "data_paths": {
     "SNDK": "reports/holding_today_lab_20260914/bars/SNDK.parquet",
@@ -937,8 +1160,16 @@
     "experiments/0/source/backend/app/research/paper_models.py": "a9a2aba942e16f706e53f7d5864e92ed0daab525a10a939753a83b640d84eb8b",
     "experiments/0/source/backend/app/alpha/paper_bar_alpha.py": "7cc029022b617f36696f3a526701ed3f0e11fb11bd16618e1be36c97b5df39f1",
     "experiments/0/source/scripts/research_direction_holding.py": "5eafac867539f9bd894f7f6a5e76dd2f8c90c2e4c5b7c6d7a805531d90a19c37",
+    "experiments/1/registry.json": "9c4d27f4e0d7fc3e2d3b2c9155430b888242b146f66cf68c436716932b907a44",
+    "experiments/1/source/backend/app/research/direction_policy.py": "7ffcd2d378027811330e735c9b061777fcc98aee26626dcdf8d4b49bd0f01145",
+    "experiments/1/source/backend/app/research/holding_policy.py": "d3d9ced1355403ec3fb904e77484064deb2a0d323b5e078b9da785a34cb800d9",
+    "experiments/1/source/backend/app/research/calibrated_holding.py": "f499cb827f5f1aa2c184d2541885da7805bbe73aef218b81569fa46bfd23ebfc",
+    "experiments/1/source/backend/app/research/paper_models.py": "a9a2aba942e16f706e53f7d5864e92ed0daab525a10a939753a83b640d84eb8b",
+    "experiments/1/source/backend/app/alpha/paper_bar_alpha.py": "7cc029022b617f36696f3a526701ed3f0e11fb11bd16618e1be36c97b5df39f1",
+    "experiments/1/source/scripts/research_direction_holding.py": "4a2b99c5e952bde3ccec6968f569a98e749961da82fad5f5cb63e749d1900b6c",
     "models/calibrated_context_curve.json": "cbed3257904c8e31a2b3c5e81d764dadb032d5df8fdb42f7db124020ea725463",
     "models/calibrated_legacy_curve.json": "226fc44f0a91419e44a3e18a2e79525351107c4ac6b555d5fe2af005eb400d4c",
+    "models/calibrated_legacy_curve_policy_cost5.json": "2af1ae634336eb59322fdcb01b6a765ff7ee867258601bd23cc635856ef40c8c",
     "bars/NVDA.parquet": "940d1d905a87568de0ce419b6ea9d3e985ce941ee87f2e75fec419b18e984311",
     "bars/SPY.parquet": "c4ebb2cefa7c0d32512d707a2878455fac813f7990a902f42459c10c9fd457c5",
     "bars/QQQ.parquet": "c2a1e04bcade4c256bb63e3820244288fdeb5d1332d95d9e31d4b828ba4615b9",
@@ -946,6 +1177,12 @@
     "bars/PLTR.parquet": "4a9e338bcf45edb6f82f2d41db9c108ca7723635e66cc037b069c90c129c40dc",
     "bars/TSLA.parquet": "9b0f3dda68e4f97de43cabe8555b96b8ebf354b9c109eea1a51e0a87b2c61233",
     "bars/SOXX.parquet": "6c80b838c64dd9f79ee2c3de423354b20b461a57ab857aedb2c95200eb297383",
+    "calibrated_legacy_curve_policy_cost5/fills.csv": "983dc290c9c8044a932b4a3ff2c26f573e0623f6b65c570946584f2e60eb8560",
+    "calibrated_legacy_curve_policy_cost5/marks.csv": "cff21f0f4e07057dfe38e7e2610720f1675e4dec45969b8592c08d3d3445daae",
+    "calibrated_legacy_curve_policy_cost5/decisions.json": "be81ed473404e1364df87c1bd91e9e60d02366ec2df32ff2ddbd1e43cc76f5c7",
+    "calibrated_legacy_curve_policy_cost5/daily.csv": "ae7380954195b0753d3425af4452bdcbbbcf73cde5bbf6639f71fbd657b6687f",
+    "calibrated_legacy_curve_policy_cost5/attribution.csv": "6252c7adcbd465f5736aa7b97dbd5e092958fb3d5593f5f062e67ebdb4866e1f",
+    "calibrated_legacy_curve_policy_cost5/forecast_metrics.csv": "d208622d1ee7eb5ec77f3aa9cbdf43a8baee7e97946ad04245568ea91b05f5d2",
     "calibrated_context_curve/fills.csv": "01fcf2df9f64c849643ca0e1fc127cd346a39945be7bb10dae149795e2343da0",
     "calibrated_context_curve/marks.csv": "577b2458e7ae502448b0385c5f47edd9c653ee8f8ad4decb9a64ddb3418662f7",
     "calibrated_context_curve/decisions.json": "b1b26d19fe89b555c89e2bfaf9005c768c4dec71c18f880502272254b5b8b4aa",
