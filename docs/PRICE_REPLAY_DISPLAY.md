@@ -44,3 +44,11 @@ python3 scripts/export_price_replay_bundle.py --help
 - Dynamic Replay浏览器检查：历史价格线、可选K线、09:32:26这类非整5分钟成交标记、播放中无未来标记、图例保持以及快速换股票后的请求竞争。
 
 截图与检查摘要：`reports/price_replay_ui_20260915/`。本次未修改 `live_runner.py` 或替换线上模型。
+
+## 每日券商模式（2026-09-16）
+
+主图默认 `source=broker`，未传日期时显示美东当天，每15秒只读刷新。日期覆盖券商活动以来的交易日；`source=research` 保留原研究包。账户FILL活动分页读取并按ID去重，缓存按账户隔离存放在忽略目录 `backend/.runtime_state/broker_replay`。今日使用IEX行情，历史使用SIP行情；两者覆盖不同，页面显示来源。仅展示已完成5分钟价格，成交保留实际时间。
+
+买卖反转拆分为平仓/开仓标记；无法与当前库存核对时显示BUY/SELL且持仓与盈亏留空。日内盈亏包含相对前收的隔夜持仓市值变化，FIFO已实现盈亏另列，二者不等于账户净值变化。使用实际成交价，不重复扣模拟5bps；券商费用尚未核实。盘前盘后成交自动扩展横轴。
+
+最新验证：4项券商核算测试及前端生产构建通过。两天SNDK真实Paper成交与TSLA X63反事实对照见 `reports/daily_broker_replay_20260916/REPORT.md`。
