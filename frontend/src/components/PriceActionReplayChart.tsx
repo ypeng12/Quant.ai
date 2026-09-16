@@ -45,7 +45,7 @@ function bounds(values: number[], includeZero = false): [number, number] {
 
 export function PriceActionReplayChart({ ticker, watchlist, onSelectTicker, refreshKey }: Props) {
   const [date, setDate] = useState('');
-  const [source, setSource] = useState<'broker' | 'research'>('broker');
+  const [source, setSource] = useState<'broker' | 'research'>('research');
   const [variant, setVariant] = useState('levels_error_risk');
   const [dates, setDates] = useState<string[]>([]);
   const [data, setData] = useState<ReplayData | null>(null);
@@ -173,7 +173,7 @@ export function PriceActionReplayChart({ ticker, watchlist, onSelectTicker, refr
       </div>
       <div className="price-replay-selectors">
         <label>来源 <select aria-label="回放数据来源" value={source} onChange={event => { setSource(event.target.value as 'broker' | 'research'); setDate(''); setDates([]); }}>
-          <option value="broker">券商真实成交 · 每日更新</option><option value="research">研究模拟 · 模型对照</option>
+          <option value="research">研究模拟 · 模型对照</option><option value="broker">券商真实成交 · 每日更新</option>
         </select></label>
         <label>日期 <select aria-label="价格回放日期" value={date || data?.date || ''} onChange={event => setDate(event.target.value)}>
           {!dates.length && <option value="">最近保存</option>}
