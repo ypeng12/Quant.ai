@@ -26,6 +26,12 @@
 .price-replay-seek { flex-wrap: nowrap; font-size: 12px; color: #94a3b8; padding-top: 10px; white-space: nowrap; }
 .price-replay-seek input { flex: 1; min-width: 50px; accent-color: #38bdf8; cursor: pointer; }
 .price-replay-footnote { padding-top: 10px; }
+.price-replay-fills { margin-top: 16px; font-size: 12px; color: #cbd5e1; }
+.price-replay-fills summary { cursor: pointer; color: #7dd3fc; font-weight: 700; padding: 8px 0; }
+.price-replay-fills > div { max-height: 310px; overflow: auto; }
+.price-replay-fills table { width: 100%; border-collapse: collapse; white-space: nowrap; }
+.price-replay-fills th { position: sticky; top: 0; background: #142032; color: #94a3b8; }
+.price-replay-fills th, .price-replay-fills td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #243044; }
 .price-replay-message { min-height: 310px; display: grid; place-content: center; color: #7dd3fc; font-size: 14px; text-align: center; }
 .price-replay-message.error { color: #fbbf24; }
 @media (max-width: 800px) { .price-replay { padding: 14px 10px; } .price-replay-selectors { justify-content: flex-start; } .price-replay-toolbar { align-items: flex-start; } .price-replay-context { font-size: 11px; } }

@@ -1853,8 +1853,14 @@ def get_dashboard_market_data(ticker: str = "TSLA", date: str = "", interval: st
 
 
 @app.get("/api/dashboard/price_replay")
-def get_dashboard_price_replay(ticker: str = "SNDK", date: str = "", variant: str = "levels_error_risk"):
+def get_dashboard_price_replay(ticker: str = "SNDK", date: str = "", variant: str = "levels_error_risk", source: str = "research"):
     """Read saved price, simulated fills and ledger; never run research or trade."""
+    if source == "broker":
+        from app.dashboard.broker_replay import BROKER_REPLAY
+        try:
+            return BROKER_REPLAY.payload(ticker, date)
+        except (ValueError, OSError, KeyError) as exc:
+            return {"success": False, "status": "unavailable", "error": "券商回放数据暂不可用", "bars": [], "fills": [], "marks": []}
     from app.dashboard.price_replay import price_replay
     return price_replay(ticker, date, variant)
 
