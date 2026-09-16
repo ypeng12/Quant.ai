@@ -79,7 +79,7 @@ const hasKnownClosePnl = (trade: TradeRecord) => isMatchedClose(trade)
 
 export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
   const [account, setAccount] = useState<AccountSummary | null>(null);
-  const [accountError, setAccountError] = useState('正在连接账户…');
+  const [accountError, setAccountError] = useState('正在连接账户… / Connecting to account…');
   const [positions, setPositions] = useState<BrokerPosition[]>([]);
   const [positionsAvailable, setPositionsAvailable] = useState(false);
   const [isBotRunning, setIsBotRunning] = useState<boolean>(false);
@@ -135,9 +135,9 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
           setAccountError('');
           try { localStorage.setItem('cached_account', JSON.stringify(accJson)); } catch (e) {}
         } else {
-          setAccountError('账户待连接：请在服务端配置 Alpaca Key 和 Secret。');
+          setAccountError('账户待连接：请在服务端配置 Alpaca Key 和 Secret。 / Account disconnected: configure the Alpaca key and secret on the server.');
         }
-      }).catch(() => setAccountError('账户刷新失败，已有数值为最近一次读取结果。'));
+      }).catch(() => setAccountError('账户刷新失败，已有数值为最近一次读取结果。 / Account refresh failed; showing the last retrieved values.'));
 
       fetch(`${API_BASE}/api/broker/positions`).then(r => r.json()).then(posJson => {
         if (posJson && posJson.success) {
@@ -543,10 +543,10 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
       })()}
 
       {/* Account Overview */}
-      <section aria-label="账户资金" style={{ marginBottom: '1.5rem' }}>
+      <section aria-label="账户资金 / Account Funds" style={{ marginBottom: '1.5rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-          <strong>账户资金 · {account ? (account.is_paper === true ? 'Alpaca Paper 模拟账户' : account.is_paper === false ? 'Alpaca 实盘账户' : 'Alpaca 账户') : '待连接'}</strong>
-          <button onClick={fetchBrokerData}>刷新资金</button>
+          <strong>账户资金 / Account Funds · {account ? (account.is_paper === true ? 'Alpaca Paper 模拟账户 / Paper Account' : account.is_paper === false ? 'Alpaca 实盘账户 / Live Account' : 'Alpaca 账户 / Account') : '待连接 / Disconnected'}</strong>
+          <button onClick={fetchBrokerData}>刷新资金 / Refresh Funds</button>
         </div>
         {accountError && <p role="status" style={{ color: '#fbbf24', fontSize: '0.8rem' }}>{accountError}</p>}
         <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
@@ -562,7 +562,7 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
             </div>
           ))}
         </div>
-        {account?.observed_at && <p style={{ color: '#94a3b8', fontSize: '0.75rem' }}>账户读取时间：{new Date(account.observed_at).toLocaleString()}</p>}
+        {account?.observed_at && <p style={{ color: '#94a3b8', fontSize: '0.75rem' }}>账户读取时间 / Retrieved at: {new Date(account.observed_at).toLocaleString()}</p>}
       </section>
 
       {/* Positions + Trading Feed Panel */}
@@ -687,10 +687,10 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
         {/* Live Feed / History Panel */}
         <div className="card" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', minWidth: 0 }}>
           {/* Tabs */}
-          <div style={{ display: 'flex', gap: '8px', marginBottom: '1rem', borderBottom: '1px solid var(--color-border)', paddingBottom: '10px' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '1rem', borderBottom: '1px solid var(--color-border)', paddingBottom: '10px' }}>
             {([
               { id: 'analysis', label: '🧠 AI Live Analysis & Alerts' },
-              { id: 'wave', label: '🌊 代理指标 / L1 数据状态' },
+              { id: 'wave', label: '🌊 代理指标 / L1 数据状态 · Proxy Indicators / L1 Data Status' },
               { id: 'portfolio', label: '📈 Portfolio History' },
               { id: 'actions', label: '⚡ Execution Activity' },
               { id: 'history', label: '📅 Trade History' },
@@ -718,7 +718,7 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
             <div style={{ flex: 1, minHeight: '650px', height: '680px', borderRadius: '8px', overflow: 'hidden' }}>
               <iframe
                 src="/charts/saggese_wave_visual_dashboard.html"
-                title="历史代理指标与真实 L1 数据状态"
+                title="历史代理指标与真实 L1 数据状态 / Historical Proxies and Actual L1 Data Status"
                 style={{ width: '100%', height: '100%', border: 'none' }}
               />
             </div>

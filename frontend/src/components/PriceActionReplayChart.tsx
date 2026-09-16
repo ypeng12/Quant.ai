@@ -33,7 +33,7 @@ const minute = (time: string) => {
 const timeLabel = (m: number) => `${Math.floor((m + 570) / 60).toString().padStart(2, '0')}:${Math.floor((m + 570) % 60).toString().padStart(2, '0')}`;
 const money = (value: number | null | undefined) => Number.isFinite(value) ? `$${Number(value).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '—';
 const variants: Record<string, string> = { context: '原 Context', levels: '支撑压力', levels_error_risk: '支撑压力＋误差风险' };
-const actions = { B: { label: '买入开多', color: '#fb7185' }, S: { label: '卖出多仓', color: '#34d399' }, C: { label: '平空', color: '#c4a0f4' }, X: { label: '开空', color: '#fbbf24' }, BUY: { label: '买入（开/平待核）', color: '#fb7185' }, SELL: { label: '卖出（开/平待核）', color: '#34d399' } };
+const actions = { B: { label: '买入开多 / Buy to Open (Long)', color: '#fb7185' }, S: { label: '卖出多仓 / Sell to Close (Long)', color: '#34d399' }, C: { label: '平空 / Buy to Cover', color: '#c4a0f4' }, X: { label: '开空 / Sell Short', color: '#fbbf24' }, BUY: { label: '买入（开/平待核） / Buy (Open/Close Unverified)', color: '#fb7185' }, SELL: { label: '卖出（开/平待核） / Sell (Open/Close Unverified)', color: '#34d399' } };
 
 function bounds(values: number[], includeZero = false): [number, number] {
   const finite = values.filter(Number.isFinite);
@@ -217,7 +217,7 @@ export function PriceActionReplayChart({ ticker, watchlist, onSelectTicker, refr
         <span>回放持仓 <b>{lastShares === null ? '—' : `${lastShares} 股`}</b></span>
         <span>{data.is_simulated ? '模拟净盈亏' : '成交与持仓盈亏（费用未核）'} <b style={{ color: (latestMark?.pnl ?? 0) >= 0 ? '#34d399' : '#fb7185' }}>{money(latestMark?.pnl)}</b></span>
       </div>
-      <div className="price-replay-legend"><span style={{ color: '#38bdf8' }}>━ Price 价格线</span><span style={{ color: '#e9ad54' }}>━ OHLCV 均价代理</span>{Object.entries(actions).filter(([key]) => key.length === 1 || data.inventory_reconciled === false).map(([key, value]) => <span key={key} style={{ color: value.color }}>{key} · {value.label}</span>)}<span>标记数字＝股数</span></div>
+      <div className="price-replay-legend"><span style={{ color: '#38bdf8' }}>━ Price / 价格线</span><span style={{ color: '#e9ad54' }}>━ OHLCV 均价代理 / OHLCV Average Price Proxy</span>{Object.entries(actions).filter(([key]) => key.length === 1 || data.inventory_reconciled === false).map(([key, value]) => <span key={key} style={{ color: value.color }}>{key} · {value.label}</span>)}<span>标记数字＝股数 / Marker Numbers = Shares</span></div>
       <div className="price-replay-canvas">
         <svg viewBox={`0 0 ${width} 744`} role="img" aria-label={`${ticker}价格线、成交量、持仓和模拟盈亏`} onMouseMove={handleHover} onMouseLeave={() => setHover(null)}>
           <defs>{panels.map((panel, i) => <clipPath id={`${clip}-${i}`} key={i}><rect x={left} y={panel.top - 8} width={plotWidth} height={panel.height + 16} /></clipPath>)}</defs>
@@ -234,8 +234,8 @@ export function PriceActionReplayChart({ ticker, watchlist, onSelectTicker, refr
               const px = x(minute(fill.time)), py = y(fill.price, 0), up = fill.action === 'B' || fill.action === 'C' || fill.action === 'BUY';
               const size = Math.min(8, 4 + Math.sqrt(fill.shares) / 2), color = actions[fill.action].color;
               const sameTime = visible.fills.slice(0, index).filter(other => other.time === fill.time).length;
-              return <g key={`${fill.time}-${index}`} data-testid="replay-fill" tabIndex={0} role="img" aria-label={`${marketTime.format(new Date(fill.time))} ${actions[fill.action].label} ${fill.shares}股 ${money(fill.price)}`}>
-                <title>{`${ticker} · ${marketTime.format(new Date(fill.time))} · ${actions[fill.action].label} ${fill.shares}股 @ ${money(fill.price)} · 成交后 ${fill.shares_after ?? '未核'}股`}</title>
+              return <g key={`${fill.time}-${index}`} data-testid="replay-fill" tabIndex={0} role="img" aria-label={`${marketTime.format(new Date(fill.time))} ${actions[fill.action].label} ${fill.shares} 股 / shares ${money(fill.price)}`}>
+                <title>{`${ticker} · ${marketTime.format(new Date(fill.time))} · ${actions[fill.action].label} ${fill.shares} 股 / shares @ ${money(fill.price)} · 成交后持仓 / Position After Fill: ${fill.shares_after ?? '未核 / Unverified'} 股 / shares`}</title>
                 <path d={up ? `M${px},${py-size}L${px-size},${py+size}L${px+size},${py+size}Z` : `M${px},${py+size}L${px-size},${py-size}L${px+size},${py-size}Z`} fill={color} />
                 <text x={px} y={py + (up ? -12 : 19) + (up ? -1 : 1) * sameTime * 11} textAnchor="middle" fontSize="10" fontWeight="700" fill={color}>{fill.action}{fill.shares}</text>
               </g>;

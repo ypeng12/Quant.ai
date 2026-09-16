@@ -145,24 +145,27 @@
             background: rgba(244, 63, 94, 0.18); color: var(--accent-red);
             padding: 2px 8px; border-radius: 4px; font-weight: 800;
         }
+        .header, .chart-header { flex-wrap: wrap; gap: 12px; }
+        .badge-bar, .control-group { flex-wrap: wrap; }
+        .table-box { overflow-x: auto; }
     </style>
 </head>
 <body>
     <div class="header">
         <div>
             <h1>🌊 LOB 订单流微观结构波浪研判终端 (Wave Alpha Terminal)</h1>
-            <p>经典图表与交互展示 · K 线、量价结构、多因子分数与波浪机会</p>
+            <p>经典图表与交互展示 · K 线、量价结构、多因子分数与波浪机会 / Classic charts and interactions · candlesticks, price–volume structure, factor scores and wave opportunities</p>
         </div>
         <div class="badge-bar">
-            <span id="liveBadge" class="badge" style="color: #fbbf24; border: 1px solid #92400e; font-weight: 700;">经典波浪展示</span>
-            <span class="badge badge-blue">波浪方向分数</span>
+            <span id="liveBadge" class="badge" style="color: #fbbf24; border: 1px solid #92400e; font-weight: 700;">经典波浪展示 / Classic wave view</span>
+            <span class="badge badge-blue">波浪方向分数 / Wave direction score</span>
             <span class="badge badge-blue">Composite Alpha</span>
         </div>
     </div>
 
     <div class="day-stats-bar" style="display:block; line-height:1.7; color:#fbbf24;" role="status" aria-live="polite">
-        <strong>数据依据：</strong><span id="dataStatus">正在读取所选交易日…</span>
-        <div>本页指标由 OHLCV 推导；方向百分比为模型或规则分数。真实 L1 数据在独立研究模块中展示。</div>
+        <strong>数据依据： / Data basis:</strong><span id="dataStatus">正在读取所选交易日… / Loading the selected trading session…</span>
+        <div>本页指标由 OHLCV 推导；方向百分比为模型或规则分数。真实 L1 数据在独立研究模块中展示。 / Indicators on this page are derived from OHLCV; directional percentages are model or rule scores. Actual L1 data are shown in the separate research module.</div>
     </div>
 
     <div id="realL1Snapshot" class="day-stats-bar" style="display:none; line-height:1.7;"></div>
@@ -170,15 +173,15 @@
     <!-- Top Navigation Controls -->
     <div class="controls-panel">
         <div class="control-group">
-            <span class="control-label">标的切换:</span>
+            <span class="control-label">标的切换: / Select ticker:</span>
             <div id="tickerButtonGroup" style="display: flex; gap: 6px;"></div>
         </div>
 
         <div class="control-group">
             <span class="control-label">交易日历史复盘 (Trading Day):</span>
-            <button id="prevDayBtn" class="nav-btn">◀ 前一交易日</button>
-            <select id="dateSelector" class="date-select"></select>
-            <button id="nextDayBtn" class="nav-btn">后一交易日 ▶</button>
+            <button id="prevDayBtn" class="nav-btn">◀ 前一交易日 / ◀ Previous session</button>
+            <select id="dateSelector" class="date-select" aria-label="选择交易日 / Select trading session"></select>
+            <button id="nextDayBtn" class="nav-btn">后一交易日 ▶ / Next session ▶</button>
         </div>
     </div>
 
@@ -193,15 +196,15 @@
             <div id="statClose" class="stat-chip-val">-</div>
         </div>
         <div class="stat-chip">
-            <div class="stat-chip-label">日内最高 / 最低</div>
+            <div class="stat-chip-label">日内最高 / 最低 / Session high / low</div>
             <div id="statRange" class="stat-chip-val">-</div>
         </div>
         <div class="stat-chip">
-            <div class="stat-chip-label">价格涨跌幅（不是策略盈亏）</div>
+            <div class="stat-chip-label">价格涨跌幅（不是策略盈亏） / Price change (not strategy P&L)</div>
             <div id="statPnl" class="stat-chip-val">-</div>
         </div>
         <div class="stat-chip">
-            <div class="stat-chip-label">波浪标记数</div>
+            <div class="stat-chip-label">波浪标记数 / Wave marker count</div>
             <div id="statSignals" class="stat-chip-val" style="color: var(--accent-blue);">-</div>
         </div>
     </div>
@@ -210,10 +213,10 @@
     <div class="chart-box">
         <div class="chart-header">
             <div class="chart-title">
-                📈 <span id="klineTitle">TSLA 5分钟 K 线与历史规则标记</span>
+                📈 <span id="klineTitle">TSLA 5分钟 K 线与历史规则标记 / TSLA 5-minute candles and historical rule markers</span>
             </div>
             <div style="font-size: 0.8rem; color: var(--text-secondary);">
-                ▲ 绿色三角：Wave Long | ▼ 红色倒三角：Wave Short · 防抖去重的经典波浪标记
+                ▲ 绿色三角：Wave Long | ▼ 红色倒三角：Wave Short · 防抖去重的经典波浪标记 / ▲ Green triangle: Wave Long | ▼ Red inverted triangle: Wave Short · debounced and deduplicated wave markers
             </div>
         </div>
         <div id="klineChart" class="chart-container"></div>
@@ -222,8 +225,8 @@
     <!-- Chart 2: OFI & Microprice Drift -->
     <div class="chart-box">
         <div class="chart-header">
-            <div class="chart-title">⚡ OFI & Microprice Drift · 经典量价视图</div>
-            <div style="font-size: 0.8rem; color: var(--text-secondary);">柱状图：OFI 量价推导值 | 紫线：Microprice Drift 估计（bps）</div>
+            <div class="chart-title">⚡ OFI & Microprice Drift · 经典量价视图 / ⚡ OFI & Microprice Drift · classic price–volume view</div>
+            <div style="font-size: 0.8rem; color: var(--text-secondary);">柱状图：OFI 量价推导值 | 紫线：Microprice Drift 估计（bps） / Bars: OHLCV-derived OFI proxy | purple line: estimated microprice drift (bps)</div>
         </div>
         <div id="ofiChart" class="chart-container chart-small"></div>
     </div>
@@ -231,8 +234,8 @@
     <!-- Chart 3: Queue Imbalance & Sweep Velocity -->
     <div class="chart-box">
         <div class="chart-header">
-            <div class="chart-title">🌊 影线实体失衡与量价活跃度</div>
-            <div style="font-size: 0.8rem; color: var(--text-secondary);">黄线：Queue Imbalance 形态推导（-1 到 +1）| 蓝线：Sweep Velocity 量价活跃度</div>
+            <div class="chart-title">🌊 影线实体失衡与量价活跃度 / 🌊 Wick/body imbalance and price–volume activity</div>
+            <div style="font-size: 0.8rem; color: var(--text-secondary);">黄线：Queue Imbalance 形态推导（-1 到 +1）| 蓝线：Sweep Velocity 量价活跃度 / Yellow: candle-derived queue-imbalance proxy (-1 to +1) | blue: price–volume activity proxy (sweep velocity)</div>
         </div>
         <div id="queueChart" class="chart-container chart-small"></div>
     </div>
@@ -240,8 +243,8 @@
     <!-- Chart 4: Continuous Composite Alpha & Wave Probability -->
     <div class="chart-box">
         <div class="chart-header">
-            <div class="chart-title">🎯 Composite Alpha 打分与波浪方向分数</div>
-            <div style="font-size: 0.8rem; color: var(--text-secondary);">绿线：上涨方向分数（%）| 区域：多因子评分（-100 到 +100）</div>
+            <div class="chart-title">🎯 Composite Alpha 打分与波浪方向分数 / 🎯 Composite Alpha and wave direction scores</div>
+            <div style="font-size: 0.8rem; color: var(--text-secondary);">绿线：上涨方向分数（%）| 区域：多因子评分（-100 到 +100） / Green line: upward direction score (%) | shaded area: factor score (-100 to +100)</div>
         </div>
         <div id="alphaChart" class="chart-container chart-small"></div>
     </div>
@@ -249,21 +252,21 @@
     <!-- Signal Details Table -->
     <div class="table-box">
         <div class="chart-header">
-            <div class="chart-title">📋 该交易日的 Saggese 波浪机会明细</div>
-            <div style="font-size: 0.78rem; color: var(--text-muted);">多空波浪标记与对应因子分数 · 展示记录</div>
+            <div class="chart-title">📋 该交易日的 Saggese 波浪机会明细 / 📋 Saggese wave opportunities for this session</div>
+            <div style="font-size: 0.78rem; color: var(--text-muted);">多空波浪标记与对应因子分数 · 展示记录 / Long/short wave markers and corresponding factor scores · display records</div>
         </div>
         <table>
             <thead>
                 <tr>
-                    <th>时间</th>
-                    <th>方向</th>
-                    <th>价格</th>
-                    <th>方向分数</th>
-                    <th>规则幅度</th>
-                    <th>OFI 代理值</th>
-                    <th>偏移估计 (bps)</th>
-                    <th>规则评分</th>
-                    <th>数据与模型依据</th>
+                    <th>时间 / Time</th>
+                    <th>方向 / Direction</th>
+                    <th>价格 / Price</th>
+                    <th>方向分数 / Direction score</th>
+                    <th>规则幅度 / Rule magnitude</th>
+                    <th>OFI 代理值 / OFI proxy</th>
+                    <th>偏移估计 (bps) / Drift estimate (bps)</th>
+                    <th>规则评分 / Rule score</th>
+                    <th>数据与模型依据 / Data and model basis</th>
                 </tr>
             </thead>
             <tbody id="signalsTableBody"></tbody>
@@ -298,14 +301,14 @@
             // Add TODAY (Live 实时) as first option
             const liveOpt = document.createElement('option');
             liveOpt.value = 'today';
-            liveOpt.textContent = '今日 L1 数据状态';
+            liveOpt.textContent = '今日行情 / Today’s market data';
             dateSelect.appendChild(liveOpt);
 
             allDays.forEach((d, idx) => {
                 const opt = document.createElement('option');
                 opt.value = d;
                 const isLatest = (idx === allDays.length - 1);
-                opt.textContent = isLatest ? `${d} (历史最新)` : d;
+                opt.textContent = isLatest ? `${d} (历史最新 / Latest archived session)` : d;
                 dateSelect.appendChild(opt);
             });
             currentDate = allDays[allDays.length - 1] || 'today';
@@ -348,8 +351,19 @@
         function legacyDirectionValue(dayData, signal) {
             const index = Number.isInteger(signal.index) ? signal.index : dayData.times.indexOf(signal.time);
             const p = dayData.wave_p_win_long[index];
-            if (!Number.isFinite(p) || p < 0 || p > 100) return '未提供';
+            if (!Number.isFinite(p) || p < 0 || p > 100) return '未提供 / Not provided';
             return `${(signal.direction === 'LONG' ? p : 100 - p).toFixed(1)}%`;
+        }
+
+        function displayServiceError(message) {
+            const knownMessages = {
+                '今日暂无完整行情，可切换历史日期': '今日暂无完整行情，可切换历史日期 / No complete market data for today; select a historical date.',
+                '今日行情暂不可用，请选择历史日期': '今日行情暂不可用，请选择历史日期 / Today’s market data unavailable; select a historical date.',
+                '今日行情暂不可用，可切换历史日期。': '今日行情暂不可用，可切换历史日期。 / Today’s market data unavailable; select a historical date.',
+                '今日尚无已完成 K 线，可选择历史交易日。': '今日尚无已完成 K 线，可选择历史交易日。 / No completed bars today; select a historical session.',
+                '等待完整的五分钟 K 线，可先查看历史展示。': '等待完整的五分钟 K 线，可先查看历史展示。 / Waiting for a completed five-minute bar; historical charts remain available.'
+            };
+            return knownMessages[message] || `服务响应（原文） / Service response (original): ${message}`;
         }
 
         async function selectDay(d, isAutoRefresh = false) {
@@ -364,18 +378,18 @@
             updateNavButtons();
             clearTimeout(liveRefreshTimer);
             liveRefreshTimer = null;
-            clearDisplayedData(d === 'today' ? '正在读取今日行情' : '正在读取历史图表');
+            clearDisplayedData(d === 'today' ? '正在读取今日行情 / Loading today’s market data' : '正在读取历史图表 / Loading historical charts');
             const isCurrent = () => generation === requestGeneration && ticker === currentTicker && d === currentDate;
             const timeout = setTimeout(() => controller.abort(), 15000);
             try {
                 if (d === 'today') {
                     const response = await fetch(`${apiBase}/api/wave/live_today?ticker=${encodeURIComponent(ticker)}`, { signal: controller.signal });
-                    if (!response.ok) throw new Error('今日行情请求失败');
+                    if (!response.ok) throw new Error('今日行情请求失败 / Today’s market-data request failed');
                     const result = await response.json();
                     if (!isCurrent()) return;
                     const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date());
                     if (!result.success || !result.data || !result.is_today || result.date !== today || result.ticker !== ticker)
-                        throw new Error(result.error || '今日暂无完整行情，可切换历史日期');
+                        throw new Error((result.error ? displayServiceError(result.error) : '') || '今日暂无完整行情，可切换历史日期 / No complete market data for today; select a historical date');
                     store[ticker].by_day.today = result.data;
                     renderDashboard(true, result.date, result.last_updated || '');
                 } else {
@@ -393,8 +407,8 @@
                 }
             } catch (error) {
                 if (isCurrent()) clearDisplayedData(d === 'today'
-                    ? (error.message || '今日行情暂不可用，请选择历史日期')
-                    : '历史数据读取失败 · 未展示其他日期的缓存');
+                    ? (error.message || '今日行情暂不可用，请选择历史日期 / Today’s market data unavailable; select a historical date')
+                    : '历史数据读取失败 · 未展示其他日期的缓存 / Historical data could not be loaded · no cache from another date is shown');
             } finally {
                 clearTimeout(timeout);
                 if (isCurrent() && d === 'today') liveRefreshTimer = setTimeout(() => selectDay('today', true), 8000);
@@ -446,9 +460,9 @@
             if (!dayData) return;
 
             const dateStr = actualDate || currentDate;
-            document.getElementById('liveBadge').textContent = `${isLive ? '当前行情' : '历史回看'} · ${dateStr}`;
-            document.getElementById('klineTitle').textContent = `${currentTicker} · ${dateStr} · 5分钟 K 线与波浪拐点`;
-            setDataStatus(`${isLive ? '当前已完成 K 线' : '归档快照'} · ${dateStr} · OHLCV 推导指标`);
+            document.getElementById('liveBadge').textContent = `${isLive ? '当前行情 / Current market data' : '历史回看 / Historical view'} · ${dateStr}`;
+            document.getElementById('klineTitle').textContent = `${currentTicker} · ${dateStr} · 5分钟 K 线与波浪拐点 / 5-minute candles and wave turning points`;
+            setDataStatus(`${isLive ? '当前已完成 K 线 / Current completed bars' : '归档快照 / Archived snapshot'} · ${dateStr} · OHLCV 推导指标 / OHLCV-derived indicators`);
 
             // Update Stats Banner
             const stats = dayData.stats;
@@ -458,7 +472,7 @@
             const pnlEl = document.getElementById('statPnl');
             pnlEl.textContent = `${stats.pnl_pct >= 0 ? '+' : ''}${stats.pnl_pct}%`;
             pnlEl.style.color = stats.pnl_pct >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
-            document.getElementById('statSignals').textContent = `${stats.signal_count} 个波浪标记`;
+            document.getElementById('statSignals').textContent = `${stats.signal_count} 个波浪标记 / wave markers`;
 
             // Clean, elegant markers that NEVER clump or stack
             const markPointData = dayData.signals.map(s => {
@@ -509,19 +523,19 @@
                         return `
                             <div style="font-family: JetBrains Mono; font-size: 0.8rem; line-height: 1.5;">
                                 <div style="font-weight: 800; color: #38bdf8; margin-bottom: 4px;">⏰ ${t} (${currentTicker})</div>
-                                <div>开: ${k[0]} | 高: ${k[3]} | 低: ${k[2]} | 收: ${k[1]}</div>
+                                <div>开 / Open: ${k[0]} | 高 / High: ${k[3]} | 低 / Low: ${k[2]} | 收 / Close: ${k[1]}</div>
                                 <div style="margin-top: 4px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 4px;">
-                                    <div>波浪方向分数: <span style="color: ${pLong >= 50 ? '#10b981' : '#f43f5e'}; font-weight: 800;">${pLong}%</span></div>
-                                    <div>⚡ OFI 代理值: <span style="color: ${ofi >= 0 ? '#10b981' : '#f43f5e'};">${ofi >= 0 ? '+' : ''}${ofi}</span></div>
-                                    <div>🎯 K 线偏移估计: <span style="color: #a855f7; font-weight: 700;">${drift >= 0 ? '+' : ''}${drift} bps</span></div>
-                                    <div>📊 规则评分: <span style="color: ${alpha >= 0 ? '#38bdf8' : '#f43f5e'};">${alpha >= 0 ? '+' : ''}${alpha}</span></div>
+                                    <div>波浪方向分数 / Wave direction score: <span style="color: ${pLong >= 50 ? '#10b981' : '#f43f5e'}; font-weight: 800;">${pLong}%</span></div>
+                                    <div>⚡ OFI 代理值 / OFI proxy: <span style="color: ${ofi >= 0 ? '#10b981' : '#f43f5e'};">${ofi >= 0 ? '+' : ''}${ofi}</span></div>
+                                    <div>🎯 K 线偏移估计 / Candle-derived drift estimate: <span style="color: #a855f7; font-weight: 700;">${drift >= 0 ? '+' : ''}${drift} bps</span></div>
+                                    <div>📊 规则评分 / Rule score: <span style="color: ${alpha >= 0 ? '#38bdf8' : '#f43f5e'};">${alpha >= 0 ? '+' : ''}${alpha}</span></div>
                                 </div>
                             </div>
                         `;
                     }
                 },
                 legend: {
-                    data: ['K 线', 'EMA 9', 'EMA 21', 'VWAP'],
+                    data: ['K 线 / Candlesticks', 'EMA 9', 'EMA 21', 'VWAP'],
                     textStyle: { color: '#94a3b8' },
                     right: '3%'
                 },
@@ -540,7 +554,7 @@
                 },
                 series: [
                     {
-                        name: 'K 线',
+                        name: 'K 线 / Candlesticks',
                         type: 'candlestick',
                         data: dayData.kline,
                         itemStyle: {
@@ -599,29 +613,29 @@
                                 let col = val >= 0 ? '#10b981' : '#f43f5e';
                                 res += `<div><span style="color:${col}">●</span> ${p.seriesName}: <b style="color:${col}">${sign}${val.toFixed(3)}</b></div>`;
                             } else {
-                                res += `<div><span style="color:#a855f7">●</span> K 线偏移估计 (bps): <b style="color:#a855f7">${sign}${val.toFixed(2)} bps</b></div>`;
+                                res += `<div><span style="color:#a855f7">●</span> K 线偏移估计 (bps) / Candle-derived drift estimate (bps): <b style="color:#a855f7">${sign}${val.toFixed(2)} bps</b></div>`;
                             }
                         });
                         res += `</div>`;
                         return res;
                     }
                 },
-                legend: { data: ['OFI 代理值', 'K 线偏移估计 (bps)'], textStyle: { color: '#94a3b8' } },
+                legend: { data: ['OFI 代理值 / OFI proxy', 'K 线偏移估计 (bps) / Candle-derived drift estimate (bps)'], textStyle: { color: '#94a3b8' } },
                 grid: { left: '4%', right: '3%', bottom: '10%', top: '15%', containLabel: true },
                 xAxis: { type: 'category', data: dayData.times, axisLine: { lineStyle: { color: '#334155' } }, axisLabel: { color: '#64748b' } },
                 yAxis: [
                     { type: 'value', name: 'OFI', splitLine: { lineStyle: { color: '#1e293b' } }, axisLabel: { color: '#64748b' } },
-                    { type: 'value', name: '偏移估计 (bps)', splitLine: { show: false }, axisLabel: { color: '#a855f7', formatter: '{value} bps' } }
+                    { type: 'value', name: '偏移估计 (bps) / Drift estimate (bps)', splitLine: { show: false }, axisLabel: { color: '#a855f7', formatter: '{value} bps' } }
                 ],
                 series: [
                     {
-                        name: 'OFI 代理值',
+                        name: 'OFI 代理值 / OFI proxy',
                         type: 'bar',
                         data: dayData.ofi,
                         itemStyle: { color: (p) => p.value >= 0 ? '#10b981' : '#f43f5e' }
                     },
                     {
-                        name: 'K 线偏移估计 (bps)',
+                        name: 'K 线偏移估计 (bps) / Candle-derived drift estimate (bps)',
                         type: 'line',
                         yAxisIndex: 1,
                         data: dayData.micro_drift,
@@ -647,22 +661,22 @@
                             let val = Number(p.value);
                             let sign = val > 0 ? '+' : '';
                             if (p.seriesName.includes('影线实体')) {
-                                res += `<div><span style="color:#f59e0b">●</span> 影线实体失衡（代理）: <b style="color:#f59e0b">${sign}${val.toFixed(3)}</b></div>`;
+                                res += `<div><span style="color:#f59e0b">●</span> 影线实体失衡（代理） / Wick/body imbalance (proxy): <b style="color:#f59e0b">${sign}${val.toFixed(3)}</b></div>`;
                             } else {
-                                res += `<div><span style="color:#38bdf8">●</span> 量价活跃度（代理）: <b style="color:#38bdf8">${sign}${val.toFixed(3)}</b></div>`;
+                                res += `<div><span style="color:#38bdf8">●</span> 量价活跃度（代理） / Price–volume activity (proxy): <b style="color:#38bdf8">${sign}${val.toFixed(3)}</b></div>`;
                             }
                         });
                         res += `</div>`;
                         return res;
                     }
                 },
-                legend: { data: ['影线实体失衡（代理）', '量价活跃度（代理）'], textStyle: { color: '#94a3b8' } },
+                legend: { data: ['影线实体失衡（代理） / Wick/body imbalance (proxy)', '量价活跃度（代理） / Price–volume activity (proxy)'], textStyle: { color: '#94a3b8' } },
                 grid: { left: '4%', right: '3%', bottom: '10%', top: '15%', containLabel: true },
                 xAxis: { type: 'category', data: dayData.times, axisLine: { lineStyle: { color: '#334155' } }, axisLabel: { color: '#64748b' } },
                 yAxis: { type: 'value', splitLine: { lineStyle: { color: '#1e293b' } }, axisLabel: { color: '#64748b' } },
                 series: [
                     {
-                        name: '影线实体失衡（代理）',
+                        name: '影线实体失衡（代理） / Wick/body imbalance (proxy)',
                         type: 'line',
                         data: dayData.queue_imb,
                         smooth: true,
@@ -670,7 +684,7 @@
                         showSymbol: false
                     },
                     {
-                        name: '量价活跃度（代理）',
+                        name: '量价活跃度（代理） / Price–volume activity (proxy)',
                         type: 'line',
                         data: dayData.sweep_vel,
                         smooth: true,
@@ -684,16 +698,16 @@
             aChart.setOption({
                 backgroundColor: 'transparent',
                 tooltip: { trigger: 'axis', backgroundColor: 'rgba(15, 20, 34, 0.95)', borderColor: '#334155' },
-                legend: { data: ['历史规则评分', '波浪方向分数 (%)'], textStyle: { color: '#94a3b8' } },
+                legend: { data: ['历史规则评分 / Historical rule score', '波浪方向分数 (%) / Wave direction score (%)'], textStyle: { color: '#94a3b8' } },
                 grid: { left: '4%', right: '3%', bottom: '10%', top: '15%', containLabel: true },
                 xAxis: { type: 'category', data: dayData.times, axisLine: { lineStyle: { color: '#334155' } }, axisLabel: { color: '#64748b' } },
                 yAxis: [
-                    { type: 'value', name: '规则评分', min: -100, max: 100, splitLine: { lineStyle: { color: '#1e293b' } }, axisLabel: { color: '#64748b' } },
-                    { type: 'value', name: '分类输出 %', min: 0, max: 100, splitLine: { show: false }, axisLabel: { color: '#64748b' } }
+                    { type: 'value', name: '规则评分 / Rule score', min: -100, max: 100, splitLine: { lineStyle: { color: '#1e293b' } }, axisLabel: { color: '#64748b' } },
+                    { type: 'value', name: '分类输出 % / Classification score %', min: 0, max: 100, splitLine: { show: false }, axisLabel: { color: '#64748b' } }
                 ],
                 series: [
                     {
-                        name: '历史规则评分',
+                        name: '历史规则评分 / Historical rule score',
                         type: 'line',
                         data: dayData.composite_alpha,
                         smooth: true,
@@ -707,7 +721,7 @@
                         showSymbol: false
                     },
                     {
-                        name: '波浪方向分数 (%)',
+                        name: '波浪方向分数 (%) / Wave direction score (%)',
                         type: 'line',
                         yAxisIndex: 1,
                         data: dayData.wave_p_win_long,
@@ -722,7 +736,7 @@
             const tbody = document.getElementById('signalsTableBody');
             tbody.innerHTML = '';
             if (dayData.signals.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: var(--text-muted); padding: 20px;">该时段暂无波浪标记，可切换日期或标的。</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: var(--text-muted); padding: 20px;">该时段暂无波浪标记，可切换日期或标的。 / No wave markers for this session; select another date or ticker.</td></tr>';
             } else {
                 dayData.signals.forEach(s => {
                     const tr = document.createElement('tr');
@@ -732,11 +746,11 @@
                         <td><span class="${isLong ? 'badge-dir-long' : 'badge-dir-short'}">${s.direction}</span></td>
                         <td>$${s.price}</td>
                         <td style="color: ${isLong ? '#10b981' : '#f43f5e'}; font-weight: 800;">${legacyDirectionValue(dayData, s)}</td>
-                        <td>${Number.isFinite(s.expected_ret) ? s.expected_ret.toFixed(2) + '（规则）' : '—'}</td>
+                        <td>${Number.isFinite(s.expected_ret) ? s.expected_ret.toFixed(2) + '（规则） / (rule)' : '—'}</td>
                         <td style="color: ${s.ofi >= 0 ? '#10b981' : '#f43f5e'};">${s.ofi}</td>
                         <td>${s.micro_drift}</td>
                         <td style="color: ${s.alpha >= 0 ? '#38bdf8' : '#f43f5e'};">${s.alpha}</td>
-                        <td style="color: var(--text-secondary); font-size: 0.78rem;">经典波浪标记 · OHLCV</td>
+                        <td style="color: var(--text-secondary); font-size: 0.78rem;">经典波浪标记 · OHLCV / Classic wave marker · OHLCV</td>
                     `;
                     tbody.appendChild(tr);
                 });

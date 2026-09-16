@@ -671,7 +671,7 @@ function App() {
               transition: 'all 0.2s ease'
             }}
           >
-            ⚡ Alpaca 实盘/模拟盘
+            ⚡ Alpaca 实盘/模拟盘 · Live / Paper Trading
           </button>
 
           <button
@@ -689,7 +689,7 @@ function App() {
               transition: 'all 0.2s ease'
             }}
           >
-            🌊 代理指标 / L1 数据状态
+            🌊 代理指标 / L1 数据状态 · Proxy Indicators / L1 Data Status
           </button>
 
           <button
@@ -828,7 +828,7 @@ function App() {
             <div style={{ width: '100%', height: 'calc(100vh - 120px)', background: '#080a11', borderRadius: '8px', overflow: 'hidden' }}>
               <iframe
                 src="/charts/saggese_wave_visual_dashboard.html"
-                title="历史代理指标与真实 L1 数据状态"
+                title="历史代理指标与真实 L1 数据状态 / Historical Proxies and Actual L1 Data Status"
                 style={{ width: '100%', height: '100%', border: 'none' }}
               />
             </div>
