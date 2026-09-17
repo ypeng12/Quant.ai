@@ -48,6 +48,8 @@ export function PriceActionReplayChart({ ticker, watchlist, onSelectTicker, refr
   const [source, setSource] = useState<'broker' | 'research'>('broker');
   const [variant, setVariant] = useState('levels_error_risk');
   const [dates, setDates] = useState<string[]>([]);
+  const [researchDates, setResearchDates] = useState<string[] | null>(null);
+  const [notice, setNotice] = useState('');
   const [data, setData] = useState<ReplayData | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -60,6 +62,34 @@ export function PriceActionReplayChart({ ticker, watchlist, onSelectTicker, refr
   const followRef = useRef(true);
   followRef.current = followLatest;
   const clip = useId().replace(/:/g, '');
+
+  useEffect(() => {
+    const controller = new AbortController();
+    let disposed = false;
+    setResearchDates(null);
+    const loadDates = async () => {
+      try {
+        const query = new URLSearchParams({ ticker, variant });
+        const response = await fetch(`${API_BASE}/api/dashboard/price_replay_dates?${query}`, { signal: controller.signal });
+        const result = await response.json();
+        if (!disposed && response.ok && result.success) {
+          setDates(result.available_dates);
+          setResearchDates(result.research_dates);
+        }
+      } catch { /* Replay data can still provide dates if the catalog is unavailable. */ }
+    };
+    void loadDates();
+    const timer = window.setInterval(() => void loadDates(), 60000);
+    return () => { disposed = true; controller.abort(); window.clearInterval(timer); };
+  }, [ticker, variant, refreshKey]);
+
+  const selectDate = (day: string) => {
+    setDate(day);
+    if (source === 'research' && researchDates && !researchDates.includes(day)) {
+      setSource('broker');
+      setNotice(`${day} 尚未生成研究模拟，已切换为该日券商成交。`);
+    } else setNotice('');
+  };
 
   useEffect(() => {
     let controller: AbortController | null = null;
@@ -77,7 +107,7 @@ export function PriceActionReplayChart({ ticker, watchlist, onSelectTicker, refr
       .then(async response => {
         const result: ReplayData = await response.json();
         if (disposed) return;
-        if (result.available_dates?.length) setDates(result.available_dates);
+        if (result.available_dates?.length) setDates(previous => [...new Set([...previous, ...result.available_dates])].sort().reverse());
         if (!response.ok || !result.success || !Array.isArray(result.bars)) throw new Error(result.error || '这个股票和日期暂无回放。');
         setError(''); setData(result);
         setCount(previous => initial || followRef.current ? result.bars.length : Math.min(previous, result.bars.length));
@@ -172,20 +202,22 @@ export function PriceActionReplayChart({ ticker, watchlist, onSelectTicker, refr
         <div className="price-replay-subtitle">{data ? `${data.date} · 截至 ${marketTime.format(new Date(data.as_of)).slice(0, 5)} 美东 · ${data.is_live ? '当日自动更新' : data.partial ? '盘中保存' : '历史复盘'}` : '读取行情与成交'}</div>
       </div>
       <div className="price-replay-selectors">
-        <label>来源 <select aria-label="回放数据来源" value={source} onChange={event => { setSource(event.target.value as 'broker' | 'research'); setDate(''); setDates([]); }}>
+        <label>来源 <select aria-label="回放数据来源" value={source} onChange={event => { setSource(event.target.value as 'broker' | 'research'); setDate(''); setNotice(''); }}>
           <option value="broker">券商真实成交 · 每日更新</option><option value="research">研究模拟 · 模型对照</option>
         </select></label>
-        <label>日期 <select aria-label="价格回放日期" value={date || data?.date || ''} onChange={event => setDate(event.target.value)}>
+        <label>日期 <select aria-label="价格回放日期" value={date || data?.date || ''} onChange={event => selectDate(event.target.value)}>
           {!dates.length && <option value="">最近保存</option>}
           {date && dates.length > 0 && !dates.includes(date) && <option value={date}>{date} · 暂无研究回放</option>}
-          {dates.map(value => <option key={value} value={value}>{value}</option>)}
+          {dates.map(value => <option key={value} value={value}>{value}{source === 'research' && researchDates && !researchDates.includes(value) ? ' · 券商成交' : ''}</option>)}
         </select></label>
+        <button onClick={() => { setSource('broker'); setDate(''); setNotice(''); }}>今天 · 自动更新</button>
         {source === 'research' && <label>研究模型 <select aria-label="回放研究模型" value={variant} onChange={event => setVariant(event.target.value)}>
           {variantChoices.map(value => <option key={value} value={value}>{variants[value] || value}</option>)}
         </select></label>}
         <div className="price-replay-symbols">{symbols.map(symbol => <button key={symbol} className={ticker === symbol ? 'active' : ''} onClick={() => onSelectTicker(symbol)}>{symbol}</button>)}</div>
       </div>
     </header>
+    {notice && <div className="price-replay-date-notice" role="status">{notice}</div>}
     <div className="price-replay-context">
       <span className="price-replay-source">{source === 'broker' ? data?.is_paper === false ? '券商实盘成交' : '券商 Paper 成交' : '研究模拟成交'}</span>
       <span>{data?.source_label || (source === 'broker' ? '正在同步券商逐笔成交' : '已保存的研究回放')}</span>

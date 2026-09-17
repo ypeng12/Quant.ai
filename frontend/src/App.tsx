@@ -635,7 +635,7 @@ function App() {
               transition: 'all 0.2s ease'
             }}
           >
-            🚀 实时 Alpha 候选与微观大屏
+            🚀 实时 Alpha
           </button>
 
           <button
@@ -653,7 +653,7 @@ function App() {
               transition: 'all 0.2s ease'
             }}
           >
-            🤖 ML 决策与概率诊断
+            🤖 ML 诊断
           </button>
 
           <button
@@ -671,25 +671,7 @@ function App() {
               transition: 'all 0.2s ease'
             }}
           >
-            ⚡ Alpaca 实盘/模拟盘 · Live / Paper Trading
-          </button>
-
-          <button
-            className={`nav-tab ${activeTab === 'saggese_wave' ? 'active' : ''}`}
-            onClick={() => setActiveTab('saggese_wave')}
-            style={{
-              padding: '8px 18px',
-              fontSize: '0.9rem',
-              fontWeight: 800,
-              background: activeTab === 'saggese_wave' ? 'linear-gradient(135deg, #06b6d4, #0891b2)' : 'transparent',
-              color: '#ffffff',
-              borderRadius: '6px',
-              border: activeTab === 'saggese_wave' ? 'none' : '1px solid rgba(6, 182, 212, 0.4)',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease'
-            }}
-          >
-            🌊 代理指标 / L1 数据状态 · Proxy Indicators / L1 Data Status
+            ⚡ 账户与交易
           </button>
 
           <button
@@ -707,7 +689,7 @@ function App() {
               transition: 'all 0.2s ease'
             }}
           >
-            🎬 HRT 级 ML 动态仿真与复盘大屏
+            🎬 每日成交复盘
           </button>
 
           <button
@@ -725,12 +707,12 @@ function App() {
               transition: 'all 0.2s ease'
             }}
           >
-            🔬 机构级 Alpha 研究
+            🔬 Alpha 研究
           </button>
 
           {/* Optional Advanced Tools */}
-          <select
-            value={['broker', 'portfolio', 'replay', 'institutional', 'saggese_wave'].includes(activeTab) ? '' : activeTab}
+          <select aria-label="更多研究工具"
+            value={['broker', 'portfolio', 'replay', 'trade_comparison', 'institutional', 'live_dashboard', 'ml_assistant'].includes(activeTab) ? '' : activeTab}
             onChange={(e) => {
               if (e.target.value) setActiveTab(e.target.value as ActiveTab);
             }}
@@ -744,7 +726,8 @@ function App() {
               cursor: 'pointer'
             }}
           >
-            <option value="" disabled style={{ background: '#111', color: '#888' }}>⚙️ 更多研究工具...</option>
+            <option value="" disabled style={{ background: '#111', color: '#888' }}>⚙️ 更多工具</option>
+            <option value="saggese_wave" style={{ background: '#111', color: '#fff' }}>🌊 代理指标 / L1 数据状态</option>
             <option value="dashboard" style={{ background: '#111', color: '#fff' }}>📊 策略回测仪表盘</option>
             <option value="report" style={{ background: '#111', color: '#fff' }}>📖 深度量化报告</option>
             <option value="research" style={{ background: '#111', color: '#fff' }}>🤖 AI 策略助手</option>

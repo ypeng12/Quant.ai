@@ -1852,6 +1852,20 @@ def get_dashboard_market_data(ticker: str = "TSLA", date: str = "", interval: st
         return {"success": False, "error": str(exc)}
 
 
+@app.get("/api/dashboard/price_replay_dates")
+def get_price_replay_dates(ticker: str = "SNDK", variant: str = "levels_error_risk"):
+    from app.dashboard.broker_replay import BROKER_REPLAY, session_dates, NY
+    from app.dashboard.price_replay import replay_date_catalog
+    import pandas as pd
+    now = pd.Timestamp.now(tz=NY)
+    try:
+        snapshot, _, _ = BROKER_REPLAY.snapshot()
+    except ValueError:
+        snapshot = None
+    dates = session_dates(snapshot["events"] if snapshot else [], now)
+    return replay_date_catalog(ticker, variant, dates, now.date().isoformat())
+
+
 @app.get("/api/dashboard/price_replay")
 def get_dashboard_price_replay(ticker: str = "SNDK", date: str = "", variant: str = "levels_error_risk", source: str = "research"):
     """Read saved price, simulated fills and ledger; never run research or trade."""

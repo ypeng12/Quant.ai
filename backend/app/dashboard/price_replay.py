@@ -34,3 +34,18 @@ def price_replay(ticker="SNDK", date="", variant="levels_error_risk", *, root=No
         return {"success": False, "status": "unavailable", **request, **metadata,
                 "error": "该股票、日期或模型的已保存回放不可用，或数据校验失败。",
                 "bars": [], "fills": [], "marks": [], "summary": None}
+
+
+def replay_date_catalog(ticker, variant, broker_dates, today, *, root=None):
+    """Calendar dates remain visible even when no research artifact exists."""
+    root = Path(root) if root is not None else BUNDLE_ROOT
+    research_dates = []
+    try:
+        manifest = json.loads((root / "manifest.json").read_text())
+        research_dates = [day for day in manifest["available_dates"]
+                          if f"{day}/{variant}/{ticker.upper()}.json" in manifest["files"] and day <= today]
+    except (OSError, ValueError, KeyError, TypeError):
+        pass
+    return dict(success=True, today=today,
+                available_dates=sorted({today, *broker_dates, *research_dates}, reverse=True),
+                research_dates=sorted(research_dates, reverse=True))

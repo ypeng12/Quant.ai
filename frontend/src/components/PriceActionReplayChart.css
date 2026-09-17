@@ -35,3 +35,6 @@
 .price-replay-message { min-height: 310px; display: grid; place-content: center; color: #7dd3fc; font-size: 14px; text-align: center; }
 .price-replay-message.error { color: #fbbf24; }
 @media (max-width: 800px) { .price-replay { padding: 14px 10px; } .price-replay-selectors { justify-content: flex-start; } .price-replay-toolbar { align-items: flex-start; } .price-replay-context { font-size: 11px; } }
+
+.price-replay-selectors select, .price-replay-selectors button { min-height: 36px; box-sizing: border-box; }
+.price-replay-date-notice { margin-top: 12px; padding: 9px 12px; border: 1px solid #22516b; background: #102535; color: #9dd9f5; font-size: 12px; }

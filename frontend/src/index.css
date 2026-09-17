@@ -1339,3 +1339,13 @@ select:focus, input[type="text"]:focus {
 
 
 
+
+/* Compact, equal-height primary navigation; secondary tools retain their routes. */
+.header-bar { gap: 16px; }
+.header-bar > .logo { flex: 0 0 auto; white-space: nowrap; }
+.header-bar .nav-tabs { min-width: 0; overflow-x: auto; flex: 1; }
+.header-bar .nav-tabs > .nav-tab,
+.header-bar .nav-tabs > select { height: 44px; box-sizing: border-box; flex: 0 0 auto; white-space: nowrap; line-height: 1.25; }
+@media (max-width: 768px) {
+  .header-bar .nav-tabs { width: 100%; flex: none; }
+}
