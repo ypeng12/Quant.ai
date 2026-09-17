@@ -6,13 +6,9 @@ This display ledger never submits/cancels orders or changes strategy decisions.
 from collections import defaultdict, deque
 from decimal import Decimal
 import copy
-import hashlib
 import os
 import threading
-import time
 import pandas as pd
-import requests
-from .credentials import resolve_trading_credentials
 
 
 def activity_fifo(activities, positions):
@@ -54,82 +50,81 @@ def activity_fifo(activities, positions):
 
 
 class BrokerFillAccounting:
+    """Account view and replay share one paginated FILL collector and cache."""
     def __init__(self):
-        self.lock=threading.Lock();self.key=None;self.running=False;self.checked=0;self.rows=None;self.events={};self.error=None
+        self.lock = threading.Lock()
+        self.cache_key = None
+        self.rows = None
 
     def snapshot(self):
+        from ..dashboard.broker_replay import BROKER_REPLAY
         try:
-            c=resolve_trading_credentials(os.environ)
+            snapshot, message, credentials = BROKER_REPLAY.snapshot(env=os.environ)
         except ValueError:
-            return None,'credential_configuration_unavailable'
-        if c is None:return None,'credentials_unavailable'
-        key=hashlib.sha256((c.endpoint+c.key).encode()).hexdigest()
+            return None, 'credential_configuration_unavailable'
+        if credentials is None:
+            return None, 'credentials_unavailable'
+        if snapshot is None:
+            return None, 'reconciling_broker_fills'
+        key = (BROKER_REPLAY.scope(credentials), snapshot['observed_at'])
         with self.lock:
-            if self.key!=key:
-                self.key=key;self.rows=None;self.events={};self.checked=0
-            if not self.running and time.monotonic()-self.checked>15:
-                self.running=True;threading.Thread(target=self._refresh,args=(c,key),daemon=True).start()
-            return copy.deepcopy(self.rows),self.error or ('ready' if self.rows is not None else 'reconciling_broker_fills')
-
-    def _refresh(self,c,key):
-        try:
-            with self.lock:events=dict(self.events) if self.key==key else {}
-            session=requests.Session();session.headers.update({'APCA-API-KEY-ID':c.key,'APCA-API-SECRET-KEY':c.secret})
-            params=dict(direction='asc',page_size=100);tokens=set()
-            if events:
-                last=max(pd.Timestamp(a['transaction_time']) for a in events.values())
-                params['after']=(last-pd.Timedelta(minutes=5)).isoformat()
-            while True:
-                response=session.get(c.endpoint+'/v2/account/activities/FILL',params=params,timeout=20)
-                response.raise_for_status();page=response.json()
-                for a in page:events[a['id']]=a
-                if len(page)<100:break
-                token=page[-1]['id']
-                if token in tokens:raise ValueError('Repeated activity cursor')
-                tokens.add(token);params['page_token']=token
-            response=session.get(c.endpoint+'/v2/positions',timeout=20);response.raise_for_status()
-            rows=activity_fifo(list(events.values()),response.json())
-            with self.lock:
-                if self.key==key:self.events=events;self.rows=rows;self.error=None
-        except Exception as exc:
-            with self.lock:
-                if self.key==key:self.rows=None;self.error=type(exc).__name__
-        finally:
-            with self.lock:self.running=False;self.checked=time.monotonic()
+            if self.cache_key != key:
+                rows = activity_fifo(snapshot['events'], snapshot['positions'])
+                if not snapshot.get('history_complete'):
+                    for row in rows:
+                        row.update(pnl=None, pnl_complete=False, accounting_status='incomplete_history')
+                self.rows, self.cache_key = rows, key
+            age = (pd.Timestamp.now(tz='America/New_York') - pd.Timestamp(snapshot['observed_at'])).total_seconds()
+            state = 'stale_broker_fills' if snapshot.get('stale') or age > 60 else 'ready'
+            return copy.deepcopy(self.rows), state
 
 
 ACCOUNTING=BrokerFillAccounting()
 
 
 def display_history(payload, *, snapshot=None, day=None):
-    day=day or str(pd.Timestamp.now(tz='America/New_York').date())
-    rows,state=ACCOUNTING.snapshot() if snapshot is None else snapshot
-    result=copy.deepcopy(payload);history=result.get('trade_history',[])
-    prior=[r for r in history if str(r.get('date') or r.get('time',''))[:10]!=day]
-    today=[r for r in history if str(r.get('date') or r.get('time',''))[:10]==day]
-    verified=[r for r in rows or [] if r['date']==day];ids={r['order_id'] for r in verified}
-    for r in today:
-        if r.get('order_id') in ids:continue
-        r.update(pnl=None,pnl_complete=False,matched_closing_qty=0,unknown_basis_qty=r.get('shares',0),
-            accounting_status='awaiting_broker_fill_reconciliation')
-        verified.append(r)
-    result['trade_history']=sorted(prior+verified,key=lambda r:r.get('time',''))
-    result['accounting_state']=state
+    day = day or str(pd.Timestamp.now(tz='America/New_York').date())
+    rows, state = ACCOUNTING.snapshot() if snapshot is None else snapshot
+    result = copy.deepcopy(payload)
+    legacy = result.get('trade_history', [])
+    if rows is not None:
+        # Full current-account history is authoritative. Unscoped order archives
+        # must not be mixed with another account's verified FIFO basis.
+        history = copy.deepcopy(rows)
+        source = 'alpaca_fill_activity'
+    else:
+        history = copy.deepcopy(legacy)
+        source = 'legacy_archive_pending_verification'
+        for row in history:
+            row.update(pnl=None, pnl_complete=False, matched_closing_qty=0,
+                       unknown_basis_qty=row.get('shares', 0),
+                       accounting_status='awaiting_broker_fill_reconciliation')
+    result['trade_history'] = sorted(history, key=lambda r: r.get('time', ''))
+    result['available_dates'] = sorted({day, *[str(r.get('date') or r.get('time', ''))[:10] for r in history if r.get('date') or r.get('time')]}, reverse=True)
+    result['accounting_state'] = state
+    result['history_source'] = source
+    result['legacy_archive_count'] = len(legacy)
     return result
 
 
-def display_summary(summary,history):
-    payload=display_history({'trade_history':history},day=summary['date'])
-    rows=[r for r in payload['trade_history'] if str(r.get('date') or r.get('time',''))[:10]==summary['date']]
-    closed=[r for r in rows if r.get('pnl_complete') and r.get('matched_closing_qty',0)>0]
-    wins=[r for r in closed if r['pnl']>0];losses=[r for r in closed if r['pnl']<0]
-    realized=round(sum(r['pnl'] for r in closed),2);floating=summary.get('unrealized_pnl')
-    unknown=sum(not r.get('pnl_complete',False) for r in rows)
-    total=round(realized+floating,2) if floating is not None else None
-    return dict(summary,total_trades=len(rows),closed_trades=len(closed),wins=len(wins),losses=len(losses),
-        win_rate=100*len(wins)/len(closed) if closed else None,realized_pnl=realized,total_pnl=total,
-        unknown_basis_trades=unknown,realized_pnl_complete=unknown==0 and payload['accounting_state']=='ready',
-        best_trade=max([r['pnl'] for r in closed]+[0]),worst_trade=min([r['pnl'] for r in closed]+[0]),
+def display_summary(summary, history):
+    payload = display_history({'trade_history': history}, day=summary['date'])
+    rows = [r for r in payload['trade_history'] if str(r.get('date') or r.get('time', ''))[:10] == summary['date']]
+    closed = [r for r in rows if r.get('pnl_complete') and r.get('matched_closing_qty', 0) > 0]
+    wins = [r for r in closed if r['pnl'] > 0]
+    losses = [r for r in closed if r['pnl'] < 0]
+    known_realized = round(sum(r['pnl'] for r in closed), 2)
+    floating = summary.get('unrealized_pnl')
+    unknown = sum(not r.get('pnl_complete', False) for r in rows)
+    complete = unknown == 0 and payload['accounting_state'] == 'ready'
+    realized = known_realized if complete else None
+    total = round(realized + floating, 2) if realized is not None and floating is not None else None
+    return dict(summary, total_trades=len(rows), closed_trades=len(closed), wins=len(wins), losses=len(losses),
+        win_rate=100 * len(wins) / len(closed) if closed else None, realized_pnl=realized, total_pnl=total,
+        known_realized_pnl=known_realized, unknown_basis_trades=unknown, realized_pnl_complete=complete,
+        best_trade=max([r['pnl'] for r in closed] + [0]) if complete else None,
+        worst_trade=min([r['pnl'] for r in closed] + [0]) if complete else None,
         realized_pnl_basis='Broker FILL FIFO, account inventory reconciled; explicit fees unverified',
         accounting_state=payload['accounting_state'],
-        reconciliation_difference=round(summary['alpaca_official_pnl']-total,2) if summary.get('alpaca_official_pnl') is not None and total is not None else None)
+        reconciliation_difference=round(summary['alpaca_official_pnl'] - total, 2)
+        if summary.get('alpaca_official_pnl') is not None and total is not None else None)

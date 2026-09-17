@@ -53,3 +53,44 @@ def test_snapshot_resolves_explicit_environment_and_handles_incomplete_credentia
     assert module.BrokerFillAccounting().snapshot()==(None,'credentials_unavailable')
     monkeypatch.setattr(module.os,'environ',{'ALPACA_API_KEY':'test_key'})
     assert module.BrokerFillAccounting().snapshot()==(None,'credential_configuration_unavailable')
+
+
+def test_all_broker_dates_replace_unscoped_archive():
+    events=[fill(1,'SNDK','buy',2,100,'2026-09-14T14:00Z'),
+            fill(2,'SNDK','sell',2,110,'2026-09-15T14:00Z'),
+            fill(3,'TSLA','buy',1,300,'2026-09-16T14:00Z'),
+            fill(4,'TSLA','sell',1,305,'2026-09-17T14:00Z')]
+    rows=activity_fifo(events,[])
+    archive={'trade_history':[dict(date='2026-09-11',time='2026-09-11 12:00',order_id='wrong_account',pnl=999)]}
+    result=display_history(archive,snapshot=(rows,'ready'),day='2026-09-17')
+    assert result['available_dates']==['2026-09-17','2026-09-16','2026-09-15','2026-09-14']
+    assert len(result['trade_history'])==4
+    assert all(r['order_id']!='wrong_account' for r in result['trade_history'])
+    assert result['trade_history'][1]['pnl']==20
+    assert archive['trade_history'][0]['pnl']==999
+
+
+def test_unknown_basis_summary_never_claims_zero_realized_or_total(monkeypatch):
+    rows=activity_fifo([fill(1,'SNDK','sell',2,100,'2026-09-17T14:00Z')],[])
+    monkeypatch.setattr(ACCOUNTING,'snapshot',lambda:(rows,'ready'))
+    s=display_summary(dict(date='2026-09-17',unrealized_pnl=420,alpaca_official_pnl=196),[])
+    assert s['total_trades']==1 and s['unknown_basis_trades']==1
+    assert s['realized_pnl'] is None and s['total_pnl'] is None
+    assert s['best_trade'] is None and s['worst_trade'] is None
+    assert s['alpaca_official_pnl']==196
+
+
+def test_accounting_reuses_replay_snapshot_and_preserves_stale_rows(monkeypatch):
+    import pandas as pd
+    from app.dashboard.broker_replay import BROKER_REPLAY
+    from app.broker.credentials import BrokerCredentials
+    from app.broker.fill_accounting import BrokerFillAccounting
+    c=BrokerCredentials('test_key','test_secret','https://paper-api.alpaca.markets','TEST')
+    snapshot=dict(events=[fill(1,'SNDK','buy',1,100,'2026-09-15T14:00Z'),fill(2,'SNDK','sell',1,110,'2026-09-16T14:00Z')],
+                  positions=[],history_complete=True,observed_at=pd.Timestamp.now(tz='UTC').isoformat(),stale=False)
+    monkeypatch.setattr(BROKER_REPLAY,'snapshot',lambda env=None:(snapshot,None,c))
+    view=BrokerFillAccounting();rows,state=view.snapshot()
+    assert state=='ready' and rows[1]['pnl']==10
+    snapshot['stale']=True
+    retained,state=view.snapshot()
+    assert state=='stale_broker_fills' and retained==rows

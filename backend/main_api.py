@@ -1530,13 +1530,17 @@ def get_action_feed(limit: int = 100):
 
 @app.get("/api/live/trade_history")
 def get_trade_history():
-    """Preserve archives; reconcile today's display against current-account fills."""
+    """Display complete current-account broker history; preserve archives on disk."""
     from app.broker.fill_accounting import display_history
     history_file = os.path.join(os.path.dirname(__file__), "trade_history.json")
     if not os.path.isfile(history_file):
         return display_history({'trade_history': []})
-    with open(history_file, encoding='utf-8') as handle:
-        return display_history(json.load(handle))
+    try:
+        with open(history_file, encoding='utf-8') as handle:
+            archive = json.load(handle)
+    except (OSError, ValueError):
+        archive = {'trade_history': []}
+    return display_history(archive)
 
 
 @app.get("/api/live/today_summary")
