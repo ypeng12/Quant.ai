@@ -536,7 +536,7 @@ export const IntradayKlineChart: React.FC<IntradayKlineChartProps> = ({ ticker: 
               color: viewMode === 'robinhood' ? '#00c805' : '#94a3b8'
             }}
           >
-            📈 曲线走势 (Robinhood)
+            📈 Price Curve
           </button>
           <button
             onClick={() => setViewMode('kline')}
@@ -551,7 +551,7 @@ export const IntradayKlineChart: React.FC<IntradayKlineChartProps> = ({ ticker: 
               color: viewMode === 'kline' ? '#38bdf8' : '#94a3b8'
             }}
           >
-            🕯️ 专业蜡烛K线 (OHLC)
+            🕯️ Candlesticks (OHLC)
           </button>
         </div>
 

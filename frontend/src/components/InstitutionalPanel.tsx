@@ -140,7 +140,7 @@ export const InstitutionalPanel: React.FC = () => {
               : 'bg-slate-800 text-slate-400 hover:text-white'
           }`}
         >
-          ⚡ C++20 引擎与 ITCH 5.0 微观结构大屏
+          ⚡ C++20 Engine & ITCH 5.0
         </button>
 
         <button
@@ -151,7 +151,7 @@ export const InstitutionalPanel: React.FC = () => {
               : 'bg-slate-800 text-slate-400 hover:text-white'
           }`}
         >
-          🧠 机器学习全景几何实验室 (ML Visual Lab)
+          🧠 ML Visual Lab
         </button>
 
         <button
@@ -162,7 +162,7 @@ export const InstitutionalPanel: React.FC = () => {
               : 'bg-slate-800 text-slate-400 hover:text-white'
           }`}
         >
-          🏛️ Quant.ai 两级自适应 ML 动态诊断 Tab
+          🏛️ Two-Stage Adaptive ML
         </button>
 
         <button
@@ -173,7 +173,7 @@ export const InstitutionalPanel: React.FC = () => {
               : 'bg-slate-800 text-slate-400 hover:text-white'
           }`}
         >
-          🔬 样本外 Alpha 验证 (Out-of-Sample Alpha Lab)
+          🔬 Out-of-Sample Alpha Lab
         </button>
 
         <button
@@ -184,7 +184,7 @@ export const InstitutionalPanel: React.FC = () => {
               : 'bg-slate-800 text-slate-400 hover:text-white'
           }`}
         >
-          📈 最优算法执行 (Almgren-Chriss Model)
+          📈 Optimal Execution (Almgren–Chriss)
         </button>
 
         <button
@@ -195,7 +195,7 @@ export const InstitutionalPanel: React.FC = () => {
               : 'bg-slate-800 text-slate-400 hover:text-white'
           }`}
         >
-          ⚖️ 协整与统计套利 (StatArb OU)
+          ⚖️ Cointegration & Statistical Arbitrage
         </button>
 
         <button
@@ -206,7 +206,7 @@ export const InstitutionalPanel: React.FC = () => {
               : 'bg-slate-800 text-slate-400 hover:text-white'
           }`}
         >
-          🛡️ 风险平价组合 (Risk Parity ERC)
+          🛡️ Risk Parity (ERC)
         </button>
 
         <button
@@ -217,7 +217,7 @@ export const InstitutionalPanel: React.FC = () => {
               : 'bg-slate-800 text-slate-400 hover:text-white'
           }`}
         >
-          🔬 夏普比率过拟合审计 (Deflated Sharpe Ratio)
+          🔬 Deflated Sharpe Ratio
         </button>
 
         <button
@@ -228,7 +228,7 @@ export const InstitutionalPanel: React.FC = () => {
               : 'bg-slate-800 text-slate-400 hover:text-white'
           }`}
         >
-          ⚡ C++ 内存性能分析 (Memory Profiler)
+          ⚡ C++ Memory Profiler
         </button>
 
         <button
@@ -239,7 +239,7 @@ export const InstitutionalPanel: React.FC = () => {
               : 'bg-slate-800 text-slate-400 hover:text-white'
           }`}
         >
-          📊 订单流不平衡度 (Order Flow Imbalance)
+          📊 Order Flow Imbalance
         </button>
 
         <button
@@ -250,7 +250,7 @@ export const InstitutionalPanel: React.FC = () => {
               : 'bg-slate-800 text-slate-400 hover:text-white'
           }`}
         >
-          🌐 多资产组合回测 (Multi-Asset Universe)
+          🌐 Multi-Asset Backtesting
         </button>
       </div>
 

@@ -79,7 +79,7 @@ export const MLAssistantPanel: React.FC<{ activeTicker: string }> = ({ activeTic
                   color: '#fff'
                 }}
               >
-                ⚡ Day Trading 模式 (15m)
+                ⚡ Day Trading (15m)
               </button>
               <button
                 onClick={() => setHorizonMode('swing')}
@@ -94,7 +94,7 @@ export const MLAssistantPanel: React.FC<{ activeTicker: string }> = ({ activeTic
                   color: '#fff'
                 }}
               >
-                📈 趋势投资模式 (1日)
+                📈 Swing Trading (1d)
               </button>
             </div>
           </div>

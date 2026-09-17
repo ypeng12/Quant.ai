@@ -84,7 +84,7 @@ export function TradeComparisonPanel({ watchlist, activeTicker, onSelectTicker }
       </div>
       <div style={{ padding: '16px' }}>
         <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-          {([{ value: 'price', label: '📈 价格线 · 买卖点 · 持仓与盈亏' }, { value: 'classic', label: '📊 经典规则轨迹与 K 线' }] as const).map(view => <button
+          {([{ value: 'price', label: '📈 Price, Trades & P&L' }, { value: 'classic', label: '📊 Rule Signals & Candlesticks' }] as const).map(view => <button
             key={view.value} onClick={() => setChartView(view.value)} aria-pressed={chartView === view.value}
             style={{ padding: '8px 12px', borderRadius: 7, border: `1px solid ${chartView === view.value ? '#288bb1' : '#2b394d'}`, background: chartView === view.value ? '#12364c' : '#121d2b', color: chartView === view.value ? '#7dd3fc' : '#94a3b8', fontWeight: 700, cursor: 'pointer' }}
           >{view.label}</button>)}

@@ -409,13 +409,13 @@ export const ResearchReportPanel: React.FC<ResearchReportPanelProps> = ({ onAppl
                       className={`tab-btn ${comparisonMarket === 'US' ? 'active' : ''}`}
                       onClick={() => setComparisonMarket('US')}
                     >
-                      🇺🇸 美股规则 (US Equities)
+                      🇺🇸 US Equities
                     </button>
                     <button
                       className={`tab-btn ${comparisonMarket === 'A' ? 'active' : ''}`}
                       onClick={() => setComparisonMarket('A')}
                     >
-                      🇨🇳 A股规则 (China A-Shares)
+                      🇨🇳 China A-Shares
                     </button>
                   </div>
                   

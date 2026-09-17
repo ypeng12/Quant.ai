@@ -714,7 +714,7 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '1rem', borderBottom: '1px solid var(--color-border)', paddingBottom: '10px' }}>
             {([
               { id: 'analysis', label: '🧠 AI Live Analysis & Alerts' },
-              { id: 'wave', label: '🌊 代理指标 / L1 数据状态 · Proxy Indicators / L1 Data Status' },
+              { id: 'wave', label: '🌊 L1 Data Status' },
               { id: 'portfolio', label: '📈 Portfolio History' },
               { id: 'actions', label: '⚡ Execution Activity' },
               { id: 'history', label: '📅 Trade History' },

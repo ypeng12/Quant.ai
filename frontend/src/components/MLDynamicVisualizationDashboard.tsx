@@ -63,7 +63,7 @@ export const MLDynamicVisualizationDashboard: React.FC = () => {
                 color: activeTab === 'two_stage' ? '#fff' : '#94a3b8'
               }}
             >
-              🏛️ 两级自适应 ML 动态诊断 Tab
+              🏛️ Two-Stage Adaptive ML
             </button>
             <button
               onClick={() => setActiveTab('overview')}
@@ -78,7 +78,7 @@ export const MLDynamicVisualizationDashboard: React.FC = () => {
                 color: activeTab === 'overview' ? '#fff' : '#94a3b8'
               }}
             >
-              🤖 全量 LightGBM 胜率与特征重要性
+              🤖 LightGBM Probabilities & Feature Importance
             </button>
           </div>
 

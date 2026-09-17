@@ -533,10 +533,10 @@ export const PaperAlphaDashboard: React.FC = () => {
       {/* Navigation Sub-Tabs */}
       <div style={{ display: 'flex', gap: '10px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '12px', marginBottom: '20px' }}>
         {[
-          { id: 'matrix', label: '📊 31 列量价与截面因子矩阵', badge: '31' },
-          { id: 'microstructure', label: '🌊 真实 L1 订单流与 Stoikov 微观模型', badge: 'OFI & Microprice' },
-          { id: 'models', label: '🤖 多模型训练与特征重要性 (Ridge · Tree · LightGBM)', badge: 'Zoo' },
-          { id: 'audit', label: '📑 学术论文源与特征规范审计', badge: 'Audited' },
+          { id: 'matrix', label: '📊 Price-Volume & Cross-Sectional Factors', badge: '31' },
+          { id: 'microstructure', label: '🌊 L1 Order Flow & Stoikov Models', badge: 'OFI & Microprice' },
+          { id: 'models', label: '🤖 Model Training & Feature Importance', badge: 'Zoo' },
+          { id: 'audit', label: '📑 Research Sources & Feature Audit', badge: 'Audited' },
         ].map(tab => (
           <button
             key={tab.id}

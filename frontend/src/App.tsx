@@ -636,7 +636,7 @@ function App() {
               transition: 'all 0.2s ease'
             }}
           >
-            🚀 实时 Alpha
+            🚀 Live Alpha
           </button>
 
           <button
@@ -654,7 +654,7 @@ function App() {
               transition: 'all 0.2s ease'
             }}
           >
-            🤖 ML 诊断
+            🤖 ML Diagnostics
           </button>
 
           <button
@@ -672,7 +672,7 @@ function App() {
               transition: 'all 0.2s ease'
             }}
           >
-            ⚡ 账户与交易
+            ⚡ Account & Trading
           </button>
 
           <button
@@ -690,7 +690,25 @@ function App() {
               transition: 'all 0.2s ease'
             }}
           >
-            🎬 每日成交复盘
+            🎬 Daily Trade Replay
+          </button>
+
+          <button
+            className={`nav-tab ${activeTab === 'saggese_wave' ? 'active' : ''}`}
+            onClick={() => setActiveTab('saggese_wave')}
+            style={{
+              padding: '8px 18px',
+              fontSize: '0.9rem',
+              fontWeight: 800,
+              background: activeTab === 'saggese_wave' ? 'linear-gradient(135deg, #06b6d4, #0891b2)' : 'transparent',
+              color: '#ffffff',
+              borderRadius: '6px',
+              border: activeTab === 'saggese_wave' ? 'none' : '1px solid rgba(6, 182, 212, 0.4)',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            🌊 L1 Data Status
           </button>
 
           <button
@@ -708,12 +726,12 @@ function App() {
               transition: 'all 0.2s ease'
             }}
           >
-            🔬 Alpha 研究
+            🔬 Alpha Research
           </button>
 
           {/* Optional Advanced Tools */}
-          <select aria-label="更多研究工具"
-            value={['broker', 'portfolio', 'replay', 'trade_comparison', 'institutional', 'live_dashboard', 'ml_assistant'].includes(activeTab) ? '' : activeTab}
+          <select aria-label="More Tools"
+            value={['broker', 'portfolio', 'replay', 'trade_comparison', 'institutional', 'saggese_wave', 'live_dashboard', 'ml_assistant'].includes(activeTab) ? '' : activeTab}
             onChange={(e) => {
               if (e.target.value) setActiveTab(e.target.value as ActiveTab);
             }}
@@ -727,13 +745,12 @@ function App() {
               cursor: 'pointer'
             }}
           >
-            <option value="" disabled style={{ background: '#111', color: '#888' }}>⚙️ 更多工具</option>
-            <option value="saggese_wave" style={{ background: '#111', color: '#fff' }}>🌊 代理指标 / L1 数据状态</option>
-            <option value="dashboard" style={{ background: '#111', color: '#fff' }}>📊 策略回测仪表盘</option>
-            <option value="report" style={{ background: '#111', color: '#fff' }}>📖 深度量化报告</option>
-            <option value="research" style={{ background: '#111', color: '#fff' }}>🤖 AI 策略助手</option>
-            <option value="walkforward" style={{ background: '#111', color: '#fff' }}>🔄 Walk-Forward 滚动验证</option>
-            <option value="experiments" style={{ background: '#111', color: '#fff' }}>🧪 策略实验对比</option>
+            <option value="" disabled style={{ background: '#111', color: '#888' }}>⚙️ More Tools</option>
+            <option value="dashboard" style={{ background: '#111', color: '#fff' }}>📊 Backtest Dashboard</option>
+            <option value="report" style={{ background: '#111', color: '#fff' }}>📖 Quant Reports</option>
+            <option value="research" style={{ background: '#111', color: '#fff' }}>🤖 AI Strategy Assistant</option>
+            <option value="walkforward" style={{ background: '#111', color: '#fff' }}>🔄 Walk-Forward Validation</option>
+            <option value="experiments" style={{ background: '#111', color: '#fff' }}>🧪 Experiment Comparison</option>
           </select>
         </div>
 
