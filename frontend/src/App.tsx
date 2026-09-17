@@ -23,6 +23,7 @@ import { ReplayAndExperimentsPanel } from './components/ReplayAndExperimentsPane
 import { MLAssistantPanel } from './components/MLAssistantPanel';
 import { TradeComparisonPanel } from './components/TradeComparisonPanel';
 import { PaperAlphaDashboard } from './components/PaperAlphaDashboard';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { API_BASE } from './config';
 
 interface SummaryData {
@@ -803,7 +804,9 @@ function App() {
 
           {/* Alpaca Live Tab (Mode 1) */}
           {activeTab === 'broker' && (
-            <BrokerPanel watchlist={watchlist} />
+            <ErrorBoundary fallbackTitle="实盘账户与成交日志面板 / Live Account and Fill Log">
+              <BrokerPanel watchlist={watchlist} />
+            </ErrorBoundary>
           )}
 
           {/* Saggese Microstructure Wave Dashboard Tab */}

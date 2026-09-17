@@ -429,7 +429,8 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
       {(() => {
         if (!todaySummary && tradeHistory.length === 0) return null;
 
-        const curDate = selectedDate || todaySummary?.date || (tradeHistory.length > 0 ? (tradeHistory[0].date || tradeHistory[0].time?.slice(0, 10))?.trim() : new Date().toLocaleDateString('sv-SE'));
+        const todayStr = todaySummary?.date || new Date().toLocaleDateString('sv-SE');
+        const curDate = selectedDate || todayStr;
         const closedToday = tradeHistory.filter(t => {
           const d = (t.date || t.time?.slice(0, 10))?.trim();
           return d === curDate && hasKnownClosePnl(t);
@@ -449,24 +450,37 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
           return `$0.00`;
         };
 
-        const activePositionsCount = positions.length;
-        const closedCount = (todaySummary?.closed_trades !== undefined && todaySummary.closed_trades > 0) ? todaySummary.closed_trades : calcClosed;
-        const winsCount = (todaySummary?.wins !== undefined) ? todaySummary.wins : calcWins;
-        const lossesCount = (todaySummary?.losses !== undefined) ? todaySummary.losses : calcLosses;
-        const winRatePct = (todaySummary?.win_rate !== undefined) ? todaySummary.win_rate : calcWinRate;
-        const realizedPnl = todaySummary?.realized_pnl ?? closedToday.reduce((sum, t) => sum + (t.pnl || 0), 0);
-        const unrealizedPnl = positionsAvailable
-          ? positions.reduce((sum, p) => sum + (p.unrealized_pnl || 0), 0)
-          : (todaySummary?.unrealized_pnl ?? 0);
+        const isViewingToday = (curDate === todayStr);
+        const activePositionsCount = isViewingToday ? positions.length : 0;
+        const closedCount = (isViewingToday && todaySummary?.closed_trades !== undefined && todaySummary.closed_trades > 0)
+          ? todaySummary.closed_trades
+          : calcClosed;
+        const winsCount = (isViewingToday && todaySummary?.wins !== undefined)
+          ? todaySummary.wins
+          : calcWins;
+        const lossesCount = (isViewingToday && todaySummary?.losses !== undefined)
+          ? todaySummary.losses
+          : calcLosses;
+        const winRatePct = (isViewingToday && todaySummary?.win_rate != null)
+          ? todaySummary.win_rate
+          : calcWinRate;
+        const realizedPnl = (isViewingToday && todaySummary?.realized_pnl !== undefined)
+          ? todaySummary.realized_pnl
+          : closedToday.reduce((sum, t) => sum + (t.pnl || 0), 0);
+        const unrealizedPnl = isViewingToday
+          ? (positionsAvailable
+            ? positions.reduce((sum, p) => sum + (p.unrealized_pnl || 0), 0)
+            : (todaySummary?.unrealized_pnl ?? 0))
+          : 0;
         // Matched-fill attribution; broker account change is reported separately.
         const netPnlVal = Number((realizedPnl + unrealizedPnl).toFixed(2));
-        const alpacaAccountDelta = account?.today_pnl ?? todaySummary?.alpaca_official_pnl;
+        const alpacaAccountDelta = isViewingToday ? (account?.today_pnl ?? todaySummary?.alpaca_official_pnl) : undefined;
 
-        const bestTradeNum = (todaySummary?.best_trade !== undefined && todaySummary.best_trade !== 0)
+        const bestTradeNum = (isViewingToday && todaySummary?.best_trade !== undefined && todaySummary.best_trade !== 0)
           ? todaySummary.best_trade
           : (closedToday.length > 0 ? Math.max(...closedToday.map(t => t.pnl || 0)) : 0);
 
-        const worstTradeNum = (todaySummary?.worst_trade !== undefined && todaySummary.worst_trade !== 0)
+        const worstTradeNum = (isViewingToday && todaySummary?.worst_trade !== undefined && todaySummary.worst_trade !== 0)
           ? todaySummary.worst_trade
           : (closedToday.length > 0 ? Math.min(...closedToday.map(t => t.pnl || 0)) : 0);
 
@@ -488,8 +502,8 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
             {/* 2. Win Rate */}
             <div className="stat-card" style={{ background: '#09090b', border: '1px solid var(--color-border)', padding: '1.25rem' }}>
               <span className="stat-label">Win Rate</span>
-              <span className="stat-value" style={{ fontSize: '1.4rem', fontWeight: 900, color: closedCount > 0 ? (winRatePct >= 50 ? 'var(--color-green)' : 'var(--color-red)') : '#38bdf8' }}>
-                {closedCount > 0 ? `${winRatePct.toFixed(1)}%` : '--'}
+              <span className="stat-value" style={{ fontSize: '1.4rem', fontWeight: 900, color: (closedCount > 0 && typeof winRatePct === 'number' && Number.isFinite(winRatePct)) ? (winRatePct >= 50 ? 'var(--color-green)' : 'var(--color-red)') : '#38bdf8' }}>
+                {(closedCount > 0 && typeof winRatePct === 'number' && Number.isFinite(winRatePct)) ? `${winRatePct.toFixed(1)}%` : '--'}
               </span>
               <div style={{ fontSize: '0.72rem', color: '#888', marginTop: '4px' }}>
                 {closedCount > 0 ? `${closedCount} trades (${winsCount}W / ${lossesCount}L)` : `${activePositionsCount} open positions`}
@@ -834,9 +848,9 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
                           <td style={{ fontWeight: 900, color: '#fff' }}>{trade.ticker}</td>
                           <td><span style={{ padding: '2px 7px', borderRadius: '4px', border: st.border, color: st.color, fontSize: '0.72rem', fontWeight: 700 }}>{trade.action}</span></td>
                           <td>{trade.shares}</td>
-                          <td>${trade.price.toFixed(2)}</td>
+                          <td>${Number(trade.price || 0).toFixed(2)}</td>
                           <td style={{ textAlign: 'right', fontWeight: 800, color: hasPnl ? (trade.pnl >= 0 ? 'var(--color-green)' : 'var(--color-red)') : '#555' }}>
-                            {hasPnl ? `${trade.pnl >= 0 ? '+' : ''}$${trade.pnl.toFixed(2)}` : '—'}
+                            {hasPnl ? `${trade.pnl >= 0 ? '+' : ''}$${Number(trade.pnl || 0).toFixed(2)}` : '—'}
                           </td>
                         </tr>
                       );
@@ -967,7 +981,7 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
                 <div style={{ textAlign: 'right', minWidth: '100px' }}>
                   <div style={{ fontSize: '0.72rem', color: 'var(--color-text-secondary)' }}>Realized PnL ({effectiveDate})</div>
                   <div style={{ fontSize: '1.3rem', fontWeight: 900, color: realizedPnl >= 0 ? 'var(--color-green)' : 'var(--color-red)' }}>
-                    {realizedPnl >= 0 ? '+' : ''}${realizedPnl.toFixed(2)}
+                    {realizedPnl >= 0 ? '+' : ''}${Number(realizedPnl || 0).toFixed(2)}
                   </div>
                 </div>
               </div>
@@ -1003,7 +1017,7 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
                           {info.trades.length} trades
                         </div>
                         <div style={{ fontSize: '1.15rem', fontWeight: 900, marginTop: '6px', color: isWin ? 'var(--color-green)' : isLoss ? 'var(--color-red)' : '#666' }}>
-                          {info.trades.some(hasKnownClosePnl) ? `${info.totalPnl > 0 ? '+' : ''}$${info.totalPnl.toFixed(2)}` : 'Unrealized / unknown'}
+                          {info.trades.some(hasKnownClosePnl) ? `${info.totalPnl > 0 ? '+' : ''}$${Number(info.totalPnl || 0).toFixed(2)}` : 'Unrealized / unknown'}
                         </div>
                       </div>
                     );
@@ -1030,7 +1044,7 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
                       return (
                         <tr key={idx} style={{ borderLeft: `3px solid ${hasPnl && trade.pnl > 0 ? 'rgba(0,200,5,0.55)' : hasPnl && trade.pnl < 0 ? 'rgba(255,59,48,0.55)' : 'rgba(255,255,255,0.07)'}` }}>
                           <td style={{ color: 'var(--color-text-secondary)', fontSize: '0.75rem', whiteSpace: 'nowrap', paddingLeft: '10px' }}>
-                            {trade.time.slice(11, 19)}
+                            {trade.time ? (trade.time.length >= 19 ? trade.time.slice(11, 19) : (trade.time.length > 5 ? trade.time.slice(5) : trade.time)) : (trade.date || '—')}
                           </td>
                           <td style={{ fontWeight: 900, fontSize: '0.9rem', color: '#fff' }}>{trade.ticker}</td>
                           <td>
@@ -1039,12 +1053,12 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
                             </span>
                           </td>
                           <td style={{ fontWeight: 600 }}>{trade.shares} shs</td>
-                          <td style={{ fontWeight: 700, color: '#e5e5e7' }}>${trade.price.toFixed(2)}</td>
+                          <td style={{ fontWeight: 700, color: '#e5e5e7' }}>${Number(trade.price || 0).toFixed(2)}</td>
                           <td style={{ fontSize: '0.72rem', color: 'var(--color-text-secondary)', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {trade.reason}
                           </td>
                           <td style={{ textAlign: 'right', fontWeight: 900, fontSize: '0.9rem', color: hasPnl ? (trade.pnl >= 0 ? 'var(--color-green)' : 'var(--color-red)') : '#555' }}>
-                            {hasPnl ? `${trade.pnl >= 0 ? '+' : ''}$${trade.pnl.toFixed(2)}` : trade.pnl_complete === false ? 'Unknown basis' : 'Open'}
+                            {hasPnl ? `${trade.pnl >= 0 ? '+' : ''}$${Number(trade.pnl || 0).toFixed(2)}` : trade.pnl_complete === false ? 'Unknown basis' : 'Open'}
                           </td>
                         </tr>
                       );
