@@ -7,7 +7,7 @@ if _backend_dir not in sys.path:
 
 import json
 import asyncio
-from fastapi import FastAPI, Query, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, Query, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, HTMLResponse
@@ -53,6 +53,8 @@ from app.multi_asset_simulator import MultiAssetPortfolioSimulator
 import time
 
 from app.broker.live_runner import LiveTradingRunner
+from app.news_monitor import list_items as list_news_items, source_status as news_source_status, start_monitor as start_news_monitor, stop_monitor as stop_news_monitor
+from app.sig_ai_triage import TriageError, analyze as analyze_sig_headline, results as sig_triage_results, status as sig_triage_status
 
 class LiveStartRequest(BaseModel):
     params: Optional[dict] = None
@@ -87,6 +89,34 @@ def auto_start_live_runner():
         print("[System Startup] 🚀 AI 量化托管交易机器人已在后台自动启动上线（支持多空双向全自动交易）！")
     except Exception as e:
         print(f"[System Startup Warning] 自动启动交易机器人异常: {e}")
+@app.on_event("startup")
+def auto_start_news_monitor():
+    start_news_monitor()
+
+@app.on_event("shutdown")
+def shutdown_news_monitor():
+    stop_news_monitor()
+
+@app.get("/api/news/items")
+def get_news_items(topic: Optional[str] = None, limit: int = Query(40, ge=1, le=100)):
+    if topic not in (None, "elections", "markets"):
+        return {"items": [], "error": "Unknown topic"}
+    return {"items": list_news_items(topic=topic, limit=limit), "topic": topic or "all"}
+
+@app.get("/api/news/sources")
+def get_news_sources():
+    return {"sources": news_source_status()}
+
+@app.get("/api/sig/triage")
+def get_sig_triage():
+    return {"status": sig_triage_status(), "results": sig_triage_results()}
+
+@app.post("/api/sig/triage/{news_id}")
+def run_sig_triage(news_id: str):
+    try:
+        return {"result": analyze_sig_headline(news_id), "status": sig_triage_status()}
+    except TriageError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=str(exc)) from exc
 
 # 请求延迟追踪
 request_latencies = []

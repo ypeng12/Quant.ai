@@ -20,7 +20,7 @@ import { SameDayReplayPanel } from './components/SameDayReplayPanel';
 import { InstitutionalPanel } from './components/InstitutionalPanel';
 import { PortfolioHistoryChart } from './components/PortfolioHistoryChart';
 import { ReplayAndExperimentsPanel } from './components/ReplayAndExperimentsPanel';
-import { MLAssistantPanel } from './components/MLAssistantPanel';
+import { PredictionsCupPanel } from './components/PredictionsCupPanel';
 import { TradeComparisonPanel } from './components/TradeComparisonPanel';
 import { PaperAlphaDashboard } from './components/PaperAlphaDashboard';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -654,7 +654,7 @@ function App() {
               transition: 'all 0.2s ease'
             }}
           >
-            🤖 ML Diagnostics
+            🏆 Predictions Cup
           </button>
 
           <button
@@ -798,9 +798,9 @@ function App() {
             <ExperimentCompare />
           )}
 
-          {/* ML Assistant & Diagnostic Dashboard Tab */}
+          {/* SIG Predictions Cup research tab */}
           {activeTab === 'ml_assistant' && (
-            <MLAssistantPanel activeTicker={activeTicker} />
+            <PredictionsCupPanel />
           )}
 
           {/* Live Interactive Alpha Dashboard Tab */}

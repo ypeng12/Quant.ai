@@ -35,6 +35,8 @@ tags:
 
 </div>
 
+**Current Predictions Cup plan:** [Read the Chinese strategy and schedule](docs/PREDICTIONS_CUP_STRATEGY.md). Other files in `docs/` are technical notes or historical research; they are not required to follow this plan.
+
 ---
 
 ## 🌟 Executive Overview
