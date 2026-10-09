@@ -1,0 +1,12 @@
+{
+  "status": "complete",
+  "requested_symbols": [
+    "NVDA",
+    "SNDK",
+    "TSLA",
+    "MSTR"
+  ],
+  "failures": {},
+  "yfinance_version": "1.5.2",
+  "downloaded_at": "2026-10-07T14:20:55.039853+00:00"
+}

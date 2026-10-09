@@ -1,0 +1,120 @@
+{
+  "checks": "Training chronology, fill timing, session inventory, gross/net/cost reconciliation and source hashes passed",
+  "registry_sha256": "6e46dd120f621e0419db1600d530f7e6302768b3a344ba961dec657ab389c64c",
+  "results": {
+    "frozen_h1": {
+      "gross_pnl": 1198.8357391360876,
+      "net_2bps": -1107.5136817959137,
+      "fixed_path_net_5bps": -4567.0378131939215,
+      "gross_exposure": 0.688370072856809,
+      "abs_net_exposure": 0.3705046885324659,
+      "daily_volatility": 0.007681657552241703,
+      "max_drawdown": -0.039385667978117156,
+      "daily_turnover": 15.52550229048937,
+      "break_even_friction_bps": 1.03959593308427,
+      "first_half_pnl": -519.180993749811,
+      "second_half_pnl": -588.3326880461027,
+      "without_best_day": -1558.868707946429,
+      "per_symbol_net": {
+        "NVDA": -627.83230045469,
+        "SNDK": 1284.2024890625871,
+        "TSLA": -1763.88387040389
+      }
+    },
+    "daily_refit_h1": {
+      "gross_pnl": -159.2950897214164,
+      "net_2bps": -1904.809834103129,
+      "fixed_path_net_5bps": -4523.081950675703,
+      "gross_exposure": 0.7573548419771198,
+      "abs_net_exposure": 0.48671824263208574,
+      "daily_volatility": 0.008715618054346425,
+      "max_drawdown": -0.057367500575725705,
+      "daily_turnover": 11.979974490719407,
+      "break_even_friction_bps": -0.1825193287357088,
+      "first_half_pnl": -2003.5289350676103,
+      "second_half_pnl": 98.71910096448119,
+      "without_best_day": -2646.8194155484452,
+      "per_symbol_net": {
+        "NVDA": -162.7416156402105,
+        "SNDK": -787.3842249023098,
+        "TSLA": -954.683993560664
+      }
+    },
+    "daily_refit_h3": {
+      "gross_pnl": 427.5250701906168,
+      "net_2bps": -963.2564006071116,
+      "fixed_path_net_5bps": -3049.4286068037036,
+      "gross_exposure": 0.7220834534951055,
+      "abs_net_exposure": 0.43281617413747214,
+      "daily_volatility": 0.00884237658665387,
+      "max_drawdown": -0.05567506524885446,
+      "daily_turnover": 9.492246036327742,
+      "break_even_friction_bps": 0.6147983405982472,
+      "first_half_pnl": -1734.060085339268,
+      "second_half_pnl": 770.8036847321564,
+      "without_best_day": -1991.7655231717872,
+      "per_symbol_net": {
+        "NVDA": -905.3885564239063,
+        "SNDK": -717.78840361325,
+        "TSLA": 659.9205594299874
+      }
+    },
+    "daily_refit_h6": {
+      "gross_pnl": 2092.2544708254118,
+      "net_2bps": 188.92139322226285,
+      "fixed_path_net_5bps": -2666.0782231824633,
+      "gross_exposure": 0.6758121654130336,
+      "abs_net_exposure": 0.3994265227819107,
+      "daily_volatility": 0.007400696624350937,
+      "max_drawdown": -0.03182841941433179,
+      "daily_turnover": 12.813467325175758,
+      "break_even_friction_bps": 2.19851637681847,
+      "first_half_pnl": -478.94128341649775,
+      "second_half_pnl": 667.8626766387606,
+      "without_best_day": -710.1084714353565,
+      "per_symbol_net": {
+        "NVDA": -767.3227226225936,
+        "SNDK": 53.15374592290027,
+        "TSLA": 903.09036992202
+      }
+    },
+    "daily_refit_h1_risk10": {
+      "gross_pnl": -588.544937133641,
+      "net_2bps": -2415.563739901583,
+      "fixed_path_net_5bps": -5156.091944053507,
+      "gross_exposure": 0.8611687378662287,
+      "abs_net_exposure": 0.6023511013568135,
+      "daily_volatility": 0.011660179161965274,
+      "max_drawdown": -0.0721998289990593,
+      "daily_turnover": 12.649418033589296,
+      "break_even_friction_bps": -0.644268068004546,
+      "first_half_pnl": -2603.776192281941,
+      "second_half_pnl": 188.21245238035772,
+      "without_best_day": -3368.3524228483584,
+      "per_symbol_net": {
+        "NVDA": 75.3410027984828,
+        "SNDK": -1346.1775361571629,
+        "TSLA": -1144.7272065428538
+      }
+    },
+    "equal_weight_session": {
+      "gross_pnl": -196.33242797849886,
+      "net_2bps": -476.0237741454912,
+      "fixed_path_net_5bps": -895.5607933959764,
+      "gross_exposure": 0.9159556963204648,
+      "abs_net_exposure": 0.9159556963204648,
+      "daily_volatility": 0.013760902875235964,
+      "max_drawdown": -0.0632790609694962,
+      "daily_turnover": 1.8552852760812428,
+      "break_even_friction_bps": -1.4039220781702475,
+      "first_half_pnl": 978.08053529053,
+      "second_half_pnl": -1454.1043094360211,
+      "without_best_day": -1711.455652844219,
+      "per_symbol_net": {
+        "NVDA": 158.63974288941063,
+        "SNDK": -56.93537983397778,
+        "TSLA": -577.7281372009074
+      }
+    }
+  }
+}

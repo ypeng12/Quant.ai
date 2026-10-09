@@ -1,0 +1,105 @@
+{
+  "status": "registered",
+  "registered_at": "2026-10-07T14:22:51.073378+00:00",
+  "start": "2026-09-15",
+  "end": "2026-10-06",
+  "capital": 47006.42,
+  "traded_symbols": [
+    "NVDA",
+    "SNDK",
+    "TSLA"
+  ],
+  "model_inputs": [
+    "NVDA",
+    "SNDK",
+    "TSLA",
+    "MSTR"
+  ],
+  "candidates": [
+    {
+      "name": "frozen_h1",
+      "feature_set": "price_volume",
+      "horizon_bars": 1,
+      "ridge_alpha": 10.0,
+      "risk_aversion": 50.0,
+      "cost_bps": 2.0,
+      "gross_limit": 0.95,
+      "symbol_limit": 0.7
+    },
+    {
+      "name": "daily_refit_h1",
+      "feature_set": "price_volume",
+      "horizon_bars": 1,
+      "ridge_alpha": 10.0,
+      "risk_aversion": 50,
+      "cost_bps": 2.0,
+      "gross_limit": 0.95,
+      "symbol_limit": 0.7
+    },
+    {
+      "name": "daily_refit_h3",
+      "feature_set": "price_volume",
+      "horizon_bars": 3,
+      "ridge_alpha": 10.0,
+      "risk_aversion": 50,
+      "cost_bps": 2.0,
+      "gross_limit": 0.95,
+      "symbol_limit": 0.7
+    },
+    {
+      "name": "daily_refit_h6",
+      "feature_set": "price_volume",
+      "horizon_bars": 6,
+      "ridge_alpha": 10.0,
+      "risk_aversion": 50,
+      "cost_bps": 2.0,
+      "gross_limit": 0.95,
+      "symbol_limit": 0.7
+    },
+    {
+      "name": "daily_refit_h1_risk10",
+      "feature_set": "price_volume",
+      "horizon_bars": 1,
+      "ridge_alpha": 10.0,
+      "risk_aversion": 10,
+      "cost_bps": 2.0,
+      "gross_limit": 0.95,
+      "symbol_limit": 0.7
+    },
+    {
+      "name": "equal_weight_session",
+      "feature_set": "price_volume",
+      "horizon_bars": 1,
+      "ridge_alpha": 10.0,
+      "risk_aversion": 50.0,
+      "cost_bps": 2.0,
+      "gross_limit": 0.95,
+      "symbol_limit": 0.7
+    }
+  ],
+  "training": "Expanding prior full sessions; same 2026-08-10 starting history for all daily refits",
+  "execution": "Completed-bar intent, next open, integer shares, existing 15:55 liquidation; 2 bps assumed friction",
+  "evaluation": "Newly evaluated historical window, not prospective or untouched holdout",
+  "selection": "Report all six candidates, no automatic live promotion; reduced risk aversion is an isolated sizing experiment",
+  "source_hashes": {
+    "scripts/research_alpha_refresh.py": "37573e49a904aed8a6963c3c3ece162f054a78f54c43f13330976cacf247c7c1",
+    "backend/app/quant_policy.py": "c62509a5f8151558b0d9b339a72956cc02684723a646d88924b9cd019aadc5fd",
+    "backend/app/research/policy_replay.py": "787f5149f3fd69fdaf70ff45508d3da0620b8c19319fb5edbf246a9df6184135",
+    "backend/app/research/causal_week_replay.py": "b96264a34e9675bcf242a5dbe6881a475176015f34362c1553963b4dd8729011"
+  },
+  "data_hashes": {
+    "NVDA": "e7ad8dc8b162fb20c4a9dccce74af97840332e94ff2a9736ebfb817dbf2da622",
+    "SNDK": "ef95f247adfc8c3adc1284223942360af5f450b936401a54f52354f859ab442a",
+    "TSLA": "88f284264e45b17f1a16da6be8745534c0a493d03c74a931e008161f493a2944",
+    "MSTR": "97309f50459def71b03378ee1a82e712774c8a7c9720389fe5f79a2cdc5c5872"
+  },
+  "frozen_model_sha256": "a3f186e60e54e901bd1d22c349e8aa86d5bfa37c8a51c802ba186e55328cf418",
+  "limitations": [
+    "Yahoo OHLCV; no timestamped quotes, partial fills, borrow or latency reconstruction",
+    "Actual explicit fees and financing unverified; 0/2/5 bps are assumed friction scenarios",
+    "Contemporary three-stock universe, not point-in-time universe selection",
+    "Frozen model has different historical training window; refresh comparison includes that window difference",
+    "Risk10 is research only, same 95% gross and 70% single-name caps",
+    "Six short-window comparisons cannot establish persistent alpha"
+  ]
+}

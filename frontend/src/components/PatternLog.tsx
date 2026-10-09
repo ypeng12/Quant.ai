@@ -18,7 +18,7 @@ interface PatternLogProps {
 export const PatternLog: React.FC<PatternLogProps> = ({ patterns }) => {
   return (
     <div className="card" style={{ maxHeight: '350px', display: 'flex', flexDirection: 'column' }}>
-      <h3 className="card-title" style={{ marginBottom: '10px' }}>K 线形态自动识别日志 (K-Line Pattern Recognition Log)</h3>
+      <h3 className="card-title" style={{ marginBottom: '10px' }}>Candlestick Pattern Recognition Log</h3>
       
       <div style={{ 
         overflowY: 'auto', 
@@ -30,7 +30,7 @@ export const PatternLog: React.FC<PatternLogProps> = ({ patterns }) => {
       }}>
         {patterns.length === 0 ? (
           <p style={{ color: 'var(--color-text-secondary)', margin: '1rem 0 0 0', fontSize: '0.9rem' }}>
-            回测时段内未识别到明显的标志性 K 线形态（如双底/双顶/锤子线等）。
+            No clear candlestick patterns, such as double bottoms, double tops, or hammers, were identified during this backtest.
           </p>
         ) : (
           patterns.map((item, idx) => {

@@ -54,6 +54,8 @@ import time
 
 from app.broker.live_runner import LiveTradingRunner
 from app.news_monitor import list_items as list_news_items, source_status as news_source_status, start_monitor as start_news_monitor, stop_monitor as stop_news_monitor
+from app.community_monitor import snapshot as community_snapshot
+from app.financial_sentiment_research import router as financial_sentiment_research_router
 from app.sig_ai_triage import TriageError, analyze as analyze_sig_headline, results as sig_triage_results, status as sig_triage_status
 
 class LiveStartRequest(BaseModel):
@@ -75,6 +77,7 @@ class ExtendedHoursOrderRequest(BaseModel):
     limit_price: Optional[float] = None
 
 app = FastAPI(title="Quant.ai API Server")
+app.include_router(financial_sentiment_research_router)
 
 # Instantiate live trading background runner
 live_runner = LiveTradingRunner()
@@ -89,6 +92,7 @@ def auto_start_live_runner():
         print("[System Startup] 🚀 AI 量化托管交易机器人已在后台自动启动上线（支持多空双向全自动交易）！")
     except Exception as e:
         print(f"[System Startup Warning] 自动启动交易机器人异常: {e}")
+
 @app.on_event("startup")
 def auto_start_news_monitor():
     start_news_monitor()
@@ -117,6 +121,13 @@ def run_sig_triage(news_id: str):
         return {"result": analyze_sig_headline(news_id), "status": sig_triage_status()}
     except TriageError as exc:
         raise HTTPException(status_code=exc.status_code, detail=str(exc)) from exc
+
+@app.get("/api/community/{symbol}")
+def get_community_posts(symbol: str, limit: int = Query(30, ge=1, le=50)):
+    try:
+        return community_snapshot(symbol, limit=limit)
+    except ValueError:
+        return {"symbol": symbol, "posts": [], "error": "Invalid symbol"}
 
 # 请求延迟追踪
 request_latencies = []
@@ -1560,7 +1571,7 @@ def get_action_feed(limit: int = 100):
 
 @app.get("/api/live/trade_history")
 def get_trade_history():
-    """Display complete current-account broker history; preserve archives on disk."""
+    """Display current-account fills while preserving archives on disk."""
     from app.broker.fill_accounting import display_history
     history_file = os.path.join(os.path.dirname(__file__), "trade_history.json")
     if not os.path.isfile(history_file):
@@ -1884,20 +1895,6 @@ def get_dashboard_market_data(ticker: str = "TSLA", date: str = "", interval: st
         return market_data(ticker, date, interval)
     except (OSError, ValueError, KeyError) as exc:
         return {"success": False, "error": str(exc)}
-
-
-@app.get("/api/dashboard/price_replay_dates")
-def get_price_replay_dates(ticker: str = "SNDK", variant: str = "levels_error_risk"):
-    from app.dashboard.broker_replay import BROKER_REPLAY, session_dates, NY
-    from app.dashboard.price_replay import replay_date_catalog
-    import pandas as pd
-    now = pd.Timestamp.now(tz=NY)
-    try:
-        snapshot, _, _ = BROKER_REPLAY.snapshot()
-    except ValueError:
-        snapshot = None
-    dates = session_dates(snapshot["events"] if snapshot else [], now)
-    return replay_date_catalog(ticker, variant, dates, now.date().isoformat())
 
 
 @app.get("/api/dashboard/price_replay")

@@ -5,6 +5,7 @@
 import os
 import pandas as pd
 import hashlib
+import math
 from datetime import datetime, timedelta
 
 CACHE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data_cache")
@@ -49,8 +50,13 @@ def get_cached(ticker: str, period: str, interval: str):
         return None
     
     ttl = CACHE_TTL.get(interval, 3600)
-    if datetime.now().timestamp() - saved_time > ttl:
+    now = datetime.now().timestamp()
+    if not math.isfinite(saved_time) or saved_time > now or now - saved_time > ttl:
         return None  # 已过期
+    # The last downloaded 5m candle can still be forming. Crossing its close
+    # does not complete that cached snapshot; fetch its final OHLCV again.
+    if interval == "5m" and int(saved_time // 300) != int(now // 300):
+        return None
 
     try:
         return pd.read_parquet(parquet_file)
@@ -64,19 +70,34 @@ def get_cached_ignore_ttl(ticker: str, period: str, interval: str):
     if not os.path.exists(parquet_file):
         return None
     try:
-        return pd.read_parquet(parquet_file)
+        frame = pd.read_parquet(parquet_file)
+        if interval == "5m":
+            with open(_meta_path(key), 'r') as handle:
+                observed_at = float(handle.read().strip())
+            if not math.isfinite(observed_at) or observed_at > datetime.now().timestamp():
+                return None
+            if not isinstance(frame.index, pd.DatetimeIndex) or frame.index.tz is None:
+                return None
+            # A fallback may show historical bars, but cannot mature a partial
+            # candle just because wall-clock time has advanced since download.
+            snapshot = pd.Timestamp(observed_at, unit="s", tz="UTC")
+            frame = frame.loc[frame.index + pd.Timedelta(minutes=5) <= snapshot]
+        return frame
     except Exception:
         return None
 
-def save_cache(ticker: str, period: str, interval: str, df: pd.DataFrame):
+def save_cache(ticker: str, period: str, interval: str, df: pd.DataFrame, *, observed_at: float = None):
     """保存数据到 Parquet 缓存"""
     if df is None or df.empty:
         return
     key = _cache_key(ticker, period, interval)
     try:
+        stamp = datetime.now().timestamp() if observed_at is None else float(observed_at)
+        if not math.isfinite(stamp):
+            raise ValueError("Cache observation time must be finite")
         df.to_parquet(_cache_path(key))
         with open(_meta_path(key), 'w') as f:
-            f.write(str(datetime.now().timestamp()))
+            f.write(str(stamp))
     except Exception as e:
         print(f"缓存写入失败: {e}")
 

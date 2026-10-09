@@ -7,3 +7,11 @@
 venv
 backend/data_cache
 *.log
+
+# Private research archives and runtime snapshots are not image inputs.
+backend/.runtime_state
+reports/market_impact_data_audit_20261007
+reports/alpha_refresh_20261007/live_snapshot.json
+reports/alpha_refresh_20261007/runtime_state.json
+reports/alpha_refresh_20261007/**/*.csv.gz
+reports/trading_logic_audit_20261002/audit.json

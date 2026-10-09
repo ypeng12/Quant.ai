@@ -1,0 +1,46 @@
+{
+  "project": "Train_Financial_Sentinment_Analysis_Using_Prices",
+  "audit_date": "2026-10-07",
+  "model_status": "Not trained",
+  "evaluation_status": "Not evaluated",
+  "current_stage": "Data audit",
+  "exploratory_labels": 90,
+  "labels_are_predictions": false,
+  "sources": [
+    {
+      "id": "news",
+      "name": "Company news",
+      "records": 187,
+      "status": "Historical audit",
+      "detail": "Benzinga via Alpaca: 152 articles have body text. Event deduplication and historical arrival times remain unresolved."
+    },
+    {
+      "id": "futu",
+      "name": "Futu community",
+      "records": 120,
+      "status": "Historical audit",
+      "detail": "118 distinct post IDs and 115 distinct texts. Author and interaction fields were absent; first-snapshot receipt times were not recorded."
+    },
+    {
+      "id": "prices",
+      "name": "Stock and benchmark prices",
+      "records": 2730,
+      "status": "Historical audit",
+      "detail": "Five-minute regular-session bars across 7 symbols and 5 trading sessions. Exploratory labels use 60-minute stock returns relative to SPY before costs."
+    },
+    {
+      "id": "sec",
+      "name": "SEC filings",
+      "records": 94,
+      "status": "Metadata only",
+      "detail": "90-day metadata snapshot: 14 filings are 8-K, 10-Q, or 10-K. All 4 attempted primary-document downloads failed; text is not available."
+    },
+    {
+      "id": "x",
+      "name": "X",
+      "records": null,
+      "status": "Not connected",
+      "detail": "No authorized structured data sample has been collected."
+    }
+  ]
+}

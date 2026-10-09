@@ -20,7 +20,8 @@ import { SameDayReplayPanel } from './components/SameDayReplayPanel';
 import { InstitutionalPanel } from './components/InstitutionalPanel';
 import { PortfolioHistoryChart } from './components/PortfolioHistoryChart';
 import { ReplayAndExperimentsPanel } from './components/ReplayAndExperimentsPanel';
-import { PredictionsCupPanel } from './components/PredictionsCupPanel';
+import { ElectionNewsPanel } from './components/ElectionNewsPanel';
+import { FinancialSentimentResearchPanel } from './components/FinancialSentimentResearchPanel';
 import { TradeComparisonPanel } from './components/TradeComparisonPanel';
 import { PaperAlphaDashboard } from './components/PaperAlphaDashboard';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -150,7 +151,7 @@ const INTERVAL_LABELS: Record<string, string> = {
   "1d": "Daily"
 };
 
-type ActiveTab = 'dashboard' | 'research' | 'report' | 'walkforward' | 'experiments' | 'replay' | 'broker' | 'institutional' | 'portfolio' | 'ml_assistant' | 'trade_comparison' | 'live_dashboard' | 'saggese_wave';
+type ActiveTab = 'dashboard' | 'research' | 'report' | 'walkforward' | 'experiments' | 'replay' | 'broker' | 'institutional' | 'portfolio' | 'financial_sentiment' | 'election_news' | 'trade_comparison' | 'live_dashboard' | 'saggese_wave';
 
 function App() {
   const [watchlist, setWatchlist] = useState<string[]>(["SNDK", "TSLA", "PLTR", "NVDA"]);
@@ -159,7 +160,10 @@ function App() {
   const [activeTicker, setActiveTicker] = useState<string>('TSLA');
   const [activeInterval, setActiveInterval] = useState<string>('1d');
   const [strategyParams, setStrategyParams] = useState<StrategyParams>(DEFAULT_STRATEGY_PARAMS);
-  const [activeTab, setActiveTab] = useState<ActiveTab>('broker');
+  const [activeTab, setActiveTab] = useState<ActiveTab>(() =>
+    new URLSearchParams(window.location.search).get('tab') === 'financial_sentiment'
+      ? 'financial_sentiment' : 'broker'
+  );
   
   const [loading, setLoading] = useState<boolean>(true);
   const [data, setData] = useState<BacktestResponse | null>(null);
@@ -640,21 +644,39 @@ function App() {
           </button>
 
           <button
-            className={`nav-tab ${activeTab === 'ml_assistant' ? 'active' : ''}`}
-            onClick={() => setActiveTab('ml_assistant')}
+            className={`nav-tab ${activeTab === 'financial_sentiment' ? 'active' : ''}`}
+            onClick={() => setActiveTab('financial_sentiment')}
             style={{
               padding: '8px 18px',
               fontSize: '0.9rem',
               fontWeight: 800,
-              background: activeTab === 'ml_assistant' ? 'linear-gradient(135deg, #0284c7, #0369a1)' : 'transparent',
+              background: activeTab === 'financial_sentiment' ? 'linear-gradient(135deg, #0d9488, #0f766e)' : 'transparent',
               color: '#ffffff',
               borderRadius: '6px',
-              border: activeTab === 'ml_assistant' ? 'none' : '1px solid rgba(56, 189, 248, 0.4)',
+              border: activeTab === 'financial_sentiment' ? 'none' : '1px solid rgba(45, 212, 191, 0.4)',
               cursor: 'pointer',
               transition: 'all 0.2s ease'
             }}
           >
-            🏆 Predictions Cup
+            Financial Sentiment
+          </button>
+
+          <button
+            className={`nav-tab ${activeTab === 'election_news' ? 'active' : ''}`}
+            onClick={() => setActiveTab('election_news')}
+            style={{
+              padding: '8px 18px',
+              fontSize: '0.9rem',
+              fontWeight: 800,
+              background: activeTab === 'election_news' ? 'linear-gradient(135deg, #0284c7, #0369a1)' : 'transparent',
+              color: '#ffffff',
+              borderRadius: '6px',
+              border: activeTab === 'election_news' ? 'none' : '1px solid rgba(56, 189, 248, 0.4)',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            📰 Election News
           </button>
 
           <button
@@ -730,8 +752,8 @@ function App() {
           </button>
 
           {/* Optional Advanced Tools */}
-          <select aria-label="More Tools"
-            value={['broker', 'portfolio', 'replay', 'trade_comparison', 'institutional', 'saggese_wave', 'live_dashboard', 'ml_assistant'].includes(activeTab) ? '' : activeTab}
+          <select
+            value={['broker', 'portfolio', 'replay', 'trade_comparison', 'institutional', 'saggese_wave', 'live_dashboard', 'financial_sentiment', 'election_news'].includes(activeTab) ? '' : activeTab}
             onChange={(e) => {
               if (e.target.value) setActiveTab(e.target.value as ActiveTab);
             }}
@@ -781,7 +803,7 @@ function App() {
 
           {/* AI Research Tab */}
           {activeTab === 'research' && (
-            <ChatPanel 
+            <ChatPanel
               onRunBacktest={handleAgentBacktest}
               isLoading={loading}
               activeTicker={activeTicker}
@@ -798,9 +820,14 @@ function App() {
             <ExperimentCompare />
           )}
 
-          {/* SIG Predictions Cup research tab */}
-          {activeTab === 'ml_assistant' && (
-            <PredictionsCupPanel />
+          {/* Company news and sentiment research */}
+          {activeTab === 'financial_sentiment' && (
+            <FinancialSentimentResearchPanel symbol={activeTicker} />
+          )}
+
+          {/* Election news collection tab */}
+          {activeTab === 'election_news' && (
+            <ElectionNewsPanel />
           )}
 
           {/* Live Interactive Alpha Dashboard Tab */}

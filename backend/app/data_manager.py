@@ -216,6 +216,9 @@ def fetch_and_prepare_data(ticker, period=None, interval="1m"):
     is_intraday = interval in ["1m", "5m", "15m", "30m", "1h"]
     
     try:
+        # Record acquisition start, not the later disk-write time: indicator
+        # preparation or a slow request can cross a five-minute bar boundary.
+        observed_at = datetime.datetime.now().timestamp()
         df = stock.history(period=period, interval=interval, prepost=is_intraday)
     except Exception as e:
         from app.data_cache import get_cached_ignore_ttl
@@ -376,7 +379,7 @@ def fetch_and_prepare_data(ticker, period=None, interval="1m"):
     regular_hours_df.bfill(inplace=True)
     
     # 保存数据到 Parquet 本地缓存
-    save_cache(ticker, period, interval, regular_hours_df)
+    save_cache(ticker, period, interval, regular_hours_df, observed_at=observed_at)
     
     return regular_hours_df
 

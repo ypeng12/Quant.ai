@@ -1,7 +1,8 @@
 """Low-cost, read-only news discovery for Quant.ai.
 
-The collector stores RSS metadata only. It does not download article bodies, call
-an LLM, infer event probabilities, or send trade instructions.
+The collector stores RSS metadata and source-provided excerpts. A separate
+cached triage step may summarize selected excerpts; it does not fetch full
+article pages, infer probabilities, or send trade instructions.
 """
 
 from __future__ import annotations
@@ -61,6 +62,9 @@ def feeds() -> list[Feed]:
     suffix = "&hl=en-US&gl=US&ceid=US:en"
     return [
         Feed("google-election", "elections", "Google News: Midterms", f"https://news.google.com/rss/search?q={election_query}{suffix}"),
+        Feed("pbs-politics", "elections", "PBS NewsHour: Politics", "https://www.pbs.org/newshour/feeds/rss/politics"),
+        Feed("abc-politics", "elections", "ABC News: Politics", "https://feeds.abcnews.com/abcnews/politicsheadlines"),
+        Feed("nbc-politics", "elections", "NBC News: Politics", "https://feeds.nbcnews.com/nbcnews/public/politics"),
         Feed("google-markets", "markets", "Google News: Markets", f"https://news.google.com/rss/search?q={market_query}{suffix}", terms=tuple(company_terms)),
         Feed("eac", "elections", "U.S. Election Assistance Commission", "https://www.eac.gov/rss.xml", True),
     ]
@@ -85,6 +89,7 @@ def _connect(path: Path | None = None) -> Iterator[sqlite3.Connection]:
             feed_id TEXT NOT NULL,
             publisher TEXT NOT NULL,
             title TEXT NOT NULL,
+            content TEXT NOT NULL DEFAULT '',
             title_key TEXT NOT NULL,
             url TEXT NOT NULL,
             published_at TEXT,
@@ -106,6 +111,10 @@ def _connect(path: Path | None = None) -> Iterator[sqlite3.Connection]:
         );
         CREATE TABLE IF NOT EXISTS news_control (key TEXT PRIMARY KEY, lease_until REAL NOT NULL);
     """)
+    # Add the feed excerpt field to databases created by earlier app versions.
+    columns = {row["name"] for row in db.execute("PRAGMA table_info(news_items)")}
+    if "content" not in columns:
+        db.execute("ALTER TABLE news_items ADD COLUMN content TEXT NOT NULL DEFAULT ''")
     try:
         with db:
             yield db
@@ -116,6 +125,20 @@ def _connect(path: Path | None = None) -> Iterator[sqlite3.Connection]:
 def _clean(text: str | None, limit: int = 320) -> str:
     value = html.unescape(re.sub(r"<[^>]+>", " ", text or ""))
     return re.sub(r"\s+", " ", value).strip()[:limit]
+
+
+def _feed_content(item: ET.Element) -> str:
+    # RSS publishers commonly put their short article excerpt in description;
+    # Atom and RSS content modules use one of these namespaced elements.
+    candidates = [item.findtext("{http://purl.org/rss/1.0/modules/content/}encoded"),
+                  item.findtext("{http://www.w3.org/2005/Atom}content"),
+                  item.findtext("{http://www.w3.org/2005/Atom}summary"),
+                  item.findtext("description")]
+    for candidate in candidates:
+        cleaned = _clean(candidate, 1600)
+        if cleaned:
+            return cleaned
+    return ""
 
 
 def _canonical_url(raw: str | None) -> str | None:
@@ -182,17 +205,20 @@ def parse_rss(payload: bytes, feed: Feed, now: datetime | None = None) -> list[d
         if not title or not link or not _matches_topic(feed, title):
             continue
         published_at = _published(item.findtext("pubDate"))
-        if published_at and datetime.fromisoformat(published_at) < now_utc - timedelta(days=3):
+        if published_at and datetime.fromisoformat(published_at) < now_utc - timedelta(days=14):
             continue
         source = _clean(item.findtext("source"), 80) or feed.label
         title_key = re.sub(r"[^a-z0-9]+", "", title.casefold())[:180]
         if not title_key:
             continue
+        # Google News RSS wraps the title and publisher name in an anchor; it
+        # is not an article excerpt and should not trigger an AI call.
+        content = "" if feed.id.startswith("google-") else _feed_content(item)
         date = (published_at or observed)[:10]
         records.append({
             "id": hashlib.sha256(f"{feed.topic}:{link}".encode()).hexdigest(),
             "topic": feed.topic, "feed_id": feed.id, "publisher": source,
-            "title": title, "title_key": title_key, "url": link,
+            "title": title, "content": content, "title_key": title_key, "url": link,
             "published_at": published_at, "discovered_at": observed,
             "day": date, "priority": _priority(feed.topic, title, feed.official),
         })
@@ -223,8 +249,11 @@ def collect_once(path: Path | None = None, downloader=None) -> dict:
                     result = db.execute(f"INSERT OR IGNORE INTO news_items ({columns}) VALUES ({placeholders})", tuple(row.values()))
                     inserted += result.rowcount
                     if result.rowcount == 0:
-                        db.execute("UPDATE news_items SET priority=? WHERE id=? AND priority<?",
-                                   (row["priority"], row["id"], row["priority"]))
+                        db.execute("""UPDATE news_items SET
+                            priority=MAX(priority,?),
+                            content=CASE WHEN content='' THEN ? ELSE content END
+                            WHERE topic=? AND title_key=? AND day=?""",
+                                   (row["priority"], row["content"], row["topic"], row["title_key"], row["day"]))
                 db.execute("""INSERT INTO news_sources(id,topic,label,last_attempt,last_success,status,error,last_count)
                     VALUES(?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET
                     last_attempt=excluded.last_attempt,last_success=excluded.last_success,
@@ -241,7 +270,7 @@ def collect_once(path: Path | None = None, downloader=None) -> dict:
         # Keep a bounded local index. Published stories can be found at their source URLs.
         cutoff = datetime.fromtimestamp(time.time() - 45 * 86400, timezone.utc).isoformat(timespec="seconds")
         db.execute("DELETE FROM news_items WHERE discovered_at < ?", (cutoff,))
-        recent_cutoff = datetime.fromtimestamp(time.time() - 3 * 86400, timezone.utc).isoformat(timespec="seconds")
+        recent_cutoff = datetime.fromtimestamp(time.time() - 14 * 86400, timezone.utc).isoformat(timespec="seconds")
         db.execute("DELETE FROM news_items WHERE published_at IS NOT NULL AND published_at < ?", (recent_cutoff,))
         db.execute("""DELETE FROM news_items WHERE id IN
             (SELECT id FROM news_items ORDER BY discovered_at DESC LIMIT -1 OFFSET 5000)""")
@@ -252,10 +281,10 @@ def list_items(topic: str | None = None, limit: int = 40, path: Path | None = No
     limit = max(1, min(100, limit))
     with _connect(path) as db:
         if topic in {"elections", "markets"}:
-            rows = db.execute("""SELECT id,topic,publisher,title,url,published_at,discovered_at,priority
+            rows = db.execute("""SELECT id,topic,publisher,title,content,url,published_at,discovered_at,priority
                 FROM news_items WHERE topic=? ORDER BY COALESCE(published_at,discovered_at) DESC,priority DESC LIMIT ?""", (topic, limit)).fetchall()
         else:
-            rows = db.execute("""SELECT id,topic,publisher,title,url,published_at,discovered_at,priority
+            rows = db.execute("""SELECT id,topic,publisher,title,content,url,published_at,discovered_at,priority
                 FROM news_items ORDER BY COALESCE(published_at,discovered_at) DESC,priority DESC LIMIT ?""", (limit,)).fetchall()
     return [dict(row) for row in rows]
 

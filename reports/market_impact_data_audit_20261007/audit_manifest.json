@@ -1,0 +1,356 @@
+{
+  "audit_date": "2026-10-07",
+  "read_only": true,
+  "data_http_requests": 28,
+  "http_200": 22,
+  "http_403": 6,
+  "article_ids": 187,
+  "first_futu_rows": 120,
+  "first_futu_unique_ids": 118,
+  "sec_90day_filings": 94,
+  "sec_key_filings": 14,
+  "exploratory_label_rows": 90,
+  "no_model_training": true,
+  "no_ab_results": true,
+  "report": "docs/alpha_research_priorities_20260913.md",
+  "raw_data_not_published": true,
+  "provenance_notes": [
+    "News-price script received CLI/output preservation guard after capture; data logic unchanged.",
+    "Futu first request start timestamps were corrected to not claim response receipt; precise receipt added for second sample.",
+    "SEC script received output preservation guard after capture.",
+    "Content reviews are assistant annotations, not independent human ground truth."
+  ],
+  "files": [
+    {
+      "path": "reports/market_impact_data_audit_20261007/alpaca/bars_NVDA_000.json",
+      "bytes": 195472,
+      "sha256": "82503e5ef06d5b99836739d39131be72faaed77ac1ae6cf66cc7b3dc55b6660e"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/alpaca/bars_PLTR_000.json",
+      "bytes": 180575,
+      "sha256": "9daaa77cb7ea0049644d0c33925c723b1e216f709bb4480b389ca3cabcb75873"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/alpaca/bars_QQQ_000.json",
+      "bytes": 193457,
+      "sha256": "a8136e20317990acd4546096abbba01bb99834f255daa91b305cbe12a601b794"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/alpaca/bars_SNDK_000.json",
+      "bytes": 192424,
+      "sha256": "c644a196311b5bbdb5bcab58d31263b572331115cee662388eb1e966a10886f3"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/alpaca/bars_SOXX_000.json",
+      "bytes": 183845,
+      "sha256": "ded2af5c32521c2338e14a201f1d176390ea075db4da9f3f26af80581165e60a"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/alpaca/bars_SPY_000.json",
+      "bytes": 193220,
+      "sha256": "6738fa4503349b74e4859085d6539b3a51f1d672073d2f5cc8ee2cd320705760"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/alpaca/bars_TSLA_000.json",
+      "bytes": 194196,
+      "sha256": "ffa882e2b53fcb93fed8fa1c9b087b46511a651580677c211141fed51dcd23cd"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/alpaca/exploratory_labels.json",
+      "bytes": 81865,
+      "sha256": "5c786240900c6c2d206f5b1dc206c67fdc8c01a02656f78502f1983da1e9223e"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/alpaca/hashes.json",
+      "bytes": 1688,
+      "sha256": "41929d5366ebb8550b77d9258231993eae81038b96f014596e205a55aa6780f8"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/alpaca/latest_sip_quote_probe.json",
+      "bytes": 73,
+      "sha256": "4127ebf53fd2034990c5e5b12ece4c82c9c73ddb15eaadf50107cc336b497b0c"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/alpaca/news_normalized.json",
+      "bytes": 657984,
+      "sha256": "2bc4724d375a9972cf882d0393c2994f2e54914e57dc6153478b5d62fc0f9f65"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/alpaca/news_older_probe_000.json",
+      "bytes": 277089,
+      "sha256": "4b618decb520170cf088bf6ed062fbc0efc605b8c44690689a82db76dd1d4fe2"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/alpaca/news_recent_000.json",
+      "bytes": 343487,
+      "sha256": "40a218e55b8ae8b984b710dd0ee0f31f4dc3dbe9ae4965e78b3289e079725bc1"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/alpaca/news_recent_001.json",
+      "bytes": 321055,
+      "sha256": "296646801bd63dacb60e0a626ced0fc938ef0ce2eb61474e700e9920f0547c8c"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/alpaca/news_recent_002.json",
+      "bytes": 324706,
+      "sha256": "cbe031a97155e51c0f47ed889acc0ce268f8bc7fdd5c63870ba28ca26d438dae"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/alpaca/news_recent_003.json",
+      "bytes": 227357,
+      "sha256": "3c43e71991dcda0134c567e6fc4ecdc46e2ff5ff8087bba1782e164854371bcc"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/alpaca/news_recent_access_probe.json",
+      "bytes": 44,
+      "sha256": "bd3eb2c6c2d72999a0b9c5a643fa89aec39a30c0f49a321151e5d195f3e0398e"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/alpaca/requests.json",
+      "bytes": 6129,
+      "sha256": "6161978c58058d051d9d5f859cbf9c1ae5c9bfef396504970130c3de777d89af"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/alpaca/summary.json",
+      "bytes": 3291,
+      "sha256": "00b2f8ac24b8931316251066f44c698ec0f3e90cec7219aaefd75903af5c37c2"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/futu/NVDA_normalized.json",
+      "bytes": 90759,
+      "sha256": "90bc43cf454c27deb9a65b54feb95355337cd6ecec1fe278c2fa16062e76b93f"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/futu/NVDA_raw.json",
+      "bytes": 114607,
+      "sha256": "b10a0983f0353e06b3e657a22c1d7c743c4dfa97ccb603c5a9205e206e2c8bf4"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/futu/NVDA_request.json",
+      "bytes": 1523,
+      "sha256": "fadc5445fc153c9e56fee318e1caabf0f3b5d68c3faca38fc478dc44cad01736"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/futu/PLTR_normalized.json",
+      "bytes": 70862,
+      "sha256": "61f3b3e11d7e6587b8360e8e740364e2e87fcd7abf9c7dbd2fd8ceb31b815702"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/futu/PLTR_raw.json",
+      "bytes": 244589,
+      "sha256": "a397de8b7c90eb80e94e39c6a3eaa42319ae753914d34f97b9ef3dc8eb0595d9"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/futu/PLTR_request.json",
+      "bytes": 1520,
+      "sha256": "3925d559f97005c2c86a0d377d682bdadb04d75a8acc00a3fc69b4fddd9c44bf"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/futu/SNDK_normalized.json",
+      "bytes": 27895,
+      "sha256": "32658943c0a72ca8e5678910639cfdbab13f764099fb1e78f5ec9c85ec86d2cf"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/futu/SNDK_raw.json",
+      "bytes": 29297,
+      "sha256": "9296b6fbe5d62e502655eb1ae41f59cb6fe45007394b1662aab04482214049b3"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/futu/SNDK_request.json",
+      "bytes": 1511,
+      "sha256": "0f07d9e1ed5b5f6d6cef0e4decc2d5e4680cc04dd29918c8b62faa3ec2746fe4"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/futu/TSLA_normalized.json",
+      "bytes": 30014,
+      "sha256": "3dffaa52bd914b40689a67786bdc50dcac33806c92dee9dd3d7c007921d7e3d1"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/futu/TSLA_raw.json",
+      "bytes": 29914,
+      "sha256": "5c6945de2c87910700c39ce9db5bff6178afbe686a51175711fd42722d7242df"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/futu/TSLA_request.json",
+      "bytes": 1516,
+      "sha256": "e5fede6e4091535874c353167fe90734475edc326a8f05e872b0d7e386618f63"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/futu/all_normalized.json",
+      "bytes": 219521,
+      "sha256": "f8eca40477c976756d7ac6221b5563f6f93a2bd6f2f2cdcb62242b7654a23060"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/futu/audit_manifest.json",
+      "bytes": 761,
+      "sha256": "03f5c6a69345b68904bb8e41b23dfe50030eb61348a64c09f281a2c95de466c8"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/futu/manual_quality_review.json",
+      "bytes": 18577,
+      "sha256": "37a9f38ca22290fa975092c763927e8557a9488efd08c2181e5767c1831943f0"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/futu/repeat_SNDK/SNDK_normalized.json",
+      "bytes": 27568,
+      "sha256": "e9d2f79f24b42416cbcc9cf27ee16e7bf4c722cb1fa659f060ea3b2a35c0d16b"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/futu/repeat_SNDK/SNDK_raw.json",
+      "bytes": 27781,
+      "sha256": "ad757d0409ffda063170bb6019a5e3711f6bfde73de9df677e0fb8e6abeb76b3"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/futu/repeat_SNDK/SNDK_request.json",
+      "bytes": 1292,
+      "sha256": "d32c711f3e7699ce086afb180f7402fc68cf3a5345f5832efcfec52f8fa01550"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/futu/repeat_SNDK/all_normalized.json",
+      "bytes": 27568,
+      "sha256": "e9d2f79f24b42416cbcc9cf27ee16e7bf4c722cb1fa659f060ea3b2a35c0d16b"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/futu/repeat_SNDK/summary.json",
+      "bytes": 2103,
+      "sha256": "aa8914fd1ac8a4383676de9d8fec01dc96a8bd5ab735619aeb7750cc7c3b39ee"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/futu/repeat_comparison.json",
+      "bytes": 757,
+      "sha256": "5ff00a3662c8cfc44075fb77f82e61915d6e93b1fa803995ed06a40e163e2ff0"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/futu/summary.json",
+      "bytes": 9449,
+      "sha256": "a52ed6cff3352ca8abb7d8670f6b8a9aeb149a2c2c405b6ac5ef994e96cf78ca"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/futu/truncation_and_duplicates.json",
+      "bytes": 910,
+      "sha256": "e5ea9a5633035fdcabfe7f782510ee2c7b55766367e61ee684bb69ce0c1fc573"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/news_quality.json",
+      "bytes": 30418,
+      "sha256": "a129d96350c98b209d9eed1da1a93181b0b35333d17ffa1706a760151a65c563"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/sec/normalized/NVDA_recent_filings.json",
+      "bytes": 873191,
+      "sha256": "853d94d8afb944de10b275340fa879ef9c1118dd6be36ad803b8c2ff1f20daf0"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/sec/normalized/NVDA_window_filings.json",
+      "bytes": 24407,
+      "sha256": "baef0896b3640e65572c72f88dfad6768da63e2cddd3d52e3d48c278a9fbea8a"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/sec/normalized/PLTR_recent_filings.json",
+      "bytes": 866083,
+      "sha256": "285682e1aa22db2e73935781604dc735f1f15e957e24de67c14003df540f4fb0"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/sec/normalized/PLTR_window_filings.json",
+      "bytes": 19992,
+      "sha256": "a7bb57391daf1d5fcfe6f0c271b032e4fe73bae42a0f71e0f7ba115fe63ec39f"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/sec/normalized/SNDK_recent_filings.json",
+      "bytes": 209541,
+      "sha256": "2631e8301fbcd377eecec9dd52054c3c332b292822a443a9cf9b9a37aece9896"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/sec/normalized/SNDK_window_filings.json",
+      "bytes": 32081,
+      "sha256": "3db02821d8f262134d825e024cba5051c0c8332e3f2b8c9082c0a069a0e8726e"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/sec/normalized/TSLA_recent_filings.json",
+      "bytes": 866945,
+      "sha256": "e94450ebd1fd12b9de27a84b0f4f564dc248c097df03b1816f558de8840a074a"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/sec/normalized/TSLA_window_filings.json",
+      "bytes": 5235,
+      "sha256": "e8cae23e011c0b84c5d30bfecc4d7df5d4b17a66d40564bcaf452b2e8d4fbee0"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/sec/raw/NVDA_latest_key_filing.response",
+      "bytes": 4819,
+      "sha256": "ab75c6ca336d3d4e93ac212f4e3f223b69b1173c7e108d14e00b361dbb744b78"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/sec/raw/NVDA_submissions.response",
+      "bytes": 159785,
+      "sha256": "0b3ce6a0cd78c43d69b19b7efb9effcd79d0c6bd4c43606aac84d0f872cc9c73"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/sec/raw/PLTR_latest_key_filing.response",
+      "bytes": 4819,
+      "sha256": "fb776e8adeb60d01a1ec3bda56eb7d63a89b4c269c8b2010bb6dc5ac2a323bf0"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/sec/raw/PLTR_submissions.response",
+      "bytes": 159009,
+      "sha256": "60547bf31fb5fa83f6bafe5da93ac1593ed2e113efdca47c8b0282cc1f317c95"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/sec/raw/SNDK_latest_key_filing.response",
+      "bytes": 4819,
+      "sha256": "ec25da65514297e94fe8d7ce6a7a064798dac57e285b925f5f882090810fa896"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/sec/raw/SNDK_submissions.response",
+      "bytes": 39617,
+      "sha256": "865f426ab6298fbcb0f9512378c11c6b7e4b932b517dbf60a157cdd31125e046"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/sec/raw/TSLA_latest_key_filing.response",
+      "bytes": 4819,
+      "sha256": "c837f209295a1c275bc470d00548b1784e4030279ba8e2eb187472844a62551c"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/sec/raw/TSLA_submissions.response",
+      "bytes": 161958,
+      "sha256": "76ef728de78f5a7048154847052d1be4b76d32be9e790f57d8ce14a026be6c3a"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/sec/raw/company_tickers.response",
+      "bytes": 1925,
+      "sha256": "c4335b2ca33fee1d65aad383463f1f738398ff3c61cb6f054f1aad18f83bab50"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/sec/requests.json",
+      "bytes": 4965,
+      "sha256": "a79323590cb49b72a77ae12ef8a36068669a09b212709258b1ba9572900f1d81"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/sec/summary.json",
+      "bytes": 17639,
+      "sha256": "ad09de7b1071ef3fd419d75c4c2a60507e2e790cea86342689f9313cfd1edbee"
+    },
+    {
+      "path": "reports/market_impact_data_audit_20261007/validation.json",
+      "bytes": 994,
+      "sha256": "828fbd62d8d36f0b58120e2266c0188cae6ca13ab8ec50e08bded954ff711c2c"
+    }
+  ],
+  "script_versions": {
+    "scripts/audit_610_news_prices.py": "9825a70df42d9db5d268c00b0b2b3aaf302531125162ef364e5d1d18ad6dc58e",
+    "scripts/audit_610_futu.py": "8dba69b27af0175dd394daf17ba488e03f8d6ae93020a7de751210a0b12ea65a",
+    "scripts/audit_610_sec.py": "7cb3b79fbe7ab6dd963b7192fedbc01649c2116e4684300148c5319ec613bea2",
+    "scripts/audit_610_news_quality.py": "0eb1ff61184c816f5a4cbe5c45fb314faa5ab0fbe3c38576368d5eb794118e2a",
+    "scripts/verify_610_data_audit.py": "1393ce5f4f316630b101713288999c96b6654bdc43ac42186525865fc96673e0"
+  },
+  "report_sha256": "d4c477fae911cec6fa97168287257ab3f01011cc1f2f9f33d7e049148615fab2",
+  "review_checks": [
+    "Independent count reconciliation",
+    "Raw response hashes",
+    "Report links",
+    "Training-out predictions for both text and baseline calibration",
+    "No-text calibration ablation",
+    "Prediction completion time before execution"
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "status": "research_only_not_approved_for_live",
+  "selected_for_live": null,
+  "model": "research_only_h6.json",
+  "sha256": "d6312c019a99c5b8c2fc6cf8086fbc2a6c229da415a16b05bf9edfc993e027d2",
+  "trained_before": "2026-10-07",
+  "trained_last_session": "2026-10-06",
+  "traded_symbols": [
+    "NVDA",
+    "SNDK",
+    "TSLA"
+  ],
+  "model_inputs": [
+    "MSTR",
+    "NVDA",
+    "SNDK",
+    "TSLA"
+  ],
+  "reason": "Positive 2bps historical result is small, negative at 5bps; without best day negative; not a demonstrated persistent advantage",
+  "validation": "All retained input data hashes match preregistration"
+}

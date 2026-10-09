@@ -18,6 +18,17 @@ tags:
 ---
 
 # 🚀 Quant.ai: Autonomous Institutional Quantitative Trading Platform
+
+## Train_Financial_Sentinment_Analysis_Using_Prices
+
+Research follows the [assigned financial sentiment project](https://github.com/gpsaggese/gpsaggese.github.io/blob/master/research/ideas/draft.Train_Financial_Sentinment_Analysis_Using_Prices.md): train and evaluate text models using subsequent price reactions, then test whether validated signals improve Quant.ai.
+
+- [Python, Docker, and Jupyter research module](research/financial_sentiment_using_prices/README.md): API and example notebooks, local data loading, and reproduction limits.
+- [Owner's research plan](docs/financial_sentiment_using_prices_plan.md): scope, data provenance, course requirements, and milestones (Chinese).
+- **Financial Sentiment** in the existing [Quant.ai app](https://huggingface.co/spaces/Ypeng12/quant-ai): public aggregate audit results, separate from Election News.
+
+Current status: **Not trained / Not evaluated**. The historical raw archive at `reports/market_impact_data_audit_20261007/` stays local. Persistent collection and validated labels precede model training, out-of-sample evaluation, event attribution, and an equal-capital A/B comparison. The course submission will be packaged for the instructor's repository later.
+
 ### Ultra-Low Latency C++20 Engine · Microstructure LOB Causal Alpha · Self-Evolving Reinforcement Learning
 
 <div align="center">

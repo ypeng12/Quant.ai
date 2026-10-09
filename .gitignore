@@ -43,3 +43,14 @@ scratch/
 backend/data/l1_capture
 backend/data/l1_history*/
 backend/data/l1_runtime/
+
+# Credentials and private audit/runtime exports remain local.
+.env.*
+!.env.example
+!**/.env.example
+reports/alpha_refresh_20261007/live_snapshot.json
+reports/alpha_refresh_20261007/runtime_state.json
+reports/alpha_refresh_20261007/progress.json
+reports/alpha_refresh_20261007/comparison/progress.json
+reports/alpha_refresh_20261007/**/*.csv.gz
+reports/trading_logic_audit_20261002/audit.json
