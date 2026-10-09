@@ -17,7 +17,7 @@
 | 3. 价格大波动归因 | 大波动之前的消息能解释多少，系统有多少错误归因？ | 波动检测、前序候选新闻排序、明确的“无法解释”输出、人工核查集、无法解释比例和错误归因率 |
 | 4. 扩展及产品接入 | 富途反向情绪／X 是否增加信息，加入 Quant.ai 后是否改善实际决策？ | 单独增益实验；有效后接入；最后用相同资金、同期与统一成本的 A/B 衡量收益和风险 |
 
-前三项来自[题目原文](https://github.com/gpsaggese/gpsaggese.github.io/blob/master/research/ideas/draft.Train_Financial_Sentinment_Analysis_Using_Prices.md)。第 4 项保留用户的长期目标；净收益提高是待验证结论。当前先完成第 1 项，网页只辅助看样本。
+前三项来自[题目原文](https://github.com/gpsaggese/gpsaggese.github.io/blob/master/research/ideas/draft.Train_Financial_Sentinment_Analysis_Using_Prices.md)。第 4 项保留用户的长期目标；净收益提高是待验证结论。当前先完成第 1 项；展示接入已有 Quant.ai HF 应用，辅助检查覆盖和研究状态。
 
 [课程指南](https://github.com/gpsaggese/gpsaggese.github.io/blob/master/class_project/README.md)要求本地 Python、Docker、Jupyter、可解释的运行结果和 10–20 分钟视频；评分涵盖完整交付、Docker、文档、复杂度、代码、PR 和理解深度。课程允许 AI 辅助，要求学生理解并能解释实现。正式提交使用[贡献流程](https://github.com/gpsaggese/gpsaggese.github.io/blob/master/class_project/how_to_contribute.md)：
 
@@ -47,9 +47,9 @@
 | SEC 披露索引 | [sec/normalized/](../reports/market_impact_data_audit_20261007/sec/normalized/) 与 [sec/summary.json](../reports/market_impact_data_audit_20261007/sec/summary.json) | 90 天窗口的 94 份披露，14 份重点披露；此次正文访问失败 |
 | 采集响应与数量复核 | [总清单](../reports/market_impact_data_audit_20261007/audit_manifest.json)、各渠道的 `requests.json`／`*_request.json`、[validation.json](../reports/market_impact_data_audit_20261007/validation.json) | 请求时间、状态、文件哈希及独立复算；用于确认数据来自哪里、是否缺失 |
 
-新闻供应商原始响应保存在 `alpaca/news_recent_*.json`，富途原始响应保存在 `futu/<股票>_raw.json`；`normalized` 文件是整理后的研究入口，网页只展示其中少量标题和时间信息，完整文本仍在文件内。
+新闻供应商原始响应保存在 `alpaca/news_recent_*.json`，富途原始响应保存在 `futu/<股票>_raw.json`；`normalized` 文件是整理后的研究入口，HF 页面只使用公开汇总计数；完整新闻和帖子档案仍在本地文件内。社区区域单独读取应用数据库，不把历史试采冒充持续采集。
 
-**当前网页的用途：**快速检查已保存的数据覆盖，并按渠道和公司翻看历史样本。它还没有完成 NLP 分析、预测、持续采集或收益比较。后续网页应服务“采集运行是否正常、有效消息是什么、模型给出了什么、A/B 结果怎样”这些具体研究问题，页面范围待讨论后确定。
+**当前展示位置与用途：**使用已有 [Quant.ai HF 应用](https://huggingface.co/spaces/Ypeng12/quant-ai) 的 **Financial Sentiment** 主导航，位于 Live Alpha 后，Election News 前。界面使用英文；公开展示历史试采覆盖、模型／评估状态和下一阶段，社区区域按所选股票读取独立数据库状态。未完成 NLP 分析、预测、持续采集或收益比较，不能把探索标签当预测。后续围绕“采集是否正常、有效消息是什么、模型给出了什么、A/B 结果怎样”逐项增加。独立 HTML 查看器不作为正式产品展示入口。
 
 **Git 保存范围：**代码、环境配置、主计划、数据清单和复算结果上传 GitHub；原始新闻／社区文本及行情快照仍由本机研究目录保存。远端克隆不会自动包含这些原始样本。Quant 原工作区的交易账本、运行状态和其他研究输出仍在原目录，不能把代码推送当成全部本机数据已备份。
 
@@ -57,7 +57,7 @@
 
 研究入口的运行说明见 [research/financial_sentiment_using_prices/README.md](../research/financial_sentiment_using_prices/README.md)。API/example notebooks 读取已有审计数据，模型和 A/B 状态分别保持 `Not trained`、`Not evaluated`。当前先按第 1 项整理数据与价格标签。
 
-Python 研究环境位于工作区 `.venv`；依赖和锁定文件使用 `requirements-financial-sentiment*`。`make financial-sentiment-check` 复核旧审计、研究 API 与前端构建。可选网页由 `make financial-sentiment-dev` 启动，地址为 `http://127.0.0.1:5175/financial-sentiment.html`，只浏览历史样本。脚本现名为 `audit_financial_sentiment_*`／`verify_financial_sentiment_data_audit.py`；原始证据中的旧文件名、路径和哈希按采样时状态保留，名称对应关系见 `reports/financial_sentiment_workspace.json`。
+Python 研究环境位于研究 worktree 的 `.venv`；依赖和锁定文件使用 `requirements-financial-sentiment*`。正式展示复用 Quant.ai 主应用，不需要单独打开 HTML。`scripts/export_financial_sentiment_summary.py` 在原 Quant 目录从本地试采档案导出 `reports/financial_sentiment_public_summary.json`，生产 API 只读这个公开汇总。研究副本中早期 `make financial-sentiment-dev/check` 查看器保留为历史工具，不作为正式展示入口。脚本现名为 `audit_financial_sentiment_*`／`verify_financial_sentiment_data_audit.py`；原始证据中的旧文件名、路径和哈希按采样时状态保留，名称对应关系见 `reports/financial_sentiment_workspace.json`。
 
 新研究输出放本项目 `outputs/`，新采集档案放 `reports/financial_sentiment_runs/<run-id>/`，均保留本机；不要覆盖 10 月 7 日证据。代码、环境配置和项目文档可以提交，原始文本、私有配置及交易运行状态不随项目包导出。正式课程可复现数据方案仍需解决：提供允许分发的小样本或明确获取步骤，并验证新环境可执行。
 
@@ -281,7 +281,7 @@ NLP 实施次序：先主体关联／去重／观点类型抽取；英文比较�
 - `Event Study`：当时可见文本、个股与基准曲线、假设入场点、事后收益；未结束显示 `Pending`。
 - `A/B Comparison`：两组资金、版本、净值曲线、净收益差、回撤、成本，以及导致持仓变化的事件。
 
-沿用现有 React／FastAPI 结构，后续集成到 Quant.ai 的导航位置再随产品确定。2026-10-09 已建立独立研究入口，支持数据覆盖、历史样本浏览与主计划链接；上述预测、事件研究和 A/B 页面尚未实现。训练离线，页面读取版本化产物；不把模型训练放进实时交易循环。未训练显示 `Not trained`，未评估显示 `Not evaluated`。
+沿用现有 React／FastAPI 结构，2026-10-09 已将 Financial Sentiment 集成到 Quant.ai 主导航第二项，页面与公开 README 使用英文。公开汇总来自试采档案，原文与账户数据保留本地；上述预测、事件研究和 A/B 页面尚未实现。训练离线，页面读取版本化产物；不把模型训练放进实时交易循环。未训练显示 `Not trained`，未评估显示 `Not evaluated`。
 
 | 阶段 | 具体交付 | 完成判据 | 状态／预计工作量 |
 | --- | --- | --- | --- |

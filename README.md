@@ -21,15 +21,13 @@ tags:
 
 ## Train_Financial_Sentinment_Analysis_Using_Prices
 
-本分支按[老师的研究题目](https://github.com/gpsaggese/gpsaggese.github.io/blob/master/research/ideas/draft.Train_Financial_Sentinment_Analysis_Using_Prices.md)开发。当前先独立完成研究，逐项验证后再接入 Quant.ai；课程提交时再打包到老师的仓库。
+Research follows the [assigned financial sentiment project](https://github.com/gpsaggese/gpsaggese.github.io/blob/master/research/ideas/draft.Train_Financial_Sentinment_Analysis_Using_Prices.md): train and evaluate text models using subsequent price reactions, then test whether validated signals improve Quant.ai.
 
-- [中文主计划与数据文件索引](docs/financial_sentiment_using_prices_plan.md)：研究范围、课程要求和已完成状态。
-- [Python / Docker / Jupyter 研究入口](research/financial_sentiment_using_prices/README.md)：API notebook、示例 notebook 与本地数据加载。
-- 历史审计数据：`reports/market_impact_data_audit_20261007/`，原始样本只保留本机。
+- [Python, Docker, and Jupyter research module](research/financial_sentiment_using_prices/README.md): API and example notebooks, local data loading, and reproduction limits.
+- [Owner's research plan](docs/financial_sentiment_using_prices_plan.md): scope, data provenance, course requirements, and milestones (Chinese).
+- **Financial Sentiment** in the existing [Quant.ai app](https://huggingface.co/spaces/Ypeng12/quant-ai): public aggregate audit results, separate from Election News.
 
-下一项：数据与价格标签。模型训练、样本外比较、新闻归因和等资金 A/B 按顺序推进。
-
-已有网页为可选样本查看器：在此工作区运行 `make financial-sentiment-dev`，打开 <http://127.0.0.1:5175/financial-sentiment.html>。`make financial-sentiment-check` 复核原审计、API 和前端构建。Docker/notebook 的命令见研究入口；Docker 尚未在本机安装或验证。
+Current status: **Not trained / Not evaluated**. The historical raw archive at `reports/market_impact_data_audit_20261007/` stays local. Persistent collection and validated labels precede model training, out-of-sample evaluation, event attribution, and an equal-capital A/B comparison. The course submission will be packaged for the instructor's repository later.
 
 ### Ultra-Low Latency C++20 Engine · Microstructure LOB Causal Alpha · Self-Evolving Reinforcement Learning
 
