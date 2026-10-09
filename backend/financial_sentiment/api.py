@@ -10,7 +10,7 @@ from fastapi.responses import PlainTextResponse
 
 ROOT = Path(__file__).resolve().parents[2]
 AUDIT = ROOT / "reports/market_impact_data_audit_20261007"
-PLAN = ROOT / "docs/signal_lab_plan.md"
+PLAN = ROOT / "docs/financial_sentiment_using_prices_plan.md"
 
 
 def read_json(path: Path):
@@ -21,20 +21,20 @@ def read_json(path: Path):
 
 
 def create_app(audit_dir: Path = AUDIT, plan_path: Path = PLAN) -> FastAPI:
-    api = FastAPI(title="Quant.ai Signal Lab", version="0.1.0")
+    api = FastAPI(title="Quant.ai · Financial Sentiment Using Prices", version="0.1.0")
 
-    @api.get("/api/research/signal-lab/health")
+    @api.get("/api/research/financial-sentiment/health")
     def health():
         return {"status": "ok", "mode": "research", "collection_running": False, "trading_enabled": False}
 
-    @api.get("/api/research/signal-lab/status")
+    @api.get("/api/research/financial-sentiment/status")
     def status():
         news = read_json(audit_dir / "alpaca/summary.json")
         futu = read_json(audit_dir / "futu/summary.json")
         sec = read_json(audit_dir / "sec/summary.json")
         validation = read_json(audit_dir / "validation.json")
         return {
-            "project": "Quant.ai Signal Lab", "mode": "research", "audit_date": "2026-10-07",
+            "project": "Quant.ai · Financial Sentiment Using Prices", "mode": "research", "audit_date": "2026-10-07",
             "model_status": "Not trained", "evaluation_status": "Not evaluated",
             "current_stage": "Data audit", "next_stage": "Persistent collection",
             "sources": [
@@ -51,10 +51,10 @@ def create_app(audit_dir: Path = AUDIT, plan_path: Path = PLAN) -> FastAPI:
             ],
             "exploratory_labels": validation["valid_exploratory_label_rows"],
             "labels_are_predictions": False,
-            "plan_url": "/api/research/signal-lab/plan",
+            "plan_url": "/api/research/financial-sentiment/plan",
         }
 
-    @api.get("/api/research/signal-lab/events")
+    @api.get("/api/research/financial-sentiment/events")
     def events(source: Literal["news", "futu"] = "news",
                symbol: str | None = Query(None, pattern=r"^[A-Z]{1,5}$"),
                limit: int = Query(20, ge=1, le=100)):
@@ -81,7 +81,7 @@ def create_app(audit_dir: Path = AUDIT, plan_path: Path = PLAN) -> FastAPI:
         items.sort(key=lambda item: (item["published_at"] or "", item["id"]), reverse=True)
         return {"items": items[:limit], "total": len(items), "source": source, "snapshot": True}
 
-    @api.get("/api/research/signal-lab/plan", response_class=PlainTextResponse)
+    @api.get("/api/research/financial-sentiment/plan", response_class=PlainTextResponse)
     def plan():
         try:
             return plan_path.read_text(encoding="utf-8")

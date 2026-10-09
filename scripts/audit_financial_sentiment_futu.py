@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Bounded, read-only public Futu endpoint audit; never accesses app databases.
 
-Usage: python3 scripts/audit_signal_lab_futu.py --output reports/market_impact_data_audit_20261007/futu
+Usage: python3 scripts/audit_financial_sentiment_futu.py --output reports/market_impact_data_audit_20261007/futu
 Four public HTTP requests by default. Raw responses are research snapshots, not
 licensed full-text archives. No pagination, login, retry, LLM, or trading calls.
 Use a new --output directory for each run; existing evidence is never overwritten.

@@ -12,15 +12,15 @@ oos:
 clean:
 	rm -rf data/raw/*.parquet reports/*.json __pycache__ src/**/__pycache__
 
-.PHONY: signal-lab-setup signal-lab-dev signal-lab-check
+.PHONY: financial-sentiment-setup financial-sentiment-dev financial-sentiment-check
 
-signal-lab-setup:
-	bash scripts/setup_signal_lab.sh
+financial-sentiment-setup:
+	bash scripts/setup_financial_sentiment.sh
 
-signal-lab-dev:
-	python3 scripts/dev_signal_lab.py
+financial-sentiment-dev:
+	python3 scripts/dev_financial_sentiment.py
 
-signal-lab-check:
-	.venv/bin/python scripts/verify_signal_lab_data_audit.py
-	.venv/bin/python -m pytest backend/tests/test_signal_lab_api.py -q
-	npm --prefix frontend run build:signal-lab
+financial-sentiment-check:
+	.venv/bin/python scripts/verify_financial_sentiment_data_audit.py
+	.venv/bin/python -m pytest backend/tests/test_financial_sentiment_api.py -q
+	npm --prefix frontend run build:financial-sentiment

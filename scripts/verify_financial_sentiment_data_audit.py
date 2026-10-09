@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Offline consistency checks of the bounded Signal Lab data acquisition experiment."""
+"""Offline consistency checks of the bounded Financial Sentiment Using Prices data acquisition experiment."""
 import hashlib
 import json
 from collections import Counter

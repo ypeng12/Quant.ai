@@ -1,14 +1,42 @@
-# Quant.ai Signal Lab：研究与实施主计划（610 课程项目）
+# Train_Financial_Sentinment_Analysis_Using_Prices：研究与课程主计划
 
 **更新：2026-10-07 完成实测；2026-10-09 加入 X 社交信息源计划，并迁入独立开发环境。** 本计划继承原 [Alpha 研究优先级文档](/Users/yuliangpeng/Desktop/Quant/docs/alpha_research_priorities_20260913.md) 的文本与价格研究部分；其他量价研究仍在原文档维护。用户要求以 Quant.ai 的实际收益改善为重要目标，最终用相同初始资金、同期运行的原系统 A 与加入文本信息的系统 B 对照。收益提高是研究目标，不能预先承诺，也不能把分类准确率替代收益证据。
 
-研究起点：[Train Financial Sentiment Analysis Using Price Response as Labels](https://github.com/gpsaggese/gpsaggese.github.io/blob/master/research/ideas/draft.Train_Financial_Sentinment_Analysis_Using_Prices.md)。核心问题是：用后续价格反应作弱标签，能否学习到传统正负面语气与过去量价之外的信息？富途的顺向／反向情绪作为重点扩展，价格大波动的新闻归因放在后续。
+研究起点：[Train Financial Sentiment Analysis Using Price Response as Labels](https://github.com/gpsaggese/gpsaggese.github.io/blob/master/research/ideas/draft.Train_Financial_Sentinment_Analysis_Using_Prices.md)。核心问题是：用后续价格反应作弱标签，能否学习到传统正负面语气与过去量价之外的信息？课程核心依次完成数据与标签、价格标签模型与基线比较、价格大波动的新闻归因；富途的顺向／反向情绪和 X 作为扩展。
+
+## 当前工作顺序与课程要求（2026-10-09 校正）
+
+用户确认：**直接在 Quant.ai 同一仓库内做研究，一项项验收；结果成熟后再接入策略；需要课程提交时再放到老师要求的 GitHub 目录。** 研究代码放在同一 Quant.ai 仓库的 `research/financial_sentiment_using_prices/`。当前使用 Git worktree，工作副本路径为 `/Users/yuliangpeng/Desktop/Train_Financial_Sentinment_Analysis_Using_Prices`，分支与题目同名。它复用 Quant.ai 的行情／新闻能力；需要提交课程作业时再打包研究目录。今后的工作以题目名称为准，不再使用 Signal Lab 作为项目名称。
+
+本阶段按课程结构准备 Python、Docker 和 Jupyter 文件。正式课程 GitHub 的 fork、issue、PR 和 reviewer 设置留到提交流程；当前没有登记可核实的 issue 号，不虚构编号。
+
+| 顺序 | 本项目必须回答的问题 | 验收产物 |
+| --- | --- | --- |
+| 1. 数据与价格标签 | 每条文本何时可用、对应哪家公司、随后不同时间窗的价格怎样变化？ | 数据字典、事件与股票关联、原始／市场调整收益标签、时间切分、泄漏检查；先审核现有样本再决定扩大采集 |
+| 2. 训练与对照 | 价格反应弱标签能否学到优于传统文本情绪和过去量价的信息？ | 价格标签微调基线；与 FinBERT、Loughran–McDonald 词典、动量比较；严格较晚时期的预测结果与失败分析 |
+| 3. 价格大波动归因 | 大波动之前的消息能解释多少，系统有多少错误归因？ | 波动检测、前序候选新闻排序、明确的“无法解释”输出、人工核查集、无法解释比例和错误归因率 |
+| 4. 扩展及产品接入 | 富途反向情绪／X 是否增加信息，加入 Quant.ai 后是否改善实际决策？ | 单独增益实验；有效后接入；最后用相同资金、同期与统一成本的 A/B 衡量收益和风险 |
+
+前三项来自[题目原文](https://github.com/gpsaggese/gpsaggese.github.io/blob/master/research/ideas/draft.Train_Financial_Sentinment_Analysis_Using_Prices.md)。第 4 项保留用户的长期目标；净收益提高是待验证结论。当前先完成第 1 项，网页只辅助看样本。
+
+[课程指南](https://github.com/gpsaggese/gpsaggese.github.io/blob/master/class_project/README.md)要求本地 Python、Docker、Jupyter、可解释的运行结果和 10–20 分钟视频；评分涵盖完整交付、Docker、文档、复杂度、代码、PR 和理解深度。课程允许 AI 辅助，要求学生理解并能解释实现。正式提交使用[贡献流程](https://github.com/gpsaggese/gpsaggese.github.io/blob/master/class_project/how_to_contribute.md)：
+
+- 项目 tag：`MSML610_Fall2026_Train_Financial_Sentinment_Analysis_Using_Prices`。
+- 课程分支／PR：`UmdTask<真实issue号>_<项目tag>`。
+- 课程目录：`class_project/msml610/Fall2026/projects/<课程分支名>/`，提交仅包含项目目录内的文件。
+- 内部实验可使用 `Train_Financial_Sentinment_Analysis_Using_Prices` 分支；分支与 Quant.ai 共用仓库，正式课程提交时再采用课程命名。
+
+官方[Fall2026 选题表](https://github.com/gpsaggese/gpsaggese.github.io/blob/master/class_project/msml610/Fall2026/chosen_projects.csv)包含本题。选题表中的 GroupId 不作为 GitHub issue 号。
+
+研究目录参考[项目生成工具](https://github.com/gpsaggese/gpsaggese.github.io/blob/master/class_project/create_project.README.md)和[Docker/Jupyter 模板](https://github.com/gpsaggese/gpsaggese.github.io/tree/master/class_project/project_template)，做成可独立搬迁的适配版；没有在 Quant 根目录原样运行官方 `create_project.py`，因为官方脚本依赖课程仓库目录和 helpers。模板参考版本：`60df5bc966d6da403eb54ee059372edc5cf20099`。当前机器未找到 Docker，容器构建和运行仍待验证。
+
+实际选题使用 research/ideas 的研究题目；[项目描述总览](https://github.com/gpsaggese/gpsaggese.github.io/blob/master/class_project/project_descriptions/README.md)、[全部项目](https://github.com/gpsaggese/gpsaggese.github.io/blob/master/class_project/project_descriptions/all_projects.md)、[MSML610 教程目录](https://github.com/gpsaggese/gpsaggese.github.io/tree/master/class_project/project_descriptions/MSML610)用于辨认课程项目类型；本项目不改成 DATA605 工具教程。
 
 ## 开发环境与下一步（2026-10-09）
 
 ### 先看数据文件，再讨论网页
 
-本机当前研究数据根目录是 `/Users/yuliangpeng/Desktop/signal-lab/reports/market_impact_data_audit_20261007/`。原采集版本仍在 `/Users/yuliangpeng/Desktop/Quant/reports/market_impact_data_audit_20261007/`；迁入时逐文件核对哈希。这里是 10 月 7 日的一次试采档案，尚未建立每天自动增加数据的采集库。
+当前研究副本的数据根目录是 `/Users/yuliangpeng/Desktop/Train_Financial_Sentinment_Analysis_Using_Prices/reports/market_impact_data_audit_20261007/`。原采集档案也保留在 `/Users/yuliangpeng/Desktop/Quant/reports/market_impact_data_audit_20261007/`；复制时逐文件核对过哈希。这里是 10 月 7 日的一次试采档案，尚未建立每天自动增加数据的采集库。
 
 | 要看什么 | 从本主计划可直接打开的文件／目录 | 内容和用途 |
 | --- | --- | --- |
@@ -25,23 +53,13 @@
 
 **Git 保存范围：**代码、环境配置、主计划、数据清单和复算结果上传 GitHub；原始新闻／社区文本及行情快照仍由本机研究目录保存。远端克隆不会自动包含这些原始样本。Quant 原工作区的交易账本、运行状态和其他研究输出仍在原目录，不能把代码推送当成全部本机数据已备份。
 
-项目名称 **Quant.ai Signal Lab**；课程编号仅用于交付说明。分支 `codex/signal-lab`，独立工作目录 `/Users/yuliangpeng/Desktop/signal-lab`。本文件为 Signal Lab 唯一持续维护的主计划，原 Quant.ai Alpha 计划保留为来源参考。
+项目名称、分支和 worktree 目录名均为 **Train_Financial_Sentinment_Analysis_Using_Prices**。`/Users/yuliangpeng/Desktop/Quant` 保留原工作状态；两处属于同一 Git 仓库。本文件为本项目唯一持续维护的主计划，原 Quant.ai Alpha 计划保留为来源参考。
 
-环境继承 Quant.ai 提交 `e835bd2b830c281889b2ba11ca358df69c88e72c`，采用稀疏检出，只包含根配置、docs、scripts、backend/app、backend/tests、frontend/src、frontend/tests。历史大型实验文件未全部复制；2026-10-07 的 Signal Lab 审计证据已逐文件校验后复制。
+研究入口的运行说明见 [research/financial_sentiment_using_prices/README.md](../research/financial_sentiment_using_prices/README.md)。API/example notebooks 读取已有审计数据，模型和 A/B 状态分别保持 `Not trained`、`Not evaluated`。当前先按第 1 项整理数据与价格标签。
 
-- Python 环境：项目内 `.venv`，依赖见 `requirements-signal-lab.txt` 和本机锁定文件。
-- 重建依赖：`make signal-lab-setup`；默认用 Python 3.11 和 `requirements-signal-lab.lock.txt` 重建本机已验证的包版本。本机当前已经安装完成。锁定文件在本机 macOS x86_64 验证；其他平台需要重新解析时，可显式运行 `SIGNAL_LAB_REQUIREMENTS=requirements-signal-lab.txt make signal-lab-setup` 并重新验证。可用 `SIGNAL_LAB_PYTHON` 指定 Python 3.11 解释器。原始快照被 Git 忽略，新的克隆需另外恢复本地审计目录。
-- 前端：复用 React/Vite 和现有 npm lockfile，独立 `signal-lab.html` 入口。Node 要求 `^20.19.0` 或 `>=22.12.0`；本机验证版本为 Node 24.19.0、npm 11.17.0。
-- 启动：`make signal-lab-dev`；默认页面 `http://127.0.0.1:5175/signal-lab.html`，研究 API `http://127.0.0.1:8001`。端口被占用会退出，避免误连其他服务。
-- 检查：`make signal-lab-check`；只做离线数据复算、研究 API 测试与前端构建。
-- API 模块：`backend.signal_lab.api:app`，只读本地历史审计。不要使用原 `backend/main_api.py` 作为研究环境入口，该入口会初始化交易运行器。
-- 研究原始文本、运行日志与虚拟环境保留本机；仓库忽略敏感配置。此工作区没有复制凭据。联网试采时显式配置私有凭据，新输出统一放 `reports/signal_lab_runs/<run-id>/`（已被 Git 忽略），不要覆盖 10 月 7 日证据。
+Python 研究环境位于工作区 `.venv`；依赖和锁定文件使用 `requirements-financial-sentiment*`。`make financial-sentiment-check` 复核旧审计、研究 API 与前端构建。可选网页由 `make financial-sentiment-dev` 启动，地址为 `http://127.0.0.1:5175/financial-sentiment.html`，只浏览历史样本。脚本现名为 `audit_financial_sentiment_*`／`verify_financial_sentiment_data_audit.py`；原始证据中的旧文件名、路径和哈希按采样时状态保留，名称对应关系见 `reports/financial_sentiment_workspace.json`。
 
-当前环境入口提供历史数据覆盖、样本浏览、主计划阅读；模型状态为 `Not trained`，A/B 为 `Not evaluated`。下一步按下面已讨论的计划实现持久采集、时间与事件去重，然后做文本基线。环境搭好不表示采集任务已经持续运行、模型已经训练或 A/B 已经开始。
-
-已有脚本统一改名为 `audit_signal_lab_*`／`verify_signal_lab_data_audit.py`。历史证据中的旧文件名、绝对路径和哈希作为采样当时的记录保留；新旧名称对应关系见 `reports/signal_lab_workspace.json`，当前应用不依赖旧工作区的文件路径。
-
-**环境验收（2026-10-09）：**依赖一致性检查通过；历史价格标签与证据哈希复算通过；研究 API 的 5 项测试通过；独立前端 TypeScript 检查、构建和 ESLint 通过。实际启动后，页面、健康状态、数据覆盖、富途股票筛选与主计划端点均返回 HTTP 200；Chrome 已确认新闻／富途切换和 PLTR 的 30 条匹配样本。重复启动会拒绝占用端口。当前仅运行本地研究 API 与前端。
+新研究输出放本项目 `outputs/`，新采集档案放 `reports/financial_sentiment_runs/<run-id>/`，均保留本机；不要覆盖 10 月 7 日证据。代码、环境配置和项目文档可以提交，原始文本、私有配置及交易运行状态不随项目包导出。正式课程可复现数据方案仍需解决：提供允许分发的小样本或明确获取步骤，并验证新环境可执行。
 
 ### 1. 本次确实做了什么，尚未做什么
 
@@ -196,7 +214,7 @@
 3. **预测层**：`feature_cutoff, extraction_completed_at, prediction_completed_at, available_at, model_version, training_cutoff, horizon, predicted_score, calibration_status, expected_excess_return(optional), sample_coverage, missing_reason`。抽取置信度不是上涨概率；实际可交易时间不得早于响应收讫、抽取完成和预测完成中的最晚时刻，不能只凭新闻已收到就假定信号已算完。
 4. **结果层**：`entry_reference_time, exit_reference_time, stock_return, benchmark_return, label_status, execution_cost_assumption`。结果层与当时预测输入隔离。
 
-NLP 实施次序：先主体关联／去重／观点类型抽取；英文比较原始 FinBERT 情绪、TF-IDF 线性模型、冻结编码器加价格标签分类头；最后才考虑微调。中文先做立场词典基线和固定提示的结构化抽取，再与冻结中文／多语言编码器比较；模型选型以这批简繁、粤语、反讽语料的验证为依据，不套用英文 FinBERT。文本模型版本、提示和阈值均冻结并缓存。此次未调用外部模型处理这些样本。
+NLP 实施次序：先主体关联／去重／观点类型抽取；英文比较原始 FinBERT 情绪、Loughran–McDonald 词典、TF-IDF 线性模型、冻结编码器加价格标签分类头；课程第 2 阶段完成价格标签微调基线，并与相同时间切分的动量基线对照。中文先做立场词典基线和固定提示的结构化抽取，再与冻结中文／多语言编码器比较；模型选型以这批简繁、粤语、反讽语料的验证为依据，不套用英文 FinBERT。文本模型版本、提示和阈值均冻结并缓存。此次未调用外部模型处理这些样本。
 
 富途先聚合同一股票过去 60 分钟已收到的去重文本，计算有明确方向的帖子净值 `(看多数−看空数)/(看多数+看空数)`、有效样本量、不明确比例、分歧和相对过去分布的变化。分母为零或覆盖低时显示缺失／低覆盖，不填中性；没有作者字段就不能按独立用户统计。条件预测单列特征，暂不强行计为无条件看多看空；重复文不加权，长文章也不按字数获得更多票。
 
@@ -275,7 +293,7 @@ NLP 实施次序：先主体关联／去重／观点类型抽取；英文比较�
 
 本次思考后的优先级：**新闻与行情已经能跑通真实数据配对，优先做主体识别和事件去重；富途尽早积累前瞻档案，但先研究帖子，不研究用户；SEC 暂作证据索引；实时行情权限与实际延迟在交易集成前解决。** 不以 187 篇新闻、120 条帖子或 90 个标签宣称有 Alpha。真正希望得到的是：信息在收益发生前被记录，模型确实改变决策，且相同资金条件下收益改善有可追溯证据。
 
-复核脚本：[新闻／行情试采](../scripts/audit_signal_lab_news_prices.py)、[富途试采](../scripts/audit_signal_lab_futu.py)、[SEC 试采](../scripts/audit_signal_lab_sec.py)、[新闻内容审阅重建](../scripts/audit_signal_lab_news_quality.py)、[离线标签与哈希复算](../scripts/verify_signal_lab_data_audit.py)。联网重新采样须使用新的 `--output` 目录；它得到新的观察，不能保证供应商返回与本次相同。复算本次证据使用 `.venv/bin/python scripts/verify_signal_lab_data_audit.py`，不发网络请求。
+复核脚本：[新闻／行情试采](../scripts/audit_financial_sentiment_news_prices.py)、[富途试采](../scripts/audit_financial_sentiment_futu.py)、[SEC 试采](../scripts/audit_financial_sentiment_sec.py)、[新闻内容审阅重建](../scripts/audit_financial_sentiment_news_quality.py)、[离线标签与哈希复算](../scripts/verify_financial_sentiment_data_audit.py)。联网重新采样须使用新的 `--output` 目录；它得到新的观察，不能保证供应商返回与本次相同。复算本次证据使用 `.venv/bin/python scripts/verify_financial_sentiment_data_audit.py`，不发网络请求。
 
 ### 11. X 等社交平台扩展（2026-10-09：已核查接口，尚未取得结构化样本）
 

@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:signal-lab": "vite --config vite.signal-lab.config.ts",
+    "dev:financial-sentiment": "vite --config vite.financial-sentiment.config.ts",
     "build": "tsc -b && vite build",
-    "build:signal-lab": "tsc --project tsconfig.signal-lab.json && vite build --config vite.signal-lab.config.ts",
+    "build:financial-sentiment": "tsc --project tsconfig.financial-sentiment.json && vite build --config vite.financial-sentiment.config.ts",
     "lint": "eslint .",
     "preview": "vite preview"
   },

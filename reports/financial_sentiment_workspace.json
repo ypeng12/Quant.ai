@@ -1,0 +1,21 @@
+{
+  "project": "Train_Financial_Sentinment_Analysis_Using_Prices",
+  "branch": "Train_Financial_Sentinment_Analysis_Using_Prices",
+  "base_commit": "e835bd2b830c281889b2ba11ca358df69c88e72c",
+  "source_workspace": "/Users/yuliangpeng/Desktop/Quant",
+  "workspace": "/Users/yuliangpeng/Desktop/Train_Financial_Sentinment_Analysis_Using_Prices",
+  "primary_plan": "docs/financial_sentiment_using_prices_plan.md",
+  "script_name_mapping": {
+    "audit_610_futu.py": "audit_financial_sentiment_futu.py",
+    "audit_610_news_prices.py": "audit_financial_sentiment_news_prices.py",
+    "audit_610_news_quality.py": "audit_financial_sentiment_news_quality.py",
+    "audit_610_sec.py": "audit_financial_sentiment_sec.py",
+    "verify_610_data_audit.py": "verify_financial_sentiment_data_audit.py"
+  },
+  "evidence_file_count": 64,
+  "evidence_copy_sha256_verified": true,
+  "credentials_copied": false,
+  "course_project_tag": "MSML610_Fall2026_Train_Financial_Sentinment_Analysis_Using_Prices",
+  "course_issue": null,
+  "research_module": "research/financial_sentiment_using_prices"
+}

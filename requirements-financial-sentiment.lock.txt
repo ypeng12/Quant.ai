@@ -1,10 +1,10 @@
-# Signal Lab 本机依赖快照；生成于 2026-10-09。
+# Financial Sentiment Using Prices 本机依赖快照；生成于 2026-10-09。
 # Python 3.11.3; macOS-14.6.1-x86_64-i386-64bit; x86_64.
-# 来源：在全新独立 .venv 安装 requirements-signal-lab.txt 后执行 pip freeze。
+# 来源：在全新独立 .venv 安装 requirements-financial-sentiment.txt 后执行 pip freeze。
 # 仅锁定 Python 包版本，不含 Python 解释器、操作系统或 wheel 哈希。
 # 本锁定文件只在上述 macOS x86_64 环境验证；其他平台需重新解析与验证。
 # 重建：python3.11 -m venv .venv
-# 安装：.venv/bin/python -m pip install -r requirements-signal-lab.lock.txt
+# 安装：.venv/bin/python -m pip install -r requirements-financial-sentiment.lock.txt
 # 校验：.venv/bin/python -m pip check
 annotated-doc==0.0.5
 annotated-types==0.8.0

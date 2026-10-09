@@ -16,5 +16,5 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src/signal-lab", "vite.signal-lab.config.ts"]
+  "include": ["src/financial-sentiment", "vite.financial-sentiment.config.ts"]
 }

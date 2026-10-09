@@ -61,7 +61,7 @@ function Events({ source, symbol }: { source: 'news' | 'futu'; symbol: string })
   </>
 }
 
-export default function SignalLab() {
+export default function FinancialSentiment() {
   const [status, setStatus] = useState<LabStatus | null>(null)
   const [statusError, setStatusError] = useState<string | null>(null)
   const [source, setSource] = useState<'news' | 'futu'>('news')
@@ -81,10 +81,10 @@ export default function SignalLab() {
     setRefresh(value => value + 1)
   }
 
-  return <div className="signal-lab">
+  return <div className="financial-sentiment">
     <a className="skip-link" href="#main">Skip to content</a>
     <header className="lab-header">
-      <a href="/signal-lab.html" className="brand" aria-label="Quant.ai Signal Lab home"><span className="brand-mark" aria-hidden="true">Q<span>·</span></span><span>Quant.ai <span className="brand-divider">/</span> <strong>Signal Lab</strong></span></a>
+      <a href="/financial-sentiment.html" className="brand" aria-label="Quant.ai · Financial Sentiment Using Prices home"><span className="brand-mark" aria-hidden="true">Q<span>·</span></span><span>Quant.ai <span className="brand-divider">/</span> <strong>Financial Sentiment Using Prices</strong></span></a>
       <div className="header-right"><span className="research-badge">Research environment</span><a href="#samples">Explore samples <span aria-hidden="true">↗</span></a></div>
     </header>
 
@@ -118,6 +118,6 @@ export default function SignalLab() {
 
       <section className="acceptance-panel" aria-labelledby="acceptance-title"><div><p className="eyebrow">THE FINISH LINE</p><h2 id="acceptance-title">Evidence before performance claims.</h2></div><p>The planned comparison uses equal starting capital, the same stock universe, risk limits, and execution assumptions. Neither a winning strategy nor a validated signal has been established.</p></section>
     </main>
-    <footer className="lab-footer"><span>Quant.ai Signal Lab <span aria-hidden="true">·</span> 610 research project</span><a href={status?.plan_url ?? '/api/research/signal-lab/plan'} target="_blank" rel="noopener noreferrer">Read research plan <span aria-hidden="true">↗</span></a><span>Archived observations. Reproducible questions.</span></footer>
+    <footer className="lab-footer"><span>Quant.ai · Financial Sentiment Using Prices <span aria-hidden="true">·</span> 610 research project</span><a href={status?.plan_url ?? '/api/research/financial-sentiment/plan'} target="_blank" rel="noopener noreferrer">Read research plan <span aria-hidden="true">↗</span></a><span>Archived observations. Reproducible questions.</span></footer>
   </div>
 }

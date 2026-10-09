@@ -35,7 +35,7 @@ export interface EventResponse {
   total: number
 }
 
-const API_ROOT = '/api/research/signal-lab'
+const API_ROOT = '/api/research/financial-sentiment'
 
 async function request<T>(path: string, signal: AbortSignal): Promise<T> {
   const response = await fetch(`${API_ROOT}${path}`, {

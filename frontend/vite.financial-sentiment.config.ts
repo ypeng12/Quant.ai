@@ -9,17 +9,17 @@ export default defineConfig({
     port: 5175,
     strictPort: true,
     proxy: {
-      '/api/research/signal-lab': {
-        target: process.env.SIGNAL_LAB_API_URL || 'http://127.0.0.1:8001',
+      '/api/research/financial-sentiment': {
+        target: process.env.FINANCIAL_SENTIMENT_API_URL || 'http://127.0.0.1:8001',
         changeOrigin: false,
       },
     },
   },
   build: {
-    outDir: 'dist-signal-lab',
+    outDir: 'dist-financial-sentiment',
     emptyOutDir: true,
     rollupOptions: {
-      input: fileURLToPath(new URL('./signal-lab.html', import.meta.url)),
+      input: fileURLToPath(new URL('./financial-sentiment.html', import.meta.url)),
     },
   },
 })

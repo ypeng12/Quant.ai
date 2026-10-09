@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Start the isolated Signal Lab API and UI; Ctrl-C stops both process groups."""
+"""Start the isolated Financial Sentiment Using Prices API and UI; Ctrl-C stops both process groups."""
 from __future__ import annotations
 
 import argparse
@@ -33,7 +33,7 @@ def main() -> int:
     python = ROOT / ".venv/bin/python"
     npm = shutil.which("npm")
     if not python.exists() or not npm or not (ROOT / "frontend/node_modules/vite").exists():
-        raise SystemExit("Run `make signal-lab-setup` to prepare Python and frontend dependencies.")
+        raise SystemExit("Run `make financial-sentiment-setup` to prepare Python and frontend dependencies.")
     check_port(args.api_port)
     check_port(args.ui_port)
     processes = []
@@ -46,16 +46,16 @@ def main() -> int:
     signal.signal(signal.SIGINT, request_stop)
     signal.signal(signal.SIGTERM, request_stop)
     env = os.environ.copy()
-    env["SIGNAL_LAB_API_URL"] = f"http://127.0.0.1:{args.api_port}"
+    env["FINANCIAL_SENTIMENT_API_URL"] = f"http://127.0.0.1:{args.api_port}"
     try:
         processes.append(subprocess.Popen(
-            [str(python), "-m", "uvicorn", "backend.signal_lab.api:app", "--host", "127.0.0.1",
-             "--port", str(args.api_port), "--reload", "--reload-dir", str(ROOT / "backend/signal_lab")],
+            [str(python), "-m", "uvicorn", "backend.financial_sentiment.api:app", "--host", "127.0.0.1",
+             "--port", str(args.api_port), "--reload", "--reload-dir", str(ROOT / "backend/financial_sentiment")],
             cwd=ROOT, env=env, start_new_session=True))
         processes.append(subprocess.Popen(
-            [npm, "run", "dev:signal-lab", "--", "--host", "127.0.0.1", "--port", str(args.ui_port)],
+            [npm, "run", "dev:financial-sentiment", "--", "--host", "127.0.0.1", "--port", str(args.ui_port)],
             cwd=ROOT / "frontend", env=env, start_new_session=True))
-        print(f"Signal Lab: http://127.0.0.1:{args.ui_port}/signal-lab.html", flush=True)
+        print(f"Financial Sentiment Using Prices: http://127.0.0.1:{args.ui_port}/financial-sentiment.html", flush=True)
         print(f"API docs: http://127.0.0.1:{args.api_port}/docs", flush=True)
         while not stopping:
             for child in processes:
