@@ -23,19 +23,23 @@ def test_rss_records_are_safe_bounded_and_date_stamped():
     assert records[0]["priority"] >= 3
 
 
-def test_collector_deduplicates_and_preserves_source_health(tmp_path):
+def test_collector_deduplicates_and_preserves_source_health(tmp_path, monkeypatch):
     path = tmp_path / "news.sqlite3"
+    monkeypatch.setattr("app.news_monitor.feeds", lambda: [
+        Feed("market-test", "markets", "Markets", "https://example.org/rss"),
+        Feed("failed-test", "markets", "Unavailable", "https://example.org/unavailable"),
+    ])
 
     def fetch(url):
-        if url == "https://www.eac.gov/rss.xml":
+        if url == "https://example.org/unavailable":
             raise ValueError("upstream unavailable")
         return RSS
 
     first = collect_once(path, fetch)
     second = collect_once(path, fetch)
-    assert first == {"inserted": 2, "failed_sources": 1}
+    assert first == {"inserted": 1, "failed_sources": 1}
     assert second == {"inserted": 0, "failed_sources": 1}
-    assert len(list_items("elections", path=path)) == 1
+    assert list_items("elections", path=path) == []
     assert len(list_items("markets", path=path)) == 1
     assert source_status(path)[-1]["status"] == "error"
 

@@ -1,5 +1,7 @@
 # SIG 选举新闻采集说明
 
+> 已归档：2026-10-09 用户要求移除 Election News。选举页面、选举 RSS 采集和自动 AI 摘要已停用；下文仅保留历史记录。
+
 这份技术说明只对应 Quant.ai 的 **SIG Predictions Cup** 页面。该页只展示选举类新闻线索；目前尚未逐条匹配到 SIG 的具体市场，部分标题可能与本届题目无关。比赛策略与交易判断见 [SIG 比赛计划](PREDICTIONS_CUP_STRATEGY.md)。
 
 ## 当前目标

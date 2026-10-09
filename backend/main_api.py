@@ -56,7 +56,6 @@ from app.broker.live_runner import LiveTradingRunner
 from app.news_monitor import list_items as list_news_items, source_status as news_source_status, start_monitor as start_news_monitor, stop_monitor as stop_news_monitor
 from app.community_monitor import snapshot as community_snapshot
 from app.financial_sentiment_research import router as financial_sentiment_research_router
-from app.sig_ai_triage import TriageError, analyze as analyze_sig_headline, results as sig_triage_results, status as sig_triage_status
 
 class LiveStartRequest(BaseModel):
     params: Optional[dict] = None
@@ -103,24 +102,13 @@ def shutdown_news_monitor():
 
 @app.get("/api/news/items")
 def get_news_items(topic: Optional[str] = None, limit: int = Query(40, ge=1, le=100)):
-    if topic not in (None, "elections", "markets"):
+    if topic not in (None, "markets"):
         return {"items": [], "error": "Unknown topic"}
-    return {"items": list_news_items(topic=topic, limit=limit), "topic": topic or "all"}
+    return {"items": list_news_items(topic="markets", limit=limit), "topic": "markets"}
 
 @app.get("/api/news/sources")
 def get_news_sources():
     return {"sources": news_source_status()}
-
-@app.get("/api/sig/triage")
-def get_sig_triage():
-    return {"status": sig_triage_status(), "results": sig_triage_results()}
-
-@app.post("/api/sig/triage/{news_id}")
-def run_sig_triage(news_id: str):
-    try:
-        return {"result": analyze_sig_headline(news_id), "status": sig_triage_status()}
-    except TriageError as exc:
-        raise HTTPException(status_code=exc.status_code, detail=str(exc)) from exc
 
 @app.get("/api/community/{symbol}")
 def get_community_posts(symbol: str, limit: int = Query(30, ge=1, le=50)):

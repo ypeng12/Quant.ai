@@ -49,7 +49,6 @@ class Feed:
 
 
 def feeds() -> list[Feed]:
-    election_query = quote("2026 midterm election when:1d")
     try:
         watchlist = json.loads((Path(__file__).resolve().parents[1] / "watchlist.json").read_text())
         tickers = [ticker for ticker in watchlist if isinstance(ticker, str) and re.fullmatch(r"[A-Z]{1,5}", ticker)][:6]
@@ -61,12 +60,7 @@ def feeds() -> list[Feed]:
     market_query = quote("(" + " OR ".join(f'"{term}"' for term in market_terms) + ") when:1d")
     suffix = "&hl=en-US&gl=US&ceid=US:en"
     return [
-        Feed("google-election", "elections", "Google News: Midterms", f"https://news.google.com/rss/search?q={election_query}{suffix}"),
-        Feed("pbs-politics", "elections", "PBS NewsHour: Politics", "https://www.pbs.org/newshour/feeds/rss/politics"),
-        Feed("abc-politics", "elections", "ABC News: Politics", "https://feeds.abcnews.com/abcnews/politicsheadlines"),
-        Feed("nbc-politics", "elections", "NBC News: Politics", "https://feeds.nbcnews.com/nbcnews/public/politics"),
         Feed("google-markets", "markets", "Google News: Markets", f"https://news.google.com/rss/search?q={market_query}{suffix}", terms=tuple(company_terms)),
-        Feed("eac", "elections", "U.S. Election Assistance Commission", "https://www.eac.gov/rss.xml", True),
     ]
 
 
@@ -312,8 +306,6 @@ def _worker() -> None:
         try:
             if _take_lease():
                 collect_once()
-                from app.sig_ai_triage import analyze_pending
-                analyze_pending()
         except (OSError, sqlite3.Error):
             pass
         _stop.wait(POLL_SECONDS)

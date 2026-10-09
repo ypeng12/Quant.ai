@@ -20,7 +20,6 @@ import { SameDayReplayPanel } from './components/SameDayReplayPanel';
 import { InstitutionalPanel } from './components/InstitutionalPanel';
 import { PortfolioHistoryChart } from './components/PortfolioHistoryChart';
 import { ReplayAndExperimentsPanel } from './components/ReplayAndExperimentsPanel';
-import { ElectionNewsPanel } from './components/ElectionNewsPanel';
 import { FinancialSentimentResearchPanel } from './components/FinancialSentimentResearchPanel';
 import { TradeComparisonPanel } from './components/TradeComparisonPanel';
 import { PaperAlphaDashboard } from './components/PaperAlphaDashboard';
@@ -151,7 +150,7 @@ const INTERVAL_LABELS: Record<string, string> = {
   "1d": "Daily"
 };
 
-type ActiveTab = 'dashboard' | 'research' | 'report' | 'walkforward' | 'experiments' | 'replay' | 'broker' | 'institutional' | 'portfolio' | 'financial_sentiment' | 'election_news' | 'trade_comparison' | 'live_dashboard' | 'saggese_wave';
+type ActiveTab = 'dashboard' | 'research' | 'report' | 'walkforward' | 'experiments' | 'replay' | 'broker' | 'institutional' | 'portfolio' | 'financial_sentiment' | 'trade_comparison' | 'live_dashboard' | 'saggese_wave';
 
 function App() {
   const [watchlist, setWatchlist] = useState<string[]>(["SNDK", "TSLA", "PLTR", "NVDA"]);
@@ -662,24 +661,6 @@ function App() {
           </button>
 
           <button
-            className={`nav-tab ${activeTab === 'election_news' ? 'active' : ''}`}
-            onClick={() => setActiveTab('election_news')}
-            style={{
-              padding: '8px 18px',
-              fontSize: '0.9rem',
-              fontWeight: 800,
-              background: activeTab === 'election_news' ? 'linear-gradient(135deg, #0284c7, #0369a1)' : 'transparent',
-              color: '#ffffff',
-              borderRadius: '6px',
-              border: activeTab === 'election_news' ? 'none' : '1px solid rgba(56, 189, 248, 0.4)',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease'
-            }}
-          >
-            📰 Election News
-          </button>
-
-          <button
             className={`nav-tab ${activeTab === 'broker' ? 'active' : ''}`}
             onClick={() => setActiveTab('broker')}
             style={{
@@ -753,7 +734,7 @@ function App() {
 
           {/* Optional Advanced Tools */}
           <select
-            value={['broker', 'portfolio', 'replay', 'trade_comparison', 'institutional', 'saggese_wave', 'live_dashboard', 'financial_sentiment', 'election_news'].includes(activeTab) ? '' : activeTab}
+            value={['broker', 'portfolio', 'replay', 'trade_comparison', 'institutional', 'saggese_wave', 'live_dashboard', 'financial_sentiment'].includes(activeTab) ? '' : activeTab}
             onChange={(e) => {
               if (e.target.value) setActiveTab(e.target.value as ActiveTab);
             }}
@@ -823,11 +804,6 @@ function App() {
           {/* Company news and sentiment research */}
           {activeTab === 'financial_sentiment' && (
             <FinancialSentimentResearchPanel symbol={activeTicker} />
-          )}
-
-          {/* Election news collection tab */}
-          {activeTab === 'election_news' && (
-            <ElectionNewsPanel />
           )}
 
           {/* Live Interactive Alpha Dashboard Tab */}

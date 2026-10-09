@@ -25,7 +25,7 @@ Research follows the [assigned financial sentiment project](https://github.com/g
 
 - [Python, Docker, and Jupyter research module](research/financial_sentiment_using_prices/README.md): API and example notebooks, local data loading, and reproduction limits.
 - [Owner's research plan](docs/financial_sentiment_using_prices_plan.md): scope, data provenance, course requirements, and milestones (Chinese).
-- **Financial Sentiment** in the existing [Quant.ai research page](https://ypeng12-quant-ai.hf.space/?tab=financial_sentiment): public aggregate audit results, separate from Election News.
+- **Financial Sentiment** in the existing [Quant.ai research page](https://ypeng12-quant-ai.hf.space/?tab=financial_sentiment): public aggregate audit results.
 
 Current status: **Not trained / Not evaluated**. The historical raw archive at `reports/market_impact_data_audit_20261007/` stays local. Persistent collection and validated labels precede model training, out-of-sample evaluation, event attribution, and an equal-capital A/B comparison. The course submission will be packaged for the instructor's repository later.
 
@@ -46,7 +46,6 @@ Current status: **Not trained / Not evaluated**. The historical raw archive at `
 
 </div>
 
-**Current Predictions Cup plan:** [Read the Chinese strategy and schedule](docs/PREDICTIONS_CUP_STRATEGY.md). Other files in `docs/` are technical notes or historical research; they are not required to follow this plan.
 
 ---
 
