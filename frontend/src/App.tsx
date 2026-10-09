@@ -20,7 +20,8 @@ import { SameDayReplayPanel } from './components/SameDayReplayPanel';
 import { InstitutionalPanel } from './components/InstitutionalPanel';
 import { PortfolioHistoryChart } from './components/PortfolioHistoryChart';
 import { ReplayAndExperimentsPanel } from './components/ReplayAndExperimentsPanel';
-import { PredictionsCupPanel } from './components/PredictionsCupPanel';
+import { ElectionNewsPanel } from './components/ElectionNewsPanel';
+import { CommunityMonitorPanel } from './components/CommunityMonitorPanel';
 import { TradeComparisonPanel } from './components/TradeComparisonPanel';
 import { PaperAlphaDashboard } from './components/PaperAlphaDashboard';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -150,7 +151,7 @@ const INTERVAL_LABELS: Record<string, string> = {
   "1d": "Daily"
 };
 
-type ActiveTab = 'dashboard' | 'research' | 'report' | 'walkforward' | 'experiments' | 'replay' | 'broker' | 'institutional' | 'portfolio' | 'ml_assistant' | 'trade_comparison' | 'live_dashboard' | 'saggese_wave';
+type ActiveTab = 'dashboard' | 'research' | 'report' | 'walkforward' | 'experiments' | 'replay' | 'broker' | 'institutional' | 'portfolio' | 'election_news' | 'trade_comparison' | 'live_dashboard' | 'saggese_wave';
 
 function App() {
   const [watchlist, setWatchlist] = useState<string[]>(["SNDK", "TSLA", "PLTR", "NVDA"]);
@@ -640,21 +641,21 @@ function App() {
           </button>
 
           <button
-            className={`nav-tab ${activeTab === 'ml_assistant' ? 'active' : ''}`}
-            onClick={() => setActiveTab('ml_assistant')}
+            className={`nav-tab ${activeTab === 'election_news' ? 'active' : ''}`}
+            onClick={() => setActiveTab('election_news')}
             style={{
               padding: '8px 18px',
               fontSize: '0.9rem',
               fontWeight: 800,
-              background: activeTab === 'ml_assistant' ? 'linear-gradient(135deg, #0284c7, #0369a1)' : 'transparent',
+              background: activeTab === 'election_news' ? 'linear-gradient(135deg, #0284c7, #0369a1)' : 'transparent',
               color: '#ffffff',
               borderRadius: '6px',
-              border: activeTab === 'ml_assistant' ? 'none' : '1px solid rgba(56, 189, 248, 0.4)',
+              border: activeTab === 'election_news' ? 'none' : '1px solid rgba(56, 189, 248, 0.4)',
               cursor: 'pointer',
               transition: 'all 0.2s ease'
             }}
           >
-            🏆 Predictions Cup
+            📰 Election News
           </button>
 
           <button
@@ -730,8 +731,8 @@ function App() {
           </button>
 
           {/* Optional Advanced Tools */}
-          <select aria-label="More Tools"
-            value={['broker', 'portfolio', 'replay', 'trade_comparison', 'institutional', 'saggese_wave', 'live_dashboard', 'ml_assistant'].includes(activeTab) ? '' : activeTab}
+          <select
+            value={['broker', 'portfolio', 'replay', 'trade_comparison', 'institutional', 'saggese_wave', 'live_dashboard', 'election_news'].includes(activeTab) ? '' : activeTab}
             onChange={(e) => {
               if (e.target.value) setActiveTab(e.target.value as ActiveTab);
             }}
@@ -781,11 +782,11 @@ function App() {
 
           {/* AI Research Tab */}
           {activeTab === 'research' && (
-            <ChatPanel 
+            <><CommunityMonitorPanel symbol={activeTicker} /><ChatPanel
               onRunBacktest={handleAgentBacktest}
               isLoading={loading}
               activeTicker={activeTicker}
-            />
+            /></>
           )}
 
           {/* Walk-Forward Tab */}
@@ -798,9 +799,9 @@ function App() {
             <ExperimentCompare />
           )}
 
-          {/* SIG Predictions Cup research tab */}
-          {activeTab === 'ml_assistant' && (
-            <PredictionsCupPanel />
+          {/* Election news collection tab */}
+          {activeTab === 'election_news' && (
+            <ElectionNewsPanel />
           )}
 
           {/* Live Interactive Alpha Dashboard Tab */}

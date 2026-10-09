@@ -1,0 +1,37 @@
+{
+  "status": "passed",
+  "checks": [
+    "raw news counts",
+    "unique article-stock rows",
+    "no historical arrival claim",
+    "bar uniqueness",
+    "entry after assumed availability plus delay",
+    "same-day 60min label within 15:55",
+    "raw price return recomputation",
+    "saved hashes"
+  ],
+  "article_stock_rows": 203,
+  "valid_exploratory_label_rows": 90,
+  "valid_label_unique_articles": 81,
+  "valid_label_rows_with_body": 76,
+  "valid_label_articles_with_body": 67,
+  "all_bars": 6604,
+  "rth_bars": 2730,
+  "label_rows_by_date": {
+    "2026-09-30": 19,
+    "2026-10-01": 12,
+    "2026-10-02": 23,
+    "2026-10-05": 20,
+    "2026-10-06": 16
+  },
+  "article_counts_by_publication_date": {
+    "2026-09-30": 29,
+    "2026-10-01": 32,
+    "2026-10-02": 40,
+    "2026-10-03": 2,
+    "2026-10-04": 12,
+    "2026-10-05": 33,
+    "2026-10-06": 39
+  },
+  "scope": "Internal consistency only, not source completeness, independent events, real-time backtest or predictive validity."
+}
