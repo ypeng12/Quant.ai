@@ -18,6 +18,20 @@ tags:
 ---
 
 # 🚀 Quant.ai: Autonomous Institutional Quantitative Trading Platform
+
+## Signal Lab 本地开发入口
+
+此 worktree 用于 **Quant.ai Signal Lab**，将公司新闻、社区观点与价格反应研究接入 Quant.ai。当前阶段是历史数据审计与样本浏览，后续按[中文研究主计划](docs/signal_lab_plan.md)推进持久采集、文本模型与等资金 A/B 实验。
+
+```bash
+cd /Users/yuliangpeng/Desktop/signal-lab
+make signal-lab-dev
+```
+
+打开 <http://127.0.0.1:5175/signal-lab.html>。`Ctrl-C` 同时停止研究 API 和前端。依赖已在此工作区安装；需要重建时运行 `make signal-lab-setup`（Python 3.11、本机锁定版本；Node 要求 `^20.19.0` 或 `>=22.12.0`），验证运行 `make signal-lab-check`。自定义端口使用 `python3 scripts/dev_signal_lab.py --api-port 8002 --ui-port 5176`。
+
+该入口仅使用本地审计快照，不启动交易或采集。原始研究数据保留在本机并被 Git 忽略；新克隆需要另行恢复该快照才能浏览样本。下方保留原 Quant.ai 项目介绍；Signal Lab 开发以以上入口和主计划为准。
+
 ### Ultra-Low Latency C++20 Engine · Microstructure LOB Causal Alpha · Self-Evolving Reinforcement Learning
 
 <div align="center">

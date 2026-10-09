@@ -43,3 +43,16 @@ scratch/
 backend/data/l1_capture
 backend/data/l1_history*/
 backend/data/l1_runtime/
+
+# Signal Lab local environment and research runtime
+frontend/dist-signal-lab/
+frontend/node_modules/.cache/
+.runtime/signal-lab/
+.env.*
+!.env.example
+!.env.signal-lab.example
+
+# New raw research captures stay local; retain the reviewed historical manifests.
+/reports/signal_lab_runs/
+/reports/market_impact_data_audit_*/
+!/reports/market_impact_data_audit_20261007/

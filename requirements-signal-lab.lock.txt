@@ -1,0 +1,51 @@
+# Signal Lab 本机依赖快照；生成于 2026-10-09。
+# Python 3.11.3; macOS-14.6.1-x86_64-i386-64bit; x86_64.
+# 来源：在全新独立 .venv 安装 requirements-signal-lab.txt 后执行 pip freeze。
+# 仅锁定 Python 包版本，不含 Python 解释器、操作系统或 wheel 哈希。
+# 本锁定文件只在上述 macOS x86_64 环境验证；其他平台需重新解析与验证。
+# 重建：python3.11 -m venv .venv
+# 安装：.venv/bin/python -m pip install -r requirements-signal-lab.lock.txt
+# 校验：.venv/bin/python -m pip check
+annotated-doc==0.0.5
+annotated-types==0.8.0
+anyio==4.15.1
+certifi==2026.7.22
+charset-normalizer==3.5.2
+click==8.5.0
+cloudpickle==3.1.2
+exchange_calendars==4.13.2
+fastapi==0.143.0
+h11==0.16.0
+httpcore==1.0.9
+httpx==0.28.1
+idna==3.20
+iniconfig==2.3.1
+joblib==1.6.0
+korean_lunar_calendar==0.4.0
+narwhals==2.26.0
+numpy==2.4.6
+opentelemetry-api==1.45.1
+packaging==26.3
+pandas==2.3.3
+pluggy==1.6.0
+pyarrow==26.0.0
+pydantic==2.14.0
+pydantic_core==2.50.0
+Pygments==2.21.0
+pyluach==2.3.0
+pytest==9.1.1
+python-dateutil==2.9.0.post0
+python-dotenv==1.2.4
+pytz==2026.5
+requests==2.34.2
+scikit-learn==1.9.1
+scipy==1.17.1
+six==1.17.0
+starlette==1.7.0
+threadpoolctl==3.7.0
+toolz==1.2.0
+typing-inspection==0.4.4
+typing_extensions==4.16.0
+tzdata==2026.5
+urllib3==2.8.0
+uvicorn==0.54.0

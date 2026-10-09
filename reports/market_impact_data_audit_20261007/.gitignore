@@ -1,0 +1,4 @@
+*
+!.gitignore
+!audit_manifest.json
+!validation.json
