@@ -421,11 +421,11 @@ function App() {
         setReplayData(json);
         setReplayIndex(0);
       } else {
-        alert("加载复盘数据失败: " + json.error);
+        alert("Failed to load replay data: " + json.error);
       }
     } catch (e) {
       console.error(e);
-      alert("网络请求失败");
+      alert("The network request failed.");
     } finally {
       setReplayLoading(false);
     }
@@ -472,7 +472,7 @@ function App() {
         if (json.success) {
           setZoomCandles(json.candles);
         } else {
-          alert("加载日内数据失败: " + json.error);
+          alert("Failed to load intraday data: " + json.error);
         }
       } catch (e) {
         console.error(e);
@@ -552,7 +552,7 @@ function App() {
   const handleRemoveTicker = async (tickerToRemove: string, e: React.MouseEvent) => {
     e.stopPropagation();
     
-    const confirmMsg = `确定要将 [${tickerToRemove}] 从 Watchlist 自选股列表中移除吗？\n\n系统提示：如果当前账户中持有 ${tickerToRemove} 的仓位，移除时将自动发起强行卖出/平仓，且 AI 后续绝不再买入或交易该股。`;
+    const confirmMsg = `Remove [${tickerToRemove}] from the watchlist?\n\nIf your account holds a position in ${tickerToRemove}, removing it will automatically submit a request to close that position. The AI will no longer buy or trade this stock.`;
     if (!window.confirm(confirmMsg)) {
       return;
     }
@@ -848,7 +848,7 @@ function App() {
 
           {/* Alpaca Live Tab (Mode 1) */}
           {activeTab === 'broker' && (
-            <ErrorBoundary fallbackTitle="实盘账户与成交日志面板 / Live Account and Fill Log">
+            <ErrorBoundary fallbackTitle="Live Account and Fill Log">
               <BrokerPanel watchlist={watchlist} />
             </ErrorBoundary>
           )}
@@ -858,7 +858,7 @@ function App() {
             <div style={{ width: '100%', height: 'calc(100vh - 120px)', background: '#080a11', borderRadius: '8px', overflow: 'hidden' }}>
               <iframe
                 src="/charts/saggese_wave_visual_dashboard.html"
-                title="历史代理指标与真实 L1 数据状态 / Historical Proxies and Actual L1 Data Status"
+                title="Historical Proxies and Actual L1 Data Status"
                 style={{ width: '100%', height: '100%', border: 'none' }}
               />
             </div>
@@ -949,8 +949,8 @@ function App() {
                         borderTop: '3px solid var(--color-green)',
                         animation: 'spin 1s linear infinite'
                       }}></div>
-                      <h4 style={{ margin: 0, fontWeight: 700, color: '#ffffff', fontSize: '0.95rem' }}>AI 托管机器学习模型正在自动优化最佳参数...</h4>
-                      <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.8rem', margin: 0 }}>正在对 {activeTicker} 近期 5 天的高频 1m 波动率和突破阻力位进行量化网格搜索。</p>
+                      <h4 style={{ margin: 0, fontWeight: 700, color: '#ffffff', fontSize: '0.95rem' }}>AI Auto-Pilot is optimizing strategy parameters...</h4>
+                      <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.8rem', margin: 0 }}>Running a grid search on {activeTicker}'s one-minute volatility and breakout levels over the last five days.</p>
                     </div>
                   </div>
                 )}
@@ -967,7 +967,7 @@ function App() {
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '0.75rem', borderBottom: '1px solid var(--color-border)', paddingBottom: '0.5rem' }}>
                       <span style={{ fontSize: '1.3rem' }}>🛡️</span>
-                      <h4 style={{ margin: 0, fontWeight: 800, fontSize: '0.95rem', color: '#ffffff' }}>AI 智能托管报告 (AI Auto-Pilot Tuning Report)</h4>
+                      <h4 style={{ margin: 0, fontWeight: 800, fontSize: '0.95rem', color: '#ffffff' }}>AI Auto-Pilot Tuning Report</h4>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                       <p style={{ color: '#e5e5ea', fontSize: '0.82rem', margin: 0, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
@@ -977,27 +977,27 @@ function App() {
                       {tuningMetrics && (
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', background: '#141416', padding: '10px 16px', borderRadius: '8px', border: '1px solid var(--color-border)' }}>
                           <div>
-                            <div style={{ fontSize: '0.7rem', color: 'var(--color-text-secondary)', marginBottom: '2px' }}>回测总盈亏</div>
+                            <div style={{ fontSize: '0.7rem', color: 'var(--color-text-secondary)', marginBottom: '2px' }}>Backtest Net P&amp;L</div>
                             <div style={{ fontSize: '0.95rem', fontWeight: 800, color: tuningMetrics.net_pnl >= 0 ? 'var(--color-green)' : 'var(--color-red)' }}>
                               ${tuningMetrics.net_pnl.toFixed(2)}
                             </div>
                           </div>
                           <div>
-                            <div style={{ fontSize: '0.7rem', color: 'var(--color-text-secondary)', marginBottom: '2px' }}>测算胜率</div>
+                            <div style={{ fontSize: '0.7rem', color: 'var(--color-text-secondary)', marginBottom: '2px' }}>Backtest Win Rate</div>
                             <div style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--color-green)' }}>
                               {tuningMetrics.win_rate.toFixed(1)}%
                             </div>
                           </div>
                           <div>
-                            <div style={{ fontSize: '0.7rem', color: 'var(--color-text-secondary)', marginBottom: '2px' }}>最大回撤</div>
+                            <div style={{ fontSize: '0.7rem', color: 'var(--color-text-secondary)', marginBottom: '2px' }}>Maximum Drawdown</div>
                             <div style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--color-red)' }}>
                               {(tuningMetrics.max_drawdown * 100).toFixed(2)}%
                             </div>
                           </div>
                           <div>
-                            <div style={{ fontSize: '0.7rem', color: 'var(--color-text-secondary)', marginBottom: '2px' }}>测算交易数</div>
+                            <div style={{ fontSize: '0.7rem', color: 'var(--color-text-secondary)', marginBottom: '2px' }}>Backtest Round Trips</div>
                             <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#ffffff' }}>
-                              {tuningMetrics.round_trips} 笔
+                              {tuningMetrics.round_trips}
                             </div>
                           </div>
                         </div>
@@ -1044,7 +1044,7 @@ function App() {
                       margin: '0 auto 10px auto'
                     }}></div>
                     <span style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
-                      正在拉取 {zoomTradeItem?.ticker} 日内高频分时数据并进行 1分钟 细节对齐...
+                      Loading {zoomTradeItem?.ticker} intraday data and aligning one-minute intervals...
                     </span>
                   </div>
                 )}
@@ -1063,10 +1063,10 @@ function App() {
               <div className="card loader-container" style={{ padding: '2.5rem', textAlign: 'center', margin: '2rem 0' }}>
                 <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>⏳</div>
                 <h3 style={{ color: '#ffffff', marginBottom: '0.5rem', fontSize: '1.1rem' }}>
-                  后端服务器正在启动或连接中断 (Backend Initializing / Connecting)
+                  Backend Initializing or Disconnected
                 </h3>
                 <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.85rem', maxWidth: '500px', margin: '0 auto 1.5rem auto', lineHeight: 1.5 }}>
-                  Hugging Face Space 首次启动容器需要 1-2 分钟编译与加载数据（冷启动）。如果页面显示连接异常，请点击下方按钮重新连接。
+                  The Hugging Face Space may take 1–2 minutes to build and load data on a cold start. If the connection fails, use the button below to reconnect.
                 </p>
                 <button
                   onClick={() => {
@@ -1086,7 +1086,7 @@ function App() {
                     boxShadow: '0 2px 8px rgba(0,200,5,0.3)'
                   }}
                 >
-                  🔄 重新连接 API 服务器 (Retry Connection)
+                  🔄 Retry API Connection
                 </button>
               </div>
             )
@@ -1100,7 +1100,7 @@ function App() {
             <div style={{ display: 'flex', gap: '6px' }}>
               <button
                 onClick={handleResetDefaultWatchlist}
-                title="恢复为默认推荐自选股池"
+                title="Restore the default watchlist"
                 style={{
                   background: 'rgba(255,255,255,0.06)',
                   border: '1px solid rgba(255,255,255,0.15)',
@@ -1116,7 +1116,7 @@ function App() {
               </button>
               <button
                 onClick={handleClearWatchlist}
-                title="清空自选股列表"
+                title="Clear the watchlist"
                 style={{
                   background: 'rgba(255,59,48,0.1)',
                   border: '1px solid rgba(255,59,48,0.3)',
@@ -1162,7 +1162,7 @@ function App() {
                     </span>
                     <button 
                       onClick={(e) => handleRemoveTicker(ticker, e)}
-                      title="移除自选股"
+                      title="Remove from the watchlist"
                       style={{
                         background: 'transparent',
                         border: 'none',

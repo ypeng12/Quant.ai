@@ -31,38 +31,38 @@ def get_company_info(ticker):
     static_db = {
         "TSLA": {
             "name": "Tesla, Inc.",
-            "sector": "Consumer Cyclical (消费周期性)",
-            "industry": "Auto Manufacturers (汽车制造商)",
+            "sector": "Consumer Cyclical",
+            "industry": "Auto Manufacturers",
             "market_cap": 820000000000,
-            "description": "Tesla Inc. 是一家设计、开发、制造和销售电动汽车、能源生成和存储系统的美国跨国公司。它是全球最受关注的高波动率日内交易标的。"
+            "description": "Tesla, Inc. is a U.S. multinational company that designs, develops, manufactures, and sells electric vehicles and energy generation and storage systems. Its shares are widely followed by intraday traders for their price volatility."
         },
         "NVDA": {
             "name": "NVIDIA Corporation",
-            "sector": "Technology (科技)",
-            "industry": "Semiconductors (半导体)",
+            "sector": "Technology",
+            "industry": "Semiconductors",
             "market_cap": 3150000000000,
-            "description": "NVIDIA Corporation 是一家设计图形处理器（GPU）的半导体跨国科技公司，在人工智能芯片、数据中心和高性能计算领域处于绝对垄断地位。"
+            "description": "NVIDIA Corporation is a multinational semiconductor and technology company that designs graphics processing units (GPUs) for artificial intelligence, data centers, and high-performance computing."
         },
         "AAPL": {
             "name": "Apple Inc.",
-            "sector": "Technology (科技)",
-            "industry": "Consumer Electronics (消费电子)",
+            "sector": "Technology",
+            "industry": "Consumer Electronics",
             "market_cap": 3320000000000,
-            "description": "Apple Inc. 是全球最具价值的电子科技公司，主营 iPhone、Mac、iPad 等消费终端设备以及各种云端订阅软件服务，现金流充裕，波动相对稳健。"
+            "description": "Apple Inc. is a global technology company that develops consumer devices, including iPhone, Mac, and iPad, along with cloud services and subscription software."
         },
         "MSFT": {
             "name": "Microsoft Corporation",
-            "sector": "Technology (科技)",
-            "industry": "Software—Infrastructure (基础软件)",
+            "sector": "Technology",
+            "industry": "Software—Infrastructure",
             "market_cap": 3250000000000,
-            "description": "Microsoft Corporation 是全球软件与云服务的龙头企业。旗下拥有 Windows 系统、Azure 云平台、Office 软件，并通过 OpenAI 领跑生成式 AI 时代。"
+            "description": "Microsoft Corporation is a global software and cloud services company. Its products include Windows, Azure, and Office, and it works with OpenAI on generative AI technologies."
         },
         "AMD": {
             "name": "Advanced Micro Devices, Inc.",
-            "sector": "Technology (科技)",
-            "industry": "Semiconductors (半导体)",
+            "sector": "Technology",
+            "industry": "Semiconductors",
             "market_cap": 260000000000,
-            "description": "Advanced Micro Devices, Inc. 是一家全球半导体公司，主营微处理器（CPU）、显卡（GPU）以及游戏主机定制芯片，与英特尔和英伟达呈竞争关系。"
+            "description": "Advanced Micro Devices, Inc. is a global semiconductor company that develops central processing units (CPUs), graphics processing units (GPUs), and custom chips for game consoles. It competes with Intel and NVIDIA."
         }
     }
     
@@ -92,10 +92,10 @@ def get_company_info(ticker):
         # 如果 yfinance 接口请求出错/被限制，使用兜底值
         fallback = {
             "name": f"{ticker} Corporation",
-            "sector": "General Sector (常规板块)",
-            "industry": "General Industry (常规行业)",
+            "sector": "General Sector",
+            "industry": "General Industry",
             "market_cap": 0,
-            "description": f"未能获取到 {ticker} 的网络实时介绍，已自动生成默认档案。该标的目前可参与量化行情回测。"
+            "description": f"Current company information for {ticker} could not be retrieved, so a default profile is shown. This symbol is available for quantitative market backtesting."
         }
         COMPANY_INFO_CACHE[ticker] = fallback
         return fallback

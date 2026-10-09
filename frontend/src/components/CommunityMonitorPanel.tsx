@@ -24,11 +24,11 @@ export const CommunityMonitorPanel: React.FC<{ symbol: string }> = ({ symbol }) 
 
   return <section style={{ padding: '18px', marginBottom: '18px', background: '#101826', border: '1px solid #2c3b50', borderRadius: '12px' }} aria-label="Community posts">
     <h2 style={{ margin: '0 0 6px' }}>Futu Community · {symbol}</h2>
-    <p style={{ color: '#a5b4c8', margin: '0 0 12px' }}>Public posts collected automatically. No AI calls or contrarian signal are used.</p>
+    <p style={{ color: '#a5b4c8', margin: '0 0 12px' }}>Saved public-post snapshot. Continuous collection has not been verified. No sentiment model or contrarian signal is applied.</p>
     {error && <p role="alert">Community source unavailable.</p>}
     {!error && snapshot && <>
-      <p style={{ color: '#a5b4c8' }}>Source: {snapshot.source?.status || 'waiting'} · Last checked: {snapshot.source?.last_success ? new Date(snapshot.source.last_success).toLocaleString('en-US') : 'Pending'}</p>
-      {snapshot.posts.length === 0 && <p>No posts collected yet.</p>}
+      <p style={{ color: '#a5b4c8' }}>Source: {snapshot.source?.status || 'waiting'} · Last successful collection: {snapshot.source?.last_success ? new Date(snapshot.source.last_success).toLocaleString('en-US') : 'Pending'}</p>
+      {snapshot.posts.length === 0 && <p>No posts saved in this app's collection database yet.</p>}
       {snapshot.posts.map(post => <article key={post.post_id} style={{ padding: '12px 0', borderTop: '1px solid #2c3b50' }}>
         <strong>{post.title || 'Community post'}</strong>
         <p style={{ color: '#b9c6d8', margin: '6px 0' }}>{post.excerpt}</p>

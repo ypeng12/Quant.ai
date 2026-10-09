@@ -1,8 +1,10 @@
 # Train_Financial_Sentinment_Analysis_Using_Prices：研究与课程主计划
 
-**更新：2026-10-07 完成实测；2026-10-09 加入 X 社交信息源计划，并迁入独立开发环境。** 本计划继承原 [Alpha 研究优先级文档](/Users/yuliangpeng/Desktop/Quant/docs/alpha_research_priorities_20260913.md) 的文本与价格研究部分；其他量价研究仍在原文档维护。用户要求以 Quant.ai 的实际收益改善为重要目标，最终用相同初始资金、同期运行的原系统 A 与加入文本信息的系统 B 对照。收益提高是研究目标，不能预先承诺，也不能把分类准确率替代收益证据。
+**更新：2026-10-07 完成实测；2026-10-09 加入 X 社交信息源计划，加入 Python 研究目录，并接入已有 Quant.ai HF 页面。** 本计划继承原 [Alpha 研究优先级文档](alpha_research_priorities_20260913.md) 的文本与价格研究部分；其他量价研究仍在原文档维护。用户要求以 Quant.ai 的实际收益改善为重要目标，最终用相同初始资金、同期运行的原系统 A 与加入文本信息的系统 B 对照。收益提高是研究目标，不能预先承诺，也不能把分类准确率替代收益证据。
 
 研究起点：[Train Financial Sentiment Analysis Using Price Response as Labels](https://github.com/gpsaggese/gpsaggese.github.io/blob/master/research/ideas/draft.Train_Financial_Sentinment_Analysis_Using_Prices.md)。核心问题是：用后续价格反应作弱标签，能否学习到传统正负面语气与过去量价之外的信息？课程核心依次完成数据与标签、价格标签模型与基线比较、价格大波动的新闻归因；富途的顺向／反向情绪和 X 作为扩展。
+
+**公开入口验收（2026-10-09）：**已将原 Quant 主目录 99 个文件的代码、研究配置和公开汇总提交并推送到 GitHub main 与既有 HF Space，首次公开入口提交为 `c9eebb3`；研究分支英文文档已推送为 `97596ac`。公开 README／页面使用英文，本主计划继续中文。64 项后端检查、4 项前端盈亏展示检查及生产构建通过，HF 实际研究 API 返回 HTTP 200，新闻／富途／行情／SEC／X 计数分别为 187／120／2730／94／未接入，探索标签为 90，模型与 A/B 状态仍为 `Not trained`／`Not evaluated`。原始语料和行情、账户快照与运行账本保留本机；原主目录只剩 `backend/trade_history.json` 的运行变化未提交。HF 社区数据库目前为 waiting，不声称已实现持续自动采集。
 
 ## 当前工作顺序与课程要求（2026-10-09 校正）
 
