@@ -4,6 +4,7 @@
 **/.env
 **/.env.*
 .venv
+**/.venv
 venv
 backend/data_cache
 *.log
@@ -11,6 +12,7 @@ backend/data_cache
 # Private research archives and runtime snapshots are not image inputs.
 backend/.runtime_state
 reports/market_impact_data_audit_20261007
+reports/financial_sentiment_runs
 reports/alpha_refresh_20261007/live_snapshot.json
 reports/alpha_refresh_20261007/runtime_state.json
 reports/alpha_refresh_20261007/**/*.csv.gz
