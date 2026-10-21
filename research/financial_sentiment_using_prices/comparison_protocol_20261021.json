@@ -1,0 +1,40 @@
+{
+  "registered_at": "2026-10-21T18:19:44.945831+00:00",
+  "earlier_declaration": "Universe and comparison were declared in task commentary before the execution outage; this is the first confirmed file write after checking absence. No expanded-company performance has been inspected.",
+  "existing_slice": "A 2016-2020; existing training/development-test results already inspected",
+  "comparison_status": "Additional fixed comparator on an already inspected development test; not a new blind holdout",
+  "finbert": {
+    "model_id": "Xenova/finbert",
+    "revision": "8f269abebfdd9009d7d9b5e96af7e5c6bfe50b20",
+    "offline_only": true,
+    "input_budget": "Same distinct original headlines contributing to the same 91 training and 87 test company-days; no summaries, bodies, prices or outcomes in inference",
+    "aggregation": "Arithmetic mean across distinct headlines of P_positive minus P_negative",
+    "truncation_policy": "Reject comparison if any headline truncates",
+    "ridge_alpha": 10.0,
+    "models": [
+      "finbert_tone_ridge",
+      "price_finbert_ridge"
+    ],
+    "calibration": "Training-only StandardScaler and Ridge; same paired rows as existing four models",
+    "pretraining_limit": "Historical model availability and pretraining overlap are not independently verified"
+  },
+  "expanded_universe": {
+    "symbols": [
+      "A",
+      "AMZN",
+      "MSFT"
+    ],
+    "selection_reason": "A retains the completed slice; AMZN/MSFT are from the existing owner-selected research pool. PLTR lacks comparable 2016-2020 listing history and stays in the prospective pool.",
+    "source_dates": [
+      "2016-01-01",
+      "2020-06-06"
+    ],
+    "training_boundary": "2019-01-01",
+    "horizon_sessions": 10,
+    "entry_delay_sessions": 2,
+    "target": "Separate split-adjusted opening-price excess return relative to SPY, excluding cash dividends; original strict total-return track unchanged",
+    "policy": "No winner-based symbol or parameter changes; publish missingness and failures per declared company",
+    "source_budget_bytes": 33554432,
+    "performance_status": "Not inspected or fitted on expanded companies"
+  }
+}

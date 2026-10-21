@@ -1,0 +1,55 @@
+{
+  "registered_at": "2026-10-21T16:54:30.828807+00:00",
+  "track": "retrospective_exploratory_price_return_not_total_return",
+  "symbol": "A",
+  "symbol_selection": "First completely retained ticker in the official FNSPID CSV prefix; selected before any price query or outcome/model inspection",
+  "source": "Zihan1004/FNSPID",
+  "revision": "bf9189c41527198897d1af3e17b1a0095279fc45",
+  "source_date_start": "2016-01-01",
+  "source_date_end_exclusive": "2020-06-06",
+  "reason_dates": "2016+ historical market-data coverage and first complete ticker headline coverage; not chosen by returns",
+  "test_start": "2019-01-01",
+  "horizon_sessions": 10,
+  "entry_delay_sessions": 2,
+  "return_basis": "split-adjusted opening price change, cash dividends excluded; not total return",
+  "target": "stock opening price return minus SPY opening price return",
+  "class_neutral_band": 0.005,
+  "tfidf": {
+    "max_features": 2000,
+    "min_df": 2,
+    "ngram_range": [
+      1,
+      2
+    ]
+  },
+  "ridge_alpha": 10.0,
+  "models": [
+    "train_mean",
+    "price_ridge",
+    "text_tfidf_ridge",
+    "price_text_ridge"
+  ],
+  "assumed_roundtrip_cost_bps": [
+    0,
+    10,
+    20
+  ],
+  "strategy": "Non-overlapping 10-session long/cash company positions from predicted relative-return sign; no shorting, no orders, no annualization",
+  "limitations": [
+    "Historical exact text versions and availability are not independently verified",
+    "Dataset symbol tags are not independent company relevance annotations",
+    "Proxy event groups cannot certify all real-world event identities",
+    "A single-company historical development slice is not a final holdout or alpha evidence"
+  ],
+  "asset_mapping": {
+    "symbol": "A",
+    "company": "Agilent Technologies Inc.",
+    "exchange": "NYSE",
+    "references": [
+      "https://www.investor.agilent.com/overview/default.aspx",
+      "https://www.investor.agilent.com/news-and-events/news/news-details/2020/Agilent-Technologies-Reports-First-Quarter-Fiscal-Year-2020-Financial-Results/"
+    ],
+    "verification": "Issuer-indexed primary content checked; direct issuer snapshot returned HTTP 403; no historical asset-master completeness claim"
+  },
+  "registered_original_protocol_sha256": "f5e9cf66514f804dba430b492e3eec864c33c0f0b2be6e75aceef49242aac95e"
+}

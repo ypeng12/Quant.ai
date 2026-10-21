@@ -11,16 +11,31 @@ MODEL_REVISION = "8f269abebfdd9009d7d9b5e96af7e5c6bfe50b20"
 MODEL_FILE = "onnx/model_quantized.onnx"
 
 
+def cached_model_file(snapshot, filename):
+    """Read only an explicit immutable local snapshot; never initiate a download."""
+    snapshot = Path(snapshot)
+    if snapshot.name != MODEL_REVISION or filename not in {MODEL_FILE, "tokenizer.json", "config.json"}:
+        raise ValueError("Require the pinned FinBERT snapshot and known model files")
+    candidate = snapshot / filename
+    if not candidate.is_file():
+        raise FileNotFoundError("Pinned local FinBERT file is absent: " + str(candidate))
+    return candidate
+
+
 class FinBertTone:
     """Run the ONNX conversion of ProsusAI/finbert without a remote API."""
 
-    def __init__(self, *, offline: bool = False):
+    def __init__(self, *, offline: bool = False, cached_snapshot=None):
         import numpy as np
         import onnxruntime as ort
-        from huggingface_hub import hf_hub_download
         from tokenizers import Tokenizer
 
         def fetch(filename):
+            if cached_snapshot is not None:
+                if not offline:
+                    raise ValueError("An explicit cache snapshot requires offline=True")
+                return cached_model_file(cached_snapshot, filename)
+            from huggingface_hub import hf_hub_download
             return Path(hf_hub_download(MODEL_ID, filename, revision=MODEL_REVISION,
                                        token=False, local_files_only=offline))
 

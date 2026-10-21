@@ -135,6 +135,8 @@ def collect_research(
     end_date: str,
     *,
     max_news_pages: int = MAX_NEWS_PAGES,
+    start_at: str | None = None,
+    end_at: str | None = None,
     session=None,
     credential_loader: Callable[[], tuple[str, str]] | None = None,
     clock: Callable[[], datetime] = _utc_now,
@@ -150,11 +152,20 @@ def collect_research(
     """
     symbols = _symbols(symbols)
     start, end = _window(start_date, end_date)
+    if (start_at is None) != (end_at is None):
+        raise ValueError("Provide both start_at and end_at for an exact window")
+    if start_at is not None:
+        start, end = _parse_timestamp(start_at), _parse_timestamp(end_at)
+        if start >= end:
+            raise ValueError("Exact window start must precede end")
+        if start.astimezone(NEW_YORK).date().isoformat() != start_date or end.astimezone(NEW_YORK).date().isoformat() != end_date:
+            raise ValueError("Exact timestamps must match their New York start/end dates")
     if type(max_news_pages) is not int or not 1 <= max_news_pages <= MAX_NEWS_PAGES:
         raise ValueError(f"max_news_pages must be between 1 and {MAX_NEWS_PAGES}")
     started = _stamp(clock())
     if end > datetime.fromisoformat(started):
-        raise ValueError("The requested 16:00 New York endpoint has not occurred yet")
+        raise ValueError("The requested endpoint has not occurred yet")
+    price_start = datetime.combine(start.astimezone(NEW_YORK).date(), time.min, NEW_YORK)
     output = Path(output_dir)
     output.mkdir(parents=True, exist_ok=False)
     (output / ".gitignore").write_text("*\n!.gitignore\n", encoding="utf-8")
@@ -174,9 +185,11 @@ def collect_research(
         "universe_fixed_before_price_scan": True,
         "window": {"start_date": start_date, "end_date": end_date,
                    "start": _stamp(start), "end": _stamp(end), "timezone": "America/New_York",
-                   "close_policy": "16:00 reference close; holidays and early-close sessions are not inferred."},
+                   "close_policy": ("Exact timestamp window including after-hours news; unfinished daily bars remain raw inputs." if start_at is not None else "16:00 reference close; holidays and early-close sessions are not inferred.")},
         "limits": {"news_pages": max_news_pages, "bars_pages": 1,
                    "window_calendar_days": MAX_WINDOW_DAYS, "symbols": MAX_SYMBOLS},
+        "bar_window": {"start": _stamp(price_start), "end": _stamp(end),
+                       "policy": "Daily bars begin at the New York date boundary so intraday cursor updates retain session bars."},
         "requests": [], "news_summary": news_summary,
         "bars_summary": {"status": "not_started", "pagination_complete": False},
         "historical_availability_verified": False,
@@ -231,7 +244,7 @@ def collect_research(
             import requests
             session = requests.Session()
         session.headers.update({"APCA-API-KEY-ID": key, "APCA-API-SECRET-KEY": secret})
-        bars_params = {"symbols": ",".join(manifest["bar_symbols"]), "start": _stamp(start),
+        bars_params = {"symbols": ",".join(manifest["bar_symbols"]), "start": _stamp(price_start),
                        "end": _stamp(end), "timeframe": "1Day", "adjustment": "raw",
                        "feed": "sip", "limit": 10000, "sort": "asc"}
         bars, _ = request(BARS_ROUTE, bars_params, "daily_bars_raw.json")
@@ -308,11 +321,14 @@ def main() -> int:
     parser.add_argument("--symbols", nargs="+", default=["PLTR", "AMZN", "MSFT"])
     parser.add_argument("--start-date", required=True, help="YYYY-MM-DD, beginning at midnight in New York.")
     parser.add_argument("--end-date", required=True, help="YYYY-MM-DD, ending at 16:00 in New York; must be in the past.")
+    parser.add_argument("--start-at", help="Optional exact timezone-aware start; provide with --end-at")
+    parser.add_argument("--end-at", help="Optional exact timezone-aware end, including after-hours; must have occurred")
     parser.add_argument("--max-news-pages", type=int, default=MAX_NEWS_PAGES, help="Bounded news page budget, from 1 to 20.")
     args = parser.parse_args()
     try:
         manifest = collect_research(args.output_dir, args.symbols, args.start_date,
-                                    args.end_date, max_news_pages=args.max_news_pages)
+                                    args.end_date, max_news_pages=args.max_news_pages,
+                                    start_at=args.start_at, end_at=args.end_at)
     except (CollectionError, ValueError, FileExistsError) as exc:
         print(json.dumps({"status": "failed", "error": str(exc)}), file=sys.stderr)
         return 1

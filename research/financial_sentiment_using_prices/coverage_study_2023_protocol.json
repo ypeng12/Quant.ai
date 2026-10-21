@@ -1,0 +1,86 @@
+{
+  "registered_at": "2026-10-21T19:06:46.788993+00:00",
+  "reason": "Source-coverage failure in a fixed 32 MiB prefix, not model performance; larger finite targeted byte ranges for the same declared universe",
+  "symbols": [
+    "A",
+    "AMZN",
+    "MSFT"
+  ],
+  "source_date_start": "2023-03-09",
+  "source_date_end_exclusive": "2023-12-01",
+  "test_start": "2023-09-01",
+  "entry_delay_sessions": 2,
+  "horizon_sessions": 10,
+  "class_neutral_band": 0.005,
+  "ridge_alpha": 10.0,
+  "tfidf": {
+    "max_features": 2000,
+    "min_df": 2,
+    "ngram_range": [
+      1,
+      2
+    ]
+  },
+  "assumed_roundtrip_cost_bps": [
+    0,
+    10,
+    20
+  ],
+  "target": "Separate split-adjusted opening-price excess return versus SPY, excluding cash dividends; strict original total-return contract unchanged",
+  "source": "Zihan1004/FNSPID",
+  "revision": "bf9189c41527198897d1af3e17b1a0095279fc45",
+  "source_file": "Stock_news/nasdaq_exteral_data.csv",
+  "budget": {
+    "public_source_bytes": 260498791,
+    "metadata_bytes": 2097152,
+    "max_public_range_requests": 173,
+    "probe_bytes": 262144,
+    "max_company_span_bytes": 100663296,
+    "max_company_price_pages": 5
+  },
+  "retrieval": "Use pinned file byte-range search on observed ticker-ordered blocks, retain raw ranges and exact offsets. Abort on non-range response, contradictory ordering, mixed malformed records or missing company boundaries. No full-file/global-order completeness claim. No symbol additions or cutoff changes.",
+  "evaluation": "Four original fixed controls per company, same paired rows; no pooled portfolio, no winner selection, no repeated A 2016 FinBERT inference",
+  "exclusions": "Publish exact missing timestamps, prices, prior momentum, maturity and transitive-source/event exclusions per company. No fabricated historical capture/version times.",
+  "price_access": "Existing Alpaca fixed-host GET only; split-adjusted sip bars; no new credentials, paid data or trades.",
+  "forbidden_actions": [
+    "push",
+    "commit",
+    "PR",
+    "purchases",
+    "paid compute",
+    "new credentials",
+    "orders"
+  ],
+  "previous_comparison_protocol_sha256": "06aaf849b517a0a1402aea0d1c49161880f1b3d9deafe7ee86284cdebebb25c3",
+  "original_registration_sha256": "6a0914ae6edaecc41a16d55af4ad6811e4eb78bb610c79523907f69934f0e125",
+  "original_registered_at": "2026-10-21T18:47:39.660377+00:00",
+  "source_schema_amendment": {
+    "reason": "First 2 range responses revealed a blank-ticker tail partition; no expanded outcome or model performance inspected",
+    "missing_ticker_policy": "Treat empty vendor ticker as final missing-tag sort partition; never select as company; abort on contradictory observed ordering",
+    "reuse": "Verify and reuse the 524288 bytes / 2 exact responses already retained, counting them within the same original 128 MiB and 96 requests; retain original receive times",
+    "first_attempt_manifest_sha256": "a5423456a78dae61ef3bc1631cc86491d398598287fbdd473ff9d701dfc06168",
+    "second_source_schema": "Observed leading CSV row index and descending date/ticker regions; locate only the already registered date interval before downloading full records"
+  },
+  "source_total_bytes": 23232979597,
+  "previous_schema_registration_sha256": "810fdbe63429b9061a565241d4bc8ee80282c2eb5178b8c57dbdfeef738c5130",
+  "fallback_source_reason": "All_external.csv observed complete local AMZN block contains only 2020-04-27 to 2020-06-02 and MSFT absent from the located sorted region; source coverage, not model performance. Try the other publicly listed pinned corpus file for the unchanged company/date pool.",
+  "previous_public_bytes": 7936665,
+  "previous_public_requests": 27,
+  "aggregate_budget": {
+    "public_bytes_across_both_files": 268435456,
+    "public_requests_across_both_files": 200,
+    "previous_manifest_sha256": "b6818f38ffcbf746afaa87dacff64930fe661dcb3076f1218412e09d9a76695d"
+  },
+  "amended_before_retrieval_at": "2026-10-21T18:57:50.855501+00:00",
+  "request_count_reason": "23 GB file needs up to two logarithmic boundary searches per declared ticker; 160 finite aggregate requests while retaining the same 128 MiB aggregate byte ceiling. No new source-2 retrieval performed yet.",
+  "date_window_seek": true,
+  "final_budget_reason": "Second pinned source is 23 GB with full article bodies; register a finite 256 MiB aggregate/200 requests and 96 MiB per fixed date region before full retrieval. Bodies are not model inputs; no market outcomes were examined to set this budget.",
+  "preview_receipt_sha256": "4ecaa9a389cdb437b22ea04229fd1071c858497e7d2f8b488bef2f5d71ed7092",
+  "prior_source2_preview_bytes": 262144,
+  "study": "additional_coverage_driven_2023_development_not_original_2016_2020_or_strict_total_return_success",
+  "date_selection_reason": "All three declared company regions have coverage beginning by 2023-03-09; six calendar training months and a later September-November development test are fixed from source coverage, before new price queries/outcomes. Do not move this boundary after metrics.",
+  "original_window_status": "2016-2020 source queries retained and unavailable for expanded training; A original experiment retained independently",
+  "inventory_sha256": "ccc7e76fd85156625757ca8b13e7c1c72584dd9b6eb1c6c240a53d7ecebfcd20",
+  "new_price_outcomes_examined_before_registration": false,
+  "retrospective_availability_warning": "Actual receipts are from 2026; final historical headlines and pretrained text may not have been available at reported dates. This additional study is development evidence, not certified point-in-time alpha."
+}

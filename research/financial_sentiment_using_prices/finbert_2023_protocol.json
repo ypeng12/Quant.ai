@@ -1,0 +1,85 @@
+{
+  "registered_at": "2026-10-21T19:33:26.395104+00:00",
+  "study": "Additional FinBERT comparison on already inspected fixed 2023 development samples; not a new blind holdout",
+  "companies": [
+    "A",
+    "AMZN",
+    "MSFT"
+  ],
+  "company_bindings": {
+    "A": {
+      "base": "reports/financial_sentiment_runs/expanded_ranges_20261021/study_2023/A_evaluation",
+      "capture": "reports/financial_sentiment_runs/expanded_ranges_20261021/study_2023/A_capture",
+      "train_rows": 52,
+      "test_rows": 28,
+      "ordered_sample_ids_sha256": "5abb838b319c70ea881778e575e69a2a246f3c7d7e5234f9c42a534ef56a0390",
+      "unique_headlines": 168,
+      "headline_uses": 178,
+      "split_sha256": "d5cbf8999a20ccb685caa9e965bf0b721f9144090491707e419a1170474a5b6d",
+      "news_sha256": "597ddc7b9eb5a0b3ad9392bbc45699f529be52ff232d97091255a0671eedebb4",
+      "base_predictions_sha256": "8d65edaa4e3edaa5d3eea7a34d55edf698e1c68b0a2627a4b1e706b8cc7b4875"
+    },
+    "AMZN": {
+      "base": "reports/financial_sentiment_runs/expanded_ranges_20261021/study_2023/AMZN_evaluation",
+      "capture": "reports/financial_sentiment_runs/expanded_ranges_20261021/study_2023/AMZN_capture",
+      "train_rows": 110,
+      "test_rows": 61,
+      "ordered_sample_ids_sha256": "e27272419ca9675b944c1dce3bbdabfb1cb6b6ae8f5e4856c342a4289ff4c688",
+      "unique_headlines": 3726,
+      "headline_uses": 4075,
+      "split_sha256": "cd00b56426894f8ea11f9e1e4342ae2bc2373f229c6472daf2e39cb376792abc",
+      "news_sha256": "24e275896ca8bd94a4ae4de296cf54318d51950c37ad5b887a7e1bed1b28df5e",
+      "base_predictions_sha256": "834222cc2c06396d261f69a449abbf59164954416f469b1ffcb8843ad3696f4d"
+    },
+    "MSFT": {
+      "base": "reports/financial_sentiment_runs/expanded_ranges_20261021/study_2023/MSFT_evaluation",
+      "capture": "reports/financial_sentiment_runs/expanded_ranges_20261021/study_2023/MSFT_capture",
+      "train_rows": 110,
+      "test_rows": 65,
+      "ordered_sample_ids_sha256": "73a038a58132791612dd0308c65466703c6fd94b35e0e3239c876893bdd7e4b6",
+      "unique_headlines": 4034,
+      "headline_uses": 4457,
+      "split_sha256": "378a17671a51344480aa9654cf987f9f820bc0607b9861c1bc3ddb6282341474",
+      "news_sha256": "562e0f23b9b7e6668fcbf8ccbb0b8dcb76be79ed780c7dad3e8e27dbec78b179",
+      "base_predictions_sha256": "c5ec1933e0345d7d11bd70bfdc7d5b1a62df8afe26844fc8a6bdf183780736ec"
+    }
+  },
+  "unchanged_target": "10-session split-adjusted opening-price excess return versus SPY excluding cash dividends; original strict total-return track unchanged",
+  "test_start": "2023-09-01",
+  "finbert": {
+    "model_id": "Xenova/finbert",
+    "revision": "8f269abebfdd9009d7d9b5e96af7e5c6bfe50b20",
+    "offline_only": true,
+    "cached_snapshot": "/Users/yuliangpeng/.cache/huggingface/hub/models--Xenova--finbert/snapshots/8f269abebfdd9009d7d9b5e96af7e5c6bfe50b20",
+    "model_sha256": "56cd19c7068ca5670c326816845bb7d7edda508b68a228697a1460d0e821ce76",
+    "tokenizer_sha256": "d241a60d5e8f04cc1b2b3e9ef7a4921b27bf526d9f6050ab90f9267a1f9e5c66",
+    "config_sha256": "3629c9707884176d61af8452d8779ee167169db85d81e2183afe939a88c483b8",
+    "input_budget": "Exactly distinct original headlines in each fixed company-day text; no summaries, bodies, prices or outcomes in model inference",
+    "aggregation": "Mean P(positive)-P(negative) across the same distinct headlines per row",
+    "calibration": "Separate per-company StandardScaler and Ridge fitted on training rows only; no company pooling or tuning",
+    "ridge_alpha": 10.0,
+    "models": [
+      "finbert_tone_ridge",
+      "price_finbert_ridge"
+    ],
+    "frozen_transformer": true,
+    "pretraining_overlap_and_historical_availability_verified": false
+  },
+  "resource_budget": {
+    "inference_wall_seconds": 900,
+    "outer_process_seconds": 930,
+    "cpu_threads": 4,
+    "batch_headlines": 64,
+    "process_company_order": [
+      "A",
+      "AMZN",
+      "MSFT"
+    ],
+    "network_allowed": false,
+    "within_run_shared_headline_cache": true
+  },
+  "coverage_failure_policy": "Never remove hard rows: any missing, truncated, invalid or budget-incomplete required headline makes that entire company FinBERT comparison Unavailable, while keeping its original four-model baseline and complete sample denominator. Save partial per-headline receipts and explicit reason. No rerun with changed rows or parameters.",
+  "cost_policy": "Same per-company fixed non-overlapping sample IDs and original assumed roundtrip 0/10/20bps; no pooled portfolio or alpha/significance claim",
+  "earlier_2023_four_model_results_already_inspected": true,
+  "new_FinBERT_results_examined_before_registration": false
+}

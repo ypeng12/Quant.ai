@@ -48,5 +48,45 @@
 .financial-sentiment-research .fsr-research-goal { padding: 16px 19px; border: 1px solid #26433e; border-radius: 8px; background: #101f20; margin-top: 18px; }
 .financial-sentiment-research .fsr-research-goal strong { color: #93cbbf; font-size: 12px; }
 .financial-sentiment-research .fsr-research-goal p { margin: 7px 0 0; color: #829f9e; font-size: 12px; line-height: 1.8; }
+.financial-sentiment-research .fsr-reload-help { max-width: 220px; color: #839aad; font-size: 10px; line-height: 1.6; text-align: right; }
+.financial-sentiment-research .fsr-report { margin-bottom: 18px; }
+.financial-sentiment-research .fsr-report > .fsr-message { margin: 18px 0 0; }
+.financial-sentiment-research .fsr-report-times { display: flex; flex-wrap: wrap; gap: 7px 24px; font-size: 11px; color: #92aabd; margin-bottom: 20px; }
+.financial-sentiment-research .fsr-report-status strong { font-size: 19px; }
+.financial-sentiment-research .fsr-report-coverage { display: flex; flex-wrap: wrap; gap: 10px 24px; padding: 14px 0; border-top: 1px solid #273b4a; border-bottom: 1px solid #273b4a; font-size: 11px; color: #93aabd; }
+.financial-sentiment-research .fsr-report-coverage strong { color: #cae8e1; font-size: 15px; margin-right: 4px; }
+.financial-sentiment-research .fsr-report-selector { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 22px 0; }
+.financial-sentiment-research .fsr-report-selector label { font-size: 12px; font-weight: 600; color: #c9dce6; }
+.financial-sentiment-research .fsr-report-selector select { color: #ddf3ed; background: #182d39; border: 1px solid #426271; border-radius: 6px; padding: 8px 28px 8px 10px; font: inherit; font-size: 12px; }
+.financial-sentiment-research .fsr-report-selector select:focus-visible, .financial-sentiment-research .fsr-diagnostics > summary:focus-visible, .financial-sentiment-research .fsr-event-sources a:focus-visible { outline: 2px solid #5fe2cd; outline-offset: 3px; }
+.financial-sentiment-research .fsr-report-selector > span { color: #8ca3b7; font-size: 11px; }
+.financial-sentiment-research .fsr-company-heading { color: #d3e4ee; font-size: 14px; margin: 0; }
+.financial-sentiment-research .fsr-price-context { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 13px 0; }
+.financial-sentiment-research .fsr-price-context > div { padding: 14px; background: #142130; border-radius: 7px; }
+.financial-sentiment-research .fsr-price-context span { display: block; color: #93acbd; font-size: 11px; margin-bottom: 8px; }
+.financial-sentiment-research .fsr-price-context strong { color: #d8e8ed; font-size: 22px; font-weight: 600; }
+.financial-sentiment-research .fsr-tone-counts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+.financial-sentiment-research .fsr-tone { padding: 6px 8px; color: #adbfcc; background: #1b2a38; border-radius: 5px; font-size: 11px; }
+.financial-sentiment-research .fsr-tone-positive { color: #a8dac9; background: #15332d; }
+.financial-sentiment-research .fsr-tone-negative { color: #e5b7b7; background: #38252d; }
+.financial-sentiment-research .fsr-report-findings h3, .financial-sentiment-research .fsr-event-list-heading h3, .financial-sentiment-research .fsr-report-limitations h3 { color: #c9dce6; font-size: 13px; margin: 19px 0 10px; }
+.financial-sentiment-research .fsr-event-list-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-top: 12px; }
+.financial-sentiment-research .fsr-event-list-heading h3 { margin: 0; }
+.financial-sentiment-research .fsr-report-findings ul, .financial-sentiment-research .fsr-report-limitations ul { padding-left: 20px; margin: 0 0 18px; }
+.financial-sentiment-research .fsr-report-findings li, .financial-sentiment-research .fsr-report-limitations li { color: #a7bece; font-size: 12px; line-height: 1.8; margin: 5px 0; overflow-wrap: anywhere; }
+.financial-sentiment-research .fsr-event { padding: 16px 0; border-top: 1px solid #25394a; }
+.financial-sentiment-research .fsr-event-tags { display: flex; flex-wrap: wrap; gap: 7px; }
+.financial-sentiment-research .fsr-event-tags > span { color: #99b3c4; border: 1px solid #304656; border-radius: 4px; font-size: 10px; padding: 3px 6px; }
+.financial-sentiment-research .fsr-event-tags > .fsr-headline-only { border-color: #68543e; color: #d9bb91; }
+.financial-sentiment-research .fsr-event-summary { color: #cfdee9; font-size: 13px; line-height: 1.8; margin: 11px 0; overflow-wrap: anywhere; }
+.financial-sentiment-research .fsr-event-meta { display: flex; flex-wrap: wrap; gap: 7px 18px; color: #809baf; font-size: 10px; line-height: 1.6; }
+.financial-sentiment-research .fsr-event-sources { display: flex; flex-wrap: wrap; gap: 8px 14px; font-size: 11px; margin-top: 11px; color: #809baf; }
+.financial-sentiment-research .fsr-event-sources a { color: #83d0c0; text-decoration: underline; text-underline-offset: 3px; }
+.financial-sentiment-research .fsr-report-limitations { padding: 0 14px; background: #19222c; border: 1px solid #34414b; border-radius: 7px; margin-top: 16px; }
+.financial-sentiment-research .fsr-diagnostics { border: 1px solid #2a3a4d; border-radius: 10px; padding: 0 18px 18px; }
+.financial-sentiment-research .fsr-diagnostics:not([open]) { padding-bottom: 0; }
+.financial-sentiment-research .fsr-diagnostics > summary { cursor: pointer; color: #c1d4e0; font-size: 14px; padding: 18px 0; }
+.financial-sentiment-research .fsr-diagnostics > summary span { display: inline-block; margin-left: 12px; color: #8099ac; font-size: 11px; }
 @media (max-width: 1050px) { .financial-sentiment-research .fsr-summary-grid { grid-template-columns: 1fr; } .financial-sentiment-research .fsr-header { flex-direction: column; gap: 18px; } .financial-sentiment-research .fsr-header-actions { flex-direction: row; align-items: center; flex-wrap: wrap; } }
 @media (max-width: 650px) { .financial-sentiment-research .fsr-header, .financial-sentiment-research .fsr-card { padding: 18px; } .financial-sentiment-research .fsr-metrics { grid-template-columns: 1fr; gap: 10px; } .financial-sentiment-research .fsr-metrics > div { padding: 15px 18px; } .financial-sentiment-research .fsr-metrics strong { font-size: 21px; } .financial-sentiment-research .fsr-section-heading { flex-direction: column; align-items: flex-start; gap: 5px; } }
+@media (max-width: 650px) { .financial-sentiment-research .fsr-price-context { grid-template-columns: 1fr; } .financial-sentiment-research .fsr-reload-help { max-width: none; text-align: left; } .financial-sentiment-research .fsr-report-selector > span { flex-basis: 100%; } }

@@ -1,0 +1,63 @@
+{
+  "registered_at": "2026-10-21T18:55:15.977853+00:00",
+  "reason": "Source-coverage failure in a fixed 32 MiB prefix, not model performance; larger finite targeted byte ranges for the same declared universe",
+  "symbols": [
+    "A",
+    "AMZN",
+    "MSFT"
+  ],
+  "source_date_start": "2016-01-01",
+  "source_date_end_exclusive": "2020-06-06",
+  "test_start": "2019-01-01",
+  "entry_delay_sessions": 2,
+  "horizon_sessions": 10,
+  "class_neutral_band": 0.005,
+  "ridge_alpha": 10.0,
+  "tfidf": {
+    "max_features": 2000,
+    "min_df": 2,
+    "ngram_range": [
+      1,
+      2
+    ]
+  },
+  "assumed_roundtrip_cost_bps": [
+    0,
+    10,
+    20
+  ],
+  "target": "Separate split-adjusted opening-price excess return versus SPY, excluding cash dividends; strict original total-return contract unchanged",
+  "source": "Zihan1004/FNSPID",
+  "revision": "bf9189c41527198897d1af3e17b1a0095279fc45",
+  "source_file": "Stock_news/All_external.csv",
+  "budget": {
+    "public_source_bytes": 134217728,
+    "metadata_bytes": 2097152,
+    "max_public_range_requests": 96,
+    "probe_bytes": 262144,
+    "max_company_span_bytes": 33554432,
+    "max_company_price_pages": 5
+  },
+  "retrieval": "Use pinned file byte-range search on observed ticker-ordered blocks, retain raw ranges and exact offsets. Abort on non-range response, contradictory ordering, mixed malformed records or missing company boundaries. No full-file/global-order completeness claim. No symbol additions or cutoff changes.",
+  "evaluation": "Report each company separately using the original frozen per-company controls and chronology; no pooled portfolio, no performance-based row/symbol selection. Additional comparisons on an expanded pool are development research, not a final untouched confirmatory holdout.",
+  "exclusions": "Publish exact missing timestamps, prices, prior momentum, maturity and transitive-source/event exclusions per company. No fabricated historical capture/version times.",
+  "price_access": "Existing Alpaca fixed-host GET only; split-adjusted sip bars; no new credentials, paid data or trades.",
+  "forbidden_actions": [
+    "push",
+    "commit",
+    "PR",
+    "purchases",
+    "paid compute",
+    "new credentials",
+    "orders"
+  ],
+  "previous_comparison_protocol_sha256": "06aaf849b517a0a1402aea0d1c49161880f1b3d9deafe7ee86284cdebebb25c3",
+  "original_registration_sha256": "6a0914ae6edaecc41a16d55af4ad6811e4eb78bb610c79523907f69934f0e125",
+  "original_registered_at": "2026-10-21T18:47:39.660377+00:00",
+  "source_schema_amendment": {
+    "reason": "First 2 range responses revealed a blank-ticker tail partition; no expanded outcome or model performance inspected",
+    "missing_ticker_policy": "Treat empty vendor ticker as final missing-tag sort partition; never select as company; abort on contradictory observed ordering",
+    "reuse": "Verify and reuse the 524288 bytes / 2 exact responses already retained, counting them within the same original 128 MiB and 96 requests; retain original receive times",
+    "first_attempt_manifest_sha256": "a5423456a78dae61ef3bc1631cc86491d398598287fbdd473ff9d701dfc06168"
+  }
+}

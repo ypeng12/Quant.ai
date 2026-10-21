@@ -1,0 +1,8 @@
+# Additional image for offline replay of the retained research archive.
+# Prepared locally; Docker build/run has NOT been verified on this Mac.
+FROM python:3.11-slim
+ENV PYTHONUNBUFFERED=1 PIP_DISABLE_PIP_VERSION_CHECK=1 MPLBACKEND=Agg
+WORKDIR /workspace
+COPY requirements-experiments.txt requirements-course.txt /tmp/research/
+RUN pip install --no-cache-dir -r /tmp/research/requirements-course.txt
+CMD ["bash"]
