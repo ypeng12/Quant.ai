@@ -153,6 +153,8 @@ const INTERVAL_LABELS: Record<string, string> = {
 type ActiveTab = 'dashboard' | 'research' | 'report' | 'walkforward' | 'experiments' | 'replay' | 'broker' | 'institutional' | 'portfolio' | 'financial_sentiment' | 'trade_comparison' | 'live_dashboard' | 'saggese_wave';
 
 function App() {
+  // Presentation only; the API middleware enforces public read-only access.
+  const isPublicResearchView = window.location.hostname.endsWith('.hf.space');
   const [watchlist, setWatchlist] = useState<string[]>(["SNDK", "TSLA", "PLTR", "NVDA"]);
   const [newTickerInput, setNewTickerInput] = useState<string>('');
   
@@ -761,6 +763,18 @@ function App() {
           Quant.ai
         </div>
       </header>
+
+      {isPublicResearchView && (
+        <div role="note" style={{
+          padding: '10px 24px',
+          borderBottom: '1px solid var(--color-border)',
+          color: 'var(--color-text-secondary)',
+          fontSize: '0.85rem',
+          lineHeight: 1.5,
+        }}>
+          Public research view · Trading and configuration changes are disabled.
+        </div>
+      )}
 
       {/* 主布局网格 */}
       <div className="app-container">

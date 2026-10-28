@@ -1,0 +1,143 @@
+{
+  "registered_at": "2026-10-21T19:54:50.430657+00:00",
+  "study": "Bounded multi-horizon retrospective development study; existing ten-session results already inspected; no blind confirmation or alpha claim",
+  "horizons_sessions": [
+    5,
+    10,
+    20
+  ],
+  "horizon_choice": "Project choice requested by owner; official idea requires several horizons but does not prescribe this list",
+  "companies": [
+    "A",
+    "AMZN",
+    "MSFT"
+  ],
+  "source_date_start": "2023-03-09",
+  "source_date_end_exclusive": "2023-12-01",
+  "test_start": "2023-09-01",
+  "entry_delay_sessions": 2,
+  "targets": [
+    "excess_price_return",
+    "raw_price_return"
+  ],
+  "target_definitions": {
+    "raw_price_return": "stock provider daily-bar o at exit / stock provider daily-bar o at entry - 1",
+    "excess_price_return": "raw_price_return minus same-session SPY daily-bar o return"
+  },
+  "strict_total_return_track": "Unchanged; both experimental targets exclude cash dividends; no invented as-of timestamps",
+  "class_neutral_band": 0.005,
+  "ridge_alpha": 10.0,
+  "ridge_solver": "lsqr",
+  "ridge_tolerance": 1e-08,
+  "tfidf": {
+    "max_features": 2000,
+    "min_df": 2,
+    "ngram_range": [
+      1,
+      2
+    ]
+  },
+  "baseline_models": [
+    "train_mean",
+    "price_ridge",
+    "text_tfidf_ridge",
+    "price_text_ridge"
+  ],
+  "cached_tone_models": [
+    "finbert_tone_ridge",
+    "price_finbert_ridge"
+  ],
+  "cached_tone_policy": "Reuse only existing hash-bound per-headline FinBERT receipts. If any required headline is missing/invalid/truncated, mark both added controls for that company/horizon/pool Unavailable; do not remove rows. No new tensor inference.",
+  "tone_cache": "reports/financial_sentiment_runs/finbert_2023_20261021/inference/partial_headline_receipts.json",
+  "tone_cache_sha256": "546caab94282f440a9399c9e6e22978c1fa5ec8e201411cf2a2bff6db0be425d",
+  "pools": {
+    "horizon_specific": "Same source company-days; run mature chronological/event-purged eligibility separately for each horizon, retaining all exclusion denominators",
+    "common_eligible": "Intersect eligible sample IDs separately within train and test across 5/10/20 before model fitting; preserve anchor-ten-session ordering; never intersect on target value or cache availability; refit each horizon using identical IDs; report if infeasible"
+  },
+  "maturity": "Training exit scheduled session-open timestamp must be strictly before 2023-09-01T00:00:00Z; excluded transitive event/source bridges retained in graph; no extra fixed embargo",
+  "price_timestamp_audit": "Require aware daily-bar t at America/New_York midnight, unique calendar session dates and finite positive o, fixed split-adjusted SIP 1Day pagination. Scheduled calendar open is a logical label clock; exact auction/fill timestamp of provider daily o is not certified by daily t. Report this limitation.",
+  "assumed_roundtrip_cost_bps": [
+    0,
+    10,
+    20
+  ],
+  "cost_policy": "Per company/horizon/target/pool, use the existing deterministic non-overlap interval selector with shared intervals for all available controls; do not compound overlapping labels or pool companies; report trade counts, held intervals, endpoints and always-company/SPY/cash. Cost-window lengths/exposure differ by horizon; no annualization or winner from cumulative returns. Actual broker charges remain unknown.",
+  "metrics": [
+    "MAE",
+    "RMSE",
+    "relative_direction_accuracy",
+    "class_balanced_accuracy",
+    "class_macro_F1",
+    "MAE_relative_to_same_horizon_train_mean"
+  ],
+  "interpretation": "Raw MAE scales with horizon; compare controls within horizon and common-ID sensitivity, not choose a best horizon by smallest raw error. No tuning, significance or tradability claim.",
+  "retained_existing10": "Reuse existing full-pool ten-session excess-target four/six-model artifacts if exact rows and inputs match; no overwrite. Raw-target ten-session and common-pool refits are separate results.",
+  "company_bindings": {
+    "A": {
+      "capture": "reports/financial_sentiment_runs/expanded_ranges_20261021/study_2023/A_capture",
+      "capture_manifest_sha256": "83dbbc2672edda30a7fc9702d1872044aee240fa791e64324789a2684d9fad34",
+      "input_files_sha256": {
+        "news.json": "597ddc7b9eb5a0b3ad9392bbc45699f529be52ff232d97091255a0671eedebb4",
+        "prices_000.json": "4ebf55f2b36606b8f31809aae2a7744fde729f03d1c9817241de47d2c6f8ffa5",
+        "protocol.json": "5be6fc27c57a4f4eea3740d09efa07bcd0179b57c34da2bb065858a214bdc16d",
+        "calendar.json": "b632a15b5fad5f14def2c071827ea49217079e708ba9f787102f5b7a60afbd33"
+      },
+      "existing10_base": "reports/financial_sentiment_runs/expanded_ranges_20261021/study_2023/A_evaluation",
+      "existing10_core_sha256": {
+        "company_days.json": "23dad0320d4547084ce06a4a81e86ef8f8f2751a0685390891922ad9305de758",
+        "split.json": "d5cbf8999a20ccb685caa9e965bf0b721f9144090491707e419a1170474a5b6d",
+        "predictions.json": "8d65edaa4e3edaa5d3eea7a34d55edf698e1c68b0a2627a4b1e706b8cc7b4875",
+        "fitted_models.json": "81154e6489e0b6ac63d75215710bd7e1ee73238846d23e247f670a0475e2d953"
+      },
+      "existing10_six": "reports/financial_sentiment_runs/finbert_2023_20261021/comparison/A",
+      "existing10_six_predictions_sha256": "b2be7af6fc1af538c57a0054971f76b295bbf12adb36ca3eba28c4727380723a"
+    },
+    "AMZN": {
+      "capture": "reports/financial_sentiment_runs/expanded_ranges_20261021/study_2023/AMZN_capture",
+      "capture_manifest_sha256": "c98d98630c5d282922e809d26e3de2c2b4d694e7558d515ca4977e51105e8c6a",
+      "input_files_sha256": {
+        "news.json": "24e275896ca8bd94a4ae4de296cf54318d51950c37ad5b887a7e1bed1b28df5e",
+        "prices_000.json": "0876a1e8ee69658e47ba7cff480c0dfadfff2501689c38df347f763bad34d065",
+        "protocol.json": "61e0defb890d7edecdd218851aef2387e6cbd135f8eff92915e79c3c690eb0e8",
+        "calendar.json": "b632a15b5fad5f14def2c071827ea49217079e708ba9f787102f5b7a60afbd33"
+      },
+      "existing10_base": "reports/financial_sentiment_runs/expanded_ranges_20261021/study_2023/AMZN_evaluation",
+      "existing10_core_sha256": {
+        "company_days.json": "344aae17f937e9999c97183250314c5962155353fa9251a663417dd26c50485c",
+        "split.json": "cd00b56426894f8ea11f9e1e4342ae2bc2373f229c6472daf2e39cb376792abc",
+        "predictions.json": "834222cc2c06396d261f69a449abbf59164954416f469b1ffcb8843ad3696f4d",
+        "fitted_models.json": "ef8cc426f14f987b96f3346bb73cdf061a3019f0793555891ddd5223abd40037"
+      },
+      "existing10_six": "reports/financial_sentiment_runs/finbert_2023_20261021/comparison/AMZN",
+      "existing10_six_predictions_sha256": "021ec60b655e336d178b661fc6319a51c0ea8b8e7ba06dbaae55b342c341cc22"
+    },
+    "MSFT": {
+      "capture": "reports/financial_sentiment_runs/expanded_ranges_20261021/study_2023/MSFT_capture",
+      "capture_manifest_sha256": "86f41cc1b6a764584c9f05e0cff1006d29b3a6c29db30379d8d334f417909133",
+      "input_files_sha256": {
+        "news.json": "562e0f23b9b7e6668fcbf8ccbb0b8dcb76be79ed780c7dad3e8e27dbec78b179",
+        "prices_000.json": "74b83eda5a798b86c9227a7e4ffb0964ffb0e2ec875bc87a2ca1050046466e40",
+        "protocol.json": "3867dd96840ac65ea1c89b793dd9fd596c3d1143d53ffd072e9e20849297e6bb",
+        "calendar.json": "b632a15b5fad5f14def2c071827ea49217079e708ba9f787102f5b7a60afbd33"
+      },
+      "existing10_base": "reports/financial_sentiment_runs/expanded_ranges_20261021/study_2023/MSFT_evaluation",
+      "existing10_core_sha256": {
+        "company_days.json": "76eec0b1ac99daa02b1cfd6ef792b8fe62a0db028afcdf2a7bd7807ed43ed1bc",
+        "split.json": "378a17671a51344480aa9654cf987f9f820bc0607b9861c1bc3ddb6282341474",
+        "predictions.json": "c5ec1933e0345d7d11bd70bfdc7d5b1a62df8afe26844fc8a6bdf183780736ec",
+        "fitted_models.json": "851de0278ddb015fe54bfdcc4b935c3d515abb1ec7f41bf2051d4aa497c39558"
+      },
+      "existing10_six": "reports/financial_sentiment_runs/finbert_2023_20261021/comparison/MSFT",
+      "existing10_six_predictions_sha256": "294416d3cd647c5fcad820e21ad47da174c753da593ee38d6e594171e155e9b9"
+    }
+  },
+  "resource_budget": {
+    "wall_seconds": 600,
+    "outer_process_seconds": 660,
+    "cpu_threads": 4,
+    "network_data_requests": 0,
+    "new_tensor_inferences": 0,
+    "max_company_horizon_target_pool_evaluations": 36
+  },
+  "new_5_20_model_outcomes_inspected_before_registration": false
+}

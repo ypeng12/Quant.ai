@@ -121,6 +121,64 @@ class CollectionTests(unittest.TestCase):
         summary = manifest["news_summary"]
         self.assertEqual((summary["raw_article_rows"], summary["duplicate_rows"], summary["duplicate_ids"], summary["changed_duplicate_rows"]), (2, 1, 1, 1))
 
+    def test_old_article_recent_revision_is_audited_and_pagination_continues(self):
+        older = news("older", updated="2026-10-08T15:00:00Z")
+        older["created_at"] = "2026-09-30T14:00:00Z"
+        session = Session([Response(bars()), Response({"news": [older], "next_page_token": "page-2"}),
+                           Response({"news": [news()], "next_page_token": None})])
+        manifest = self.collect(session)
+        self.assertEqual(manifest["status"], "complete")
+        self.assertEqual(len(session.calls), 3)
+        self.assertEqual(manifest["news_summary"]["raw_article_rows"], 2)
+        self.assertEqual(manifest["news_summary"]["accepted_article_rows"], 1)
+        self.assertEqual(manifest["news_summary"]["rejected_article_rows"], 1)
+        rejection = self.read("news_rejected_records.json")[0]
+        self.assertEqual(rejection["id"], "older")
+        self.assertTrue(rejection["updated_within_requested_window"])
+        self.assertEqual(rejection["response_received_at"], manifest["requests"][1]["response_received_at"])
+        articles, _, provenance = self.compatible_inputs()
+        self.assertEqual([a["id"] for a in articles], ["one"])
+        self.assertEqual(provenance["verified_rejected_records"], 1)
+        self.assertEqual(self.read("news_raw_000.json")["news"][0], older)
+
+    def test_publication_after_window_is_rejected_without_changing_endpoint(self):
+        later = news("future", updated="2026-10-10T15:00:00Z")
+        later["created_at"] = "2026-10-10T14:00:00Z"
+        session = Session([Response(bars()), Response({"news": [later, news()], "next_page_token": None})])
+        manifest = self.collect(session)
+        self.assertEqual(manifest["status"], "complete")
+        self.assertFalse(self.read("news_rejected_records.json")[0]["updated_within_requested_window"])
+        self.assertEqual([a["id"] for a in self.compatible_inputs()[0]], ["one"])
+        self.assertEqual(session.calls[1][1]["params"]["end"], "2026-10-09T20:00:00+00:00")
+
+    def test_invalid_update_order_still_fails(self):
+        session = Session([Response(bars()), Response({"news": [news(updated="2026-10-06T15:00:00Z")], "next_page_token": None})])
+        with self.assertRaisesRegex(CollectionError, "precedes"):
+            self.collect(session)
+        self.assertEqual(self.read("manifest.json")["status"], "failed")
+        self.assertFalse((self.output / "news_normalized.json").exists())
+
+    def test_rejection_audit_cannot_hide_an_in_window_article(self):
+        self.collect(Session([Response(bars()), Response({"news": [news()], "next_page_token": None})]))
+        manifest = self.read("manifest.json")
+        rejection = [{"file": "news_raw_000.json", "row_index": 0, "id": "one",
+                      "created_at": "2026-10-07T14:00:00Z", "updated_at": "2026-10-07T15:00:00Z",
+                      "response_received_at": manifest["requests"][1]["response_received_at"],
+                      "reason": "publication_outside_requested_window", "updated_within_requested_window": True}]
+        path = self.output / "news_rejected_records.json"
+        path.write_text(json.dumps(rejection))
+        manifest["rejected_records_sha256"] = hashlib.sha256(path.read_bytes()).hexdigest()
+        manifest["news_summary"]["rejected_article_rows"] = 1
+        (self.output / "manifest.json").write_text(json.dumps(manifest))
+        with self.assertRaisesRegex(ValueError, "reason"):
+            self.compatible_inputs()
+
+    def test_tampered_rejection_audit_hash_is_rejected(self):
+        self.collect(Session([Response(bars()), Response({"news": [news()], "next_page_token": None})]))
+        (self.output / "news_rejected_records.json").write_text('[{}]')
+        with self.assertRaisesRegex(ValueError, "hash"):
+            self.compatible_inputs()
+
     def test_page_cap_is_explicitly_truncated_and_still_auditable(self):
         session = Session([Response(bars()), Response({"news": [news()], "next_page_token": "more"})])
         manifest = self.collect(session, max_news_pages=1)

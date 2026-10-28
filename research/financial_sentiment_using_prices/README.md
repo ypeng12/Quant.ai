@@ -2,6 +2,8 @@
 
 This Python research module tests whether text labels derived from subsequent price reactions can add information to Quant.ai. The directory preserves the spelling of the assigned project title. See the [owner's research plan](../../docs/financial_sentiment_using_prices_plan.md) for scope and milestones; this README describes reproduction.
 
+For the owner's Chinese explanation, current progress, original trading-logic audit, and the October 28 old/new strategy comparison, see [Chinese project review](README.zh-CN.md). The new offline comparison is implemented; its text overlay did not improve the price-only control in this development run, and no candidate has been promoted to live trading.
+
 **Status (2026-10-21):** A real historical price-return TF-IDF/linear baseline and manual daily capture/checkpoint path now run locally. The original strict ten-session total-return target still has zero independently eligible prospective labels; trading alpha and A/B remain unverified. See the October 21 section below for exact commands, counts and negative baseline results.
 
 ## Course template adaptation
@@ -1046,3 +1048,227 @@ This step's latest results are the separate comparison report and nine-cell exec
 notebook/HTML. LM, multiple horizons, transformer fine-tuning, independently
 evaluated attribution, original strict evidence, Docker and final submission/video
 remain unfinished. This step did not start those extra experiments.
+
+
+## October 21: registered multi-horizon development comparison completed
+
+The fixed 2023 A / AMZN / MSFT source pool and September 1 split now have separate
+5/10/20-session **raw and SPY-excess price-return** comparisons. These horizons are
+project choices, not a course-prescribed list. Both targets exclude dividends;
+the original strict ten-session total-return track remains separate and has zero
+eligible labels. This is development sensitivity, not blind confirmation or alpha.
+
+The 36 registered combinations completed offline in 19.23 seconds. Horizon-specific
+used counts are 440 / 426 / 400 (train 286 / 272 / 246; test 154 each), from the same
+451 observed company-days. Maturity exclusions are 14 / 25 / 51, with no missing
+observed endpoints. Common-ID sensitivity uses exactly 246 training and 154 test
+rows at every horizon, without return- or cache-dependent row selection. Original
+full-pool ten-session excess results are retained after exact split/hash checks.
+
+Full-pool five-session added FinBERT controls are explicitly unavailable for all
+three companies because some newly mature training titles lack cached inference.
+All four baselines keep every row. Ten/twenty-session and all common-ID tone
+comparisons have complete coverage; no tensor inference or downloads are repeated.
+The saved tables contain 204 measured model slots, 12 unavailable slots and 936
+assumed-cost scenarios, with non-overlapping intervals and session exposure. Daily
+bar timestamps certify aggregation dates, not exact auction/trade/fill timestamps.
+
+**408 research tests pass.** The separate
+[multi-horizon notebook](financial_sentiment.multi_horizon.ipynb) has **7 executed
+code cells, zero errors and exact reproduction of all 36 prediction/metric/cost
+comparisons** in 22.15 seconds. See the separate
+[report](financial_sentiment.multi_horizon_report.md) for all counts, targets,
+MAE tables, exclusions, price-timestamp limits and cost assumptions. Prior reports
+and the delivered eight-page PDF remain unchanged.
+
+```bash
+RESEARCH_PYTHON=/Library/Frameworks/Python.framework/Versions/3.11/bin/python3.11
+"$RESEARCH_PYTHON" research/financial_sentiment_using_prices/multi_horizon.py \
+  --repo "$PWD" \
+  --registration research/financial_sentiment_using_prices/multi_horizon_2023_protocol.json \
+  --output-dir reports/financial_sentiment_runs/my_new_multi_horizon_run
+```
+
+Choose a new private output directory; existing output is rejected. Retained data
+and tone receipts are required, but no credentials or network calls are used.
+Artifacts: `reports/financial_sentiment_runs/multi_horizon_2023_20261021/`, including
+`delivery/metrics.csv`, `coverage.csv`, `cost_scenarios.csv`, and executed notebook/HTML
+in `notebook_delivery/`. Remaining course work: LM baseline, price-label transformer
+fine-tuning, independent large-move attribution gold evaluation, strict availability
+and total-return evidence, Docker execution and owner-authorized submission/video.
+
+
+## October 21: official Loughran–McDonald baseline completed
+
+The official project's Milestone 2 explicitly specifies the **Loughran–McDonald
+dictionary**; LM here means that financial lexicon. The official Notre Dame source
+permits academic research, while commercial use needs separate licensing. Its
+1993–2025 CSV was obtained anonymously (9,093,460 bytes, SHA-256
+`e2d1328682bab7d2187684fb9f5420bb730401c9eefc00daf835edd203f4859d`).
+Raw dictionary and permission/retrieval receipts remain in the ignored private
+run directory, with no commercial deployment or redistribution claim. The current
+version was retrieved in 2026 and does not certify a 2023 as-of dictionary.
+
+The registered score counts positive-minus-negative word occurrences divided by
+retained ASCII tokens, then equally averages distinct original headlines per
+company-day. No-match titles retain numeric zero and explicit diagnostics. Two
+training-only Ridge controls (LM and price-plus-LM) now cover all 36 fixed 2023
+company/horizon/target/pool cases. All 451 company-days have a score; 5,235 of 7,293
+distinct titles have no polarity hit and no rows are selectively removed. Original
+rows, labels, controls and cost intervals are unchanged; existing baselines are not
+refitted. The resulting tables have 276 measured model slots and the same 12
+unavailable prior FinBERT slots, plus 1,152 assumed-cost scenarios. Development
+results are inconsistent and do not establish alpha.
+
+**422 research tests pass**, including 14 added LM tests. The separate
+[LM notebook](financial_sentiment.lm.ipynb) has **7 executed code cells, zero errors
+and exact reproduction of all 36 cases**, including original predictions/costs,
+new calibrations, scores, metrics and paired losses. Execution took 7.86 seconds;
+the primary comparison took 3.16 seconds. See the independent
+[LM report](financial_sentiment.lm_report.md) for official meaning/license evidence,
+the preregistered score, full counts, both targets/pools, all controls and limitations.
+Previous reports and the delivered PDF remain unchanged.
+
+```bash
+RESEARCH_PYTHON=/Library/Frameworks/Python.framework/Versions/3.11/bin/python3.11
+"$RESEARCH_PYTHON" research/financial_sentiment_using_prices/lm_baseline.py \
+  --repo "$PWD" \
+  --registration research/financial_sentiment_using_prices/lm_2023_protocol.json \
+  --output-dir reports/financial_sentiment_runs/my_new_LM_run
+```
+
+Use a new private output directory and retain the versioned dictionary/receipts
+and fixed archives. Reruns are offline and do not retrieve resources or accept
+terms. Artifacts are under `reports/financial_sentiment_runs/lm_2023_20261021/`:
+`evaluation/`, `delivery/` CSVs and `notebook_delivery/` executed notebook/HTML.
+Both raw and excess targets exclude dividends; strict total-return eligible labels
+remain zero. Remaining course work is transformer fine-tuning, independent
+attribution evaluation, strict clock/return evidence, Docker execution and
+owner-authorized video/submission. This bounded slice starts none of those tasks.
+
+
+## October 28: saved Quant.ai signals and read-only inspection
+
+The current signal explorer reads the frozen `comparison_v1` replay under
+`reports/quant_logic_review_20261028/`. It covers NVDA, SNDK and TSLA over 32
+sessions, September 14–October 27, 2026: 96 company/session series and 7,296
+company-level decisions. A is the original five-minute price model; C is the
+thirty-minute price-only control; B adds a residual text correction to C at the
+same horizon. The snapshot records 50 nonzero company forecast corrections.
+This count is neither a count of changed orders nor evidence of higher profit.
+
+The existing Quant.ai React research view displays price bars, actual saved
+simulated holdings and fill markers, A/C/B forecasts, full/effective text
+corrections, and linear feature contributions. Near the session exit, C/B's
+effective horizon is explicitly shortened. Later realized price returns are
+separate retrospective diagnostics at the matching horizon, not decision inputs
+or portfolio PnL. Contributions reconcile the intercept, clipping and saved
+rounding; they explain model arithmetic, not why the market moved.
+
+Text eligibility requires verified receipt plus a declared simulated 60-second
+processing delay. Displayed evidence has only two distinct receipt dates
+(October 12 and 21); a 48-hour window can reuse one batch across decision dates.
+New October 28 collections are not backfilled into this replay. Unknown text,
+unavailable calibration and a deliberate zero correction remain distinct states.
+The default NVDA/October 23 selection is the earliest nonzero correction, chosen
+without ranking subsequent profit.
+
+From the repository root, reproduce the public snapshot and local view with:
+
+```bash
+python3.11 scripts/export_quant_signal_explorer.py
+python3.11 scripts/render_quant_signal_explorer.py
+npm --prefix frontend run build
+python3.11 scripts/serve_financial_sentiment_preview.py --port 8138
+```
+
+Open `http://127.0.0.1:8138/?tab=financial_sentiment`. This dedicated preview serves saved research
+routes, rejects mutation requests, restricts browser connections to its own
+origin, and does not import the trading API or brokerage services. Building or
+exporting this view does not run the strategy. The original trading application
+has separate local controls; the preview is the reproduction entry point here.
+
+`GET /api/research/financial-sentiment/signals` validates the public whitelist,
+source clocks, horizon arithmetic, saved contributions and later price endpoints.
+It serves a cached, pre-serialized response with gzip/ETag support; changing the
+file invalidates the cache and triggers validation. Invalid snapshots fail closed.
+The deterministic `reports/financial_sentiment_signal_explorer.json.gz` is the
+small public artifact; the full-precision `.json` stays local. A gzip-only deployment
+is supported with bounded decompression. The private export audit records input,
+generator and output hashes. Article bodies, local paths and account identifiers
+are excluded. The static `.png` is a companion view of the same saved data.
+
+
+## October 28: SEC CompanyFacts collection attempt
+
+The bounded collector in `company_facts.py` supports reported revenue, operating
+income, net income, operating cash flow, cash and total assets. It preserves units,
+filing versions and reported duration; cumulative six/nine-month values are not
+silently treated as quarterly figures. A filing date alone does not establish
+historical pipeline availability, and numerical facts do not replace filing
+narrative or a reviewed investment thesis.
+
+The actual October 28 attempt made **five SEC requests, all HTTP 403**: four fresh
+submissions/identity requests for NVDA, SNDK, TSLA and PLTR, followed by one SNDK
+CompanyFacts request using a previously verified official submissions archive.
+This was one CompanyFacts request, not five successful company downloads.
+**Zero companies supplied usable financial facts.** Metric coverage and eight-quarter
+coverage therefore remain unknown, not zero. No automatic investment rating or
+fundamental alpha was produced. Responses and failure reasons are retained under
+`reports/financial_sentiment_runs/continuation_20261028/company_facts/`; access
+restrictions were not bypassed. This work does not change the A/C/B replay.
+
+
+## October 28: independent 2023 price-label BERT experiment
+
+The new registration `price_bert_2023_protocol_v2_20261028.json` retains the old
+protocol and its artifacts. It uses the official Apache-2.0
+`google-bert/bert-base-uncased` checkpoint at the registered revision. Only the
+last encoder layer and a scalar regression head are updated; embeddings and
+earlier layers remain frozen. This is partial-model fine-tuning of BERT, not
+FinBERT fine-tuning or full-model training.
+
+The experiment uses Agilent (A), Amazon (AMZN) and Microsoft (MSFT). Company ticker
+A is not the original Quant.ai strategy A. It uses a fixed September 1, 2023
+split and a ten-trading-session company-minus-SPY split-adjusted price-return
+target. It predicts a relative price reaction, not a human sentiment category.
+Each company's model starts independently from the same checkpoint. All distinct
+retained headlines for one company-day are averaged into one prediction and one
+equal-weight training loss; headlines do not become independent price labels.
+Training uses one fixed epoch, 272 company-days and 272 actual optimizer steps,
+without held-out checkpoint selection or hyperparameter search.
+
+All 154 held-out predictions were generated and saved before their outcome labels
+were opened. Training and evaluation completed with all three companies and 272
+actual optimizer steps. Eight existing controls keep their saved predictions and
+identical rows. The independent run's aggregate results are in
+[`reports/financial_sentiment_price_bert.json`](../../reports/financial_sentiment_price_bert.json); detailed receipts and model states
+remain under `reports/financial_sentiment_runs/price_bert_20261028_v2/`.
+The isolated `requirements-price-bert.txt` environment is for this experiment
+only and must not be used as the app environment. Training is not a deployment
+step, and exporting the signal view never retrains this model.
+
+Held-out MAE below is in **percentage points of ten-session SPY-excess price
+return**; smaller is better. Direction accuracy is the sign of that relative
+return, not the direction of the stock's absolute return.
+
+| Company | Train / held-out rows | Price-label BERT MAE | Training-mean MAE | Price-only Ridge MAE | BERT direction accuracy |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Agilent (A) | 52 / 28 | 5.6832 pp | 5.6557 pp | 5.3556 pp | 32.14% |
+| Amazon (AMZN) | 110 / 61 | 2.7115 pp | 3.2371 pp | 3.5316 pp | 39.34% |
+| Microsoft (MSFT) | 110 / 65 | 2.5896 pp | 2.5281 pp | 2.4826 pp | 69.23% |
+
+AMZN's magnitude error improves in this development sample, while its direction
+accuracy is below the training-mean control's 50.82%. Agilent and Microsoft do
+not improve MAE over that simple control. Microsoft's 69.23% direction accuracy
+equals the constant training-mean baseline. These mixed results do not justify
+promoting the model to live trading. All nine models' metrics and illustrative
+cost scenarios are retained in the aggregate summary; sparse company intervals
+are not Quant.ai portfolio profits.
+
+The October 27 rehearsal remains a historical record of **zero actual optimizer
+steps and 272 mock markers**. Its status is not rewritten by the later real run.
+The signal explorer shows separate historical/current tracks. This 2023 model
+does **not** feed the September–October 2026 A/C/B curves or change their recorded
+holdings. Later-retrieved 2023 news lacks verified historical receipt clocks;
+development metrics and illustrative interval returns do not establish live alpha.

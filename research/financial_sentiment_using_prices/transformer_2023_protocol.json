@@ -1,0 +1,92 @@
+{
+  "registered_at": "2026-10-21T20:40:01.548997+00:00",
+  "study": "Bounded partial price-label BERT fine-tuning feasibility; fixed already-inspected 2023 development data, not blind confirmation or alpha",
+  "companies": [
+    "A",
+    "AMZN",
+    "MSFT"
+  ],
+  "horizon_sessions": 10,
+  "target": "excess_price_return",
+  "pool": "horizon_specific",
+  "target_definition": "company split-adjusted daily o exit/entry minus1, less same-endpoint SPY return; cash dividends excluded; strict total-return track unchanged",
+  "test_start": "2023-09-01",
+  "entry_delay_sessions": 2,
+  "lm_registration": "research/financial_sentiment_using_prices/lm_2023_protocol.json",
+  "lm_registration_sha256": "3b86571ca47601ebd56b86d2527dcbfa6eea0c3e43eefdf9e7492946fe7c6343",
+  "baseline_evaluation": "reports/financial_sentiment_runs/lm_2023_20261021/evaluation",
+  "baseline_summary_sha256": "a34f5e94fc999e7480324cc978ac7db49ec0b0f1f68dadb37963c1c01e6ab538",
+  "resource_audit_sha256": "4049844871b075a16722b39d527ef94c287a1f1f610bab1ddf26a42ce25f2eab",
+  "tokenizer_snapshot": "/Users/yuliangpeng/.cache/huggingface/hub/models--Xenova--finbert/snapshots/8f269abebfdd9009d7d9b5e96af7e5c6bfe50b20",
+  "tokenizer_sha256": "d241a60d5e8f04cc1b2b3e9ef7a4921b27bf526d9f6050ab90f9267a1f9e5c66",
+  "config_sha256": "3629c9707884176d61af8452d8779ee167169db85d81e2183afe939a88c483b8",
+  "tokenizer_python": "/Users/yuliangpeng/Desktop/Quant/research/financial_sentiment_using_prices/.venv/bin/python",
+  "trainable_checkpoint": null,
+  "checkpoint_policy": "No trainable floating checkpoint cached. Require a new registration binding local safetensors BERT checkpoint/config hashes before any real training. No downloads, ONNX conversion, random real-data substitute or installation.",
+  "architecture": {
+    "base": "12-layer hidden768 FinBERT BERT encoder",
+    "updated": [
+      "backbone.encoder.layer.11.*",
+      "head.weight",
+      "head.bias"
+    ],
+    "frozen": "embeddings, encoder0..10, pooler; discard original sentiment classifier",
+    "description": "Partial transformer-layer fine-tuning plus new scalar head, not full-model or head-only training",
+    "dropout": "eval mode even while fitting selected parameters; deterministic without dropout"
+  },
+  "inputs": {
+    "max_tokens": 64,
+    "headline_chunk_size": 8,
+    "truncation_allowed": false,
+    "aggregation": "All exact distinct original headlines per company-day, separately encoded then mean scalar prediction; same headline budget as controls",
+    "loss": "MSE of company-day mean prediction versus normalized day target; one equal-weight step per day, no independent headline-label replication",
+    "failure": "Any missing or overlength required title makes whole company comparator unavailable; preserve baseline rows"
+  },
+  "training": {
+    "seed": 610,
+    "epochs": 1,
+    "optimizer": "AdamW",
+    "learning_rate": 2e-05,
+    "weight_decay": 0.0,
+    "gradient_clip_norm": 1.0,
+    "target_scaler": "Company training mean/population std only; scale1 if std<1e-8",
+    "company_models": "Independent reset from same checkpoint, fixed company order; training-only seed610+index shuffle",
+    "max_total_steps": 272,
+    "selection": "None; no validation/test-driven checkpoint or hyperparameter selection"
+  },
+  "resources": {
+    "device": "cpu",
+    "threads": 2,
+    "interop_threads": 1,
+    "max_rss_bytes": 1610612736,
+    "min_available_bytes": 2147483648,
+    "train_seconds": 480,
+    "evaluation_seconds": 120,
+    "outer_seconds": 660,
+    "tokenization_seconds": 60,
+    "synthetic_seconds": 20
+  },
+  "stop_rule": "Check deadline/RSS/available memory before each group/chunk. Nonfinite values, coverage failure or incomplete epoch => partial/failed receipt, no heldout evaluation. All companies must finish before opening heldout text/outcomes. No budget extension/device/model fallback.",
+  "sample_policy": "Exact ordered ten-session train/test IDs and full source/event proxy graph, training exit before cutoff, company-day aggregation, excluded bridges retained",
+  "evaluation": {
+    "new_model": "partial_bert_price_regression",
+    "baselines": "Eight saved same-row ten-session excess controls, hash checked, never refitted",
+    "metrics": [
+      "MAE",
+      "RMSE",
+      "direction_accuracy",
+      "price_class_balanced_accuracy",
+      "price_class_macro_f1"
+    ],
+    "class_band": 0.005,
+    "assumed_roundtrip_bps": [
+      0,
+      10,
+      20
+    ],
+    "incomplete": "Unavailable new-model metrics/costs, never zero or synthetic market results"
+  },
+  "LM_caveat": "1993-2025 dictionary retrieved2026 postdates2023; academic research only, no commercial permission",
+  "dry_run": "Tiny random synthetic two-layer transformer tests same freezing/group-loss/update/budget engine; never FinBERT training or market performance",
+  "new_price_transformer_outcomes_inspected_before_registration": false
+}

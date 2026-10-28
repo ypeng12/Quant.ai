@@ -67,11 +67,47 @@ def read_inputs(directory: Path) -> tuple[list[dict], dict, dict]:
     # Confirm the normalized texts were retained from these actual responses.
     raw_articles = {}
     receipts = {}
+    rejected = {}
+    rejection_hash = manifest.get("rejected_records_sha256")
+    if rejection_hash is not None:
+        rejection_path = directory / "news_rejected_records.json"
+        if digest(rejection_path) != rejection_hash:
+            raise ValueError("Rejected-record audit hash differs from manifest")
+        rejection_rows = json.loads(rejection_path.read_text())
+        if not isinstance(rejection_rows, list):
+            raise ValueError("Rejected-record audit must be a list")
+        for row in rejection_rows:
+            key = (row.get("file"), row.get("row_index"))
+            if (key[0] not in verified or not key[0].startswith("news_raw_")
+                    or type(key[1]) is not int or key[1] < 0 or key in rejected):
+                raise ValueError("Invalid or duplicate rejected-record location")
+            rejected[key] = row
+        if manifest["news_summary"]["rejected_article_rows"] != len(rejected):
+            raise ValueError("Rejected-record count differs from manifest")
+    verified_rejections = set()
     for filename in verified:
         if filename.startswith("news_raw_"):
-            for article in json.loads((directory / filename).read_text())["news"]:
+            receipt = next(r["response_received_at"] for r in manifest["requests"] if r["file"] == filename)
+            for row_index, article in enumerate(json.loads((directory / filename).read_text())["news"]):
+                key = (filename, row_index)
+                if key in rejected:
+                    row = rejected[key]
+                    start, end = timestamp(manifest["window"]["start"]), timestamp(manifest["window"]["end"])
+                    created, updated = timestamp(article["created_at"]), timestamp(article["updated_at"])
+                    if (row.get("reason") != "publication_outside_requested_window"
+                            or row.get("id") != str(article["id"])
+                            or row.get("created_at") != article["created_at"]
+                            or row.get("updated_at") != article["updated_at"]
+                            or row.get("response_received_at") != receipt
+                            or updated < created or start <= created <= end
+                            or row.get("updated_within_requested_window") is not (start <= updated <= end)):
+                        raise ValueError("Rejected-record reason does not match the retained response")
+                    verified_rejections.add(key)
+                    continue
                 raw_articles[str(article["id"])] = article
-                receipts[str(article["id"])] = next(r["response_received_at"] for r in manifest["requests"] if r["file"] == filename)
+                receipts[str(article["id"])] = receipt
+    if verified_rejections != set(rejected):
+        raise ValueError("Rejected-record audit refers to a missing raw occurrence")
     if set(raw_articles) != {str(x["id"]) for x in articles}:
         raise ValueError("Normalized article IDs differ from archived responses")
     for article in articles:
@@ -88,6 +124,9 @@ def read_inputs(directory: Path) -> tuple[list[dict], dict, dict]:
                   "verified_raw_responses": verified,
                   "ignored_answer_files": ["case_review.json", "outlook_20261009.json", "price_scan.json"],
                   "historical_availability_verified": False}
+    if rejection_hash is not None:
+        provenance["input_files"]["news_rejected_records.json"] = rejection_hash
+        provenance["verified_rejected_records"] = len(verified_rejections)
     news_files = sorted(name for name in verified if name.startswith("news_raw_"))
     provenance["news_pagination_complete"] = bool(news_files) and not json.loads((directory / news_files[-1]).read_text()).get("next_page_token")
     if inputs["daily_bars_raw.json"].get("next_page_token"):

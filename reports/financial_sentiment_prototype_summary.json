@@ -1,0 +1,3545 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-10-09T22:21:46.456634+00:00",
+  "price_asof": "2026-10-09T16:00:00-04:00",
+  "analysis_mode": "Retrospective evidence review",
+  "extraction_method": "Rules v1 + FinBERT tone",
+  "model_status": "Pretrained inference only",
+  "prediction_status": "Not trained",
+  "ab_status": "Not evaluated",
+  "coverage": {
+    "articles_loaded": 385,
+    "article_company_pairs": 265,
+    "classified_pairs": 221,
+    "clusters": 262
+  },
+  "companies": [
+    {
+      "symbol": "PLTR",
+      "article_count": 19,
+      "headline_only_count": 6,
+      "cluster_count": 17,
+      "sentiment": {
+        "positive": 6,
+        "negative": 0,
+        "neutral": 13,
+        "unavailable": 0
+      },
+      "findings": [
+        "19 tagged articles produced 17 candidate event groups; grouping uses conservative rules.",
+        "4 articles contain analyst-revision candidates; these are opinions, not company revenue.",
+        "Observed price return from 2026-10-02 close to 2026-10-09 close: +10.75%.",
+        "Observed return difference: +9.59 percentage points versus SPY and +6.84 versus IGV; no causal attribution.",
+        "On 2026-10-05, the stock gapped +0.37% before the regular open, then returned -0.03% from open to close. The daily gain was not an after-open gain.",
+        "On 2026-10-08, the stock gapped +2.51% before the regular open, then returned -0.11% from open to close. The daily gain was not an after-open gain."
+      ],
+      "limitations": [
+        "Text tone is not an expected return or a calibrated probability of a stock rising.",
+        "Historical text was collected after the price window; this is a retrospective review.",
+        "Event grouping and fact/opinion labels use rules and require human review.",
+        "Only the retained news feed is searched. Company IR pages and earlier reports elsewhere are not retrieved automatically.",
+        "The earliest report in a candidate group is only the earliest retained article; later details must not be backdated to that time.",
+        "The report combines rule templates with price arithmetic, not a generative analyst or a causal explanation.",
+        "Vendor ticker tags and company-bearing sentences do not prove direct economic relevance.",
+        "No current Futu crowding measurement or trained ten-day return forecast is available.",
+        "6 articles have no body; their claims are headline-only."
+      ],
+      "price_context": {
+        "status": "Available",
+        "return_pct": 10.754966887417217,
+        "excess_vs_spy_pp": 9.59468415782936,
+        "excess_vs_sector_pp": 6.844609975123572,
+        "sector_benchmark": "IGV"
+      },
+      "events": [
+        {
+          "id": "PLTR:financial_results:5412fbf4dae9de7c",
+          "event_type": "financial_results",
+          "claim_kind": "reported_fact",
+          "summary": "PLTR: Financial results or management guidance are discussed.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-01T13:04:37Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/equities/26/10/62105178/palantir-stock-soars-60-in-q3-after-first-half-rout-can-earnings-keep-the-rally-going"
+          ],
+          "tone": "positive",
+          "headline_only": false
+        },
+        {
+          "id": "PLTR:other:9fbc474f738352f1",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "PLTR: Unconfirmed or conditional wording: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-01T13:48:43Z",
+          "source_urls": [
+            "https://www.benzinga.com/etfs/sector-etfs/26/10/62107232/michael-burry-shifts-to-long-dated-ai-bets-as-soxx-suffers-its-worst-quarter-since-2025"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "PLTR:other:d79a0321e6465639",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "PLTR: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-01T22:01:42Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62124826/palantir-technologies-teams-armada-deliver-sovereign-ai-infrastructure-manufactured-united-states-an"
+          ],
+          "tone": "positive",
+          "headline_only": true
+        },
+        {
+          "id": "PLTR:trading_activity:2e9cf3e0097d0691",
+          "event_type": "trading_activity",
+          "claim_kind": "reported_fact",
+          "summary": "PLTR: Share-price movement or trading activity is reported; it is not a company operating result.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-02T01:41:13Z",
+          "source_urls": [
+            "https://www.benzinga.com/etfs/broad-u-s-equity-etfs/26/10/62125747/peter-thiel-ai-demand-cathie-wood-palantir-ark-invest-sold"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "PLTR:contract_change:a621d7a666a7434f",
+          "event_type": "contract_change",
+          "claim_kind": "reported_fact",
+          "summary": "PLTR: A contract or commercial arrangement is discussed.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-02T14:23:17Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62135784/palantir-stock-rises-on-armada-deal-for-air-gapped-sovereign-ai"
+          ],
+          "tone": "positive",
+          "headline_only": false
+        },
+        {
+          "id": "PLTR:other:212e0282e4dc4c2a",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "PLTR: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-02T14:59:56Z",
+          "source_urls": [
+            "https://www.benzinga.com/quote/PLTR"
+          ],
+          "tone": "neutral",
+          "headline_only": true
+        },
+        {
+          "id": "PLTR:other:b2f3003bab827b83",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "PLTR: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-02T17:35:36Z",
+          "source_urls": [
+            "https://www.benzinga.com/etfs/sector-etfs/26/10/62142882/cathie-wood-buying-rocket-lab-again-why-3-ark-etfs-are-betting-on-neutron"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "PLTR:market_commentary:75b7e05ee07f2072",
+          "event_type": "market_commentary",
+          "claim_kind": "opinion",
+          "summary": "PLTR: Market or sector commentary mentions the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-05T17:35:17Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/options/26/10/62171753/6-information-technology-stocks-whale-alerts-today-s-session"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "PLTR:contract_change:ed5e545c677b2e5c",
+          "event_type": "contract_change",
+          "claim_kind": "reported_fact",
+          "summary": "PLTR: A contract or commercial arrangement is discussed.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-06T10:34:12Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62184331/surf-air-mobility-signs-definitive-agreement-clipper-aviation-operatoros-surf-air-mobility-s-surfos-"
+          ],
+          "tone": "positive",
+          "headline_only": true
+        },
+        {
+          "id": "PLTR:contract_change:ded054df7da8d5c9",
+          "event_type": "contract_change",
+          "claim_kind": "reported_fact",
+          "summary": "PLTR: A contract termination or non-renewal is reported; this is not a new contract award.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-06T11:40:13Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62185722/uk-financial-conduct-authority-says-it-has-not-renewed-short-term-palantir-contract-relating-tech-an"
+          ],
+          "tone": "neutral",
+          "headline_only": true
+        },
+        {
+          "id": "PLTR:market_commentary:d1cfe1f62d32698f",
+          "event_type": "market_commentary",
+          "claim_kind": "opinion",
+          "summary": "PLTR: Market or sector commentary mentions the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-07T07:22:58Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/equities/26/10/62209448/dan-ives-names-5-potential-tech-winners-for-2027-as-investors-underestimate-4-trillion-spending-wave"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "PLTR:analyst_revision:3024ef6d65d4eb7a",
+          "event_type": "analyst_revision",
+          "claim_kind": "opinion",
+          "summary": "PLTR: Goldman Sachs upgraded the stock to Buy. Analyst opinions are not return forecasts.",
+          "article_count": 3,
+          "earliest_reported_at": "2026-10-08T10:23:06Z",
+          "source_urls": [
+            "https://www.benzinga.com/analyst-stock-ratings/upgrades/26/10/62243452/this-palantir-analyst-turns-bullish-here-are-top-5-upgrades-for-thursday",
+            "https://www.benzinga.com/analyst-stock-ratings/upgrades/26/10/62245215/palantir-gets-goldman-sachs-upgrade-as-sovereign-ai-opens-new-market",
+            "https://www.benzinga.com/news/26/10/62239993/goldman-sachs-upgrades-palantir-technologies-buy-announces-230-price-target"
+          ],
+          "tone": "mixed",
+          "headline_only": false
+        },
+        {
+          "id": "PLTR:market_commentary:b2a96576fd5b8cae",
+          "event_type": "market_commentary",
+          "claim_kind": "opinion",
+          "summary": "PLTR: Market or sector commentary mentions the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-08T11:48:37Z",
+          "source_urls": [
+            "https://www.benzinga.com/trading-ideas/movers/26/10/62241998/what-is-going-on-with-palantir-tech-stock-on-thursday"
+          ],
+          "tone": "positive",
+          "headline_only": false
+        },
+        {
+          "id": "PLTR:other:8bb2ebe4e800ebea",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "PLTR: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-08T13:10:56Z",
+          "source_urls": [
+            "https://www.benzinga.com/etfs/sector-etfs/26/10/62245057/nvidia-crowdstrike-dan-ives-4-trillion-tech-spending-wave-etf"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "PLTR:other:a032bac087c6e7ea",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "PLTR: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-09T03:27:36Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/equities/26/10/62264221/securitize-shares-jump-tokenized-us-stocks-solana"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "PLTR:analyst_revision:173171384b7baac5",
+          "event_type": "analyst_revision",
+          "claim_kind": "opinion",
+          "summary": "PLTR: Barclays initiated coverage; the cited rating is Overweight; the cited price target is $265. Analyst opinions are not return forecasts.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-09T13:16:21Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62270689/barclays-initiates-coverage-palantir-technologies-overweight-rating-announces-price-target-265"
+          ],
+          "tone": "neutral",
+          "headline_only": true
+        },
+        {
+          "id": "PLTR:market_commentary:adc1ab8c31ac6fdd",
+          "event_type": "market_commentary",
+          "claim_kind": "opinion",
+          "summary": "PLTR: Market or sector commentary mentions the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-09T17:35:10Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/options/26/10/62279967/10-information-technology-stocks-whale-alerts-today-s-session"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        }
+      ]
+    },
+    {
+      "symbol": "AMZN",
+      "article_count": 120,
+      "headline_only_count": 24,
+      "cluster_count": 120,
+      "sentiment": {
+        "positive": 24,
+        "negative": 8,
+        "neutral": 72,
+        "unavailable": 16
+      },
+      "findings": [
+        "120 tagged articles produced 120 candidate event groups; grouping uses conservative rules.",
+        "6 articles contain analyst-revision candidates; these are opinions, not company revenue.",
+        "Observed price return from 2026-10-02 close to 2026-10-09 close: +4.34%.",
+        "Observed return difference: +3.18 percentage points versus SPY and +4.11 versus QQQ; no causal attribution."
+      ],
+      "limitations": [
+        "Text tone is not an expected return or a calibrated probability of a stock rising.",
+        "Historical text was collected after the price window; this is a retrospective review.",
+        "Event grouping and fact/opinion labels use rules and require human review.",
+        "Only the retained news feed is searched. Company IR pages and earlier reports elsewhere are not retrieved automatically.",
+        "The earliest report in a candidate group is only the earliest retained article; later details must not be backdated to that time.",
+        "The report combines rule templates with price arithmetic, not a generative analyst or a causal explanation.",
+        "Vendor ticker tags and company-bearing sentences do not prove direct economic relevance.",
+        "No current Futu crowding measurement or trained ten-day return forecast is available.",
+        "24 articles have no body; their claims are headline-only."
+      ],
+      "price_context": {
+        "status": "Available",
+        "return_pct": 4.337627226463092,
+        "excess_vs_spy_pp": 3.177344496875234,
+        "excess_vs_sector_pp": 4.112167635758968,
+        "sector_benchmark": "QQQ"
+      },
+      "events": [
+        {
+          "id": "AMZN:contract_change:36ab7626f45ed9a7",
+          "event_type": "contract_change",
+          "claim_kind": "reported_fact",
+          "summary": "AMZN: A contract or commercial arrangement is discussed.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-01T05:20:03Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62097215/amazon-constellation-nuclear-power-deal-ai-electricity-demand-3-billion"
+          ],
+          "tone": "positive",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:ee41ae4e3b0107f3",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: Unconfirmed or conditional wording: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-01T07:16:54Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62098081/jim-cramer-apple-stock-iphone-foldable-1999-smart-home-devices"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:b4a1bd2af824fce7",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-01T08:39:53Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62098649/bernie-sanders-slams-trumps-ai-oligarchs-as-elon-musk-jeff-bezos-mark-zuckerberg-and-jensen-huangs-wealth-tops-1-7-trillion-youre-asking-us-to"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:9a8ee97016737a89",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-01T09:31:05Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62099040/metas-ai-spending-has-a-3-9-billion-tax-perk-mark-zuckerberg-led-company-reportedly-classified-data-centers-as-pilot-models"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:8c1ca0eaf28ea19e",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: Only a vendor symbol tag links this article to the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-01T10:03:14Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62099488/broadcom-lend-42-billion-anthropic-infrastructure-lease-agreements-according-ipo-prospectus"
+          ],
+          "tone": "unavailable",
+          "headline_only": true
+        },
+        {
+          "id": "AMZN:contract_change:03e897e69fe05a5a",
+          "event_type": "contract_change",
+          "claim_kind": "reported_fact",
+          "summary": "AMZN: A contract or commercial arrangement is discussed.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-01T10:57:27Z",
+          "source_urls": [
+            "https://www.benzinga.com/trading-ideas/movers/26/10/62100792/constellation-energy-amazon-lock-20-year-nuclear-power-purchase-agreement-stock-soars"
+          ],
+          "tone": "positive",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:contract_change:a665a410358c6635",
+          "event_type": "contract_change",
+          "claim_kind": "reported_fact",
+          "summary": "AMZN: A contract or commercial arrangement is discussed.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-01T12:05:30Z",
+          "source_urls": [
+            "https://www.benzinga.com/trading-ideas/movers/26/10/62102645/whats-going-on-with-synopsys-shares-thursday-2"
+          ],
+          "tone": "positive",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:contract_change:8da627d3355d6e0f",
+          "event_type": "contract_change",
+          "claim_kind": "reported_fact",
+          "summary": "AMZN: A contract or commercial arrangement is discussed.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-01T12:39:36Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/equities/26/10/62098914/stock-market-today-nasdaq-100-futures-gain-dow-jones-drops-as-iran-receives-us-proposal-to-restore-ceasefire-ceg-vicr-mu-in-focus"
+          ],
+          "tone": "positive",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:f425ab523e36c8e0",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-01T13:07:03Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62105294/kodiak-ai-taps-amazon-web-services-its-primary-cloud-provider"
+          ],
+          "tone": "neutral",
+          "headline_only": true
+        },
+        {
+          "id": "AMZN:other:6a6106f0ca085b08",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-01T13:48:43Z",
+          "source_urls": [
+            "https://www.benzinga.com/etfs/sector-etfs/26/10/62107232/michael-burry-shifts-to-long-dated-ai-bets-as-soxx-suffers-its-worst-quarter-since-2025"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:partnership:b54a794ca9edf65f",
+          "event_type": "partnership",
+          "claim_kind": "reported_fact",
+          "summary": "AMZN: A partnership or collaboration is reported.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-01T16:29:06Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/equities/26/10/62114603/sp-500-slips-micron-fails-to-impress-markets-thursday"
+          ],
+          "tone": "positive",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:1274a5d9c5b0a1c7",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-01T16:47:19Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62115405/andrew-yang-compares-ai-to-walmart-hollowing-out-local-communities-the-market-will-optimize-for-productivity-and-profit-not-human-dignity"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:b3492f775dd537ea",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-01T17:29:35Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62116747/amazon-microsoft-meta-ai-investment-railway-mania"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:5af0742e8a6a0530",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: Only a vendor symbol tag links this article to the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-01T17:29:44Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62116754/anthropic-said-to-target-mega-ipo-before-thanksgiving-holiday-anthropic-said-to-weigh-ipo-marketing-as-soon-as-week-of-nov-9"
+          ],
+          "tone": "unavailable",
+          "headline_only": true
+        },
+        {
+          "id": "AMZN:other:ae779a31dffd343f",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: Only a vendor symbol tag links this article to the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-01T18:08:07Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62118125/anthropic-introduces-mods-small-typescript-functions-change-how-claude-code-works"
+          ],
+          "tone": "unavailable",
+          "headline_only": true
+        },
+        {
+          "id": "AMZN:market_commentary:669037385223b332",
+          "event_type": "market_commentary",
+          "claim_kind": "opinion",
+          "summary": "AMZN: Market or sector commentary mentions the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-01T19:03:10Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62119835/aws-says-ai-costs-are-falling-up-to-100x-every-few-months-paving-way-for-wider-adoption"
+          ],
+          "tone": "positive",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:f9bde83d849c29d1",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-01T19:04:58Z",
+          "source_urls": [
+            "https://www.benzinga.com/Opinion/26/10/62119909/market-reaction-to-micron-earnings-and-broadcom-deal-signals-a-shift-in-ai-trade"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:990594cfc7706d0f",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-01T22:31:41Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62124979/bill-ackman-on-ai-massively-increased-the-risk-of-disruption"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:5f9a2b7b4312aefd",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-02T06:41:06Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62126744/amazon-seeks-offload-8bn-nvidia-chips-investors-ft"
+          ],
+          "tone": "neutral",
+          "headline_only": true
+        },
+        {
+          "id": "AMZN:other:eff73bbb47066d4a",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-02T08:06:39Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62127116/gavin-newsom-tesla-waymo-california-robotaxi-rules"
+          ],
+          "tone": "positive",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:financial_results:d08122ea95c3e38b",
+          "event_type": "financial_results",
+          "claim_kind": "reported_fact",
+          "summary": "AMZN: Financial results or management guidance are discussed.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-02T10:00:40Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62128041/amazon-eyes-8-billion-nvidia-chip-sale-to-investors-as-ai-infrastructure-costs-surge-report"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:0f5a4d6d4329e412",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: Only a vendor symbol tag links this article to the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-02T10:59:58Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62129274/reported-earlier-samsung-triple-hbm-prices-next-year-mk-exclusive"
+          ],
+          "tone": "unavailable",
+          "headline_only": true
+        },
+        {
+          "id": "AMZN:other:aafc599d3c90cf04",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-02T11:27:35Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62129673/microsoft-amazon-cloud-arms-set-face-deeper-scrutiny-under-eu-s-tech-rules-bloomberg"
+          ],
+          "tone": "neutral",
+          "headline_only": true
+        },
+        {
+          "id": "AMZN:other:5a4c3f732608c881",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-02T12:44:47Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62131358/broadcom-chases-nvidia-with-60-billion-financing-plan-for-ai-customers"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:39cb620bdd51831b",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-02T14:20:23Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/prediction-markets/26/10/62135661/steve-eisman-ai-risk-everybodys-in-trouble"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:4df93dde55f9a88f",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-02T14:47:25Z",
+          "source_urls": [
+            "https://www.benzinga.com/analyst-stock-ratings/upgrades/26/10/62136926/this-cerebras-systems-analyst-bullish-nvidia-exaggerated"
+          ],
+          "tone": "positive",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:market_commentary:627f582b1dd39530",
+          "event_type": "market_commentary",
+          "claim_kind": "opinion",
+          "summary": "AMZN: Market or sector commentary mentions the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-02T15:01:32Z",
+          "source_urls": [
+            "https://www.benzinga.com/etfs/sector-etfs/26/10/62137658/8-of-11-sectors-rise-friday-as-growth-leads"
+          ],
+          "tone": "positive",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:2761726207fa8c09",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-02T15:45:35Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/prediction-markets/26/10/62139287/ai-debt-brewing-crisis-amazon-coreweave"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:2addef6e17804340",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: Only a vendor symbol tag links this article to the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-02T17:07:48Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62142049/anthropic-invests-100m-train-10-000-engineers-and-tackle-enterprise-ai-talent-gap"
+          ],
+          "tone": "unavailable",
+          "headline_only": true
+        },
+        {
+          "id": "AMZN:other:85b5ee934a71626a",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-02T17:24:22Z",
+          "source_urls": [
+            "https://www.benzinga.com/Opinion/26/10/62142552/why-is-the-market-celebrating-a-weak-jobs-report"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:market_commentary:920b9ab439d244de",
+          "event_type": "market_commentary",
+          "claim_kind": "opinion",
+          "summary": "AMZN: Market or sector commentary mentions the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-02T17:35:13Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/options/26/10/62142866/8-consumer-discretionary-stocks-whale-alerts-today-s-session"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:e6a736a438ef4691",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-03T12:30:20Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/equities/26/10/62151335/micron-nike-meta-and-more-5-stocks-investors-couldnt-stop-buzzing-about-this-week"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:97a9021939d8d956",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-03T15:00:16Z",
+          "source_urls": [
+            "https://www.benzinga.com/crypto/cryptocurrency/26/10/62151542/forget-xrp-these-4-altcoins-are-on-standard-chartereds-radar"
+          ],
+          "tone": "positive",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:90b718ac830a94c3",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-04T02:56:54Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62151997/amazon-1-billion-data-center-communities-ai-backlash"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:613254e376901520",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-04T03:46:09Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62152019/elizabeth-warren-targets-trump-big-tech-over-massive-tax-breaks-for-ai-and-data-centers-people-are-worried-about-ai"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:d65e1884b7d849f9",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-04T05:28:18Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/politics/26/10/62152077/trump-defends-ohio-data-centers-ai"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:430bc68b7bea9a98",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-04T18:30:39Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/equities/26/10/62152809/nvidia-stock-briefly-tops-key-level-as-earnings-season-puts-ai-spending-in-focus"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:de876fbbc4f05be9",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-05T05:37:31Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/travel/26/10/62153870/elon-musk-shows-off-starlink-streaming-5-live-football-games-on-one-flight-united-calls-it-a-game-changer"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:a034618653ed1c77",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-05T06:48:08Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62154326/ross-gerber-says-amazon-usps-need-to-sunset-dirty-gas-trucks-amid-high-fuel-costs-energy-shocks"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:44480556cabe1040",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-05T07:59:06Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/equities/26/10/62154739/michael-burry-raises-red-flag-on-oracles-664b-backlog-and-ai-spending-the-customer-is-now-the-lender"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:81d9ccbea6381541",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-05T10:20:19Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62156355/spacex-shares-look-unusually-cheap-morgan-stanley-says-elon-musks-ai-starlink-bets-take-center-stage"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:71b93d86d2cfe30d",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: Only a vendor symbol tag links this article to the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-05T10:46:30Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62156832/reported-october-3-openai-ceo-social-media-post-calls-cerebras-close-partner-deep-engagement"
+          ],
+          "tone": "unavailable",
+          "headline_only": true
+        },
+        {
+          "id": "AMZN:other:201e2ca8c7d8ed9c",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-05T10:58:20Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/equities/26/10/62156971/cbrs-stock-surges-over-6-in-monday-pre-market-whats-the-sam-altman-connection"
+          ],
+          "tone": "positive",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:contract_change:e895ec5ca315d5ba",
+          "event_type": "contract_change",
+          "claim_kind": "reported_fact",
+          "summary": "AMZN: A contract or commercial arrangement is discussed.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-05T12:33:19Z",
+          "source_urls": [
+            "https://www.benzinga.com/trading-ideas/movers/26/10/62159795/amazon-reportedly-seeks-to-move-8-billion-of-nvidia-chips-off-its-balance-sheet"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:71affa1019b53c39",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-05T13:21:30Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/large-cap/26/10/62161704/highest-yielding-hyperscaler-bonds-october-2026-spacex-oracle"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:analyst_revision:e523b385ad88b205",
+          "event_type": "analyst_revision",
+          "claim_kind": "opinion",
+          "summary": "AMZN: An analyst reiterated a rating or target; the cited rating is Buy; the cited price target is $350. Analyst opinions are not return forecasts.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-05T14:10:29Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62163974/td-cowen-reiterates-buy-amazon-com-maintains-350-price-target"
+          ],
+          "tone": "neutral",
+          "headline_only": true
+        },
+        {
+          "id": "AMZN:other:c2fa70e2388cc82a",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-05T15:06:55Z",
+          "source_urls": [
+            "https://www.benzinga.com/analyst-stock-ratings/reiteration/26/10/62166196/spacex-is-cheap-and-getting-cheaper-morgan-stanley-says"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:partnership:574d481117c50f68",
+          "event_type": "partnership",
+          "claim_kind": "reported_fact",
+          "summary": "AMZN: A partnership or collaboration is reported.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-05T16:16:25Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62168851/qualcomm-licenses-huawei-chip-tech-as-its-push-beyond-smartphones-picks-up-speed"
+          ],
+          "tone": "positive",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:dce395583559b034",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-05T16:36:18Z",
+          "source_urls": [
+            "https://www.benzinga.com/Opinion/26/10/62169671/how-brazil-election-could-impact-the-us-and-investors"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:4892a5bb4252bcb3",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: Only a vendor symbol tag links this article to the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-05T18:17:23Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62173070/meta-and-microsoft-work-wean-staff-anthropic-s-claude-information"
+          ],
+          "tone": "unavailable",
+          "headline_only": true
+        },
+        {
+          "id": "AMZN:other:d64a694acda5a322",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-05T18:21:43Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62173195/amazon-announces-aws-digital-sovereignty-lens-well-architected-framework"
+          ],
+          "tone": "neutral",
+          "headline_only": true
+        },
+        {
+          "id": "AMZN:other:c3ab9a2fda0d5634",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-05T18:37:12Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62173752/tom-lee-ai-debt-trap"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:2d3e79b1d8ba6ce0",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-05T19:00:29Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62174377/nasdaq-100-record-high-stocks-below-50-day-average"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:trading_activity:458f4389bc16c469",
+          "event_type": "trading_activity",
+          "claim_kind": "reported_fact",
+          "summary": "AMZN: Share-price movement or trading activity is reported; it is not a company operating result.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-05T19:01:25Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62174431/robinhood-traders-big-tech-selling"
+          ],
+          "tone": "positive",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:market_commentary:0390bd644f53b473",
+          "event_type": "market_commentary",
+          "claim_kind": "opinion",
+          "summary": "AMZN: Market or sector commentary mentions the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-05T20:45:19Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62178170/here-s-how-much-you-would-have-made-owning-amazon-com-stock-last-15-years"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:d504cd6a6e98893c",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: Only a vendor symbol tag links this article to the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-05T21:03:18Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62178697/wall-street-banks-launch-record-60b-chip-deal-broadcom-and-anthropic-financial-times"
+          ],
+          "tone": "unavailable",
+          "headline_only": true
+        },
+        {
+          "id": "AMZN:analyst_revision:1aae7afd6847ca02",
+          "event_type": "analyst_revision",
+          "claim_kind": "opinion",
+          "summary": "AMZN: An analyst commented on the stock. Analyst opinions are not return forecasts.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-06T05:30:27Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62181242/pinterest-amazon-james-dibbo-cfo-bill-ready"
+          ],
+          "tone": "positive",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:2334508706d908a6",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-06T10:38:27Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62184431/google-unleashes-ai-on-aging-enterprise-tech-with-new-cloud-modernization-suite"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:a778c416818c4b03",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: Unconfirmed or conditional wording: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-06T11:40:30Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62185741/big-short-investor-steve-eisman-pushes-back-on-michael-burrys-ai-chip-depreciation-thesis-i-think-he-is-wrong"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:contract_change:d07df2f4bf2d1642",
+          "event_type": "contract_change",
+          "claim_kind": "reported_fact",
+          "summary": "AMZN: A contract or commercial arrangement is discussed.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-06T13:32:49Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62190391/google-constellation-energy-nuclear-deal-stocks-rally"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:087a8b6a57913888",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: Only a vendor symbol tag links this article to the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-06T13:58:33Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62191562/dimon-says-anthropic-s-mythos-pushed-cyber-risk-10-fold-bloomberg"
+          ],
+          "tone": "unavailable",
+          "headline_only": true
+        },
+        {
+          "id": "AMZN:contract_change:005b211931682d27",
+          "event_type": "contract_change",
+          "claim_kind": "reported_fact",
+          "summary": "AMZN: A contract or commercial arrangement is discussed.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-06T15:07:43Z",
+          "source_urls": [
+            "https://www.benzinga.com/trading-ideas/long-ideas/26/10/62194958/constellation-google-ai-deal"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:market_commentary:b9d8ee580aa8d0be",
+          "event_type": "market_commentary",
+          "claim_kind": "opinion",
+          "summary": "AMZN: Market or sector commentary mentions the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-06T15:33:30Z",
+          "source_urls": [
+            "https://www.benzinga.com/etfs/sector-etfs/26/10/62195896/9-of-11-sectors-rise-in-tuesday-trading-as-defensives-lead"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:analyst_revision:b935c5a818ca182a",
+          "event_type": "analyst_revision",
+          "claim_kind": "opinion",
+          "summary": "AMZN: An analyst reiterated a rating or target; the cited rating is Buy; the cited price target is $385. Analyst opinions are not return forecasts.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-06T17:13:13Z",
+          "source_urls": [
+            "https://www.benzinga.com/trading-ideas/movers/26/10/62199434/amazon-stock-moves-higher-whats-happening"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:83bc14ca0452de9b",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-06T17:34:34Z",
+          "source_urls": [
+            "https://www.benzinga.com/Opinion/26/10/62200112/sp-eyes-record-high-yet-concentration-risk-looms"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:f9680f511f214219",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: Only a vendor symbol tag links this article to the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-06T18:01:16Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62200877/anthropic-announces-claude-now-works-google-docs-sheets-and-slides"
+          ],
+          "tone": "unavailable",
+          "headline_only": true
+        },
+        {
+          "id": "AMZN:analyst_revision:268a79f049948832",
+          "event_type": "analyst_revision",
+          "claim_kind": "opinion",
+          "summary": "AMZN: An analyst raised the price target; the cited rating is Buy; the cited price target is $385. Analyst opinions are not return forecasts.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-06T18:12:06Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62201277/tigress-financial-maintains-buy-amazon-com-raises-price-target-385"
+          ],
+          "tone": "neutral",
+          "headline_only": true
+        },
+        {
+          "id": "AMZN:market_commentary:c90f49c248807415",
+          "event_type": "market_commentary",
+          "claim_kind": "unknown",
+          "summary": "AMZN: Unconfirmed or conditional wording: Market or sector commentary mentions the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-06T18:56:43Z",
+          "source_urls": [
+            "https://www.benzinga.com/etfs/sector-etfs/26/10/62202508/warren-buffett-said-buy-the-sp-500-but-this-etf-is-secretly-an-ai-powerhouse"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:6d38fd7fa080c28b",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-06T19:00:08Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/prediction-markets/26/10/62202607/jamie-dimon-ai-capital-crunch-rates"
+          ],
+          "tone": "negative",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:c59aa5d2e8835d53",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-06T19:29:38Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/equities/26/10/62203364/sp-500-record-high-only-3-percent-stocks-invited"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:cc16a218a9f7d7cd",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-06T19:41:23Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/prediction-markets/26/10/62203648/nvidia-strength-masks-market-pain"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:trading_activity:06e38c2e62ae06c5",
+          "event_type": "trading_activity",
+          "claim_kind": "reported_fact",
+          "summary": "AMZN: Share-price movement or trading activity is reported; it is not a company operating result.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-07T02:29:01Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/equities/26/10/62208213/cathie-wood-trims-elon-musks-spacex-ark-invest-adds-to-meta-amazon-and-coreweave-positions"
+          ],
+          "tone": "positive",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:6e51c5df006712d8",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-07T03:13:29Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62208295/burry-big-tech-ai-spending-oligopoly-too-big-to-fail"
+          ],
+          "tone": "positive",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:fd319ed7286f1627",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-07T05:48:59Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/politics/26/10/62208662/elon-musk-defends-1-trillion-fortune-tied-to-spcx-tsla-slams-bernie-sanders-takers-take-from-the-makers"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:c97adfd2271c4db4",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-07T07:03:47Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62209295/nvidia-apple-sp-500-top-10-stocks-41-percent-diversification"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:product:7c06c5682e16f805",
+          "event_type": "product",
+          "claim_kind": "reported_fact",
+          "summary": "AMZN: A product announcement is reported.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-07T07:22:04Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62209435/apple-is-coming-for-amazon-and-googles-lunch-with-lg-backed-smart-home-devices"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:ed05a7ba4061c578",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-07T08:52:05Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/economic-data/26/10/62209975/ray-dalio-ai-classic-bubble-nearing-bursting-point"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:contract_change:5fca54989fe3279a",
+          "event_type": "contract_change",
+          "claim_kind": "reported_fact",
+          "summary": "AMZN: A contract or commercial arrangement is discussed.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-07T09:18:56Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62210129/amazon-prime-video-emmys-streaming-deal-2027"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:2438742650727468",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: Only a vendor symbol tag links this article to the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-07T09:35:51Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/economic-data/26/10/62210297/aul-krugman-ai-boom-crowding-out-dot-com-bubble"
+          ],
+          "tone": "unavailable",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:c78009bafe60c40c",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-07T10:19:46Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62211147/anthropic-ceo-dario-amodei-took-home-18-million-in-2025-how-his-pay-compares-with-google-and-amazon-ceos-report"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:trading_activity:116bd4588bdcea76",
+          "event_type": "trading_activity",
+          "claim_kind": "reported_fact",
+          "summary": "AMZN: Share-price movement or trading activity is reported; it is not a company operating result.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-07T13:02:54Z",
+          "source_urls": [
+            "https://www.benzinga.com/etfs/sector-etfs/26/10/62215698/cathie-wood-bets-31m-on-amazon-coreweave-meta-teradyne"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:ddca159d1840f896",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-07T13:51:14Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/prediction-markets/26/10/62218288/meta-muse-27-billion-ai-agent"
+          ],
+          "tone": "negative",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:contract_change:32953f02e59235de",
+          "event_type": "contract_change",
+          "claim_kind": "reported_fact",
+          "summary": "AMZN: A contract or commercial arrangement is discussed.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-07T16:01:19Z",
+          "source_urls": [
+            "https://www.benzinga.com/trading-ideas/movers/26/10/62224731/why-is-oklo-stock-falling-on-wednesday"
+          ],
+          "tone": "positive",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:0687d9a73d162026",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-07T16:15:27Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62225274/whats-going-on-with-meta-platforms-stock-wednesday-5"
+          ],
+          "tone": "negative",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:0d798a0600ab291a",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-07T17:18:50Z",
+          "source_urls": [
+            "https://www.benzinga.com/Opinion/26/10/62227573/global-bond-selloff-dents-market-bullishness-treasury-auction-to-test-sentiment"
+          ],
+          "tone": "negative",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:market_commentary:adf62fa32e684114",
+          "event_type": "market_commentary",
+          "claim_kind": "opinion",
+          "summary": "AMZN: Market or sector commentary mentions the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-07T17:35:11Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/options/26/10/62228074/10-consumer-discretionary-stocks-whale-alerts-today-s-session"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:market_commentary:26b8f8a5fdf53ca4",
+          "event_type": "market_commentary",
+          "claim_kind": "opinion",
+          "summary": "AMZN: Market or sector commentary mentions the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-07T18:09:23Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/private-markets/26/10/62229321/waymo-borrows-5-billion-to-fuel-its-global-robotaxi-expansion"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:e56d0db2270c58d7",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: Only a vendor symbol tag links this article to the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-07T18:13:56Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62229518/anthropic-introduces-claude-haiku-5-5-cheapest-fastest-and-most-capable-small-model-we-ve-ever-relea"
+          ],
+          "tone": "unavailable",
+          "headline_only": true
+        },
+        {
+          "id": "AMZN:contract_change:d7e17af454511d6b",
+          "event_type": "contract_change",
+          "claim_kind": "reported_fact",
+          "summary": "AMZN: A contract or commercial arrangement is discussed.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-07T18:19:35Z",
+          "source_urls": [
+            "https://www.benzinga.com/trading-ideas/movers/26/10/62229700/why-is-bkv-stock-surging-wednesday"
+          ],
+          "tone": "positive",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:trading_activity:5fb8ba0510819e8f",
+          "event_type": "trading_activity",
+          "claim_kind": "reported_fact",
+          "summary": "AMZN: Share-price movement or trading activity is reported; it is not a company operating result.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-07T18:45:45Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62230380/amazon-ai-boom-analysts-see-aws-ai-agents-driving-bigger-growth"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:product:b0151e8c5cbf75f6",
+          "event_type": "product",
+          "claim_kind": "reported_fact",
+          "summary": "AMZN: A product announcement is reported.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-07T21:13:04Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62234695/amazon-introduces-aws-physical-ai-toolchain"
+          ],
+          "tone": "neutral",
+          "headline_only": true
+        },
+        {
+          "id": "AMZN:other:1aa4f4db62fafe66",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-08T06:44:03Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62237230/amazon-employees-hit-fresh-job-cuts-across-several-teams-business-insider"
+          ],
+          "tone": "negative",
+          "headline_only": true
+        },
+        {
+          "id": "AMZN:product:6b3ebc649570ffdb",
+          "event_type": "product",
+          "claim_kind": "reported_fact",
+          "summary": "AMZN: A product announcement is reported.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-08T07:29:29Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/space/26/10/62237729/spcx-ceo-elon-musk-praises-jeff-bezos-28-billion-bet-on-blue-origin-as-space-race-intensifies-says-hes-glad-bezos-cares-so-much"
+          ],
+          "tone": "positive",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:79a4a6b62f8de146",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-08T08:37:43Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/politics/26/10/62238280/jeff-bezos-takes-aim-at-politicians-picking-villains-over-housing-costs-as-socialism-debate-grows-when-youre-in-the-polling-booth"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:partnership:09d6d75d21c37050",
+          "event_type": "partnership",
+          "claim_kind": "unknown",
+          "summary": "AMZN: Unconfirmed or conditional wording: A partnership or collaboration is reported.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-08T09:29:43Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62238712/apple-smart-home-report-resideo-arlo-allegion-stocks-fall"
+          ],
+          "tone": "positive",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:product:83f3678b12e3e3b5",
+          "event_type": "product",
+          "claim_kind": "reported_fact",
+          "summary": "AMZN: A product announcement is reported.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-08T12:02:49Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62242618/amazon-reportedly-cuts-fewer-than-1000-jobs-across-us-india-and-uk-as-fresh-layoffs-hit-retail-customer-service-and-engineering-teams"
+          ],
+          "tone": "negative",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:product:3909fff693675a23",
+          "event_type": "product",
+          "claim_kind": "reported_fact",
+          "summary": "AMZN: A product announcement is reported.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-08T12:33:16Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62236128/jeff-bezos-blue-origin-ipo-funding"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:product:0efb25be69808d07",
+          "event_type": "product",
+          "claim_kind": "reported_fact",
+          "summary": "AMZN: A product announcement is reported.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-08T13:02:22Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62244823/amazon-introducing-all-new-amazon-alexa-tablets-alexa-built"
+          ],
+          "tone": "neutral",
+          "headline_only": true
+        },
+        {
+          "id": "AMZN:other:83a7f32fd0079d71",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-08T13:04:36Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62244918/alibaba-explores-spanish-expansion-amid-global-ai-push"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:analyst_revision:fe80cfcae861f183",
+          "event_type": "analyst_revision",
+          "claim_kind": "opinion",
+          "summary": "AMZN: An analyst commented on the stock. Analyst opinions are not return forecasts.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-08T13:40:36Z",
+          "source_urls": [
+            "https://www.benzinga.com/analyst-stock-ratings/analyst-color/26/10/62246092/amazons-current-valuation-presents-attractive-entry-point-analyst"
+          ],
+          "tone": "positive",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:contract_change:dacbb0d7cc8b2256",
+          "event_type": "contract_change",
+          "claim_kind": "reported_fact",
+          "summary": "AMZN: A cloud-credit arrangement is mentioned; credit amounts are not booked revenue.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-08T13:55:40Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62246816/amazon-web-services-announces-golden-age-science-accelerator-commits-50m-cloud-credits-support-white"
+          ],
+          "tone": "positive",
+          "headline_only": true
+        },
+        {
+          "id": "AMZN:product:d55ca437b92b0587",
+          "event_type": "product",
+          "claim_kind": "reported_fact",
+          "summary": "AMZN: A product announcement is reported.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-08T14:17:25Z",
+          "source_urls": [
+            "https://www.benzinga.com/trading-ideas/long-ideas/26/10/62248018/blue-origin-ipo-amazon"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:a5247d92ad4f971f",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-08T14:24:50Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62248420/what-is-going-on-with-alphabet-stock-on-thursday"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:7778fd7ebf871e98",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: Unconfirmed or conditional wording: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-08T15:02:06Z",
+          "source_urls": [
+            "https://www.benzinga.com/etfs/broad-u-s-equity-etfs/26/10/62249936/trump-accounts-state-street"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:5c9140e88373f88f",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: Only a vendor symbol tag links this article to the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-08T15:09:51Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62250199/anthropic-deepening-its-support-american-scientific-research-committing-150m-over-three-years-genesi"
+          ],
+          "tone": "unavailable",
+          "headline_only": true
+        },
+        {
+          "id": "AMZN:other:d10531d88ecfb0db",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-08T17:37:53Z",
+          "source_urls": [
+            "https://www.benzinga.com/Opinion/26/10/62255776/stock-reaction-to-samsung-and-tsmc-earnings-is-an-early-indicator-of-a-market-character-shift-watch-oil-and-yields"
+          ],
+          "tone": "negative",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:5d46bef7527e2fce",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: Only a vendor symbol tag links this article to the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-08T19:04:30Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62258644/anthropic-launches-cyber-mission-to-equip-defenders-with-ai-tools-research-and-resources-to-strengthen-software-and-systems-security"
+          ],
+          "tone": "unavailable",
+          "headline_only": true
+        },
+        {
+          "id": "AMZN:other:cd776628991f2708",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: Only a vendor symbol tag links this article to the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-08T19:04:41Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62258661/anthropic-announces-claude-docs-slides-and-design-are-out-beta-and-every-claude-plan-including-free-"
+          ],
+          "tone": "unavailable",
+          "headline_only": true
+        },
+        {
+          "id": "AMZN:other:99f59aa839942157",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-09T03:27:36Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/equities/26/10/62264221/securitize-shares-jump-tokenized-us-stocks-solana"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:market_commentary:f99994295d5b2941",
+          "event_type": "market_commentary",
+          "claim_kind": "opinion",
+          "summary": "AMZN: Market or sector commentary mentions the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-09T06:02:40Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62264549/jim-cramer-daniel-newman-explain-openai-revenue-scare-gap-is-about-counting-not-sales"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:19ec858be5d4d23a",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-09T09:05:43Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/space/26/10/62265766/ahead-of-dal-earnings-elon-musk-mocks-deltas-starlink-snub-accessing-the-internet-is-utterly-impossible"
+          ],
+          "tone": "negative",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:c4214cde6245f263",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: Unconfirmed or conditional wording: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-09T09:57:17Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62266305/wall-street-still-treats-micron-like-a-commodity-stock-analyst-says-thats-a-costly-mistake"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:aae02f9481c462cc",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-09T11:33:03Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62268160/dean-of-valuation-warns-of-ai-cash-drain-4-ways-to-play-the-shift"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:market_commentary:e107c49f6de314ae",
+          "event_type": "market_commentary",
+          "claim_kind": "opinion",
+          "summary": "AMZN: Market or sector commentary mentions the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-09T12:08:38Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62268971/aws-ceo-says-ai-spending-isnt-a-bubble-just-yet-amazons-cloud-chief-says-we-feel-really-good-as-ray-dalio-warns-the-boom-is-near-a-breaking-point"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:analyst_revision:f9dc430611aa4716",
+          "event_type": "analyst_revision",
+          "claim_kind": "opinion",
+          "summary": "AMZN: Needham commented on the stock. Analyst opinions are not return forecasts.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-09T12:56:57Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62270135/amazon-is-undervalued-says-analyst-and-ai-could-be-its-biggest-advantage"
+          ],
+          "tone": "positive",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:market_commentary:974405c5325e7e39",
+          "event_type": "market_commentary",
+          "claim_kind": "opinion",
+          "summary": "AMZN: Market or sector commentary mentions the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-09T15:17:43Z",
+          "source_urls": [
+            "https://www.benzinga.com/etfs/sector-etfs/26/10/62275392/9-of-11-sectors-rise-friday-as-real-estate-leads"
+          ],
+          "tone": "positive",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:33fe5bdbb5b8818c",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-09T16:28:55Z",
+          "source_urls": [
+            "https://www.benzinga.com/Opinion/26/10/62277859/nvidia-backed-data-center-ipo-collapses-openai-revenue-questions-apple-customers-are-not-price-insensitive"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:2c7d1f4260e6f2d9",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-09T17:14:03Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62279162/whats-going-on-with-snap-stock-friday-3"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:other:9e490bde9c67f7c9",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "AMZN: Only a vendor symbol tag links this article to the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-09T17:27:07Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/equities/26/10/62279599/stock-market-today-nasdaq-100-rebounds-t-mobile-tumbles"
+          ],
+          "tone": "unavailable",
+          "headline_only": false
+        },
+        {
+          "id": "AMZN:market_commentary:87f47bf9d239cac4",
+          "event_type": "market_commentary",
+          "claim_kind": "opinion",
+          "summary": "AMZN: Market or sector commentary mentions the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-09T17:35:10Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/options/26/10/62279970/9-consumer-discretionary-stocks-whale-activity-today-s-session"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        }
+      ]
+    },
+    {
+      "symbol": "MSFT",
+      "article_count": 126,
+      "headline_only_count": 44,
+      "cluster_count": 125,
+      "sentiment": {
+        "positive": 11,
+        "negative": 9,
+        "neutral": 78,
+        "unavailable": 28
+      },
+      "findings": [
+        "126 tagged articles produced 125 candidate event groups; grouping uses conservative rules.",
+        "7 articles contain analyst-revision candidates; these are opinions, not company revenue.",
+        "Observed price return from 2026-10-02 close to 2026-10-09 close: +3.39%.",
+        "Observed return difference: +2.23 percentage points versus SPY and -0.52 versus IGV; no causal attribution.",
+        "On 2026-10-06, the stock gapped +1.24% before the regular open, then returned -0.45% from open to close. The daily gain was not an after-open gain.",
+        "On 2026-10-07, the stock gapped +0.27% before the regular open, then returned -0.18% from open to close. The daily gain was not an after-open gain."
+      ],
+      "limitations": [
+        "Text tone is not an expected return or a calibrated probability of a stock rising.",
+        "Historical text was collected after the price window; this is a retrospective review.",
+        "Event grouping and fact/opinion labels use rules and require human review.",
+        "Only the retained news feed is searched. Company IR pages and earlier reports elsewhere are not retrieved automatically.",
+        "The earliest report in a candidate group is only the earliest retained article; later details must not be backdated to that time.",
+        "The report combines rule templates with price arithmetic, not a generative analyst or a causal explanation.",
+        "Vendor ticker tags and company-bearing sentences do not prove direct economic relevance.",
+        "No current Futu crowding measurement or trained ten-day return forecast is available.",
+        "44 articles have no body; their claims are headline-only."
+      ],
+      "price_context": {
+        "status": "Available",
+        "return_pct": 3.3891755067339213,
+        "excess_vs_spy_pp": 2.228892777146063,
+        "excess_vs_sector_pp": -0.521181405559723,
+        "sector_benchmark": "IGV"
+      },
+      "events": [
+        {
+          "id": "MSFT:other:27f04c6a4b70f8ed",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-01T05:20:03Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62097215/amazon-constellation-nuclear-power-deal-ai-electricity-demand-3-billion"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:4e52571ed30c4184",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-01T09:31:05Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62099040/metas-ai-spending-has-a-3-9-billion-tax-perk-mark-zuckerberg-led-company-reportedly-classified-data-centers-as-pilot-models"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:aec9faf9c0f30b7b",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: Only a vendor symbol tag links this article to the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-01T10:03:14Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62099488/broadcom-lend-42-billion-anthropic-infrastructure-lease-agreements-according-ipo-prospectus"
+          ],
+          "tone": "unavailable",
+          "headline_only": true
+        },
+        {
+          "id": "MSFT:other:be85d05bf247a949",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: Unconfirmed or conditional wording: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-01T10:17:32Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/health-care/26/10/62100052/chuck-schumer-slams-hyde-amendment-on-50th-anniversary-says-abortion-restrictions-force-americans-to-choose-between-care-rent-food-health-care-must-not-be-a-privilege"
+          ],
+          "tone": "positive",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:analyst_revision:f8341d52917930cf",
+          "event_type": "analyst_revision",
+          "claim_kind": "opinion",
+          "summary": "MSFT: Wells Fargo raised the price target; the cited rating is Overweight; the cited price target is $725. Analyst opinions are not return forecasts.",
+          "article_count": 2,
+          "earliest_reported_at": "2026-10-01T12:40:19Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62103962/wells-fargo-maintains-overweight-microsoft-raises-price-target-725",
+            "https://www.benzinga.com/trading-ideas/movers/26/10/62111178/whats-going-on-with-microsoft-stock-6"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:cc3998ede13abff6",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-01T13:48:43Z",
+          "source_urls": [
+            "https://www.benzinga.com/etfs/sector-etfs/26/10/62107232/michael-burry-shifts-to-long-dated-ai-bets-as-soxx-suffers-its-worst-quarter-since-2025"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:market_commentary:4600d7f34cb2043b",
+          "event_type": "market_commentary",
+          "claim_kind": "opinion",
+          "summary": "MSFT: Market or sector commentary mentions the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-01T15:11:52Z",
+          "source_urls": [
+            "https://www.benzinga.com/etfs/sector-etfs/26/10/62111517/8-of-11-sectors-fall-in-thursday-trading-as-cyclicals-lead"
+          ],
+          "tone": "positive",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:656502872a107d70",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-01T15:18:22Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62111759/microsoft-announces-ryan-roslansky-has-decided-leave-company-dan-shapero-will-continue-ceo-linkedin-"
+          ],
+          "tone": "negative",
+          "headline_only": true
+        },
+        {
+          "id": "MSFT:other:faa9ccc14140c2f3",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: Only a vendor symbol tag links this article to the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-01T16:22:03Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62114420/openai-parts-ways-researchers-who-allegedly-shared-confidential-information-wsj-exclusive"
+          ],
+          "tone": "unavailable",
+          "headline_only": true
+        },
+        {
+          "id": "MSFT:other:3a7147657d5bf1a0",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: Only a vendor symbol tag links this article to the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-01T17:18:40Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62116447/california-attorney-general-bonta-serves-investigative-subpoena-openai-over-cybersecurity-incidents"
+          ],
+          "tone": "unavailable",
+          "headline_only": true
+        },
+        {
+          "id": "MSFT:other:011cf2e67c5b85e5",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-01T17:29:35Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62116747/amazon-microsoft-meta-ai-investment-railway-mania"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:0745607e048c9e88",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: Only a vendor symbol tag links this article to the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-01T18:08:07Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62118125/anthropic-introduces-mods-small-typescript-functions-change-how-claude-code-works"
+          ],
+          "tone": "unavailable",
+          "headline_only": true
+        },
+        {
+          "id": "MSFT:other:e9ece14f811af374",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: Only a vendor symbol tag links this article to the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-01T18:20:24Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62118585/nvidia-softbank-make-final-20b-investment-openai-s-last-round-information"
+          ],
+          "tone": "unavailable",
+          "headline_only": true
+        },
+        {
+          "id": "MSFT:other:50cf013b9b0adafe",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-01T19:04:58Z",
+          "source_urls": [
+            "https://www.benzinga.com/Opinion/26/10/62119909/market-reaction-to-micron-earnings-and-broadcom-deal-signals-a-shift-in-ai-trade"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:e5c9a03618e9bc8a",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-01T22:31:41Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62124979/bill-ackman-on-ai-massively-increased-the-risk-of-disruption"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:financial_results:bb0ab7048057cb08",
+          "event_type": "financial_results",
+          "claim_kind": "reported_fact",
+          "summary": "MSFT: Financial results or management guidance are discussed.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-02T10:00:40Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62128041/amazon-eyes-8-billion-nvidia-chip-sale-to-investors-as-ai-infrastructure-costs-surge-report"
+          ],
+          "tone": "positive",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:f0edf8e66aaec1c0",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-02T10:12:46Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62128369/micron-analyst-dismisses-supply-glut-fears-as-ai-memory-crunch-deepens"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:cafe89b26625069b",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-02T11:27:35Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62129673/microsoft-amazon-cloud-arms-set-face-deeper-scrutiny-under-eu-s-tech-rules-bloomberg"
+          ],
+          "tone": "neutral",
+          "headline_only": true
+        },
+        {
+          "id": "MSFT:other:8015f7a2cfa7bac0",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: Unconfirmed or conditional wording: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-02T11:48:52Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62129995/google-turns-up-ai-heat-with-gemini-4-argon-rivals-may-have-to-cut-prices-analyst"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:e6e0acf7fcbf31aa",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-02T12:44:47Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62131358/broadcom-chases-nvidia-with-60-billion-financing-plan-for-ai-customers"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:2c13d51825fa2141",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-02T14:20:23Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/prediction-markets/26/10/62135661/steve-eisman-ai-risk-everybodys-in-trouble"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:bcdd8ee9061cfdc0",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-02T15:00:23Z",
+          "source_urls": [
+            "https://www.benzinga.com/government/26/10/62137517/louisiana-rep-cleo-fields-bought-75k-worth-alphabet-stock"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:fa9bc4a08974c353",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-02T15:00:24Z",
+          "source_urls": [
+            "https://www.benzinga.com/government/26/10/62137518/ohio-rep-david-taylor-bought-45k-worth-amgen-stock"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:595adb76d674937d",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: Only a vendor symbol tag links this article to the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-02T17:07:48Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62142049/anthropic-invests-100m-train-10-000-engineers-and-tackle-enterprise-ai-talent-gap"
+          ],
+          "tone": "unavailable",
+          "headline_only": true
+        },
+        {
+          "id": "MSFT:other:aaa47e49265a0d85",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-02T17:24:22Z",
+          "source_urls": [
+            "https://www.benzinga.com/Opinion/26/10/62142552/why-is-the-market-celebrating-a-weak-jobs-report"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:3fb2e2b653786861",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-03T12:30:20Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/equities/26/10/62151335/micron-nike-meta-and-more-5-stocks-investors-couldnt-stop-buzzing-about-this-week"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:4cc9555f89240acf",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-04T03:46:09Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62152019/elizabeth-warren-targets-trump-big-tech-over-massive-tax-breaks-for-ai-and-data-centers-people-are-worried-about-ai"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:7b86a802bc7ac57a",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: Unconfirmed or conditional wording: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-04T08:21:12Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/economic-data/26/10/62152166/linkedin-cofounder-defends-massive-ai-infrastructure-spending-says-ai-capital-is-the-only-reason-were-not-in-a-recession"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:7f99b1d921290f4f",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: Unconfirmed or conditional wording: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-04T08:42:23Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62152178/bernie-sanders-warns-ai-could-become-smarter-than-humans-do-not-want-to-wait-around"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:9cd66bb01a43235c",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: Only a vendor symbol tag links this article to the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-04T12:41:27Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62152468/president-trump-sunday-announced-formation-super-intelligence-force-coordinate-federal-government-su"
+          ],
+          "tone": "unavailable",
+          "headline_only": true
+        },
+        {
+          "id": "MSFT:other:4806bf63915d0199",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: Only a vendor symbol tag links this article to the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-04T16:33:09Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62152689/axios-reported-earlier-sunday-nvidia-backed-reflection-prepares-powerful-open-weight-ai-system-chall"
+          ],
+          "tone": "unavailable",
+          "headline_only": true
+        },
+        {
+          "id": "MSFT:other:20b0ad00a2aa78a5",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-04T18:30:39Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/equities/26/10/62152809/nvidia-stock-briefly-tops-key-level-as-earnings-season-puts-ai-spending-in-focus"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:financial_results:d395cf72c999fa9a",
+          "event_type": "financial_results",
+          "claim_kind": "reported_fact",
+          "summary": "MSFT: Financial results or management guidance are discussed.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-04T20:40:33Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/market-summary/26/10/62153008/mags-top-magnificent-7-etf-shows-renewed-demand-as-top-stocks-jump-ahead-of-earnings"
+          ],
+          "tone": "positive",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:9d422cc441e4b439",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-05T07:59:06Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/equities/26/10/62154739/michael-burry-raises-red-flag-on-oracles-664b-backlog-and-ai-spending-the-customer-is-now-the-lender"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:579b69c985b525ad",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: Unconfirmed or conditional wording: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-05T08:37:58Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62155005/chamath-palihapitiya-backs-satya-nadellas-warning-on-closed-ai-models-companies-could-be-paying-for-intelligence-twice-heres-why"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:d7c527dbfa12f7d3",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: Unconfirmed or conditional wording: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-05T09:30:38Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62155435/senator-mark-kelly-wants-tech-giants-to-pay-their-fair-share-to-solve-challenges-created-by-ai-my-make-ai-work-for-americans-act-does-exactly-that"
+          ],
+          "tone": "negative",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:8f6eaf56ec19f3c2",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: Only a vendor symbol tag links this article to the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-05T10:46:30Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62156832/reported-october-3-openai-ceo-social-media-post-calls-cerebras-close-partner-deep-engagement"
+          ],
+          "tone": "unavailable",
+          "headline_only": true
+        },
+        {
+          "id": "MSFT:analyst_revision:9c9fde2ed3fc0a4b",
+          "event_type": "analyst_revision",
+          "claim_kind": "opinion",
+          "summary": "MSFT: An analyst upgraded the stock to Buy; the cited price target is $665. Analyst opinions are not return forecasts.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-05T12:42:51Z",
+          "source_urls": [
+            "https://www.benzinga.com/trading-ideas/movers/26/10/62160121/melius-upgrades-microsoft-to-buy-with-665-target-on-ai-security-demand"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:market_commentary:8485cd4c4262d553",
+          "event_type": "market_commentary",
+          "claim_kind": "opinion",
+          "summary": "MSFT: Market or sector commentary mentions the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-05T13:21:30Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/large-cap/26/10/62161704/highest-yielding-hyperscaler-bonds-october-2026-spacex-oracle"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:11c3538744a3a684",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-05T14:58:29Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/equities/26/10/62165839/nvidia-outweighs-256-sp-500-companies-concentration"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:b7809d1278897bc3",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: Unconfirmed or conditional wording: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-05T16:16:39Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/prediction-markets/26/10/62168858/spacex-microsoft-ai-customer"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:43e67e4db182d3a1",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-05T16:36:18Z",
+          "source_urls": [
+            "https://www.benzinga.com/Opinion/26/10/62169671/how-brazil-election-could-impact-the-us-and-investors"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:f303f6b5d9ec15b3",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-05T16:55:41Z",
+          "source_urls": [
+            "https://www.benzinga.com/trading-ideas/long-ideas/26/10/62170511/trump-musk-super-intelligence"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:market_commentary:7fd78339fdcc63ab",
+          "event_type": "market_commentary",
+          "claim_kind": "opinion",
+          "summary": "MSFT: Market or sector commentary mentions the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-05T17:35:17Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/options/26/10/62171753/6-information-technology-stocks-whale-alerts-today-s-session"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:3bb1efbacf58b951",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: Only a vendor symbol tag links this article to the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-05T17:47:22Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62172041/openai-says-it-expanding-its-approach-content-provenance-include-text-response-eu-regulatory-require"
+          ],
+          "tone": "unavailable",
+          "headline_only": true
+        },
+        {
+          "id": "MSFT:other:2ae32099049bbfd2",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: Only a vendor symbol tag links this article to the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-05T17:55:10Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62172267/ai-infrastructure-and-compute-48-organizations-running-ai-production-name-google-platform-their-prim"
+          ],
+          "tone": "unavailable",
+          "headline_only": true
+        },
+        {
+          "id": "MSFT:other:cede39ef7d1f2fc5",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-05T18:17:23Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62173070/meta-and-microsoft-work-wean-staff-anthropic-s-claude-information"
+          ],
+          "tone": "neutral",
+          "headline_only": true
+        },
+        {
+          "id": "MSFT:analyst_revision:6306f63098b4403f",
+          "event_type": "analyst_revision",
+          "claim_kind": "opinion",
+          "summary": "MSFT: An analyst raised the price target; the cited rating is Outperform; the cited price target is $615. Analyst opinions are not return forecasts.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-05T18:30:58Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62173571/scotiabank-maintains-sector-outperform-microsoft-raises-price-target-615"
+          ],
+          "tone": "positive",
+          "headline_only": true
+        },
+        {
+          "id": "MSFT:other:d9664323b13ce034",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-05T18:37:12Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62173752/tom-lee-ai-debt-trap"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:8a47d389b812af2c",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: Only a vendor symbol tag links this article to the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-05T21:00:31Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62178597/openai-talks-uae-funds-blackrock-30-billion-round-bloomberg"
+          ],
+          "tone": "unavailable",
+          "headline_only": true
+        },
+        {
+          "id": "MSFT:other:ca396af8b834b440",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: Only a vendor symbol tag links this article to the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-05T21:03:18Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62178697/wall-street-banks-launch-record-60b-chip-deal-broadcom-and-anthropic-financial-times"
+          ],
+          "tone": "unavailable",
+          "headline_only": true
+        },
+        {
+          "id": "MSFT:other:89d71ce45da79aac",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-05T22:29:15Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/politics/26/10/62179941/congressman-who-loves-magnificent-seven-stocks-buys-3-mag-7-names-in-september"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:analyst_revision:0ae966093ef3748b",
+          "event_type": "analyst_revision",
+          "claim_kind": "opinion",
+          "summary": "MSFT: Oppenheimer commented on the stock. Analyst opinions are not return forecasts.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-06T10:55:48Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62184798/jim-cramer-says-microsoft-is-one-of-ais-big-winners-as-copilot-momentum-builds"
+          ],
+          "tone": "positive",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:b9da5c87d48e1c39",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-06T11:35:23Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62185668/think-nvidias-ai-boom-is-priced-in-analyst-says-wall-street-is-underestimating-the-next-6-to-8-quarters"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:f7a15ca4bf3e3a03",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: Unconfirmed or conditional wording: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-06T11:40:30Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62185741/big-short-investor-steve-eisman-pushes-back-on-michael-burrys-ai-chip-depreciation-thesis-i-think-he-is-wrong"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:cc87956801e8060a",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: Only a vendor symbol tag links this article to the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-06T12:54:56Z",
+          "source_urls": [
+            "https://www.benzinga.com/analyst-stock-ratings/price-target/26/10/62188662/general-motors-to-rally-around-40-here-are-10-top-analyst-forecasts-for-tuesday"
+          ],
+          "tone": "unavailable",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:694df6ff411dc281",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-06T13:18:32Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62189966/jim-cramer-warns-rising-treasury-yields-could-signal-bigger-market-risks-despite-ai-rally-bond-sellers-have-been-anything-but-stupid"
+          ],
+          "tone": "positive",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:contract_change:bfd512331abf93a2",
+          "event_type": "contract_change",
+          "claim_kind": "reported_fact",
+          "summary": "MSFT: A contract or commercial arrangement is discussed.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-06T13:32:49Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62190391/google-constellation-energy-nuclear-deal-stocks-rally"
+          ],
+          "tone": "positive",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:b55b10bbc690a812",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: Only a vendor symbol tag links this article to the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-06T13:58:33Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62191562/dimon-says-anthropic-s-mythos-pushed-cyber-risk-10-fold-bloomberg"
+          ],
+          "tone": "unavailable",
+          "headline_only": true
+        },
+        {
+          "id": "MSFT:other:02d2df98f53f835d",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-06T15:07:43Z",
+          "source_urls": [
+            "https://www.benzinga.com/trading-ideas/long-ideas/26/10/62194958/constellation-google-ai-deal"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:868714740349cb07",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: Only a vendor symbol tag links this article to the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-06T16:07:01Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62197166/atlassian-and-openai-expand-partnership-turn-enterprise-knowledge-action"
+          ],
+          "tone": "unavailable",
+          "headline_only": true
+        },
+        {
+          "id": "MSFT:analyst_revision:fcc9d971aebb3e14",
+          "event_type": "analyst_revision",
+          "claim_kind": "opinion",
+          "summary": "MSFT: An analyst commented on the stock. Analyst opinions are not return forecasts.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-06T16:43:43Z",
+          "source_urls": [
+            "https://www.benzinga.com/analyst-stock-ratings/analyst-color/26/10/62198412/microsoft-sets-up-a-second-ai-paycheck-as-copilot-shifts-to-pay-per-use"
+          ],
+          "tone": "positive",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:market_commentary:c05619621d7409d2",
+          "event_type": "market_commentary",
+          "claim_kind": "opinion",
+          "summary": "MSFT: Market or sector commentary mentions the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-06T17:34:23Z",
+          "source_urls": [
+            "https://www.benzinga.com/etfs/sector-etfs/26/10/62200101/nvidia-apple-microsoft-now-drive-21-of-sp-500-heres-how-much-etf-investors-own"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:1653a9a71da7d73e",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: Only a vendor symbol tag links this article to the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-06T17:46:54Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62200416/openai-announces-advancing-computer-use-ironclad"
+          ],
+          "tone": "unavailable",
+          "headline_only": true
+        },
+        {
+          "id": "MSFT:other:48ab925f381ed642",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: Only a vendor symbol tag links this article to the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-06T18:01:16Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62200877/anthropic-announces-claude-now-works-google-docs-sheets-and-slides"
+          ],
+          "tone": "unavailable",
+          "headline_only": true
+        },
+        {
+          "id": "MSFT:market_commentary:a43cdee6e2ae11a0",
+          "event_type": "market_commentary",
+          "claim_kind": "unknown",
+          "summary": "MSFT: Unconfirmed or conditional wording: Market or sector commentary mentions the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-06T18:56:43Z",
+          "source_urls": [
+            "https://www.benzinga.com/etfs/sector-etfs/26/10/62202508/warren-buffett-said-buy-the-sp-500-but-this-etf-is-secretly-an-ai-powerhouse"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:8e8d8d89069b12cf",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-06T19:00:08Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/prediction-markets/26/10/62202607/jamie-dimon-ai-capital-crunch-rates"
+          ],
+          "tone": "positive",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:804a01847fa36f93",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: Only a vendor symbol tag links this article to the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-06T19:06:15Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62202755/anthropic-expands-cyber-verification-program-three-tier-access-advanced-ai-models-security-professio"
+          ],
+          "tone": "unavailable",
+          "headline_only": true
+        },
+        {
+          "id": "MSFT:other:6c246660648fc16f",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-06T19:29:38Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/equities/26/10/62203364/sp-500-record-high-only-3-percent-stocks-invited"
+          ],
+          "tone": "negative",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:ae5e07ff8de51766",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-06T19:41:23Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/prediction-markets/26/10/62203648/nvidia-strength-masks-market-pain"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:c28d3c503aa64b16",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-07T03:13:29Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62208295/burry-big-tech-ai-spending-oligopoly-too-big-to-fail"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:12e0f58dfdb3fca4",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-07T07:03:47Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62209295/nvidia-apple-sp-500-top-10-stocks-41-percent-diversification"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:market_commentary:fc1d538808a3876b",
+          "event_type": "market_commentary",
+          "claim_kind": "opinion",
+          "summary": "MSFT: Market or sector commentary mentions the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-07T07:22:58Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/equities/26/10/62209448/dan-ives-names-5-potential-tech-winners-for-2027-as-investors-underestimate-4-trillion-spending-wave"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:trading_activity:2906e2258008eb30",
+          "event_type": "trading_activity",
+          "claim_kind": "reported_fact",
+          "summary": "MSFT: Share-price movement or trading activity is reported; it is not a company operating result.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-07T07:40:47Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62209518/jim-cramer-sees-more-ai-upside-ahead-for-meta-microsoft-and-amd-despite-bubble-fears-they-were-going-to-figure-something-out"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:market_commentary:cabd4e7e501a7df8",
+          "event_type": "market_commentary",
+          "claim_kind": "opinion",
+          "summary": "MSFT: Market or sector commentary mentions the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-07T08:20:12Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62209830/godfather-of-ai-geoffrey-hinton-on-regrets-over-inventing-ai-calls-for-fda-like-rules-before-releasing-models-says-public-pressure-like-climate-change-could-drive-action"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:market_commentary:2061337c7308656c",
+          "event_type": "market_commentary",
+          "claim_kind": "opinion",
+          "summary": "MSFT: Market or sector commentary mentions the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-07T08:52:05Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/economic-data/26/10/62209975/ray-dalio-ai-classic-bubble-nearing-bursting-point"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:analyst_revision:e953c537864d6474",
+          "event_type": "analyst_revision",
+          "claim_kind": "opinion",
+          "summary": "MSFT: An analyst raised the price target; the cited rating is Outperform; the cited price target is $635. Analyst opinions are not return forecasts.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-07T12:50:28Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62215105/evercore-isi-group-maintains-outperform-microsoft-raises-price-target-635"
+          ],
+          "tone": "neutral",
+          "headline_only": true
+        },
+        {
+          "id": "MSFT:product:8fb90472c7bda642",
+          "event_type": "product",
+          "claim_kind": "reported_fact",
+          "summary": "MSFT: A product announcement is reported.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-07T13:44:13Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62217330/nvidia-inside-microsofts-new-laptop-runs-ai-agents-without-the-cloud"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:contract_change:a2e571339241cfb7",
+          "event_type": "contract_change",
+          "claim_kind": "reported_fact",
+          "summary": "MSFT: A contract or commercial arrangement is discussed.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-07T15:35:31Z",
+          "source_urls": [
+            "https://www.benzinga.com/trading-ideas/long-ideas/26/10/62223759/spacex-iren-ai-margin-gap"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:9c19d4557bbfd13b",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-07T17:18:50Z",
+          "source_urls": [
+            "https://www.benzinga.com/Opinion/26/10/62227573/global-bond-selloff-dents-market-bullishness-treasury-auction-to-test-sentiment"
+          ],
+          "tone": "negative",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:7dd82ce737b54602",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-07T17:19:25Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62227599/microsoft-rolls-out-microsoft-execution-containers-block-agents-unauthorized-data-access"
+          ],
+          "tone": "neutral",
+          "headline_only": true
+        },
+        {
+          "id": "MSFT:other:aa1f298739dea674",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-07T17:25:24Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62227817/microsoft-rolls-out-ai-coding-model-can-run-indivdual-laptops-new-nvidia-nemotron-model-will-run-ind"
+          ],
+          "tone": "neutral",
+          "headline_only": true
+        },
+        {
+          "id": "MSFT:other:18d17dd25a044ae2",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-07T17:33:49Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62228007/microsoft-exec-says-copilot-will-delegate-tasks-local-models-when-cost-or-privacy-are-key-concerns"
+          ],
+          "tone": "neutral",
+          "headline_only": true
+        },
+        {
+          "id": "MSFT:other:9fd95a6306fb147c",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-07T17:35:06Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62228061/microsoft-exec-says-meta-s-muse-coming-windows"
+          ],
+          "tone": "neutral",
+          "headline_only": true
+        },
+        {
+          "id": "MSFT:product:bad72ca0ad099a0c",
+          "event_type": "product",
+          "claim_kind": "reported_fact",
+          "summary": "MSFT: A product announcement is reported.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-07T17:39:06Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62228248/microsoft-exec-says-co-introduces-surface-laptop-ultra"
+          ],
+          "tone": "neutral",
+          "headline_only": true
+        },
+        {
+          "id": "MSFT:other:26275312a81f969f",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-07T17:40:40Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62228309/microsoft-exec-says-call-duty-will-come-nvidia-rtx-spark-machines-2027"
+          ],
+          "tone": "neutral",
+          "headline_only": true
+        },
+        {
+          "id": "MSFT:other:49e732b16ff91ab3",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-07T17:49:33Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62228587/microsoft-exec-says-rtx-spark-based-machines-nvidia-chips-will-begin-shipping-next-week"
+          ],
+          "tone": "neutral",
+          "headline_only": true
+        },
+        {
+          "id": "MSFT:other:1f2f063ca16fca26",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-07T17:57:04Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62228838/microsoft-exec-says-surface-laptop-ultra-prices-range-5-899-most-powerful-model"
+          ],
+          "tone": "neutral",
+          "headline_only": true
+        },
+        {
+          "id": "MSFT:other:7caf02266633106c",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: Only a vendor symbol tag links this article to the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-07T18:13:56Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62229518/anthropic-introduces-claude-haiku-5-5-cheapest-fastest-and-most-capable-small-model-we-ve-ever-relea"
+          ],
+          "tone": "unavailable",
+          "headline_only": true
+        },
+        {
+          "id": "MSFT:contract_change:43f366ac3100094e",
+          "event_type": "contract_change",
+          "claim_kind": "reported_fact",
+          "summary": "MSFT: A contract or commercial arrangement is discussed.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-07T18:19:35Z",
+          "source_urls": [
+            "https://www.benzinga.com/trading-ideas/movers/26/10/62229700/why-is-bkv-stock-surging-wednesday"
+          ],
+          "tone": "positive",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:ad8cfac4d6421675",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: Only a vendor symbol tag links this article to the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-07T18:24:51Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62229879/openai-introduces-gpt-6-and-intelligent-ui-everyone"
+          ],
+          "tone": "unavailable",
+          "headline_only": true
+        },
+        {
+          "id": "MSFT:other:bb9544ab066ef450",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-08T04:23:08Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62236616/trump-national-medals-elon-musk-jensen-huang-satya-nadella-tech-ceos"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:3a7f3a901189f5fd",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: Unconfirmed or conditional wording: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-08T08:22:51Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62238152/senator-adam-schiff-warns-advanced-ai-poses-growing-national-security-threat-calls-for-guardrails-before-its-too-late-a-pinky-swear-wont-cut-it"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:2f3609382769cf94",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-08T11:48:37Z",
+          "source_urls": [
+            "https://www.benzinga.com/trading-ideas/movers/26/10/62241998/what-is-going-on-with-palantir-tech-stock-on-thursday"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:2bdde6fc57c6c6e2",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-08T12:34:56Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62243753/samsung-80-billion-profit-tops-nvidia-amd-lisa-su-seoul"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:0ca90496e4d94739",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-08T12:47:14Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62244140/microsoft-creates-new-xbox-division-xp-appoints-kayleen-walters-president-xp"
+          ],
+          "tone": "neutral",
+          "headline_only": true
+        },
+        {
+          "id": "MSFT:other:37c98d7edd413b58",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-08T13:10:56Z",
+          "source_urls": [
+            "https://www.benzinga.com/etfs/sector-etfs/26/10/62245057/nvidia-crowdstrike-dan-ives-4-trillion-tech-spending-wave-etf"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:760c736e35a9379d",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-08T14:23:43Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62248353/vice-president-vance-says-u-s-suspending-perm-program-microsoft-message-microsoft-you-ve-got-hire-am"
+          ],
+          "tone": "neutral",
+          "headline_only": true
+        },
+        {
+          "id": "MSFT:other:222d97e2b330dc0b",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-08T14:24:50Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62248420/what-is-going-on-with-alphabet-stock-on-thursday"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:009d82357772a5d1",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-08T14:30:12Z",
+          "source_urls": [
+            "https://www.benzinga.com/government/26/10/62248648/u-s-labor-secretary-says-suspending-some-largest-it-sourcing-firms-world-labor-certification-program"
+          ],
+          "tone": "negative",
+          "headline_only": true
+        },
+        {
+          "id": "MSFT:other:f1fd5723846b35dc",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: Only a vendor symbol tag links this article to the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-08T14:42:22Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62249118/openai-says-recently-banned-2-io-one-russia-and-one-iran-used-our-models-combination-more-traditiona"
+          ],
+          "tone": "unavailable",
+          "headline_only": true
+        },
+        {
+          "id": "MSFT:other:fab4943a594c3864",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: Unconfirmed or conditional wording: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-08T15:02:06Z",
+          "source_urls": [
+            "https://www.benzinga.com/etfs/broad-u-s-equity-etfs/26/10/62249936/trump-accounts-state-street"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:fdf2794ca82931d5",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: Only a vendor symbol tag links this article to the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-08T15:09:51Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62250199/anthropic-deepening-its-support-american-scientific-research-committing-150m-over-three-years-genesi"
+          ],
+          "tone": "unavailable",
+          "headline_only": true
+        },
+        {
+          "id": "MSFT:other:2dce56bd48050b4d",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-08T15:47:35Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/prediction-markets/26/10/62251534/spacex-ai-data-center-500-billion"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:trading_activity:1265fc11ae939762",
+          "event_type": "trading_activity",
+          "claim_kind": "reported_fact",
+          "summary": "MSFT: Share-price movement or trading activity is reported; it is not a company operating result.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-08T16:36:56Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62253346/whats-going-on-with-microsoft-stock-thursday-5"
+          ],
+          "tone": "negative",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:3fd2545e53cf148b",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: Only a vendor symbol tag links this article to the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-08T16:41:45Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62253500/trump-to-unveil-2-4b-in-ai-pledges-to-boost-research-bloomberg"
+          ],
+          "tone": "unavailable",
+          "headline_only": true
+        },
+        {
+          "id": "MSFT:other:a0c9f5c838cd481c",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: Only a vendor symbol tag links this article to the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-08T16:45:03Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62253618/openai-annualised-revenues-20bn-less-than-previously-signalled-financial-times"
+          ],
+          "tone": "unavailable",
+          "headline_only": true
+        },
+        {
+          "id": "MSFT:other:73c050e5fa3bded5",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-08T16:55:57Z",
+          "source_urls": [
+            "https://www.benzinga.com/etfs/sector-etfs/26/10/62253994/ai-bubble-nearing-a-breaking-point-ray-dalios-warning-reveals-a-risk-hiding-in-these-etfs"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:91594f3c13be48d1",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-08T17:22:38Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62255138/microsoft-u-s-government-suspending-perm-program-says-we-look-forward-providing-administration-addit"
+          ],
+          "tone": "neutral",
+          "headline_only": true
+        },
+        {
+          "id": "MSFT:other:d4fdf540931ec00f",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-08T17:37:53Z",
+          "source_urls": [
+            "https://www.benzinga.com/Opinion/26/10/62255776/stock-reaction-to-samsung-and-tsmc-earnings-is-an-early-indicator-of-a-market-character-shift-watch-oil-and-yields"
+          ],
+          "tone": "negative",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:c7bd794149aab93d",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-08T18:18:39Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/prediction-markets/26/10/62257221/openai-revenue-run-rate-ai-stocks"
+          ],
+          "tone": "negative",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:84de949591aa481b",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: Unconfirmed or conditional wording: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-08T18:41:39Z",
+          "source_urls": [
+            "https://www.benzinga.com/trading-ideas/long-ideas/26/10/62258043/microsoft-visa-freeze-ai-brain-drain"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:a96d2ef17ff81cdb",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: Only a vendor symbol tag links this article to the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-08T19:04:30Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62258644/anthropic-launches-cyber-mission-to-equip-defenders-with-ai-tools-research-and-resources-to-strengthen-software-and-systems-security"
+          ],
+          "tone": "unavailable",
+          "headline_only": true
+        },
+        {
+          "id": "MSFT:other:bc158995ef7a3b7d",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-08T19:10:23Z",
+          "source_urls": [
+            "https://www.benzinga.com/crypto/cryptocurrency/26/10/62258814/solana-tops-nyse-trade-count-can-robinhood-coinbase-hyperliquid-keep-up"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:market_commentary:d8800d49dccb6334",
+          "event_type": "market_commentary",
+          "claim_kind": "opinion",
+          "summary": "MSFT: Market or sector commentary mentions the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-08T22:00:33Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62263077/here-s-how-much-you-would-have-made-owning-microsoft-stock-last-20-years"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:ed4efc908942f199",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-09T03:27:36Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/equities/26/10/62264221/securitize-shares-jump-tokenized-us-stocks-solana"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:market_commentary:335a418658455073",
+          "event_type": "market_commentary",
+          "claim_kind": "opinion",
+          "summary": "MSFT: Market or sector commentary mentions the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-09T06:02:40Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62264549/jim-cramer-daniel-newman-explain-openai-revenue-scare-gap-is-about-counting-not-sales"
+          ],
+          "tone": "negative",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:67fd0944b2220809",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: Only a vendor symbol tag links this article to the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-09T06:31:50Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/26/10/62264784/openai-says-three-employees-violated-sensitive-information-policies-denies-safety-concern-firings-wi"
+          ],
+          "tone": "unavailable",
+          "headline_only": true
+        },
+        {
+          "id": "MSFT:other:c49bb71e3ea824f6",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-09T07:00:05Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62264954/musk-congratulates-medal-winners-trump-calls-him-national-treasure"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:82c9b25e31be66c5",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-09T07:29:01Z",
+          "source_urls": [
+            "https://www.benzinga.com/news/travel/26/10/62265147/bill-gates-says-aviation-is-one-of-the-hardest-sectors-to-decarbonize-amid-skyrocketing-fuel-costs-heres-his-solution"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:65e2f000bf590bb1",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: Unconfirmed or conditional wording: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-09T09:57:17Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62266305/wall-street-still-treats-micron-like-a-commodity-stock-analyst-says-thats-a-costly-mistake"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:d24b237152b8fc4c",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-09T11:33:03Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/tech/26/10/62268160/dean-of-valuation-warns-of-ai-cash-drain-4-ways-to-play-the-shift"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:1da145e7f29d8073",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: Unconfirmed or conditional wording: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-09T15:04:46Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/prediction-markets/26/10/62274917/google-could-eat-openais-lunch-warns-cal-newport"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:cb4847b314737e47",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: The company is mentioned, but the rules cannot identify a specific event.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-09T16:28:55Z",
+          "source_urls": [
+            "https://www.benzinga.com/Opinion/26/10/62277859/nvidia-backed-data-center-ipo-collapses-openai-revenue-questions-apple-customers-are-not-price-insensitive"
+          ],
+          "tone": "neutral",
+          "headline_only": false
+        },
+        {
+          "id": "MSFT:other:dced6a548f22b269",
+          "event_type": "other",
+          "claim_kind": "unknown",
+          "summary": "MSFT: Only a vendor symbol tag links this article to the company.",
+          "article_count": 1,
+          "earliest_reported_at": "2026-10-09T17:27:07Z",
+          "source_urls": [
+            "https://www.benzinga.com/markets/equities/26/10/62279599/stock-market-today-nasdaq-100-rebounds-t-mobile-tumbles"
+          ],
+          "tone": "unavailable",
+          "headline_only": false
+        }
+      ]
+    }
+  ]
+}

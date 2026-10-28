@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { API_BASE } from '../config';
 import { CommunityMonitorPanel } from './CommunityMonitorPanel';
 import { StockContextPanel } from './StockContextPanel';
+import { StrategyComparisonPanel } from './StrategyComparisonPanel';
+import { SignalExplorerPanel } from './SignalExplorerPanel';
 import './FinancialSentimentResearchPanel.css';
 
 interface ResearchSource {
@@ -129,10 +131,10 @@ function EvidenceReportPanel({ symbol, revision }: { symbol: string; revision: n
   }, [revision]);
 
   const company = report?.companies.find(item => item.symbol === (reportSymbol ?? symbol)) ?? report?.companies[0];
-  const heading = <div className="fsr-section-heading"><h2 id="fsr-report-title">Automated evidence report</h2><span>Saved prototype output</span></div>;
+  const heading = <div className="fsr-section-heading"><h2 id="fsr-report-title">Archived evidence report</h2><span>Earlier prototype · Separate research track</span></div>;
 
   if (loading) return <section className="fsr-card fsr-report" aria-labelledby="fsr-report-title">{heading}<p className="fsr-help" role="status">Loading the saved evidence report…</p></section>;
-  if (missing) return <section className="fsr-card fsr-report" aria-labelledby="fsr-report-title">{heading}<div className="fsr-message"><strong>Report not generated</strong><p>The prototype has no saved report available. Opening this page does not collect data or run a model.</p></div></section>;
+  if (missing) return <section className="fsr-card fsr-report" aria-labelledby="fsr-report-title">{heading}<div className="fsr-message"><strong>Archived report unavailable</strong><p>The prototype has no saved report available. Opening this page does not collect data or run a model.</p></div></section>;
   if (error || !report || !company) return <section className="fsr-card fsr-report" aria-labelledby="fsr-report-title">{heading}<div className="fsr-message fsr-error" role="alert"><strong>Evidence report unavailable</strong><p>{error ?? 'No valid saved report is available.'}</p><p>No substitute events or analysis are displayed.</p></div></section>;
 
   const prices = company.price_context;
@@ -147,12 +149,12 @@ function EvidenceReportPanel({ symbol, revision }: { symbol: string; revision: n
   const visibleEvents = showingAll ? sortedEvents : (companyEvents.length ? companyEvents : sortedEvents).slice(0, 12);
   return <section className="fsr-card fsr-report" aria-labelledby="fsr-report-title">
     {heading}
-    <p className="fsr-help"><strong>{report.analysis_mode}</strong> · {report.extraction_method}. Rules identify candidate events; pretrained FinBERT classifies text tone. Tone is not a forecast of a stock’s return.</p>
+    <p className="fsr-help">This dated prototype is separate from the current strategy comparison and signal explorer. <strong>{report.analysis_mode}</strong> · {report.extraction_method}. Rules identify candidate events; pretrained FinBERT classifies text tone. Tone is not a forecast of a stock’s return.</p>
     <div className="fsr-report-times"><span>Generated: <time dateTime={report.generated_at}>{reportTime(report.generated_at)}</time></span><span>Prices through: <time dateTime={report.price_asof}>{reportTime(report.price_asof)}</time></span></div>
     <div className="fsr-metrics fsr-report-status">
-      <div><span>Text analysis</span><strong>{report.model_status}</strong><p>Rule extraction and pretrained tone inference.</p></div>
-      <div><span>Price prediction</span><strong>{report.prediction_status}</strong><p>No calibrated probability of a price increase.</p></div>
-      <div><span>Equal-capital A/B</span><strong>{report.ab_status}</strong><p>No trading advantage has been established.</p></div>
+      <div><span>Text analysis in this archive</span><strong>{report.model_status}</strong><p>Rule extraction and pretrained tone inference.</p></div>
+      <div><span>Price-model status in this archive</span><strong>{report.prediction_status}</strong><p>No calibrated probability of a price increase.</p></div>
+      <div><span>A/B status at archive time</span><strong>{report.ab_status}</strong><p>This earlier snapshot does not contain an A/B experiment.</p></div>
     </div>
     <div className="fsr-report-coverage" aria-label="Report coverage">
       <span><strong>{report.coverage.articles_loaded.toLocaleString('en-US')}</strong> articles loaded</span>
@@ -252,15 +254,18 @@ export function FinancialSentimentResearchPanel({ symbol }: { symbol: string }) 
       </div>
     </header>
 
+    <StrategyComparisonPanel revision={revision} />
+    <SignalExplorerPanel revision={revision} />
     <StockContextPanel revision={revision} />
     <EvidenceReportPanel symbol={symbol} revision={revision} />
 
     <details className="fsr-diagnostics">
-      <summary>Data diagnostics <span>Historical audit{status ? ` · ${status.audit_date}` : ''}</span></summary>
+      <summary>Archived data diagnostics <span>Historical audit{status ? ` · ${status.audit_date}` : ''}</span></summary>
     {error ? <div className="fsr-message fsr-error" role="alert"><strong>Research summary unavailable</strong><p>{error}</p><p>No substitute counts or model results are displayed.</p><button className="fsr-reload" onClick={reload}>Retry</button></div> : !status ? <div className="fsr-message" role="status">Loading the saved research summary…</div> : <>
-      <div className="fsr-metrics" aria-label="Research status">
-        <div><span>Model status</span><strong>{status.model_status}</strong><p>Text models and signals require validation.</p></div>
-        <div><span>Evaluation status</span><strong>{status.evaluation_status}</strong><p>No A/B performance claim is established.</p></div>
+      <p className="fsr-help"><strong>Collection audit dated {status.audit_date}.</strong> These archived stages describe that snapshot, not current model-training progress. The saved comparison and signal explorer above report their own experiment versions and dates.</p>
+      <div className="fsr-metrics" aria-label="Archived research status">
+        <div><span>Model status on {status.audit_date}</span><strong>{status.model_status}</strong><p>Status recorded for the original collection audit only.</p></div>
+        <div><span>Evaluation status on {status.audit_date}</span><strong>{status.evaluation_status}</strong><p>Later experiments are reported separately above.</p></div>
         <div><span>Exploratory return labels</span><strong>{Number.isFinite(status.exploratory_labels) ? status.exploratory_labels.toLocaleString('en-US') : 'Unavailable'}</strong><p>{status.labels_are_predictions === false ? 'Realized historical outcomes, not predictions.' : 'Label interpretation has not been confirmed.'}</p></div>
       </div>
 
@@ -278,12 +283,12 @@ export function FinancialSentimentResearchPanel({ symbol }: { symbol: string }) 
         </section>
 
         <section className="fsr-card" aria-labelledby="fsr-roadmap-title">
-          <div className="fsr-section-heading"><h2 id="fsr-roadmap-title">Research progress</h2></div>
-          <p className="fsr-help">Current stage: <strong>{status.current_stage}</strong></p>
+          <div className="fsr-section-heading"><h2 id="fsr-roadmap-title">Archived research roadmap</h2></div>
+          <p className="fsr-help">Stage recorded at audit: <strong>{status.current_stage}</strong></p>
           <ol className="fsr-milestones">{milestones.map((milestone, index) => <li key={milestone.title} className={milestone.title === status.current_stage ? 'fsr-current-stage' : ''}>
-            <span className="fsr-step-number" aria-hidden="true">{index + 1}</span><div><h3>{milestone.title}{milestone.title === status.current_stage && <span>Current</span>}</h3><p>{milestone.description}</p></div>
+            <span className="fsr-step-number" aria-hidden="true">{index + 1}</span><div><h3>{milestone.title}{milestone.title === status.current_stage && <span>Recorded stage</span>}</h3><p>{milestone.description}</p></div>
           </li>)}</ol>
-          <div className="fsr-next-stage"><span>Next stage</span><strong>{status.next_stage ?? 'Persistent collection'}</strong></div>
+          <div className="fsr-next-stage"><span>Next step recorded then</span><strong>{status.next_stage ?? 'Persistent collection'}</strong></div>
         </section>
       </div>
     </>}

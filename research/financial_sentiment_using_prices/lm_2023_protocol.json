@@ -1,0 +1,103 @@
+{
+  "registered_at": "2026-10-21T20:15:49.625854+00:00",
+  "study": "Loughran-McDonald dictionary addition to already-inspected fixed 2023 development comparisons; not a blind test or alpha confirmation",
+  "meaning": "Official Milestone 2 explicitly specifies Loughran-McDonald dictionary; LM does not mean a generic language-model comparator here",
+  "official_course_source": {
+    "url": "https://raw.githubusercontent.com/gpsaggese/gpsaggese.github.io/master/research/ideas/draft.Train_Financial_Sentinment_Analysis_Using_Prices.md",
+    "sha256": "e5c032416b5bae4dbb1e4aab3731ad895e2de0442cac110b9c10571973677f2d"
+  },
+  "source": {
+    "official_page": "https://sraf.nd.edu/loughranmcdonald-master-dictionary/",
+    "version": "Loughran-McDonald_MasterDictionary_1993-2025.csv; official page updated March 2026",
+    "local_root": "reports/financial_sentiment_runs/lm_2023_20261021/source",
+    "files_sha256": {
+      "course_idea.md": "e5c032416b5bae4dbb1e4aab3731ad895e2de0442cac110b9c10571973677f2d",
+      "retrieval_receipt.json": "383e98a1764881022cace002cd23c1f573c0bf5daee08c5eb12f654d0ca5ed0b",
+      "official_dictionary_page.html": "a30888dedc26cd8522a6ca1b3e044ce78ccf54cef7c8f234d37dc7b73334f7e9",
+      "Loughran-McDonald_MasterDictionary_1993-2025.csv": "e2d1328682bab7d2187684fb9f5420bb730401c9eefc00daf835edd203f4859d"
+    },
+    "license_scope": "Official page permits free academic research; local MSML610 academic comparison only. Commercial Quant.ai deployment and redistribution are not authorized by this experiment. No explicit legal acceptance, credentials or paid access used.",
+    "historical_lexicon_availability": "Current 2025 dictionary retrieved 2026, postdates 2023 sample. Use current positive category flags; do not claim reconstruction of a 2023 as-of dictionary."
+  },
+  "companies": [
+    "A",
+    "AMZN",
+    "MSFT"
+  ],
+  "horizons_sessions": [
+    5,
+    10,
+    20
+  ],
+  "targets": [
+    "excess_price_return",
+    "raw_price_return"
+  ],
+  "pools": [
+    "horizon_specific",
+    "common_eligible"
+  ],
+  "test_start": "2023-09-01",
+  "source_date_start": "2023-03-09",
+  "source_date_end_exclusive": "2023-12-01",
+  "entry_delay_sessions": 2,
+  "prior_registration": "research/financial_sentiment_using_prices/multi_horizon_2023_protocol.json",
+  "prior_registration_sha256": "f37d525426e10e87d23651866976d8e4235ccb57a71e87cc61f401ed1eb7031d",
+  "prior_evaluation": "reports/financial_sentiment_runs/multi_horizon_2023_20261021/evaluation",
+  "prior_summary_sha256": "c9adc68c1c598be25a6f2f1eacadb09fc2f7b544959fe2f9de1a14216410363f",
+  "new_models": [
+    "lm_tone_ridge",
+    "price_lm_ridge"
+  ],
+  "score": {
+    "tokenization": "ASCII letter runs [A-Za-z]+, uppercase, discard length <2; no stemming, lemmatization, stopword removal or negation rules",
+    "active_category": "Integer Positive or Negative flag >0 in the current CSV; zero and negative (removed) flags are inactive. No inferred backdating from category-year fields.",
+    "headline_score": "(positive token occurrences - negative token occurrences) / all retained token occurrences; repeated words counted; score bounded [-1,1]",
+    "no_polarity_hit": "With retained tokens but no positive/negative hits, use numeric zero and explicit NoPolarityMatch diagnostic; this is not independently verified neutral tone. Do not remove these rows.",
+    "aggregation": "Recover exact original headlines from source_row_indices, deduplicate identical titles preserving first-seen order as the FinBERT input budget, verify newline-joined text equals saved company-day text, then arithmetic mean of headline scores; no URL/company-name filtering",
+    "unavailable": "Any missing/invalid source title or zero-token headline makes that company-day unavailable; if any train or test row of a case is unavailable, mark both added LM controls Unavailable for the whole case. Keep every existing baseline row/model; never intersect on LM coverage.",
+    "additional_categories": "Master-word match, positive/negative counts, token counts and zero-hit coverage are diagnostics only; no other dictionary categories enter calibration"
+  },
+  "calibration": {
+    "design_lm_tone_ridge": [
+      "lm_score"
+    ],
+    "design_price_lm_ridge": [
+      "prior_open_momentum_5",
+      "prior_open_momentum_20",
+      "lm_score"
+    ],
+    "scaler": "StandardScaler fitted on training rows only, separate by company/horizon/target/pool",
+    "ridge_alpha": 10.0,
+    "solver": "lsqr",
+    "tol": 1e-08,
+    "class_neutral_band": 0.005,
+    "no_hyperparameter_search": true
+  },
+  "sample_policy": "Exactly reuse each registered prior case train/test ordered IDs; common pool remains eligibility-only intersection already fixed across horizons. No source retrieval, repricing, selective removal or baseline refit. Prior outcomes already inspected.",
+  "metrics": [
+    "MAE",
+    "RMSE",
+    "direction_accuracy",
+    "price_class_balanced_accuracy",
+    "price_class_macro_f1",
+    "MAE_relative_to_same_case_train_mean",
+    "paired absolute losses versus existing controls, descriptive only"
+  ],
+  "assumed_roundtrip_cost_bps": [
+    0,
+    10,
+    20
+  ],
+  "cost_policy": "Reuse original non-overlap interval IDs per case; long company if predicted selected target >0 else cash; preserve always-company/SPY/cash. Original costs are assumed execution bps, not actual charges. Raw/excess targets both exclude dividends; execution-time certification false; no pooled company capital curve or horizon selection.",
+  "strict_total_return_track": "Unchanged, zero eligible labels inherited; no historical capture timestamps invented",
+  "resource_budget": {
+    "wall_seconds": 300,
+    "outer_seconds": 330,
+    "cpu_threads": 4,
+    "case_comparisons": 36,
+    "new_tensor_inferences": 0,
+    "new_data_requests_during_evaluation": 0
+  },
+  "new_LM_outcomes_inspected_before_registration": false
+}

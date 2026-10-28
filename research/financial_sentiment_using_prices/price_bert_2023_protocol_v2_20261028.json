@@ -1,0 +1,178 @@
+{
+  "schema_version": 2,
+  "registered_at": "2026-10-28T22:26:41.712983+00:00",
+  "evaluation_kind": "retrospective_development",
+  "model": "price_label_bert",
+  "supersedes": {
+    "registration": "research/financial_sentiment_using_prices/transformer_2023_protocol.json",
+    "sha256": "9ffb9a7e766e45f80ca28671259e10bb47709797254ae5a6a73f361e69a2202b",
+    "scope": "New bounded download/install authorization and official BERT checkpoint; previous no-download registration and its 0-step artifacts remain unchanged."
+  },
+  "companies": [
+    "A",
+    "AMZN",
+    "MSFT"
+  ],
+  "horizon_sessions": 10,
+  "target": "excess_price_return",
+  "pool": "horizon_specific",
+  "test_start": "2023-09-01",
+  "entry_delay_sessions": 2,
+  "prepared": "reports/financial_sentiment_runs/transformer_acceptance_20261022/prepared",
+  "tokenized": "reports/financial_sentiment_runs/tokenizer_export_20261023_optimized/export_a",
+  "baseline_evaluation": "reports/financial_sentiment_runs/lm_2023_20261021/evaluation",
+  "checkpoint": {
+    "repository": "google-bert/bert-base-uncased",
+    "revision": "86b5e0934494bd15c9632b12f734a8a67f723594",
+    "license": "apache-2.0",
+    "files": {
+      "config.json": {
+        "sha256": "7160e1553ad2ca51d8c1cb066be533db31826e12d173824c1bb0cb1a4f187d20",
+        "bytes": 570,
+        "url": "https://huggingface.co/google-bert/bert-base-uncased/resolve/86b5e0934494bd15c9632b12f734a8a67f723594/config.json",
+        "remote_lfs_sha256": null
+      },
+      "tokenizer.json": {
+        "sha256": "ce64fce797c24f68df90b40a3f74f579b336a493db14bd583fd520ea0d8c9a98",
+        "bytes": 466062,
+        "url": "https://huggingface.co/google-bert/bert-base-uncased/resolve/86b5e0934494bd15c9632b12f734a8a67f723594/tokenizer.json",
+        "remote_lfs_sha256": null
+      },
+      "tokenizer_config.json": {
+        "sha256": "a025160ef0431f1a392f6f050c1310f4c5d9fb6f275932dbccba73c4d214bf10",
+        "bytes": 48,
+        "url": "https://huggingface.co/google-bert/bert-base-uncased/resolve/86b5e0934494bd15c9632b12f734a8a67f723594/tokenizer_config.json",
+        "remote_lfs_sha256": null
+      },
+      "vocab.txt": {
+        "sha256": "07eced375cec144d27c900241f3e339478dec958f92fddbc551f295c992038a3",
+        "bytes": 231508,
+        "url": "https://huggingface.co/google-bert/bert-base-uncased/resolve/86b5e0934494bd15c9632b12f734a8a67f723594/vocab.txt",
+        "remote_lfs_sha256": null
+      },
+      "README.md": {
+        "sha256": "9187b6018ea0010d884e78e098e328faa1b88b301570d0cce606bb35e4067e17",
+        "bytes": 10517,
+        "url": "https://huggingface.co/google-bert/bert-base-uncased/resolve/86b5e0934494bd15c9632b12f734a8a67f723594/README.md",
+        "remote_lfs_sha256": null
+      },
+      "model.safetensors": {
+        "sha256": "68d45e234eb4a928074dfd868cead0219ab85354cc53d20e772753c6bb9169d3",
+        "bytes": 440449768,
+        "url": "https://huggingface.co/google-bert/bert-base-uncased/resolve/86b5e0934494bd15c9632b12f734a8a67f723594/model.safetensors",
+        "remote_lfs_sha256": "68d45e234eb4a928074dfd868cead0219ab85354cc53d20e772753c6bb9169d3"
+      }
+    },
+    "local_directory": "reports/financial_sentiment_runs/price_bert_assets_20261028",
+    "official_model_card": "https://huggingface.co/google-bert/bert-base-uncased",
+    "loading": "local safetensors only; no pickle, remote code, or automatic download while training"
+  },
+  "bound_files_sha256": {
+    "research/financial_sentiment_using_prices/train_price_bert.py": "5c92bd7cce7adaa030928da8513f8f3d54018662d4c82bfb5c5d5551118bebc0",
+    "research/financial_sentiment_using_prices/price_transformer.py": "7b2602e76fe7bc175cf7d24960108d33ed8478a60937cccc9f884efac3a1942b",
+    "research/financial_sentiment_using_prices/grouped_collation.py": "765b06485369cb23600815327ceda3051585a14aefaae83005471d1b6bcd3d8d",
+    "research/financial_sentiment_using_prices/grouped_loss.py": "849840f264fdf0f832de0afa7b20da3a90006246f97d392cbc392a6f6484d47a",
+    "research/financial_sentiment_using_prices/run_historical.py": "52df88599cb36d4892c1dee4b76e98fddc8661dc1a7c6524deff4c30323cf739",
+    "research/financial_sentiment_using_prices/price_labels.py": "0331ce178a6237b127d1b2f82ed8a9593c074a8bdc1959d82ec11992a2e594fc",
+    "research/financial_sentiment_using_prices/tests/test_train_price_bert.py": "f951a4a78a1eaca7eee95223556358deca62117179a58f54a83adf48f93c2470",
+    "research/financial_sentiment_using_prices/requirements-price-bert.txt": "8ab6613bf7b3143300841364c509e740b9c4c5b4f182d7764385248c1e64df2e",
+    "research/financial_sentiment_using_prices/transformer_2023_protocol.json": "9ffb9a7e766e45f80ca28671259e10bb47709797254ae5a6a73f361e69a2202b",
+    "research/financial_sentiment_using_prices/lm_2023_protocol.json": "3b86571ca47601ebd56b86d2527dcbfa6eea0c3e43eefdf9e7492946fe7c6343",
+    "reports/financial_sentiment_runs/transformer_acceptance_20261022/prepared/preparation_receipt.json": "a3569882c73148a4d565892eed027ceb1f88fd85750ce14d84c9aa1c54dfc4af",
+    "reports/financial_sentiment_runs/transformer_acceptance_20261022/prepared/training_packet.json": "8de01e7754064af6f575f1c5bde301db56c48f99bbc21a225cf9880e00bad4ad",
+    "reports/financial_sentiment_runs/transformer_acceptance_20261022/prepared/heldout_text_packet.json": "f2129c5bdcd7acd273cf6181bbad87220d8859a8cb1c66c525ee8b1024203adc",
+    "reports/financial_sentiment_runs/tokenizer_export_20261023_optimized/export_a/tokenization_receipt.json": "0bd17a7cecfe18b831226ddd1a64ddce8820f6a6846c6af466a08ae32aad4090",
+    "reports/financial_sentiment_runs/tokenizer_export_20261023_optimized/export_a/training_tokens.json": "46a8233d013730acf99fa768c34d0c57a41aad23f3fa4d0fb664e32d4a3014e8",
+    "reports/financial_sentiment_runs/tokenizer_export_20261023_optimized/export_a/heldout_tokens.json": "5ab2ad0db1c9c4bb366e10ae74a29ff4f5d6cdb0803a72c0a345029585166297",
+    "reports/financial_sentiment_runs/lm_2023_20261021/evaluation/summary.json": "a34f5e94fc999e7480324cc978ac7db49ec0b0f1f68dadb37963c1c01e6ab538",
+    "reports/financial_sentiment_runs/lm_2023_20261021/evaluation/A/h10/horizon_specific/excess_price_return/predictions.json": "32c1ab2873d95f43009b7cff251e2915a639451950f2a6d20bf2f17b410ed57d",
+    "reports/financial_sentiment_runs/lm_2023_20261021/evaluation/A/h10/horizon_specific/excess_price_return/report.json": "07fc61b41ab6b839b4fe16f5fa15f98ccc417a3d3ca993de07b4761ed07e043b",
+    "reports/financial_sentiment_runs/lm_2023_20261021/evaluation/AMZN/h10/horizon_specific/excess_price_return/predictions.json": "edb01f6f3d2acd18484204bb6700fbaa06cbadd2fa2a35975769e37d64e195a9",
+    "reports/financial_sentiment_runs/lm_2023_20261021/evaluation/AMZN/h10/horizon_specific/excess_price_return/report.json": "8a19c4a6c8aef7c311a9f0c03f986113a64c309534c1b28c3fa902bb61f0e174",
+    "reports/financial_sentiment_runs/lm_2023_20261021/evaluation/MSFT/h10/horizon_specific/excess_price_return/predictions.json": "36f0f6ecd0c94829512a8961bf0890f066a4263fe8b34fcbe1795b4082f45663",
+    "reports/financial_sentiment_runs/lm_2023_20261021/evaluation/MSFT/h10/horizon_specific/excess_price_return/report.json": "b0c7330922b741c9208d461bc24f4a8a688533c2a6bd54169467dd201d784a85"
+  },
+  "packages": {
+    "torch": "2.2.2",
+    "transformers": "4.41.2",
+    "safetensors": "0.4.5",
+    "tokenizers": "0.19.1",
+    "huggingface-hub": "0.23.5",
+    "numpy": "1.26.4",
+    "psutil": "7.1.3"
+  },
+  "runtime": {
+    "python": "3.11.3",
+    "venv": "research/financial_sentiment_using_prices/.venv-price-bert",
+    "system_site_packages": true,
+    "note": "Reuses existing CPU torch/numpy/psutil; fixed HF dependencies are isolated. This environment is not compatible with inherited Gradio and is never used for the app."
+  },
+  "architecture": {
+    "base": "google-bert/bert-base-uncased; 12 layers, hidden768, float32",
+    "updated": [
+      "backbone.encoder.layer.11.*",
+      "head.weight",
+      "head.bias"
+    ],
+    "frozen": "Embeddings and encoder layers0..10; original MLM/NSP classifiers and unused pooler discarded",
+    "dropout": "eval mode throughout; deterministic no-dropout gradients"
+  },
+  "inputs": {
+    "max_tokens": 64,
+    "headline_chunk_size": 8,
+    "truncation_allowed": false,
+    "aggregation": "All exact distinct original headlines per company-day, separately encoded then mean scalar prediction; same headline budget as controls",
+    "loss": "MSE of company-day mean prediction versus normalized day target; one equal-weight step per day, no independent headline-label replication",
+    "failure": "Any missing or overlength required title makes whole company comparator unavailable; preserve baseline rows"
+  },
+  "training": {
+    "seed": 610,
+    "epochs": 1,
+    "optimizer": "AdamW",
+    "learning_rate": 2e-05,
+    "weight_decay": 0.0,
+    "gradient_clip_norm": 1.0,
+    "target_scaler": "Company training mean/population std only; scale1 if std<1e-8",
+    "company_models": "Independent reset from same checkpoint, fixed company order; training-only seed610+index shuffle",
+    "max_total_steps": 272,
+    "selection": "None; no validation/test-driven checkpoint or hyperparameter selection",
+    "headline_chunk_size": 8
+  },
+  "resources": {
+    "device": "cpu",
+    "threads": 2,
+    "interop_threads": 1,
+    "max_rss_bytes": 3221225472,
+    "min_available_bytes": 2147483648,
+    "train_seconds": 1800,
+    "evaluation_seconds": 600,
+    "outer_seconds": 2600
+  },
+  "stop_rule": "Check budgets before every group and headline chunk and optimizer step; outer timer interrupts. Nonfinite, coverage, timing or memory failure retains actual completed-step receipt and forbids heldout evaluation until all 272 steps and all3 company epochs complete. No automatic retry/budget extension/model substitution.",
+  "evaluation": {
+    "new_model": "price_label_bert",
+    "baselines": "Eight saved same-row controls; exact predictions/report bytes hash-bound; never refitted",
+    "metrics": [
+      "MAE",
+      "RMSE",
+      "direction_accuracy",
+      "price_class_balanced_accuracy",
+      "price_class_macro_f1"
+    ],
+    "class_band": 0.005,
+    "assumed_roundtrip_bps": [
+      0,
+      10,
+      20
+    ],
+    "incomplete": "Unavailable new-model metrics/costs, never zero or synthetic market results",
+    "heldout_policy": "Heldout file hashes/IDs known beforehand; heldout feature JSON first parsed after all3 fits. All heldout predictions saved before heldout outcome JSON is parsed."
+  },
+  "interpretation": [
+    "2023 retrospective retrieval availability is unverified; development research only.",
+    "This trains a 10-session relative price regressor, not a human sentiment classifier.",
+    "No tuning, model selection, or trading deployment based on this run.",
+    "Prior frozen FinBERT is a distinct unchanged comparator.",
+    "LM comparator dictionary has separate research-use and retrospective-version constraints."
+  ]
+}

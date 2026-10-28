@@ -220,13 +220,15 @@ class LiveTradingRunner:
 
     def _quant_model(self):
         from app.quant_policy import PolicyModel
+        import hashlib
         backend_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
         path = os.environ.get("QUANT_POLICY_PATH") or self.strategy_params["quant_policy_path"]
         path = path if os.path.isabs(path) else os.path.join(backend_dir, path)
         modified = os.stat(path).st_mtime_ns
         if getattr(self, "_quant_model_key", None) != (path, modified):
-            with open(path) as handle:
-                kind = json.load(handle).get("kind")
+            with open(path, "rb") as handle:
+                artifact_bytes = handle.read()
+                kind = json.loads(artifact_bytes).get("kind")
             if kind == "calibrated_direction_holding_v1":
                 from app.research.calibrated_holding import CalibratedHoldingModel
                 self._quant_fitted_model = CalibratedHoldingModel.load(path)
@@ -235,6 +237,9 @@ class LiveTradingRunner:
                 self._quant_fitted_model = HoldingModel.load(path)
             else:
                 self._quant_fitted_model = PolicyModel.load(path)
+            if os.stat(path).st_mtime_ns != modified:
+                raise ValueError("Policy artifact changed while loading")
+            self._quant_model_sha256 = hashlib.sha256(artifact_bytes).hexdigest()
             self._quant_model_key = (path, modified)
             self._quant_last_bar = None
         return self._quant_fitted_model
@@ -243,6 +248,27 @@ class LiveTradingRunner:
         if not hasattr(self, "_quant_execution_lock"):
             self._quant_execution_lock = threading.RLock()
         return self._quant_execution_lock
+
+    def _lifecycle_mutex(self):
+        if not hasattr(self, "_lifecycle_lock"):
+            self._lifecycle_lock = threading.RLock()
+        return self._lifecycle_lock
+
+    def _record_execution_receipt(self, payload):
+        directory = getattr(self, "_decision_audit_directory", None)
+        if directory is None:
+            # Supports isolated legacy unit harnesses which bypass __init__.
+            # Every normally constructed runner configures the private journal.
+            return True
+        from app.broker.decision_journal import append_receipt
+        try:
+            self._decision_audit_status = append_receipt(directory, payload)
+            return True
+        except (OSError, ValueError, TypeError) as exc:
+            self._decision_audit_status = {"status": "unavailable", "error_type": type(exc).__name__,
+                                           "new_risk_blocked": True}
+            self.add_log("Decision receipt unavailable; new risk is blocked until the audit can be saved.")
+            return False
 
     def _holding_l1_adjustment(self, model, weights, diagnostics, current, now, allowed, shortable, liquidation_at=None):
         """Optional learned L1 residual; incompatible data preserves base decisions."""
@@ -273,6 +299,9 @@ class LiveTradingRunner:
 
     def _run_quant_policy_cycle(self):
         with self._execution_mutex():
+            if getattr(self, "is_running", None) is False:
+                self._quant_status = {**self._quant_status, "state": "stopped"}
+                return
             return self._run_quant_policy_cycle_unlocked()
 
     def _run_quant_policy_cycle_unlocked(self):
@@ -401,12 +430,35 @@ class LiveTradingRunner:
                                  "model": model.spec.name, "status": "model_forecast"}
                         for symbol in allowed_symbols
                     }
+                    from app.broker.decision_journal import pseudonym
+                    self._quant_decision_id = pseudonym(cycle_id)
+                    self._quant_decision_audited = self._record_execution_receipt({
+                        "kind": "decision", "decision_id": self._quant_decision_id,
+                        "model_name": model.spec.name,
+                        "model_sha256": getattr(self, "_quant_model_sha256", "unavailable"),
+                        "trained_before": str(model.trained_before), "bar_open_at": bar.isoformat(),
+                        "signal_cutoff_at": (bar + pd.Timedelta(minutes=5)).isoformat(),
+                        "broker_clock_at": now.isoformat(),
+                        "horizon_minutes": 5 * float(getattr(model.spec, "horizon_bars", 1)),
+                        "expected_gross_return_bps": {s: float(forecast_mu[s]) * 10000 for s in allowed_symbols},
+                        "current_weights": {s: float(current[s]) for s in allowed_symbols},
+                        "target_weights": {s: float(weights[s]) for s in allowed_symbols},
+                        "target_shares": {s: int(self._quant_targets[s]) for s in allowed_symbols},
+                        "bar_close_prices": {s: float(prices[s]) for s in allowed_symbols},
+                        "input_sha256": {s: pseudonym(frame.to_json(date_format="iso", orient="split")) for s, frame in frames.items()},
+                        "assumed_cost_bps_per_side": float(model.spec.cost_bps),
+                        "cost_verified": False, "text_applied": False,
+                    })
+                    if not self._quant_decision_audited:
+                        # Retry a failed receipt on the next reconciliation cycle.
+                        self._quant_last_bar = None
                 self._quant_status = {"state": "ready", "model": model.spec.name,
                                       "trained_before": model.trained_before,
                                       "bar_time": bar.isoformat(), "target_shares": dict(self._quant_targets),
                                       "unmodeled_watchlist_symbols": sorted(watchlist.difference(symbols)),
                                       "decision_diagnostics": dict(getattr(self, "_quant_decision_diagnostics", {})),
                                       "gross_limit": model.spec.gross_limit}
+                self._quant_status["decision_audit"] = dict(getattr(self, "_decision_audit_status", {}))
             except Exception as exc:
                 self.ticker_scores = {}
                 self.intraday_opportunities = {}
@@ -423,6 +475,9 @@ class LiveTradingRunner:
                                  cost_bps=float(model.spec.cost_bps) if model else 0,
                                  cycle_id=cycle_id)
         for intent in intents:
+            if not intent.reducing and not getattr(self, "_quant_decision_audited", True):
+                self._quant_status.update(state="decision_audit_unavailable", reason="New risk requires a saved decision receipt")
+                continue
             prior = next((submission for submission in reversed(list(self._quant_submissions.values()))
                           if submission.get("base_client_order_id") == intent.client_order_id), None)
             if prior and (not prior.get("resolved") or prior.get("status") == "filled"):
@@ -441,8 +496,26 @@ class LiveTradingRunner:
                 self._quant_status = {"state": "session_boundary_recheck", "clock": sending_clock["timestamp"],
                                       "reason": "Session changed during this cycle; next cycle reconciles inventory before closing"}
                 return
+            if not flatten and bar != sending_time.floor("5min") - pd.Timedelta(minutes=5):
+                self._quant_clock = sending_clock
+                self._quant_status = {"state": "stale_decision_recheck", "clock": sending_time.isoformat(),
+                                      "signal_bar": bar.isoformat(),
+                                      "reason": "A newer completed bar became available; recompute before submitting"}
+                return
             attempt = int(prior.get("attempt", 0)) + 1 if prior else 1
             client_id = intent.client_order_id if attempt == 1 else f"{intent.client_order_id[:36]}-{attempt}"
+            from app.broker.decision_journal import pseudonym
+            # Scheduled liquidation is its own decision; never attach its fill
+            # to a previous intraday forecast still cached on this runner.
+            receipt_id = pseudonym(cycle_id) if flatten else getattr(self, "_quant_decision_id", pseudonym(cycle_id))
+            intent_saved = self._record_execution_receipt({"kind": "order_intent", "decision_id": receipt_id,
+                "intent_reason": "scheduled_flatten" if flatten else "policy_rebalance",
+                "client_order_id": client_id, "symbol": intent.symbol, "side": intent.side,
+                "quantity": float(intent.quantity), "reducing": bool(intent.reducing),
+                "broker_clock_at": sending_time.isoformat(), "cost_verified": False})
+            if not intent_saved and not intent.reducing:
+                self._quant_status.update(state="decision_audit_unavailable", reason="New risk requires a saved order-intent receipt")
+                continue
             submission = {"client_order_id": client_id, "base_client_order_id": intent.client_order_id,
                           "attempt": attempt, "ticker": intent.symbol,
                           "qty": intent.quantity, "filled_qty": 0, "side": intent.side,
@@ -451,6 +524,11 @@ class LiveTradingRunner:
             self._save_liquidation_submissions()
             result = self.adapter.submit_market_order(intent.symbol, intent.quantity, intent.side,
                                                       price=execution_marks[intent.symbol], client_order_id=client_id)
+            self._record_execution_receipt({"kind": "order_result", "decision_id": receipt_id,
+                "client_order_id": client_id, "symbol": intent.symbol,
+                "status": str(result.get("status") or "submission_unknown"),
+                "submission_success": result.get("success") is True,
+                "broker_order_ref": pseudonym(result["order_id"]) if result.get("order_id") else "unavailable"})
             submission.update(order_id=result.get("order_id"), status=result.get("status") or "submission_unknown")
             if result.get("error"):
                 submission["error"] = result["error"]
@@ -477,7 +555,9 @@ class LiveTradingRunner:
             await asyncio.sleep(float(self.strategy_params["orders_sync_interval_seconds"]))
 
     def __init__(self):
-        self.is_running = True
+        # Construction and API startup are display/read operations. Execution
+        # begins only after an explicit start (or user toggle-to-start) request.
+        self.is_running = False
         self.logs = []
         self.action_logs = []
         self.trade_history = []
@@ -495,6 +575,9 @@ class LiveTradingRunner:
         self.loop_task = None
         self.order_sync_thread = None
         self._quant_execution_lock = threading.RLock()
+        self._lifecycle_lock = threading.RLock()
+        self._decision_audit_directory = os.path.join(os.path.dirname(self.history_file), ".runtime_state", "decision_audit")
+        self._decision_audit_status = {"status": "not_started"}
         self._orders_lock = threading.RLock()
         self._orders_refresh_lock = threading.Lock()
         self._orders_cache = []
@@ -504,14 +587,13 @@ class LiveTradingRunner:
 
         self.strategy_params = self._quant_policy_defaults()
         self.ticker_scores = {}
-        self._quant_status = {"state": "initializing"}
+        self._quant_status = {"state": "stopped", "reason": "Explicit start request required"}
         self._quant_submissions = {}
         self._quant_last_bar = None
         self._quant_targets = {}
         self._loaded_strategy_version = None
         self.load_runner_config()
-        self.add_log("Quant policy execution initialized; model forecasts and actual broker fills are reported separately.")
-        self.start()
+        self.add_log("Quant policy ready in stopped mode; an explicit start request is required for execution.")
 
 
     def _bg_refresh_account(self):
@@ -805,6 +887,10 @@ class LiveTradingRunner:
 
 
     def start(self, strategy_params: Optional[Dict] = None, tickers: Optional[List[str]] = None, **kwargs):
+        with self._lifecycle_mutex():
+            return self._start_locked(strategy_params=strategy_params, tickers=tickers, **kwargs)
+
+    def _start_locked(self, strategy_params: Optional[Dict] = None, tickers: Optional[List[str]] = None, **kwargs):
         if getattr(self, '_loop_thread', None) is not None and self._loop_thread.is_alive():
             self.add_log("[Warning] AI Quant Bot is already running.")
             return False
@@ -821,15 +907,20 @@ class LiveTradingRunner:
         if tickers:
             self.update_tickers(tickers)
 
-        self.save_runner_config()
-        
         self.init_alpaca_adapter()
         if self._broker_connection["connected"]:
             mode = "Paper" if self._broker_connection["is_paper"] else "Live"
             self.add_log(f"Broker {mode} account verified using {self._broker_connection['credential_source']} credentials.")
         else:
             self.add_log(f"[Execution disconnected] {self._broker_connection['reason']}")
+            self.is_running = False
+            self._quant_status = {"state": "unavailable", "reason": self._broker_connection["reason"],
+                                  "execution_connected": False}
+            self.save_runner_config()
+            return False
         self.is_running = True
+        self._quant_status = {"state": "starting", "reason": "Explicit start request accepted"}
+        self.save_runner_config()
         self._start_order_sync_worker()
         self.add_log(f"Execution loop started across {len(self.active_tickers)} tickers; broker_connected={self._broker_connection['connected']}.")
         
@@ -1177,24 +1268,30 @@ class LiveTradingRunner:
             return {"success": False, "error": err_msg}
 
     def stop(self):
-        if not self.is_running:
-            self.add_log("[Notice] AI Quant Bot is paused in standby mode.")
-            return False
-        self.is_running = False
-        if self.loop_task:
-            self.loop_task.cancel()
-            self.loop_task = None
-        self.save_runner_config()
-        self.add_log("🤖 [AI Engine Reload] Configuration saved, background worker ready.")
-        return True
+        # Serialize lifecycle changes and let an in-flight execution cycle finish
+        # before acknowledging stop. No order is canceled or position closed here.
+        with self._lifecycle_mutex(), self._execution_mutex():
+            if not self.is_running:
+                self.add_log("[Notice] AI Quant Bot is paused in standby mode.")
+                return False
+            self.is_running = False
+            if self.loop_task:
+                self.loop_task.cancel()
+                self.loop_task = None
+            self._quant_status = {**self._quant_status, "state": "stopped",
+                                  "reason": "Explicit stop request accepted"}
+            self.save_runner_config()
+            self.add_log("Execution stopped; existing broker orders and inventory are unchanged.")
+            return True
 
     def toggle(self, strategy_params: Optional[Dict] = None, tickers: Optional[List[str]] = None) -> Dict:
         if self.is_running:
             self.stop()
             return {"status": "stopped", "is_running": False, "message": "Manually stopped AI Quant Trading Bot"}
         else:
-            self.start(strategy_params=strategy_params, tickers=tickers)
-            return {"status": "started", "is_running": True, "message": "Manually started AI Quant Trading Bot"}
+            started = self.start(strategy_params=strategy_params, tickers=tickers)
+            return {"status": "started" if started else "not_started", "is_running": self.is_running,
+                    "message": "Manually started AI Quant Trading Bot" if started else "Execution did not start; inspect connection and worker status"}
 
     def submit_extended_hours_order(self, symbol: str, qty: int, side: str, limit_price: float) -> Dict:
         with self._execution_mutex():
@@ -1259,6 +1356,7 @@ class LiveTradingRunner:
             "monitored_tickers": self.active_tickers,
             "strategy_params": self.strategy_params,
             "quant_policy": self._quant_status,
+            "decision_audit": dict(getattr(self, "_decision_audit_status", {"status": "not_started"})),
             "logs_count": len(self.logs),
             "orders": orders_snapshot["orders"],
             "orders_meta": {

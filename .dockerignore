@@ -5,6 +5,8 @@
 **/.env.*
 .venv
 **/.venv
+**/.venv-*
+**/.pytest_cache
 venv
 backend/data_cache
 *.log
@@ -17,3 +19,5 @@ reports/alpha_refresh_20261007/live_snapshot.json
 reports/alpha_refresh_20261007/runtime_state.json
 reports/alpha_refresh_20261007/**/*.csv.gz
 reports/trading_logic_audit_20261002/audit.json
+reports/quant_logic_review_20261028
+reports/financial_sentiment_signal_explorer.json

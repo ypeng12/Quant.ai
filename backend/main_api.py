@@ -11,6 +11,7 @@ from fastapi import FastAPI, HTTPException, Query, WebSocket, WebSocketDisconnec
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, HTMLResponse
+from app.public_read_only import PublicReadOnlyMiddleware
 from pydantic import BaseModel
 from typing import Optional, List
 import uvicorn
@@ -56,6 +57,9 @@ from app.broker.live_runner import LiveTradingRunner
 from app.news_monitor import list_items as list_news_items, source_status as news_source_status, start_monitor as start_news_monitor, stop_monitor as stop_news_monitor
 from app.community_monitor import snapshot as community_snapshot
 from app.financial_sentiment_research import router as financial_sentiment_research_router
+from app.financial_sentiment_comparison import router as financial_sentiment_comparison_router
+from app.financial_sentiment_context import router as financial_sentiment_context_router
+from app.financial_sentiment_signals import router as financial_sentiment_signals_router
 
 class LiveStartRequest(BaseModel):
     params: Optional[dict] = None
@@ -77,20 +81,12 @@ class ExtendedHoursOrderRequest(BaseModel):
 
 app = FastAPI(title="Quant.ai API Server")
 app.include_router(financial_sentiment_research_router)
+app.include_router(financial_sentiment_comparison_router)
+app.include_router(financial_sentiment_context_router)
+app.include_router(financial_sentiment_signals_router)
 
-# Instantiate live trading background runner
+# Initialize the runner in standby. Trading starts only through an explicit request.
 live_runner = LiveTradingRunner()
-
-@app.on_event("startup")
-def auto_start_live_runner():
-    """
-    后端服务启动时，自动初始化开启 AI 量化托管交易机器人（开盘状态由 Alpaca 官方交易所 API 实时判定）。
-    """
-    try:
-        live_runner.start()
-        print("[System Startup] 🚀 AI 量化托管交易机器人已在后台自动启动上线（支持多空双向全自动交易）！")
-    except Exception as e:
-        print(f"[System Startup Warning] 自动启动交易机器人异常: {e}")
 
 @app.on_event("startup")
 def auto_start_news_monitor():
@@ -129,6 +125,9 @@ async def track_latency(request, call_next):
     if len(request_latencies) > 10000:  # 只保留最近10000条
         request_latencies.pop(0)
     return response
+
+# Public Spaces expose research views only. CORS must wrap the denial response.
+app.add_middleware(PublicReadOnlyMiddleware)
 
 # 允许跨域请求 (CORS)，方便 React 前端调用
 app.add_middleware(

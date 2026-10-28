@@ -32,6 +32,10 @@ class CollectionError(RuntimeError):
     """A capture failed; its manifest and any received pages remain on disk."""
 
 
+class OutsidePublicationWindow(CollectionError):
+    """A valid vendor record is outside the registered publication window."""
+
+
 def _utc_now() -> datetime:
     return datetime.now(timezone.utc)
 
@@ -102,8 +106,10 @@ def _normalize(article: dict, received_at: str, start: datetime, end: datetime) 
     if not isinstance(article.get("symbols"), list) or any(not isinstance(s, str) for s in article["symbols"]):
         raise CollectionError("News response contains invalid symbol tags")
     created, updated = _parse_timestamp(article["created_at"]), _parse_timestamp(article["updated_at"])
-    if updated < created or not start <= created <= end:
-        raise CollectionError("Article publication/update timestamps violate the requested window")
+    if updated < created:
+        raise CollectionError("Article update precedes its publication timestamp")
+    if not start <= created <= end:
+        raise OutsidePublicationWindow("Article publication is outside the requested window")
     return {
         "id": str(article["id"]),
         "headline": re.sub(r"\s+", " ", html.unescape(article["headline"])).strip(),
@@ -149,6 +155,10 @@ def collect_research(
     file. A news page cap returns status 'truncated', never 'complete'. Duplicate
     news IDs retain the last archived occurrence and that occurrence's receipt
     time, matching read_inputs(); duplicate counts remain visible in summaries.
+    Valid records created outside the requested window are retained in the raw
+    response and an explicit rejected-record audit. A vendor may return a recent
+    revision of an older article. That does not silently change our publication
+    window into an update-time window. Malformed records still fail the capture.
     """
     symbols = _symbols(symbols)
     start, end = _window(start_date, end_date)
@@ -173,11 +183,13 @@ def collect_research(
         "status": "not_started", "pagination_complete": False, "truncated": False,
         "pages_received": 0, "raw_article_rows": 0, "unique_article_ids": 0,
         "duplicate_rows": 0, "duplicate_ids": 0, "changed_duplicate_rows": 0,
+        "accepted_article_rows": 0, "rejected_article_rows": 0,
         "max_pages": max_news_pages, "page_size": 50,
         "duplicate_resolution": "Last archived occurrence and its response receipt time.",
         "coverage_scope": "The bounded vendor query, not a guarantee of all market news.",
         "historical_availability_verified": False,
     }
+    rejected_records = []
     manifest = {
         "schema_version": 1, "status": "running", "created_at": started,
         "analysis_asof": _stamp(end), "source": "alpaca_read_only_market_data",
@@ -193,9 +205,11 @@ def collect_research(
         "requests": [], "news_summary": news_summary,
         "bars_summary": {"status": "not_started", "pagination_complete": False},
         "historical_availability_verified": False,
+        "normalization_policy": "created_at within the inclusive requested window; valid outside-window records remain in raw responses and the rejected-record audit; malformed records fail the capture",
     }
 
     def save_manifest():
+        manifest["rejected_records_sha256"] = _save(output / "news_rejected_records.json", rejected_records)
         _save(output / "manifest.json", manifest)
         _save(output / "news_summary.json", news_summary)
 
@@ -270,8 +284,20 @@ def collect_research(
                 raise CollectionError("News response must contain a news list")
             news_summary["pages_received"] += 1
             news_summary["raw_article_rows"] += len(payload["news"])
-            for raw in payload["news"]:
-                article = _normalize(raw, received, start, end)
+            for row_index, raw in enumerate(payload["news"]):
+                try:
+                    article = _normalize(raw, received, start, end)
+                except OutsidePublicationWindow:
+                    rejected_records.append({
+                        "reason": "publication_outside_requested_window",
+                        "file": f"news_raw_{page:03d}.json", "row_index": row_index,
+                        "id": str(raw["id"]), "created_at": raw["created_at"],
+                        "updated_at": raw["updated_at"], "response_received_at": received,
+                        "updated_within_requested_window": start <= _parse_timestamp(raw["updated_at"]) <= end,
+                    })
+                    news_summary["rejected_article_rows"] += 1
+                    continue
+                news_summary["accepted_article_rows"] += 1
                 identity = article["id"]
                 if identity in articles:
                     news_summary["duplicate_rows"] += 1

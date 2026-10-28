@@ -1,0 +1,75 @@
+.signal-explorer { color: var(--text-primary, #e2e8f0); }
+.signal-explorer-tracks { margin: 18px 0; font-size: 13px; }
+.signal-explorer-tracks summary, .signal-explorer-details summary { cursor: pointer; color: var(--text-primary, #e2e8f0); }
+.signal-explorer-track-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 12px; }
+.signal-explorer-track-grid article { border: 1px solid rgba(148, 163, 184, .15); border-radius: 9px; padding: 13px 15px; }
+.signal-explorer-track-grid h3 { font-size: 13px; margin: 0 0 8px; }
+.signal-explorer-track-grid strong { display: block; color: #a5b4fc; font-size: 13px; }
+.signal-explorer-track-grid span, .signal-explorer-track-grid p { font-size: 12px; color: var(--text-secondary, #94a3b8); line-height: 1.6; }
+.signal-explorer-controls { display: flex; flex-wrap: wrap; gap: 12px 20px; margin: 18px 0; }
+.signal-explorer-controls label { display: flex; flex-direction: column; gap: 7px; font-size: 12px; color: var(--text-secondary, #94a3b8); }
+.signal-explorer-controls select { min-width: 140px; padding: 9px 12px; background: var(--bg-secondary, #142033); color: var(--text-primary, #e2e8f0); border: 1px solid rgba(148, 163, 184, .3); border-radius: 7px; font: inherit; }
+.signal-explorer-time { display: grid; grid-template-columns: minmax(220px, 1fr) auto; gap: 10px 20px; padding: 16px; background: rgba(96, 165, 250, .05); border: 1px solid rgba(96, 165, 250, .17); border-radius: 10px; }
+.signal-explorer-time > div { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px 20px; justify-content: space-between; font-size: 12px; color: var(--text-secondary, #94a3b8); }
+.signal-explorer-time strong { color: var(--text-primary, #e2e8f0); margin-left: 7px; }
+.signal-explorer-time input { width: 100%; accent-color: #2dd4bf; cursor: pointer; }
+.signal-explorer-time button:disabled { opacity: .4; cursor: default; }
+.signal-explorer-current { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 18px 0; }
+.signal-explorer-current > div { border-bottom: 1px solid rgba(148, 163, 184, .2); padding: 10px 0 14px; }
+.signal-explorer-current span { color: var(--text-secondary, #94a3b8); font-size: 11px; display: block; }
+.signal-explorer-current strong { display: block; font-size: 19px; font-weight: 600; margin-top: 9px; font-variant-numeric: tabular-nums; }
+.signal-explorer-plot { min-width: 0; margin: 14px 0; padding: 14px 10px 10px; border: 1px solid rgba(148, 163, 184, .12); border-radius: 10px; }
+.signal-explorer-plot-title { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 8px; }
+.signal-explorer-plot h3 { font-size: 13px; margin: 0 0 10px; }
+.signal-explorer-plot-title > span { font-size: 11px; color: var(--text-secondary, #94a3b8); }
+.signal-explorer-svg { width: 100%; overflow-x: auto; }
+.signal-explorer-svg svg { width: 100%; height: auto; display: block; }
+.signal-explorer-grid { stroke: rgba(148, 163, 184, .13); stroke-width: 1; }
+.signal-explorer-zero { stroke: rgba(148, 163, 184, .4); stroke-dasharray: 4 4; }
+.signal-explorer-cursor { stroke: rgba(250, 250, 250, .4); stroke-dasharray: 3 4; }
+.signal-explorer-axis { fill: var(--text-secondary, #94a3b8); font-size: 11px; }
+.signal-explorer-legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 20px; font-size: 11px; }
+.signal-explorer-legend span { display: inline-flex; align-items: center; gap: 7px; }
+.signal-explorer-legend i { display: block; width: 16px; height: 3px; }
+.signal-explorer-forecast-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.signal-explorer-forecast-grid svg { min-width: 350px; }
+.signal-explorer-helper { font-size: 12px; color: var(--text-secondary, #94a3b8); line-height: 1.65; margin: 8px 0 14px; }
+.signal-explorer-buy { color: #4ade80; margin-right: 8px; }
+.signal-explorer-sell { color: #fb7185; }
+.signal-explorer-text-block { margin: 18px 0; padding: 15px 17px; border: 1px solid rgba(251, 191, 36, .18); border-radius: 10px; background: rgba(251, 191, 36, .035); }
+.signal-explorer-block-heading { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; }
+.signal-explorer-block-heading h3 { font-size: 14px; margin: 0; }
+.signal-explorer-block-heading span { font-size: 12px; color: #fbbf24; }
+.signal-explorer-text-block p { font-size: 12px; color: var(--text-secondary, #a7b4c8); line-height: 1.7; margin-bottom: 0; }
+.signal-explorer-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin: 22px 0; }
+.signal-explorer-detail-grid h3 { font-size: 14px; margin: 0 0 12px; }
+.signal-explorer-empty { font-size: 12px; line-height: 1.7; color: var(--text-secondary, #94a3b8); padding: 15px; border: 1px dashed rgba(148, 163, 184, .22); border-radius: 7px; }
+.signal-explorer-contribution { margin: 14px 0; }
+.signal-explorer-contribution > div:first-child { display: flex; justify-content: space-between; gap: 10px; font-size: 12px; }
+.signal-explorer-contribution strong { font-size: 12px; font-weight: 500; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.signal-explorer-contribution-track { position: relative; height: 10px; margin: 7px 0 4px; background: linear-gradient(90deg, transparent calc(50% - .5px), #64748b calc(50% - .5px), #64748b calc(50% + .5px), transparent calc(50% + .5px)), rgba(148, 163, 184, .07); border-radius: 2px; }
+.signal-explorer-contribution-track i { position: absolute; display: block; height: 100%; border-radius: 2px; }
+.signal-explorer-contribution-track .is-positive { background: #2dd4bf; }
+.signal-explorer-contribution-track .is-negative { background: #fb7185; }
+.signal-explorer-contribution small { font-size: 10px; color: var(--text-secondary, #94a3b8); }
+.signal-explorer-decomposition { font-size: 12px; margin-top: 18px; font-variant-numeric: tabular-nums; }
+.signal-explorer-decomposition > div { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-top: 1px solid rgba(148, 163, 184, .1); }
+.signal-explorer-decomposition dt { color: var(--text-secondary, #94a3b8); }
+.signal-explorer-decomposition dd { margin: 0; }
+.signal-explorer-evidence { max-height: 640px; overflow: auto; padding-right: 4px; }
+.signal-explorer-evidence article { border: 1px solid rgba(148, 163, 184, .16); border-radius: 8px; padding: 13px; margin-bottom: 10px; font-size: 12px; }
+.signal-explorer-evidence article > div { display: flex; justify-content: space-between; gap: 8px; }
+.signal-explorer-evidence article > div span { font-size: 10px; color: var(--text-secondary, #94a3b8); }
+.signal-explorer-evidence p { line-height: 1.6; }
+.signal-explorer-evidence dl { margin: 10px 0; color: var(--text-secondary, #94a3b8); font-size: 11px; }
+.signal-explorer-evidence dl > div { display: grid; grid-template-columns: 65px 1fr; gap: 8px; margin: 5px 0; }
+.signal-explorer-evidence dd { margin: 0; }
+.signal-explorer-evidence small { color: var(--text-secondary, #94a3b8); overflow-wrap: anywhere; }
+.signal-explorer-details { border-top: 1px solid rgba(148, 163, 184, .14); padding-top: 13px; margin-top: 13px; font-size: 12px; line-height: 1.7; color: var(--text-secondary, #94a3b8); }
+.signal-explorer-table-wrap { width: 100%; overflow-x: auto; margin-top: 12px; }
+.signal-explorer-table-wrap table { border-collapse: collapse; width: 100%; font-size: 11px; }
+.signal-explorer-table-wrap th, .signal-explorer-table-wrap td { padding: 10px; border-bottom: 1px solid rgba(148, 163, 184, .14); text-align: left; }
+.signal-explorer-table-wrap th { font-weight: 500; color: var(--text-primary, #e2e8f0); }
+.signal-explorer-table-wrap td { font-variant-numeric: tabular-nums; }
+@media (max-width: 1000px) { .signal-explorer-forecast-grid, .signal-explorer-detail-grid { grid-template-columns: 1fr; } }
+@media (max-width: 640px) { .signal-explorer-current { grid-template-columns: 1fr 1fr; } .signal-explorer-current strong { font-size: 17px; } .signal-explorer-time { grid-template-columns: 1fr; } .signal-explorer-controls label { flex: 1; } .signal-explorer-svg svg { min-width: 440px; } }

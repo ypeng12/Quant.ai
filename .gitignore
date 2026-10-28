@@ -1,5 +1,6 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
+.pytest_cache/
 *.py[cod]
 *$py.class
 
@@ -10,6 +11,7 @@ Thumbs.db
 # Virtual Environments
 venv/
 .venv/
+.venv-*/
 env/
 .env
 backend/.runtime_state/
@@ -60,3 +62,15 @@ reports/trading_logic_audit_20261002/audit.json
 /reports/financial_sentiment_*.json
 /reports/financial_sentiment_*.png
 /reports/financial_sentiment_*.jpg
+
+# Local decision audits contain private historical operations and source traces.
+/reports/quant_logic_review_20261028/
+# Only explicitly reviewed public research exports are tracked.
+!/reports/financial_sentiment_strategy_comparison.json
+!/reports/financial_sentiment_signal_explorer.json.gz
+!/reports/financial_sentiment_public_summary.json
+!/reports/financial_sentiment_prototype_summary.json
+!/reports/financial_sentiment_stock_context.json
+!/reports/financial_sentiment_signal_explorer.png
+!/reports/financial_sentiment_strategy_comparison.png
+!/reports/financial_sentiment_price_bert.json

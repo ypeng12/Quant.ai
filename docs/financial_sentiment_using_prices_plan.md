@@ -1,124 +1,77 @@
-# Train_Financial_Sentinment_Analysis_Using_Prices：研究与课程主计划
+# Financial Sentiment：Quant.ai 信息增强与交易改进主计划
 
-**更新：2026-10-21。第 30 节完成固定 2023 三公司样本的扩展 FinBERT 六模型对照：396 测试、9 单元 notebook、426 配对行完整覆盖，129 秒离线推理。开发结果未建立 Alpha；原窗口失败与严格总回报目标保留。原十日公司相对 SPY 总收益目标保留，严格合格样本仍为 0；历史替代口径不冒充其完成。** Financial Sentiment 的主研究保持约两周（10 个交易日）的公司趋势与信息背景，5／20 日用于稳健性检查；富途重点研究条件反向／拥挤指标；结合支撑／压力、市场／行业背景和独立的当日风险更新，辅助 Quant.ai 现有 Alpha。原 60 分钟标签保留为历史接入审计，不再决定项目主周期。已完成小样本试采、Python 研究目录和既有 Quant.ai HF 展示接入。本计划继承原 [Alpha 研究优先级文档](alpha_research_priorities_20260913.md) 的文本与价格研究部分；其他量价研究仍在原文档维护。最终用相同初始资金、同期运行的无文本系统 A 与加入文本信息的系统 B 对照。收益提高是研究目标，不能预先承诺，也不能把分类准确率替代收益证据。
+**更新：2026-10-28。当前优先级以本页为准；后面的带日期记录是历史证据，不能当作当前进度。** 中文阅读入口：[README.zh-CN.md](../research/financial_sentiment_using_prices/README.zh-CN.md)。本文件继续作为该项目唯一执行计划；原股票 Alpha 研究在 [Alpha 主计划](alpha_research_priorities_20260913.md) 保留。
 
-研究起点：[Train Financial Sentiment Analysis Using Price Response as Labels](https://github.com/gpsaggese/gpsaggese.github.io/blob/master/research/ideas/draft.Train_Financial_Sentinment_Analysis_Using_Prices.md)。核心问题是：用后续价格反应作弱标签，能否学习到传统正负面语气与过去量价之外的信息？课程核心依次完成数据与标签、价格标签模型与基线比较、价格大波动的新闻归因；富途的顺向／反向情绪和 X 作为扩展。
+## 当前目标：先验证 Quant.ai 的经济价值
 
-**公开入口验收（2026-10-09）：**已将原 Quant 主目录 99 个文件的代码、研究配置和公开汇总提交并推送到 GitHub main 与既有 HF Space，首次公开入口提交为 `c9eebb3`；研究分支英文文档已推送为 `97596ac`。公开 README／页面使用英文，本主计划继续中文。64 项后端检查、4 项前端盈亏展示检查及生产构建通过，HF 实际研究 API 返回 HTTP 200，新闻／富途／行情／SEC／X 计数分别为 187／120／2730／94／未接入，探索标签为 90，模型与 A/B 状态仍为 `Not trained`／`Not evaluated`。原始语料和行情、账户快照与运行账本保留本机；该次推送完成时原主目录只剩 `backend/trade_history.json` 的运行变化未提交。HF 社区数据库在验收时为 waiting，不声称已实现持续自动采集。
+用户明确要求同时推进两件事：改进原炒股逻辑，以及将 Financial Sentiment 接入改进后的逻辑；交付相同资金下旧 A、新 B 两个可运行版本与结果。课程整理为附属交付，不再主导下一步资源分配。金融情绪可以作为候选 Alpha 或原量价的条件信息，但不能预先认定它能赚钱。
 
-## 当前成果与缺口总览（10/21 更新：历史开发基线与每日采集已可运行）
+本次已经实现并实际跑完：原操作留存审计、固定30分钟校准量价候选、严格收讫文本残差适配器、A/C/B统一模拟账本、2/5 bps独立执行成本情景、公开汇总以及现有React双模型组件/只读API。未启动交易后端、未替换默认模型、未发订单或修改账户账本。
 
-**10/21 最新：第 30 节已在同一 426 行上完成新增 FinBERT 对照；396 项测试通过，9 单元 notebook 实际执行，6,948 次不同标题推理约 129 秒，无截断／新增删行。A／AMZN 的量价＋FinBERT 更差，MSFT 小幅改善；成本中仍是原有空仓／始终持股暴露，没有文本新增择时收益。原严格合格仍为 0。第 29 节三公司来源及 Library 8 页报告保留为此前交付快照。**
+## 10/28 已实现的两个版本与内部对照
 
-**October 20: Section 26 records the 27-pair assistant review (13 direct / 9 contextual / 1 unrelated / 4 uncertain), five shared reported-event groups, and actual 329-test verification. Post-open review is not backdated; eligible labeled samples remain zero.**
+- **A：旧模型**。冻结原 `price_volume_h1_g50`，最后训练日9/11；在共同NVDA/SNDK/TSLA池重放，MSTR为模型输入。不是完整实际账户复刻。
+- **C：只改原逻辑**。30分钟目标，每日用过去训练；最后五个先前完整日只做收益幅度校准，不回灌基础拟合。保留原12量价特征、优化器和风险边界。
+- **B：C＋文本**。消息量、有限词典立场、覆盖、重复文本代理、年龄和缺失特征；只用有响应收讫证据的版本，48小时窗口和60秒明示模拟处理延迟。同30分钟残差校准，修正上限±5bps；无资格时严格回退C。未把十日回报机械加到日内预测。
 
-**October 19, next NLP step: Section 25 adds a real 25-article input snapshot, verifies primary-source return semantics, and records 0 eligible labeled samples. The actual checkout passed 316 tests; no TF-IDF model was trained.**
+两组各$50,000，9/14—10/27共32交易日。9/1—9/11属于旧模型训练期，不拿来评估；本轮预登记截止10/27，10/28不纳入。
 
-**10/19 最新：第 24 节保存真实公司行动宽／窄窗口及发行人日程，实证确认窄过程日期查询漏掉 SPY 9/18 除息；今天实际 308 项测试通过，真实合格标签仍为 0。**
+| 模型 | 2bps/边净模拟收益 | 最大回撤 | 平均总敞口 | 5bps/边完整重放净收益 |
+| --- | ---: | ---: | ---: | ---: |
+| A | −$2,509.98 | −8.6060% | 71.86% | −$8,734.55 |
+| B | −$51.46 | −2.7533% | 22.48% | −$1,121.66 |
+| C | +$32.61 | −2.7533% | 21.21% | −$1,061.95 |
 
-**10/18 最新：第 23 节新增公司行动日期、去重与真实总收益证据约束；今天的测试和阻塞见该节，昨日 269 项不代替今日验收。**
+**B−A为+$2,458.52，但B自身亏损；B−C为−$84.07。** 本轮改善主要是减少不可靠预测驱动的换仓和实际风险承担，未证明稳定方向Alpha。文本本轮没有正增益，不晋级为正式交易候选。C去掉最佳日后亏$368.42，不能将其微利包装成可靠盈利。
 
-**本轮新增：第 22 节已落实今晚独立日历／价格端点覆盖审计和下一项每日验收；最新运行、测试与任务核对见该节。真实标签与模型评价仍未完成。**
+文本共631个去重版本，446有收讫证据。7,296个公司—bar决策中417有可用文本；50个股票预测被修正，集中在10/23的25个组合时点。修订次数不是订单次数。五个覆盖日期门槛不代表五个独立信息批次，B−C还包含残差截距/可用性特征，不等于纯情绪语义贡献。
 
-**总体判断：已有能实际运行的“原始数据→审计→规则事件／预训练语气→价格背景→证据展示”原型；课程的“真实文本→十日价格标签模型→较晚时期评价→大波动归因”研究闭环尚未完成。** 工程基础已具备可复算证据，下一阶段的重点是把真实档案连接成经过时间与来源审计的监督学习数据集。当前不能据工程测试、截图或案例说明宣布有预测能力或交易 Alpha，也不宜用一个主观完成百分比概括。
+完整证据：[登记与结果](../reports/quant_logic_review_20261028/comparison_v1/registry.json)、[操作复盘](../reports/quant_logic_review_20261028/trade_decision_audit.md)、[公开比较](../reports/financial_sentiment_strategy_comparison.json)。新文件和新结果保留全部正负结论，没有按结果改参数挑赢家。
 
-本节只盘点 MSML610 Financial Sentiment 及其在 Quant.ai 的研究展示；Quant.ai 原有 Alpha、交易账本和其他历史研究不计作本课题已验证的成果。以下数量来自本地文件与保存日志。10/15 盘点重新核对代码、产物与哈希；10/16 完成预检、统一入口和来源资格；10/17 新取得同一微软 2025 年事件的官方财报发布和电话会正文，最新全套 255 项研究测试通过，未训练或评价真实价格模型。
+## 数据与工程的当前真实状态
 
-### A. 已经实现、实际跑过，以及仍未完成的部分
-
-| 工作项 | 目前实际完成的内容 | 当前边界／缺项 |
+| 主题 | 最新状态 | 不应声称 |
 | --- | --- | --- |
-| 原始数据审计 | 新闻、富途、行情、SEC 索引的真实请求与返回归档，覆盖、重复、时间和哈希检查 | 只是多次有界试采，尚无常驻采集与连续质量验收 |
-| 新闻／日线采集器 | `collect_research.py` 固定 Alpaca GET，记录实际收讫、版本、失败和截断，拒绝覆盖已有 run | 没有统一富途／SEC／IR／X 采集、增量调度及完整历史回填 |
-| 自动证据报告 | `event_extraction.py`＋`sentiment_model.py`＋`run_research.py`：公司子句、规则事件、候选分组、固定 FinBERT CPU 语气推理和价格比较；真实档案已跑通 | 当前自动报告仅 PLTR／AMZN／MSFT；不是本项目训练的价格预测文本模型 |
-| SNDK 多来源视图 | `stock_context.py`＋`render_stock_context.py`：七标的量价与参考位、新闻时间线、富途词典、公开 JSON、PNG 和交互组件 | 独立离线管线；新闻精选由助手逐项复核，未自动生成可靠的综合方向预测 |
-| 旧价格标签 | 203 个公司文章候选中的 90 个 60 分钟探索标签，已独立复算 | 历史结果标签；不能改称十日标签，也不是当时预测 |
-| 新十日标签契约 | `price_labels.py`：08:45 原始输入截止、09:15 完成、当日开盘至第十个给定交易日开盘；5／20 日辅助；成熟、缺失和口径区分 | 需要调用方提供可信日历、总收益序列、时间／版本与特征证据；真实档案尚未整理成这一输入契约 |
-| 时间与分组隔离 | 清除未成熟标签、较晚原始特征、来源／事件直接和传递关联；拒绝混合期限、口径与日历 | 工程契约已验证，不能独立认证调用方的真实来源或历史声明 |
-| 五种 baseline 框架 | `price_baselines.py`：训练均值、动量校准、语气校准、纯量价、量价＋语气；同样本、训练内缩放／拟合、逐样本损失差 | 目前验收使用合成数据；输入为预先准备的数字特征，尚无真实 archive→公司日频特征适配器，也没有训练文本编码器 |
-| API 与现有应用展示 | `financial_sentiment_research.py`／`financial_sentiment_context.py` 白名单只读 `/status`、`/report`、`/context`；现有 Financial Sentiment 导航集成证据报告与 SNDK explorer | 页面刷新只读保存结果；新标签／baseline 尚无专门页面，不能把静态报告当正在采集／训练 |
-| 审计保全修复 | CLI 必须显式指定输入目录之外的新 `--audit-output`，拒绝旧审计／路径别名，发布失败保全旧报告 | 新行为有 14 项新增回归；旧审计仍对应历史生成器，修改前代码已备份 |
-| Python 与课程文件 | Python 研究目录、API/example 成对 `.ipynb/.py`、英文 README、Docker／Jupyter 脚本已存在 | Notebook 仍主要演示旧审计，未承载真实十日模型和完整失败分析；Docker 完整运行未验收 |
-| 月度真实数据预检 | 新增 `data_preflight.py`；PLTR／AMZN／MSFT 的 9 月覆盖、原文／版本绑定、请求时间语义和原始日线口径已复算，见第 18 节 | 只有 9/30 的 11 个 ID／15 个公司对，精确收讫缺失；仍不是公司日频训练适配器 |
-| 统一课程入口 | `run_course.py` 复用已有预检与 `evaluate_dataset()`；真实档案 dry-run／prepared 契约／显式合成三种来源，保存逐阶段报告与哈希 | raw→公司日频适配器、真实文本模型、LM 和完整归因仍明确 Pending；prepared 来源由调用方负责独立审计 |
-| 四类来源资格审计 | 既有 `data_preflight` 区分财报、电话会、新闻、投资者评论，保留事件身份、原始发布时间、版本、实际收讫与检索证据；SNDK 52 条来源记录已核对 | SNDK 批次 0 条截点合格来源、财报／电话会正文均缺；微软新取得正文的历史资格另见下一行，不能据此生成真实训练标签 |
-| 微软单事件官方正文 | 新增 `issuer_event.py`，两份官方响应 200；财报正文 18,511 字符、电话会 52,511 字符；同一 FY2026 Q1／2025-10-29 事件与发布日期精度已核对 | 当前版本在 2026-10-17 收到，不能当 2025 年可用输入；精确原始发布时间和历史收讫未知，同事件新闻／评论未取得 |
-| 真实监督学习研究 | 已明确任务、标签、对照、时间切分和输出要求 | TF-IDF／线性文本价格模型、LM 对照、真实较晚时期比较、独立文本评价集均未完成 |
-| 大波动新闻归因 | PLTR 和 SNDK 已有人工辅助案例、价格拆解与证据限制说明 | 没有冻结的大波动检测／前序排序／独立核查闭环，尚无完整错误归因和无法解释比例 |
-| 策略增量 | A／B／C 定义、同资金与成本口径已在计划中说明 | 情绪对交易的样本外增益、富途条件反向、A/B 净收益均未评估 |
+| 实际操作记录 | 旧29源审计之外，补取9/1—10/27的7793个唯一paper fills、3836 orders、41个日净值点；79页无过滤活动精确账务核验 | 知道历史每次模型版本、能逐笔确定错误原因、paper等于实钱 |
+| 行情 | 本轮四股各3120条，9/1—10/27，旧8月档案预热 | 有真实到达、报价、借券和实际手续费 |
+| 2023文本实验 | A/AMZN/MSFT 9419标题—公司记录；十日272训练/154测试；TF-IDF/Ridge、冻结FinBERT、LM及5/10/20日均有实际结果 | 所有模型未训练；或者已经证明未来净收益 |
+| Transformer | 10/28独立BERT登记：3公司、272真实optimizer步骤、154测试预测/原8基线比较完成；末层和head微调 | 旧Mock等于训练；微调完成等于Alpha成立；2023模型已驱动2026日内B |
+| 富途/X/官方披露 | 富途试采与特征已用；X无结构化样本；新增SEC Company Facts六指标归一化，真实5次请求均403、0家公司成功，IR仅有限正文 | 散户反向已验证、所有财报都读过 |
+| 产品 | A/B/C比较、交互信号图、context/report快照和公开API只读边界已实现；旧/status明确标为历史审计 | 构建成功等于线上版本已验收，刷新页面等于持续采集 |
+| 采集 | 10/28完成新7日窗口：436合格新闻/2隔离旧稿；11品种各6日线；Futu三股90帖，TSLA429 | 单次补采等于已持续后台采集；后来收到能回填过去 |
 
-### B. 手里实际有哪些数据和实验产物
+旧首页中“所有真实模型未训练/LM未完成”等已经过时，原文移到本文件末尾保留历史。此前总回报严格轨道与2023回溯价格收益轨道不同，不能把严格轨道0合格样本理解为从未训练任何模型。
 
-| 批次 | 真实规模与已保存结果 | 如何解释 |
-| --- | --- | --- |
-| **10/7 接入审计** | 187 篇新闻，152 篇有正文；203 个公司文章对；7 标的 6,604 根五分钟线，其中常规时段 2,730 根；富途首批 120 行／118 ID／115 种文本；SEC 94 条元数据 | 产生 90 个 60 分钟探索标签，涉及 81 篇文章。SEC 正文未成功取得；质量注释是助手审阅，不是独立人类金标准 |
-| **10/9 广窗口案例／语气原型** | 385 篇新闻，286 篇有正文；三公司 265 个文章公司对，221 个语气评分、44 个未评分、262 个候选事件组；25 标的日线背景 | FinBERT 确实在本地 CPU 推理；265 对和 262 组不是同等数量的独立事件，更不是收益预测。PLTR 19 对、AMZN 120 对、MSFT 126 对 |
-| **10/9 新采集器实测** | 57 篇新闻、71 公司文章对、60 个语气评分、69 组；8 标的各 2 根日线；请求／收讫与哈希留存 | 这 57 篇全部包含在上一行的 385 篇中，验证的是采集器与分析衔接 |
-| **10/12 10:45 SNDK 回顾** | 497 根日线；553 根返回五分钟记录中使用 546 根完整柱；另有 30 条富途样本 | 价格与参考区域的人工辅助复盘；富途样本晚于截点收到，不能回填成盘前或 10:45 前输入 |
-| **10/12 12:00 SNDK 快照** | 497 根日线；658 根返回五分钟记录中使用 651 根；新闻 21 篇（19 正文）＋IR 1＋行业 2，共 24 条来源记录；富途 30 条；SEC 37 条元数据 | 新闻／富途在截点可用均为 0，行情也在截点后收到；保存为事后研究。富途词典看多 2、看空 1、未知 27，覆盖 10%；+33.33 是方向平衡刻度，不是上涨概率 |
-| **10/15 标签／baseline 验收** | 无新增真实采集；同一套 45 个 DEMO 观测、80 个人工模拟日、160 条 DEMO／SPY 数值，分别检查 5／10／20 日与五个模型 | 纯合成工程实验。十日为 16 个训练、14 个测试；二十日保留 6 条缺尾部日历记录。真实价格标签模型评价仍为 `Not evaluated` |
+## 10/28 继续收尾：信号、采集与执行隔离
 
-**本次只读去重复算：**按同一 Alpaca 新闻 ID，10/7 的 187、10/9 的 385、采集器的 57、10/12 的 21 四份 `news_normalized.json` 合集为 **466 个新闻 ID**。按上述顺序新增 ID 分别为 187／264／0／15。此数仅覆盖这四份明确的规范化新闻档案，不含旧新闻单页访问探针；不表示独立事件、独立全文版本、公司相关样本或合格训练记录。原型 v1／v2／final 及合成 v1／v2 是重跑，不能当新语料批次累加。10/7 的 50 篇旧新闻访问探针、SNDK 重复采样另作诊断证据，不混入主样本。
+Signal explorer 已实现96个股票—日期切片；7,296个决策的价格、A5分钟/C-B30分钟预测、实际模拟持仓与fill、文本delta、来源时间、线性贡献和后验诊断都能对应。公开文件只含白名单，正文/账户/本地路径不公开；传输约0.93MB gzip。证据只来自10/12和10/21两个独立收讫日期，不把多条bar或多日覆盖当新事件。
 
-新闻／社区／价格最新原始批次仍是 10/12；10/17 新增的是对微软 2025-10-29 事件两份官方正文的当前抓取，不能算新的 2025 年当时样本。10/15 14:33 美东保存了标签工程交付，**10/16 新增月度预检、统一入口与来源资格审计**，没有新增市场语料。10/16 分别保存月度预检、入口验收和来源资格 run；10/17 新保存微软官方文档捕获／审计 run。来源资格 run 重读旧档案，微软 run 是历史事件的当前版本，不是新增当时样本。10/17 进程核对未发现项目研究／采集进程，尚无持续采集成功的验收证据。
+新的paper账户审计已逐页hash核验，并与日净值精确对平；金额及逐笔资料只放[本地所有者报告](../reports/quant_logic_review_20261028/broker_readonly_capture/analysis/paper_account_audit_zh.md)。主要工程含义是：毛损益本身为负，不能把真实账户问题全部归于手续费；原回放A的高假设摩擦和paper账户的实际费用是不同口径。
 
-### C. 已验收的证据、保存位置与课程交付状态
+服务构造与API启动现在保持交易待命；需要显式start。已增加发送前bar新鲜度检查、模型/输入/预测/目标与订单关联日志，日志写入失败时禁止新增风险但允许减仓；清仓不沿用旧预测原因。公开HF部署另有API统一只读边界，修改请求403，防止未鉴权公网调用启动/配置接口；无SPACE_ID的本地控制保留。没有触发交易、替换默认模型或改动原ledger。
 
-**10/15 工程验收：140 项研究测试＋111 项独立研究 API 测试＝251 项通过，前端 TypeScript／Vite 生产构建通过。10/16 前两轮新增 23 项预检及 19 项入口测试，本轮新增 45 项来源／集成回归，10/16 研究测试全套 227 项通过；10/17 新增 28 项正文捕获／审计回归，最新全套 255 项通过。未改动的 API／前端沿用已保存验收，不计作本轮重跑。** 10/15 盘点核对了保存日志哈希、相关代码／测试指纹和合成输出一致。SNDK 新 CLI 独立复算与旧公开 JSON 只有生成时间不同。Notebook 当前保存的输出和 execution counts 为空，是提交文件状态，不能据此否定已有历史执行记录，也不能据此声称新十日研究已执行。
+新增新闻采集修复了“旧稿更新日期在查询窗内、原发布不在窗内”的边界：两条显式隔离并留hash/页/行证据，继续分页而不篡改时间。10/28新数据保持独立，不回填原comparison_v1。未来采集、独立标签和前瞻观察仍需真实时间积累。
 
-| 去哪里看 | 内容 |
-| --- | --- |
-| [研究代码与英文复现入口](../research/financial_sentiment_using_prices/README.md) | 现有模块、命令、环境与能力边界 |
-| [10/7 原始审计](../reports/market_impact_data_audit_20261007/)／[复算记录](../reports/market_impact_data_audit_20261007/validation.json) | 最初真实数据、请求、失败和旧标签 |
-| [三公司自动报告](../reports/financial_sentiment_prototype_summary.json) | 规则事件、FinBERT 语气、计数和已实现价格背景 |
-| [SNDK JSON](../reports/financial_sentiment_stock_context.json)／[PNG](../reports/financial_sentiment_stock_context.png)／[浏览器截图](../reports/financial_sentiment_stock_context_preview.jpg) | 12:00 ET 多来源回顾快照与展示 |
-| [微软官方正文审计](../reports/financial_sentiment_runs/msft_fy2026q1_20261017T141455Z/audit/report.json)／[验证清单](../reports/financial_sentiment_runs/msft_fy2026q1_20261017T141455Z/delivery_verification.json) | 两份真实正文、日期角色／精度与实际当前收讫；0 历史截点合格来源、0 标签、255 项工程测试 |
-| [四类来源资格审计](../reports/financial_sentiment_runs/source_eligibility_20261016T162759Z/real_dry_run/source_family_audit.json)／[验证清单](../reports/financial_sentiment_runs/source_eligibility_20261016T162759Z/delivery_verification.json) | 36 个输入、52 条快照记录、0 条截点合格来源；财报／电话会正文缺口与 227 项工程测试 |
-| [统一入口真实 dry-run](../reports/financial_sentiment_runs/course_entry_20261016T144513Z/real_dry_run/report.json)／[入口验证清单](../reports/financial_sentiment_runs/course_entry_20261016T144513Z/delivery_verification.json) | 逐阶段完成情况、9 类待补输入、0 标签／Not evaluated、182 项研究测试及输入保全 |
-| [三公司月度真实预检](../reports/financial_sentiment_runs/month_preflight_20261016T143225Z/preflight.json)／[验证清单](../reports/financial_sentiment_runs/month_preflight_20261016T143225Z/delivery_verification.json) | 9 月覆盖、真实时间缺口、原始价格口径与输入保全，0 个正式标签 |
-| [10/15 真实数据就绪报告](../reports/financial_sentiment_runs/course_framework_20261015T182506Z/real_data_readiness.json) | 为什么真实十日模型仍未评估 |
-| [最终合成比较](../reports/financial_sentiment_runs/course_framework_20261015T182506Z/synthetic_contract_summary_v2.json)／[最终测试记录](../reports/financial_sentiment_runs/course_framework_20261015T182506Z/verification/final_v2_summary.json) | 三个周期的工程验收、模型输入输出与测试日志 |
-| [时间戳备份清单](../.local_backups/financial_sentiment_20261015T181743Z/manifest.json) | 245 文件、18,618,647 字节源数据的本地备份；压缩包与逐文件哈希已核验，不含凭据／环境／交易账本 |
+Company Facts 已增加可复现采集与六类财务指标归一化，保留申报版本、单位、期间和实际收讫时间，区分季度/YTD/年度/时点。实采4份submissions及已核验SNDK的1份Company Facts均403；没有改身份重试或用测试fixture填真实数据，八季度覆盖与最新财务期仍未知。8项专项测试通过。
 
-本地最新代码仍有未提交／未跟踪内容；`main` 当前提交为 `b86e611`。**10/17 14:30Z 通过 GitHub 只读 API 核对，远端 `main` 也为同一完整提交 `b86e611b3c2e31f0029c21de8fbd10afbdc55d66`**；提交历史相同不代表工作区已同步。当前 8 个已跟踪文件修改、41 个未跟踪文件（不含忽略的私有档案），其中包含最新采集器、标签／baseline／入口、SNDK 展示和来源审计；交易账本的既有改动单独保留，不计入研究成果。研究最新文件以当前 Quant 工作区为准，不能只从较早的研究 worktree 或干净远端克隆恢复。原始语料和运行审计默认留本机，清洁 clone 不包含这些材料。本地备份已保存，尚无异地备份验收。10/9 公开入口有历史上线记录；本地新能力验收不等于线上已经部署，本次未检查 HF 在线状态。
+## 10/28 真实价格监督 BERT 结果
 
-远端 `origin` 为 GitHub `ypeng12/Quant.ai`，`hf` 为既有 Hugging Face Space；`all` 同时配置 GitHub 和 HF 两处 push 地址。只读盘点未做提交、fetch、push 或部署。最新微软 run 的验证清单另保存两正文的离线重提取、6 份精确生成源码版本及已通过测试日志；145 个历史报告、三份先前 run 的 52 个清单输出和原备份压缩包均重新核对，未改变。
+固定官方 BERT base revision、独立研究环境与训练预算，Agilent（A，非策略A）/AMZN/MSFT 各自重置，最后编码层和回归头共18个参数张量更新，其余181个冻结张量保持不变。272真实步骤和154测试行全部完成，约20.2分钟；所有拟合结束才打开测试特征，所有预测冻结才打开测试收益，23个注册源码/数据/基线哈希一致。旧0步Mock回执原样保留，新结果单列，不改2026 A/C/B。
 
-| 课程交付项 | 现状 |
-| --- | --- |
-| 研究问题、主要标签与对照路线 | 已写清；正式结果尚缺 |
-| Python 代码、英文说明、成对 notebooks | 已有；需接入真实十日研究与完整解释 |
-| 数据字典、可再分发样本／明确获取步骤 | 小样本字段与审计已有；正式课程复现方案未验收 |
-| 真实 archive→公司日频特征／标签数据集 | 未完成，是当前连接工程框架与研究的关键缺口 |
-| 文本价格标签模型与公平对照 | 未完成；预训练语气和合成数值实验不能替代 |
-| 独立人工评价、归因评价与失败分析 | 未完成正式验收；现有案例是开发材料 |
-| Docker／新环境完整复现 | 文件齐全，完整运行未验收；本机未发现 Docker |
-| 正式课程 issue／PR／reviewer | 本地计划仍记为待完成，本次未核对远端课程状态 |
-| 最终报告、可讲解演示与视频 | 待形成正式研究结果后完成 |
+公开结果：[financial_sentiment_price_bert.json](../reports/financial_sentiment_price_bert.json)。BERT的A/AMZN/MSFT测试MAE分别5.6832/2.7115/2.5896百分点；对应训练均值5.6557/3.2371/2.5281。AMZN幅度误差改善但方向准确率39.34%低于均值50.82%；MSFT方向69.23%与均值相同，不能称稳定选股优势。九模型均同样本比较，不只报赢家。每公司不重叠区间6/7/7、示意交易0/2/7；成本试算不是Quant.ai可执行组合收益。后取得的2023标题仍不能冒充当时收到，严格前瞻资格未由本次训练改变，模型不晋级。
 
-研究 venv 为 Python 3.11.3，已有固定 NLP 推理依赖与模型缓存；pandas、dotenv、Matplotlib、FastAPI 和 notebook 工具不在该隔离 venv 内。历史验收使用了适合各任务的不同解释器；Notebook 与 NLP 的 numpy 固定版本不同，应保持独立环境。Docker 文件当前覆盖旧 notebook 流程，尚不是完整多来源采集／训练容器。
+## 接下来按这一个顺序推进
 
-### D. 对当前进度的判断与下一优先级
+1. **把执行与数据证据补完整。** 9/16之后paper流水及账户净值已补齐核对。常规自动交易/定时清仓现在有私有journal；继续补报价、真实费用、手动/延长时段路径及历史版本映射。旧日志负期望入场先关联版本和成交，不臆造逐笔错误原因。
+2. **维护可核验的产品状态。** 本轮已按实验轨道显示状态、实现白名单汇总及信号可视化；发布后通过HF接口、部署SHA和实际图表核验。采集断档要显示。研究、展示与交易启动已解耦，不能为看报告启动runner。
+3. **先让价格基础和成本站得住。** 保留本轮C的负结果/集中度，校准真实执行边际；之后的候选必须另行预登记，和当前A/C/B全部并列，不能静默换赢家。
+4. **只在新增信息足够时升级文本。** 增加独立信息批次及人工语义评价；控制相同覆盖的常数残差/置乱文本对照，区分文本语义、消息量和结构变化。Futu顺向/机械反向/条件反向仍需分别验证；X与复杂Transformer不是默认盈利解法。
+5. **冻结后前瞻A/C/B。** 同资金、股池、约束、时钟、成本规则，报告B−A与B−C、实际风险和新增数据/算力费用。约40交易日只作首轮观察，不承诺统计功效或“大赚”。没有净增益则不扩大风险。
+6. **独立完成中长期层。** 十日公司趋势、5日Futu反转、财报科技事实与20/60/120日长期论点按既定期限研究；真正跨夜策略要另设同期限基准和账本。课程材料最后从已完成研究整理。
 
-已有成果的实用价值是：可以查看真实原文、核对收讫与价格窗口、运行预训练语气和规则报告、展示 SNDK 证据、保存可复算产物，并用测试限制未来信息和覆盖旧审计。**最关键的缺口是研究数据集和真实实验，而非继续增加页面或测试数量。**
+原定六类外部数据入口、20公司/12个月历史范围、四股Futu、500条NLP复核等目标在中文README和以下历史设计保留；目前并未全部完成。本轮没有改变正式运行配置，也没有创建新的课程仓库/分支。
 
-1. **先决定真实数据路线并打通适配器。**核验新闻版本／可用时间、独立交易日历、公司行动／总收益，形成公司—决策日特征和标签。当前严格入口主动排除 `Retrospective`；历史回溯研究必须另行明确假设和评价入口，不能把未知时间改成 `verified=True`。
-2. **建立独立复核并跑最小真实模型。**固定公司池／日期／样本与切分，训练 TF-IDF＋线性价格标签模型，对比 FinBERT、LM、动量、纯量价及文本增量；保存失败与较晚时期逐样本结果。先确认基线和评价有效，再考虑更复杂模型。
-3. **补齐归因与课程复现。**覆盖错误与无法解释的案例，完成新环境／Docker、可分发数据、notebooks、报告和演示。富途反向、X、长期估值和交易 A/B 保留为后续扩展。
-
-用户已确认 **11 月底交付、每天推进、高质量完成**。第 17 节的 11/23 是建议的内部验收日，不是用户提供的官方课程截止；每日具体小时数尚未确认，46 天仅为 10/16–11/30 的日历跨度，不代表用户承诺连续工作 46 天。本节盘点实际成果，未来日期和目标不计作已完成工作。
-
-### E. 本地、云端与每日协作的实际条件（10/17 只读核对）
-
-| 运行方式 | 现在能做什么 | 继续所需条件 |
-| --- | --- | --- |
-| 本地研究 | 标准库离线预检／审计、原文复核、现存 Python 3.11 NLP 环境和缓存的 CPU FinBERT 推理；SNDK 图表读取保存快照 | Notebook／绘图与 NLP 依赖分环境补齐；真实训练先解决日历、总收益、来源时间／版本及公司日频适配器。10/17 进程检查仅见编辑器 Python 环境助手，未见研究／采集任务，不重复启动 |
-| 云端研究 | 可以在独立研究环境迁移已验收代码与允许使用的材料；尚未创建或验收该环境 | 明确计算规格、网络／数据权限、依赖与模型缓存、持久存储、日志和备份；私有原始档案需要另行确定允许迁移的范围。现有 Web 容器和 HF 展示不等于完整研究环境，私有 runs 被排除；本机 PATH 未发现 Docker，容器构建／执行尚未验收 |
-| 每日与 Slack | 主计划已有每日一个可验收问题、保留证据及更新进展的节奏 | 当前没有已验收的后台日程或 Slack 自动更新，不能称已在每天自动运行；本次只整理现状，没有发送外部消息 |
-
-现阶段优先在本地完成小规模可复现闭环。转云端可以改善算力与持续运行条件，不能自动补齐历史版本／可用时间或提高数据资格。待数据路线明确后再决定迁移，保留本地最新文件与历史证据。
-
-## 研究方向与决策依据（2026-10-09，以本节为准）
+## 历史方向与决策依据（2026-10-09；当前执行顺序以首页为准）
 
 **来源与目标澄清（10/16）：Financial Sentiment 必须研究财报及电话会、新闻、投资者评论，目标是真实可重复的盈利 Alpha。** 财报／电话会也属于当前来源调查，不能只因其可支持长期研究而从近期来源审计略去。需要分别验证原始事实、报道转载和投资者反应的新增信息及真实可用时间；最终以已有量价之外、较晚时期／样本外、明确成本口径后的收益增量为准。来源覆盖、182 项或更多工程测试、情绪分类和价格预测误差都不能单独证明盈利。
 
@@ -1337,3 +1290,551 @@ FinBERT 对照使用既有缓存 `Xenova/finbert`、固定 revision `8f269abebfd
 - **归因原文要求：**检测超过 k 标准差的大波动、回看此前新闻并排序，明确允许“无法解释”；对已知事件日的手工标注集核查，报告无法解释比例和错误归因率。3σ 日收益在例子中出现，不等于所有实验统一阈值。原文没有给标注者人数／盲法；独立且对模型输出设盲的金标准是本项目质量要求，不能把助手自评冒称独立验证，也不能伪装为原文的逐字要求。
 
 本轮只记录这些准确要求，**没有启动多期限、LM、归因或 transformer 微调实验**。后续先分别预登记有限预算、期限／样本／统计比较和独立标注流程，再执行；原严格总回报合格仍为 0，Docker、正式课程提交和视频仍待完成。
+
+
+## 31. 固定 2023 样本的多期限比较完成（10/21，独立开发分析）
+
+### 先登记，再计算；不改变原十日研究结果
+
+2026-10-21T19:54:50.430657Z 在查看新增 5／20 日结果前冻结协议，SHA256 `f37d525426e10e87d23651866976d8e4235ccb57a71e87cc61f401ed1eb7031d`。5／10／20 个交易日是本项目选择，课程原文只要求多个期限，并未指定该列表。公司 A／AMZN／MSFT、2023-03-09 至 12-01（不含）源日期、09-01 切分、两交易日延迟、原有模型参数保持固定；没有按表现选公司、期限或参数。
+
+分别评价原始公司价格收益和公司减同期 SPY 的超额价格收益；两者均用已缓存 split-adjusted 日线 `o`，排除现金分红，不冒充原严格总回报目标。Transformer 仍冻结，语气仅是训练期校准特征。原三个公司 full-pool 十日超额收益六模型结果通过精确 split／输入／预测哈希核验后复用，没有覆盖或替换。原研究报告、FinBERT 报告和已交付 PDF 保持原内容。
+
+### 真实样本、成熟度、缺失及时间戳审计
+
+固定来源仍为 9,419 条标题—公司记录、451 个公司日。三个期限的 451 行都具有可观察价格端点与事前动量；无缺失端点／日历导致的删除。只因训练结果跨过 09-01T00:00:00Z 而剔除：5 日 14 行、10 日 25 行、20 日 51 行。事后可观察标签数不等于满足切分的样本数，更不等于严格可交易标签。
+
+| 公司 | 5 日训练／测试 | 10 日训练／测试 | 20 日训练／测试 | 三期限共同训练／测试 |
+| --- | --- | --- | --- | --- |
+| A | 56／28 | 52／28 | 46／28 | 46／28 |
+| AMZN | 115／61 | 110／61 | 100／61 | 100／61 |
+| MSFT | 115／65 | 110／65 | 100／65 | 100／65 |
+| 总计 | 286／154 | 272／154 | 246／154 | 246／154 |
+
+共同池在训练和测试内分别按三个期限合格 ID 取交集，不按收益、指标或 FinBERT 缓存取交集；每个期限以相同 ID 重新拟合。完整来源／标题近重复传递图包含被排除桥接行；各公司保留训练／测试之间无共享代理组，三公司之间直接 source ID 也无跨切分共享。经济事件身份仍未独立核实；模型逐公司训练，不宣称跨公司事件已全部去重。没有额外固定 embargo，测试标签仍重叠，不提供 IID 显著性。
+
+每家档案 255 公司日线＋255 SPY 日线，日历 2023-01-09 至 2024-01-12，分页完整、日历日无缺失。20 日最晚结果 A 为 12-27，AMZN／MSFT 为 2024-01-03，均在缓存内。日线 `t` 为纽约午夜，DST 两偏移、唯一日期、正有限价格已核对；09:30 是日历逻辑标签时钟。[Alpaca 官方聚合说明](https://docs.alpaca.markets/us/docs/market-data-faq#how-are-bars-aggregated)不把日线 `t` 当作 `o` 对应交易的精确时间。当前不能认证官方开盘竞价价格或可成交填单；这一限制同样适用于旧十日结果，不能隐瞒。
+
+### 固定模型、缓存失败及结果解释
+
+固定四基线为训练均值、量价 Ridge、TF-IDF Ridge、量价＋TF-IDF；有完整已存语气回执时另加 FinBERT／量价＋FinBERT。所有词表／IDF／Scaler／Ridge 仅训练期拟合，alpha10、LSQR1e-8、2000特征、min_df2、1–2gram不变。
+
+5 日 full-pool 多出的成熟训练行中，A 有 4 行／10 个不同标题哈希未缓存，AMZN 为 5／94，MSFT 为 5／85。按预登记规则，整家该期限新增两模型标为 Unavailable，两个目标都保留完整四基线及分母；没有选择容易的行。10／20 日及所有共同池语气覆盖完整，不补做 tensor 推理。216 个模型槽中 204 个有实测结果，12 个明确不可用。
+
+同样本超额收益例子：共同池 MSFT 10 日量价＋FinBERT MAE 为 2.3844 个百分点（均值 2.5311）；20 日同模型为 5.3730（均值 4.5199），但纯语气为 4.2663。A 20 日量价＋TF-IDF 为 9.6350（均值 10.8798）。变化随公司、目标、期限不同而不一致。原始 MAE 随期限变化，不能据 5 日误差更小选择期限；完整表同时给同期限训练均值比值、RMSE、方向、分类指标。没有独立盲测或稳定 Alpha 结论。
+
+成本仍是 0／10／20 bp 假设往返执行场景，实际费用未知、现金利息和分红不计。逐公司／期限使用确定性不重叠区间，对所有模型及始终持公司、SPY、现金用相同区间；5／10／20 日间区间数和持仓暴露不同，禁止按累积收益排名期限。A 11／6／3 个区间，AMZN 和 MSFT 均 13／7／4。十日量价＋TF-IDF 仍为 A 全现金、AMZN／MSFT 全持股。完整 936 项成本结果、选中窗口／端点和持仓天数已保存，不合并虚构三公司资金曲线。
+
+### 已验收文件及可运行命令
+
+独立新增 `multi_horizon.py`、12 项测试、`multi_horizon_2023_protocol.json`；`financial_sentiment.multi_horizon.ipynb`／配对 `.py` 和 `financial_sentiment.multi_horizon_report.md`。主运行 36 组合约 19.23 秒（外层 19.76）；无新来源请求、模型下载、tensor 推理或参数搜索。完整 **408 项研究测试通过，6.539 秒**。新 notebook **7 单元、0 错误、22.15 秒**，独立重算标签、事前特征、成熟度、共同 ID 和成本，重新执行固定离线拟合，36 项预测／指标／成本精确一致。
+
+结果根为 `reports/financial_sentiment_runs/multi_horizon_2023_20261021/`：`evaluation/`、`execution_receipt.json`、`delivery/metrics.csv`、`delivery/coverage.csv`、`delivery/cost_scenarios.csv`、`notebook_delivery/` 及私有 notebook 复算目录。7 单元 HTML 可直接阅读，无需 Docker。旧 PDF 正在另行翻译，本轮没有触碰。
+
+仓库根可执行（输出目录必须新建，不覆盖旧实验）：
+
+```bash
+RESEARCH_PYTHON=/Library/Frameworks/Python.framework/Versions/3.11/bin/python3.11
+"$RESEARCH_PYTHON" research/financial_sentiment_using_prices/multi_horizon.py \
+  --repo "$PWD" \
+  --registration research/financial_sentiment_using_prices/multi_horizon_2023_protocol.json \
+  --output-dir reports/financial_sentiment_runs/my_new_multi_horizon_run
+```
+
+### 本轮到此收束；下一项课程必要工作
+
+1. **LM 与价格标签文本训练：**先核实已有 LM 词表及许可／版本／哈希，冻结同一开发行与训练内校准，再加公平 LM 对照；价格标签 transformer 微调仍未完成，不能把冻结 FinBERT＋Ridge 写成已微调。
+2. **独立大波动归因：**登记 move 阈值、事前新闻窗、排序和“无法解释”类，准备独立于模型输出的手工事件日金标准，报告无法解释比例与错误归因率。课程举例 3σ，不是已统一的强制阈值。当前来源／标题代理组和助手审阅不是该独立金标准。
+3. **原严格研究轨道：**继续已有每日确切窗口采集、保留真实收讫证据，解决发布／版本时间及开盘总收益公司行动证据，再等标签成熟；严格合格仍 0。
+4. **课程交付：**Docker 仍未安装，不能称容器已验收；需获准且可用的 Docker 环境、最后课程叙述／视频及用户授权的正式提交。不自行安装、创建 issue／PR 或推送。
+
+以上是可执行的剩余必要项，不把本轮有限多期限结果称作整个课题完成。没有交易、收费数据／计算、新凭据、安装或推送。
+
+
+## 32. 官方 Loughran–McDonald 词典基线完成（10/21，独立开发比较）
+
+### LM 的准确含义、来源与使用范围
+
+先重新读取[官方研究题目 Milestone 2](https://github.com/gpsaggese/gpsaggese.github.io/blob/master/research/ideas/draft.Train_Financial_Sentinment_Analysis_Using_Prices.md#implementation-plan)，原文明确列出 **Loughran–McDonald dictionary**。此处 LM 指金融情绪词典，不是泛称 language model；没有用另一种代理词表充当 LM。当前原文 SHA256 `e5c032416b5bae4dbb1e4aab3731ad895e2de0442cac110b9c10571973677f2d` 与既有保存原文一致。
+
+本机相关缓存没有 LM 词表。[Notre Dame 官方页面](https://sraf.nd.edu/loughranmcdonald-master-dictionary/)说明学术研究可免费使用、商业许可需另行联系。页面 2026 年 3 月更新，直接链接 1993–2025 CSV。本次在真实时间 2026-10-21T20:14:17.631046Z 取得匿名 HTTP200 文件，9,093,460 字节，SHA256 `e2d1328682bab7d2187684fb9f5420bb730401c9eefc00daf835edd203f4859d`。没有登录、新凭据、收费或显式接受额外条款步骤。仅用于 MSML610 本地学术比较，不宣称获准 Quant.ai 商业部署或公开再分发；原 CSV、许可页面与请求／收讫回执置于忽略的私有研究目录，没有加入产品、旧 PDF 或公开源码。
+
+词典实测 86,553 个主词、347 个有效正词、2,345 个有效负词；分类标记为正整数才有效，0 和负数移除标记无效（正类 7／负类 10 个移除标记）。当前有效分类标记没有晚于 2023 的条目，**仍不能据此复原或认证 2023 当时词典版本**；主词更新、移除与历史发布均可能不同。本次使用的是 2026 收讫的现行版本，保持回溯开发属性。
+
+### 在评价前登记评分和样本规则
+
+2026-10-21T20:15:49.625854Z 冻结 `lm_2023_protocol.json`，SHA256 `3b86571ca47601ebd56b86d2527dcbfa6eea0c3e43eefdf9e7492946fe7c6343`。新 LM 结果此前未查看；旧开发测试结果已看过，不把本次附加对照称为新盲测。
+
+- 按 ASCII 字母串分词、转大写、保留至少 2 字母；不做词干／词形还原、停用词或否定修正。
+- 每标题以正词出现次数减负词出现次数、除以全部保留词数；重复词计次。公司日内按原始标题去重并等权平均，要求与既有 newline 拼接文本精确一致，不引入正文、摘要或未来信息。
+- 有词但无正负命中时数值为 0，同时记 `NoPolarityMatch`；没有把“未命中”冒称独立验证的中性。缺标题／映射失配／零词标题则该行不可用；任一必需行不可用会令整个 case 的两种新增 LM 对照不可用，保留原基线和完整分母。此失败分支有测试，真实数据未触发。
+- 新增纯 LM 和量价＋LM 两个 Ridge 对照；逐公司／期限／目标／样本池分别仅在训练期拟合 Scaler 与 Ridge(alpha10, LSQR1e-8)。没有参数搜索或 transformer 微调。
+- 复用第 31 节全部 36 个 case 的固定有序 ID、标签、训练成熟切分、完整来源／事件代理图清理及共同 ID 交集。原有四／六基线直接复用，不重拟合，数值逐项校验。两个收益目标均排除现金分红，原严格总回报轨道不变。
+
+### 实际覆盖和未命中
+
+| 公司 | 来源标题—公司记录 | 公司日内去重标题使用 | 公司日／可评分 | 无正负命中标题使用 | 无正负命中公司日 |
+| --- | ---: | ---: | --- | ---: | ---: |
+| A | 195 | 194 | 85／85 | 148 | 54 |
+| AMZN | 4422 | 4301 | 181／181 | 3126 | 2 |
+| MSFT | 4802 | 4667 | 185／185 | 3340 | 1 |
+
+全局不同标题 **7,293** 个，其中 **5,235（71.78%）无正负词命中**；公司日内不同标题使用总计 9,162，与 9,419 原始记录不是同一分母。57 个完全无命中的公司日仍保留；没有通过删除无命中或困难样本改善成绩。451 公司日评分可用、不可用 0。各期限使用数量仍为 440／426／400；共同池仍为 246 训练／154 测试，与第 31 节一致。原 full-pool 5 日 FinBERT 缺失的 12 个模型槽继续不可用，没有借 LM 完整覆盖去填充 FinBERT。
+
+### 结果不一致，保留正负例与成本假设
+
+36 case 新增 72 项实测 LM 模型结果，加上原有 204 项，总计 276 个有实测结果的槽；288 个潜在槽中的 12 个原 FinBERT 缺失明确保留。逐样本绝对误差、408 项 LM 对既有对照的均值损失差只作描述，不对重叠标签给 IID 显著性。
+
+| full-pool 十日超额目标 | 纯价格 MAE pp | 纯 LM MAE pp | 量价＋LM MAE pp |
+| --- | ---: | ---: | ---: |
+| A | 5.3556 | 5.6397 | 5.4085 |
+| AMZN | 3.5316 | 3.2700 | 3.5562 |
+| MSFT | 2.4826 | 2.5030 | 2.4535 |
+
+共同样本十日量价＋LM 对纯价格分别 A 5.7507 对 5.5502、AMZN 3.9320 对 3.8875、MSFT 2.3989 对 2.4316 个百分点。改善不是跨公司、目标、期限一致的结果；原始 MAE 随期限不同，不能据误差小选择期限。
+
+1,152 项成本场景复用各 case 原不重叠窗口和 0／10／20 bp 假设往返成本；实际费用未知，不是账户扣费。新增 LM 与旧模型使用同样区间，正预测持公司、否则现金；超额目标不自动变成 SPY 对冲。保持原始／超额、两个样本池、持仓天数及现金／始终公司／SPY 对照，排除分红、利息与年化，不合并三家公司资本曲线。
+
+正例同样保留：MSFT 5 日量价＋LM 在假设 10bp 下 9.5797%（8 个持仓窗口），始终持股为 9.1774%（13 个窗口）；20 日纯 LM 为 13.8560%（3 个），始终持股 12.3413%（4 个）。负例：MSFT 10 日量价＋LM 为 8.2857%，纯价格／始终持股 11.1534%；AMZN 5 日量价＋LM 0.6261%，纯价格 1.8069%。这些是小样本、不同暴露的已查看开发区间诊断，不是稳定 Alpha 或可成交实盘证据。旧模型预测及成本逐项数值不变。
+
+### 代码、测试、notebook 与复现
+
+新增 `lm_baseline.py`、`tests/test_lm_baseline.py`、`lm_2023_protocol.json`、`financial_sentiment.lm.ipynb`／配对 `.py` 和独立英文 `financial_sentiment.lm_report.md`。代码没有接产品或交易。主实验实际 **3.16 秒**，外层 3.68 秒；300／330 秒登记预算内完成，无新 tensor 推理、模型下载或评价期来源请求。完整 **422 项研究测试通过，12.102 秒**（新增 14 项）。新 notebook **7 单元、0 错误、7.86 秒**，独立复算标题／公司日评分、训练均值与变换、目标 MAE 和成本，并精确复现全部 36 case 的预测、校准参数、指标、损失与分数。
+
+结果根：`reports/financial_sentiment_runs/lm_2023_20261021/`，包括私有 `source/`、`evaluation/`、`execution_receipt.json`、`delivery/metrics.csv`、`cost_scenarios.csv`、`coverage.csv`、`paired_mean_losses.csv` 及 `notebook_delivery/` 执行版 HTML／ipynb。此前英文报告、PDF 与 10 日／多期限结果保持原内容。
+
+```bash
+RESEARCH_PYTHON=/Library/Frameworks/Python.framework/Versions/3.11/bin/python3.11
+"$RESEARCH_PYTHON" research/financial_sentiment_using_prices/lm_baseline.py \
+  --repo "$PWD" \
+  --registration research/financial_sentiment_using_prices/lm_2023_protocol.json \
+  --output-dir reports/financial_sentiment_runs/my_new_LM_run
+```
+
+输出目录必须新建，需保留本次固定词典／回执和此前档案，复跑不联网、无新凭据、无条款代签。评分方法及版本不按表现改动；要更换词典版本需另作明确记录。
+
+### 本轮收束与剩余必要项
+
+LM 本轮实现／评价已完成，学术来源没有访问阻塞；商业许可没有申请或承诺。下一课程必要项仍是价格标签 transformer 微调、独立大波动归因金标准及错误归因／无法解释评价、Docker 执行与课程叙述／视频／用户授权正式提交。原严格研究仍需真实发布／版本时间、开盘总回报公司行动证据及成熟标签，严格合格保持 0。本轮没有启动微调、安装、付费、交易、issue／PR 或推送。
+
+
+## 33. 10/22 每日推进：transformer 数据包与合成梯度契约验收
+
+### 先检查实际落盘，再执行一项有限目标
+
+今天无害执行探针返回成功；核对 `implementation/20261021/transformer/price_transformer.py`、仓库同名文件及 transformer 实验输出，确认旧源码补丁**没有落盘**、没有部分训练输出。旧登记及资源审计存在，登记 SHA256 为 `9ffb9a7e766e45f80ca28671259e10bb47709797254ae5a6a73f361e69a2202b`，本轮原样保留并复制为研究目录的 `transformer_2023_protocol.json`。10/21 的不确定写入已解决；今天源码是新的、有独立测试的验收工具，不冒充此前已完成的真实训练器。
+
+本日技术假设是：① 固定公司日训练目标不会进入测试文本包；② 只有最后一个合成 transformer block 和新回归头更新；③ 同样本、同种子及公司日均值预测损失可精确回放。它们是工程契约，不是 Alpha 假设被验证。
+
+### 实际数据包结果
+
+固定 2023、十交易日、SPY 超额**价格收益**、9/01 切分及两交易日延迟保持不变。A 52／28、AMZN 110／61、MSFT 110／65，合计 **272 训练／154 测试**；最后训练结果均在 9/01 UTC 截止前成熟。完整来源／事件代理图包含排除桥接行，保留训练／测试无共享代理组；原始标题按公司日去重和顺序核对，没有按结果或模型覆盖删行。
+
+`training_packet.json` 只含公司日 ID、原始标题及训练目标；`heldout_text_packet.json` 严格只含 ID 和标题，没有价格／收益／标签字段。合计 **8,710 次公司日内不同标题使用、6,948 个全局不同标题**。没有重拟合或重跑 LM、期限、缓存 FinBERT 对照。
+
+仍为排除现金分红的回溯开发轨道，不认证历史文本版本／发布时间或实际可成交开盘价。严格轨道上次合格数仍为 0，**今天没有重新计算该数字或创建新严格标签**。LM 1993–2025 版晚于 2023，只保留学术研究许可边界。
+
+### 今天实际通过的测试与合成回放
+
+新增 `price_transformer.py`、`tests/test_price_transformer.py` 和原样登记副本。今天 **13 项聚焦测试通过，0 失败，28.363 秒**；覆盖 UTC 时区成熟、排除行传递桥接、测试标签隔离、标题一致性、训练内标准化、有限时间／RSS／可用内存预算、冻结参数、不把标题当独立价格标签，以及保存输出。原有 **422 项全套结果属于 10/21，今天未重跑全套**，不报虚假的新全套计数。
+
+用既有 `/Library/Frameworks/Python.framework/Versions/3.11/bin/python3.11` / PyTorch 2.2.2 和 2 个 intra-op CPU 线程，两次运行随机初始化的 **2 层、hidden8** 微型 transformer，每次 4 个虚构公司日／7 条人工标题、4 次 optimizer step。只更新最后一个合成 block（index1）和新头，**14 个选中参数张量全部有变化、冻结参数变化 0**。同种子610的参数前后哈希、损失顺序、标准化和更新名精确一致。损失先对每个公司日全部标题预测取均值，再计算一个目标损失；单位测试明确区别“均值的损失”与“逐标题损失的均值”。
+
+引擎实耗 **1.491／1.610 秒**，各在20秒登记内部预算内；外层分别 **5.521／4.346 秒**，各小于40秒。观测最大 RSS 约 **214.3 MiB**，小于1536MiB；可用内存最低约 **4.60 GiB**，高于2GiB底线。预算耗尽会返回 partial，不伪造完成或市场预测。
+
+这些不是 FinBERT 权重更新：旧协议计划的真实12层模型/第11层没有加载或训练，head-only 或微型随机模型不会记作已微调。新的工具明确没有真实预训练训练入口，且合成引擎拒绝真实市场样本 ID。
+
+### 精确阻塞、未运行与保全
+
+当前预检 **Blocked**：登记没有浮点训练 checkpoint；缓存 FinBERT 快照仍只有量化 ONNX／tokenizer／config；既有研究解释器缺 `transformers` 与 `safetensors`。先前装包／权重下载问题未获答复，本轮不安装、不下载，不切换新的运行时。NLP venv／tokenizer 本轮未调用。
+
+今天**未运行**真实预训练加载／微调、真实测试预测、新模型交易成本收益评价、真实文本 tokenization、旧422项全套与已完成的LM／期限／FinBERT实验。没有新的 Alpha／收益结论，也不把旧 PDF 称作今日报告。读取最新主计划后只更新当前摘要并追加本节；现有用户改动、原登记、此前报告／PDF／结果都核对保留。
+
+结果根：`reports/financial_sentiment_runs/transformer_acceptance_20261022/`，含 `prepared/`、`preflight/preflight.json`、`dry_a/`、`dry_b/`、`execution_receipt.json`、`delivery/acceptance_report.md`、13项测试日志及最终验证回执。工作区范围／保全快照和实施脚本在 `evidence/20261022/transformer_acceptance/`、`implementation/20261022/transformer_acceptance/`。
+
+### 下一条有界、免费、可执行目标
+
+下一次只做 **tokenizer-only 数据包验收**：显式使用项目已存在 NLP venv 与已缓存的固定 tokenizer，为这两份隔离文本包导出 token IDs／mask／输入哈希／实际长度；要求64-token预算内不截断、不缺任何标题／公司日、不复制测试标签，不做模型推理或重跑情绪对照。该导出子命令今天尚未实现，下一次需新增并测试，不能冒充现成能力。真实微调仍待授权资源及新的浮点权重哈希绑定，不能直接修改旧登记凑一次运行。
+
+今天已实际测试的复现入口如下（输出目录须使用新路径）：
+
+```bash
+RESEARCH_PYTHON=/Library/Frameworks/Python.framework/Versions/3.11/bin/python3.11
+"$RESEARCH_PYTHON" research/financial_sentiment_using_prices/price_transformer.py prepare \
+  --repo "$PWD" \
+  --registration research/financial_sentiment_using_prices/transformer_2023_protocol.json \
+  --output-dir reports/financial_sentiment_runs/my_new_transformer_packets
+"$RESEARCH_PYTHON" research/financial_sentiment_using_prices/price_transformer.py dry-run \
+  --registration research/financial_sentiment_using_prices/transformer_2023_protocol.json \
+  --output-dir reports/financial_sentiment_runs/my_new_synthetic_contract_run
+```
+
+本轮于验证及主计划更新后收束。没有安装、模型下载、付费、新凭据、推送、PR、交易、Slack联系或发布。
+
+
+## 34. 10/23 每日推进：固定 tokenizer 的无标签 token 导出完成
+
+### 本日假设与实际起点
+
+先以无害探针确认执行成功，再读取最新仓库规则、用户改动、昨日第33节和真实准备数据。昨日两份数据包／登记哈希一致，当时没有任何 token 导出结果；本次不重跑10/21模型或10/22梯度验收。明确使用已存在 NLP venv 的 Python3.11.3／tokenizers0.22.2，不静默替换运行时，不安装或下载。
+
+技术假设：① 固定 tokenizer 特征不依赖训练目标值，测试目标字段会被拒绝；② 公司、样本ID及标题顺序原样保持；③ 64-token预算下不截断，空文本／空编码／超长明确失败而不删样本；④ 同输入两次导出数据字节一致。这些是输入契约，不能当 Alpha 假设获支持。
+
+### 真实结果与标签隔离
+
+新增独立 `tokenize_transformer.py` 和 `tests/test_tokenize_transformer.py`，不改昨日 `price_transformer.py`。使用原固定 tokenizer/config哈希及原登记 `9ffb9a7e766e45f80ca28671259e10bb47709797254ae5a6a73f361e69a2202b`，没有改动源字节或登记内容。
+
+| 公司 | 训练行／标题使用 | 测试行／标题使用 |
+| --- | --- | --- |
+| A | 52／137 | 28／41 |
+| AMZN | 110／2577 | 61／1498 |
+| MSFT | 110／2847 | 65／1610 |
+
+合计 **272 训练／154 测试、6,948 不同标题、8,710 次标题使用**。导出仍保留公司日袋和原标题顺序；输出只有ID、标题原文哈希、token IDs、attention/type masks、长度及诊断，训练和测试 token 文件均不带任何目标／价格标签。原训练包的target字段不参与分词，修改target的测试证明导出字节不变；测试包多出target／label／价格字段时在 tokenizer 调用前拒绝。缓存共享仅是固定文本编码复用，没有在训练或测试数据上拟合词表。
+
+实际未截断长度 **6–55 tokens（含特殊token）**；未知token出现0、截断0、空编码0、删行／删标题0。关闭padding，attention mask全1、单文本type IDs全0；逐条核对来源哈希、合法ID范围、长度、公司日及标题次序。超长／空文本负例明确失败，不把难样本删除后报完整。
+
+### 首次失败、证据和有限修正
+
+首版实际导出在登记 **60秒内部预算**处失败（60.171秒），返回非零；没有生成训练／测试token数据，第二次未启动。失败根为 `reports/financial_sentiment_runs/tokenizer_export_20261023/`，回执和日志保留；工作区保存初版源码和首次测试日志，不把失败改写成成功。
+
+微基准实际测得 `get_vocab_size()` 3次约27.8ms，而短文本encode100次约9.5ms。首版逐token校验反复查询固定词表大小，放大了耗时。仅把词表大小／特殊token ID缓存为每个 tokenizer 查询一次，增加查询次数断言。没有扩大64-token／60秒预算、删数据、改tokenizer或参数。
+
+修正后在新目录实际导出两次，引擎 **1.371／1.322秒**；外层 **1.518／1.466秒**，均小于原75秒上限。两份训练数据和两份测试数据各自字节／SHA256完全一致，源文件／代码／runtime／tokenizer／config均有绑定回执。
+
+### 今天的测试、未运行及阻塞
+
+修正后的 **13项聚焦分词测试通过，0失败、0跳过，0.448秒**。覆盖目标值独立性、测试标签污染、ID／顺序、重复标题、64／65边界、空编码／overflow、输入或tokenizer字节变化、失败回执、输出保全，以及实际缓存tokenizer关闭padding／截断。首版13测试也曾通过（31.599秒），但真实导出失败说明功能测试不替代实际预算验收；两版证据均保留。
+
+今天**没有运行**10/21旧422全套、10/22的13项梯度测试／合成训练、真实模型加载／推理／微调、市场预测／成本评价、LM／期限／FinBERT旧对照。没有新的全套测试计数或收益结论。数据仍是2023回溯、排除分红的价格收益轨道，未创建严格总回报标签；上次严格合格0未在今天重算。LM后于2023的词典仍只作学术研究。
+
+真实微调阻塞不变：原登记没有浮点checkpoint，既有研究解释器缺 `transformers`／`safetensors`；装包／权重下载审批尚未答复。今天的tokenizer-only任务不需要它们，没有擅自安装、下载或切换环境。此前报告／PDF是旧快照，未修改，不称本日PDF。
+
+### 证据、复现命令与下一项
+
+成功根：`reports/financial_sentiment_runs/tokenizer_export_20261023_optimized/`，包括 `export_a/`、`export_b/` 各自的 `training_tokens.json`、`heldout_tokens.json`、`tokenization_receipt.json`，以及 `execution_receipt.json`、`delivery/acceptance_report.md`、最新测试日志、性能诊断和最终保全回执。失败根单独保留。工作区范围、输入／用户文件保全快照及实现存于 `evidence/20261023/tokenizer_export/`、`implementation/20261023/tokenizer_export/`。
+
+已实际验证的命令（仓库根执行，输出路径必须新建）：
+
+```bash
+TOKENIZERS_PARALLELISM=false research/financial_sentiment_using_prices/.venv/bin/python \
+  research/financial_sentiment_using_prices/tokenize_transformer.py \
+  --prepared reports/financial_sentiment_runs/transformer_acceptance_20261022/prepared \
+  --registration research/financial_sentiment_using_prices/transformer_2023_protocol.json \
+  --output-dir reports/financial_sentiment_runs/my_new_token_export
+```
+
+下一次仅做 **分组collator／右侧padding验收**：用既有PyTorch读取这两份token文件，保存公司日offset与标题权重，按最长序列补0及mask（不超过64），训练目标只从原训练包按ID显式join；测试加载接口不接价格标签路径。用人工forward／合成契约验证分组聚合，不加载真实模型、不重跑旧实验。该collator今天尚未实现／运行；真实微调仍需获准资源和新浮点checkpoint哈希登记。
+
+本轮于结构／哈希验证及读取最新主计划后更新本节即收束。无安装、下载、收费计算、凭据、交易、推送、PR、发布、Slack消息或新自动化。
+
+
+## 35. 10/24 每日推进：分组整理、右侧 padding 与训练标签 ID 对齐
+
+### 检查实际状态与本日技术假设
+
+无害执行探针成功后读取当前规则、代码、用户改动、原计划第34节及真实token回执，确认此前没有collator输出。没有重做tokenizer导出或旧模型实验。今天只新增 `grouped_collation.py` 与 `tests/test_grouped_collation.py`；使用原有研究Python，核心只依赖标准库，一项测试用已存在PyTorch 2.2.2做CPU tensor转换，不加载模型、不切换NLP环境。
+
+验收假设：① 右侧补0／mask0不改变有效token；② offsets和标题权重保存公司日边界、行及标题顺序并保留尾批；③ 原训练标签按稳定ID及原标题哈希对齐，而非按输入位置；④ 测试整理接口不接受目标，测试ID无法进入训练标签能力集合。它们是数据契约，不是预测或Alpha证据。
+
+### 今天实际结果
+
+四公司日一批是本轮数据验收格式选择，不改原模型训练登记／标签／公司池。各公司分开，不把不同公司混入同一批。
+
+| 公司 | 训练行／批 | 测试行／批 |
+| --- | --- | --- |
+| A | 52／13 | 28／7 |
+| AMZN | 110／28 | 61／16 |
+| MSFT | 110／28 | 65／17 |
+
+合计 **272／154 公司日、69／40批、8,710次标题使用**，4个不足4日的尾批均保留。逐批独立比对原token输入：group offsets起止、标题所属公司日、每组权重和1、标题哈希及次序、有效token前缀、右侧补0与attention/type masks全部一致。保留 **146,014 个有效token位置**，另有 **228,196 个新mask0 padding位置**；无截断或删行。每批只补到本批最长标题，且不超过登记64-token上限。
+
+训练目标只从原 `training_packet.json` 按ID显式join，源码标题哈希必须与同ID的token标题精确匹配。全部272个目标值原样一致，每公司日一个标签，未复制成逐标题独立标签。测试批没有 labels／target／label_sample_ids 字段，接口不接受目标源参数；重复／缺失／额外／测试ID、同ID错标题、非有限目标等负例明确拒绝。没有拟合标准化或词表。
+
+### 通过、失败及未运行
+
+今天 **14项聚焦测试通过，0失败、0跳过，13.979秒**；含乱序标签源正确对齐、padding/mask、group边界／权重、尾批、64／65边界、数据不变性及CPU tensor形状/类型检查。旧422全套、10/22的13梯度测试及10/23的13分词测试未重跑，不冒称新全套总数。
+
+全量collation实耗 **0.858秒**，外层 **1.024秒**，在60／75秒预算内。原登记、token回执与两份token文件、原始训练／测试文本包及准备审计哈希均在执行前后核验。继承已审计且未改动输入的成熟度、时间切分与完整事件代理图保证；今天不重造价格标签，也不把回溯文本升级成当时可得。
+
+数据仍为固定2023十日SPY超额**价格收益**，排除分红；严格总回报轨道没有新增标签，原合格0未在今天重算。LM后于2023的词典继续仅作学术研究，不新增商业许可声明。
+
+今天**未运行**重新分词、模型加载／前向／微调、任何合成optimizer更新、市场预测／成本收益对照、LM／期限／FinBERT旧实验和旧全套。没有Alpha或收益结论，旧PDF不是今日报告。
+
+### 精确阻塞、证据和下一项
+
+真实微调前置审批仍为**待答复，不是已拒绝**。原登记浮点checkpoint仍为null，当前研究解释器的包存在状态为 `{'torch': True, 'transformers': False, 'safetensors': False}`；没有安装／下载。核心数据步骤不需要缺失训练依赖，因此本轮已完成而不伪装成真实微调。
+
+结果根 `reports/financial_sentiment_runs/grouped_collation_20261024/`：`batches/training_batches.json`、`heldout_batches.json`、`collation_receipt.json`，`execution_receipt.json`、`delivery/acceptance_report.md`、14项测试日志和最终回执。工作区范围／保全及实施脚本在 `evidence/20261024/grouped_collation/` 与 `implementation/20261024/grouped_collation/`。读取最新主计划后只更新当前摘要并追加本节，现有用户改动、原登记、输入token／数据包、旧报告和PDF均保留核对。
+
+当前已实际运行的复现命令（仓库根；输出路径必须新建）：
+
+```bash
+RESEARCH_PYTHON=/Library/Frameworks/Python.framework/Versions/3.11/bin/python3.11
+"$RESEARCH_PYTHON" research/financial_sentiment_using_prices/grouped_collation.py \
+  --token-dir reports/financial_sentiment_runs/tokenizer_export_20261023_optimized/export_a \
+  --prepared reports/financial_sentiment_runs/transformer_acceptance_20261022/prepared \
+  --registration research/financial_sentiment_using_prices/transformer_2023_protocol.json \
+  --groups-per-batch 4 \
+  --output-dir reports/financial_sentiment_runs/my_new_collation_run
+```
+
+下一项免费有界目标：新增**纯tensor的分组均值／MSE及梯度验收**，检查标题数不同的公司日仍等权，按原8标题chunk处理与整袋处理的分组损失及梯度一致；只用人工标量预测和已有CPU PyTorch，不需要预训练模型或optimizer。该损失／梯度实现今天尚未编写／执行，不重复旧合成训练。真实微调仍需另行满足已登记前置资源与新的浮点权重哈希绑定。
+
+本轮完成验证和原计划更新后收束，无安装、下载、付费、凭据、交易、推送、PR、发布、Slack消息、新任务或自动化。
+
+
+## 36. 10/25 每日推进：公司日等权损失与整袋／不均匀分块梯度等价
+
+### 实际起点与假设
+
+无害执行探针成功，读取仓库与`.agents`规则、最新主计划、当前Git状态及10/24真实产物。HEAD仍为`ce060b4a2658005f36f6a9d0c2c54f390871d7ad`，既有用户改动和未提交研究文件均保留；实际没有今天的损失模块，故没有重复已完成工作。父线程已检查频道，但连接器仅暴露10/13加入事件，不能把未暴露消息说成完整历史。
+
+实施前范围／哈希登记存于工作区`evidence/20261025/grouped_loss/scope_and_before.json`。明确假设：固定参数时，完整标题袋与连续不均匀chunk具有同样公司日均值、损失和梯度。公式为
+
+`z_g=(y_g-mu_company_train)/sigma_company_train; p_g=sum_i p_gi/n_g; L=sum_g (p_g-z_g)^2/D`。
+
+`mu/sigma`只来自本公司完整原训练包，使用原population std规则，小于1e-8时scale=1。每个公司日权重1/D、每篇标题在该日权重1/n_g；先求日均值再平方，不把日标签复制成独立标题损失，不把大小不同的块均值等权相加。多日平均只用于验收数学；原登记仍是每公司日一个optimizer step，不能把本轮4日collation格式或平均梯度当作与逐日AdamW等价的训练安排。
+
+### 实际修改与验证
+
+新增`research/financial_sentiment_using_prices/grouped_loss.py`及`tests/test_grouped_loss.py`，不改旧collator、`price_transformer.py`或原登记。训练目标能力由原训练ID、原值和原标题哈希绑定；验证严格有序批ID、标签ID／原值、完整递增offset、组下标／权重、标题次序、右侧补0与mask。重复／缺失／错序ID、空／缺失组、测试或未知ID、测试无标签批、错标签、错标题、缺失／重复／乱序chunk及非有限预测明确拒绝。
+
+chunk接口携带原始起始标题位置，要求连续覆盖所有标题，用每个公司日原始标题总数归一化；跨日块按交集分别累计。所有计算图保留至一次backward，不声称已实现流式低内存训练。未创建optimizer，未进行任何权重更新。
+
+**16项新聚焦测试全部通过，0失败、0跳过，测试执行0.150秒，含Python/PyTorch启动外层3.953秒。** 覆盖解析公司日损失与逐标题梯度、float64及float32共享参数梯度、8／4／1／整袋chunk、训练专属scale、稳定ID与负例、padding扩展不变性、无输入修改。显式`grad=None`后重算与参照一致；不清零的负对照显示梯度翻倍，防止误报等价。float64容差1e-12、float32容差2e-6。
+
+独立CLI成功：按原准备审计与文件哈希检查全部**69训练批／272公司日**（A52／13，AMZN110／28，MSFT110／28），没有读取测试目标、计算历史预测或历史loss。随后仅对人工3公司日、1／3／11篇标题共15个标量做对照：chunk8、4、1、15与整袋的损失及共享参数梯度绝对误差均为**0**，最大日均值误差6.939e-18，小于1e-12。引擎0.349秒、含启动外层2.816秒，未超60秒外层预算。逐标题梯度等价见独立单测，未将市场文本用于人工预测器。
+
+### 保全、未运行与阻塞
+
+今日保护快照覆盖107个既有文件；仅有意更新本主计划，其余106个在结束时核验不变，包含旧登记、源代码、输入／token／collation数据包及被保护的历史报告／PDF。HEAD、暂存区和diff检查另有回执。原2023十日SPY超额价格收益轨道仍排除分红，保留原时间切分、标签成熟度与事件分组审计输入；本轮未重算这些标签。严格总回报轨道新增标签0，上次合格0没有在今天重算。LM词典晚于2023且仅供学术研究的局限保留。
+
+**未运行**旧422全套、旧13／13／14项日验收、模型加载／FinBERT推理或微调、旧合成transformer训练、任何optimizer step、重新分词、历史市场loss／预测、回测／交易成本评价及旧模型比较。没有新收益或Alpha结论，旧PDF未修改且不是本日报告。
+
+真实微调仍无已登记浮点checkpoint，当前研究解释器缺`transformers`和`safetensors`；安装／下载审批仍**待答复，非批准、非拒绝**，本轮没有安装、下载或切换环境。一个辅助`/bin/ps -axo pid,ppid,etime,command`查询被沙箱拒绝（`Operation not permitted`），未重试；原只读Git查询随后正常完成，不构成验收阻塞。
+
+### 证据、复现命令与下一步
+
+结果根`reports/financial_sentiment_runs/grouped_loss_20261025/`含`acceptance_receipt.json`、`execution_receipt.json`、`execution.log`及`delivery/`下的测试日志、测试命令回执和最终保全回执。工作区`evidence/20261025/grouped_loss/`保存范围、原计划快照与检查证据，`implementation/20261025/grouped_loss/`保存实现及有界操作脚本。
+
+已实际运行（仓库根，使用原研究解释器；新输出路径不得已存在）：
+
+```bash
+RESEARCH_PYTHON=/Library/Frameworks/Python.framework/Versions/3.11/bin/python3.11
+PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=2 OPENBLAS_NUM_THREADS=2 \
+  "$RESEARCH_PYTHON" -m unittest discover \
+  -s research/financial_sentiment_using_prices/tests -p test_grouped_loss.py -v
+
+PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=2 OPENBLAS_NUM_THREADS=2 \
+  "$RESEARCH_PYTHON" research/financial_sentiment_using_prices/grouped_loss.py \
+  --collation-dir reports/financial_sentiment_runs/grouped_collation_20261024/batches \
+  --prepared reports/financial_sentiment_runs/transformer_acceptance_20261022/prepared \
+  --registration research/financial_sentiment_using_prices/transformer_2023_protocol.json \
+  --output-dir reports/financial_sentiment_runs/my_new_grouped_loss_acceptance
+```
+
+下一项免费有界目标：只做**逐公司／逐日执行清单与步骤边界验收**，按照原seed610+公司序号重现确定性训练顺序，确认272个训练日各出现一次、测试ID不进入、日边界有明确梯度重置要求，预算中断回执区分完成与未完成日；不创建模型或optimizer、不重复今天梯度比较。该调度验收今天未实现／运行。真实训练仍须先满足已登记依赖及浮点checkpoint哈希绑定。
+
+本轮在验证与原计划更新后停止，无安装、下载、购买、收费计算、新凭据、推送、PR、交易、发布、Slack消息、新任务或自动化。
+
+
+## 37. 10/27 每日推进：确定性逐日执行清单与Mock步骤边界
+
+### 核对现状与先登记的验收标准
+
+本机无害探针成功，读取当前规则、最新计划、原训练登记与10/25实际产物。保护范围132个现有文件和上次回执比对无变化，原计划止于第36节，没有同类清单模块，故本轮不重复旧实验。父线程此次确认真正的私有`#quantai`为`C0C90M919L2`，最新项目线程仍为10/19；它不是10/25本地回执之后的新进展。公开`#quant-ai`是另一个频道；保留第36节历史记录并在此澄清上下文。
+
+实施前范围、假设与输入哈希已写工作区`evidence/20261027/daily_execution/scope_and_before.json`。按原登记：公司顺序A／AMZN／MSFT，各自`seed610+index`在原训练分区内打乱一轮；每个公司日恰好一个优化步骤，标题chunk上限8。验收要求相同输入清单字节一致、原训练日与标题完整覆盖、尾部组保留、只从原训练包拟合本公司归一化；4日整理批和标题chunk不能偷偷成为优化单位。日边界要求一次清零、全部标题块后一次日损失／backward／clip／step标记；模拟中断必须区分完成日、未完成日与未开始日。
+
+### 实际改动及通过的检查
+
+新增`research/financial_sentiment_using_prices/daily_execution.py`和`tests/test_daily_execution.py`。复用原`TrainingTargets`与`validate_batch`进行原训练ID／值／标题哈希、分区身份和padding审计，不改旧代码或训练登记。清单记录原始行ID／行位置、标题身份哈希、局部标题块和训练归一化来源；不导出逐日原值或归一化目标，不加载测试文本／目标。归一化仍是本公司完整训练集mean／population std、极小std时scale1；没有在测试数据或混合公司上拟合。
+
+**15项新聚焦测试通过，0失败、0跳过，0.070秒，含启动外层0.418秒。** 覆盖三公司固定seed及黄金顺序、重复运行、改变整理批大小不改变每日计划、尾组／标题尾块、日标记完整顺序、训练专属scale、错误／重复／缺失／错序ID与组、测试ID污染、错标签／标题、登记变化、清单篡改和Mock预算中断。重复Mock回放无残留调用状态；没有真实清零、反传或optimizer对象。
+
+独立CLI引擎0.477秒、含启动外层0.672秒，在原定60秒外层预算内。两次从同一实际输入构建的`manifest_a.json`／`manifest_b.json`字节完全相同：
+
+| 公司 | seed | 训练日／整理批 | 标题使用／标题块 | 原尾批保留日 |
+| --- | --- | --- | --- | --- |
+| A | 610 | 52／13 | 137／54 | 0 |
+| AMZN | 611 | 110／28 | 2577／370 | 2 |
+| MSFT | 612 | 110／28 | 2847／405 | 2 |
+
+合计272日、69整理批、5,561次训练标题使用、829标题块；两个训练尾批的4日及237个不足8标题的尾块均保留。独立检查逐一对照原始训练行及标题哈希、全部标题位置、训练专属scale、无测试ID交集与2,192个有序Mock事件。
+
+完整回放的公司重置标记3次，每日清零／日损失／backward／clip／步骤标记各272次，而不是每块或每整理批执行。全部都是`unittest.mock`调用，不会重置真实checkpoint、修改梯度或更新权重。真实optimizer步骤0，未导入torch／transformers／safetensors，未创建模型。
+
+两个独立中断场景：首次日检查前预算耗尽时，272日均未开始；实际多块日`A:2023-05-26`的首块后模拟耗尽，30日标记完成、1日未完成、241日未开始。未完成日没有日损失／backward／clip／步骤标记，三类ID互斥且完整覆盖原计划；不能把它当作可恢复的真实训练checkpoint。即使Mock全完成，`real_training_complete`与`heldout_evaluation_authorized`仍为false。
+
+### 文件保全与精确阻塞
+
+原132文件在写计划前核对无变化；仅有意更新此计划，其余131文件在结束时再次核验哈希不变。包括原登记、旧代码、原训练／测试文本包、token／collation输入、受保护历史报告和PDF。HEAD仍为`ce060b4a2658005f36f6a9d0c2c54f390871d7ad`。
+
+**Git核验限制：**首次`git status --short`返回128：`fatal: .git/index: unable to map index file: Operation timed out`。随后有界只读索引探针可读取文件大小1,198,772字节，但打开／读取头部返回`TimeoutError: [Errno 60] Operation timed out`。这是确认失败的只读操作，不是待运行命令；未重复查询、修改／重建索引或读取此前被拒绝的进程／会话目录。HEAD可单独读取且已在结束时重核；当前暂存区和完整工作树状态**未核实**，不声称暂存区为空或Git全绿。改动范围由新增文件排他创建及现有文件哈希核对支持。新增代码和计划的空白检查使用无需索引的`git diff --no-index --check`。
+
+真实微调前置仍未满足：原登记浮点checkpoint为null，现有研究解释器缺`transformers`／`safetensors`；安装／下载审批仍**待答复，非批准亦非拒绝**。本轮未安装、下载或切换环境，没有收费资源、新凭据、推送、PR、交易、发布或Slack发送。
+
+数据仍是固定2023十日SPY超额价格收益、排除现金分红的回溯开发轨道，时间戳／成熟度／分区原审计输入未改，今天不重算标签。严格总回报轨道新增标签0，上次严格合格0未在今天重算。LM后于2023的词典及仅学术研究许可局限保留。
+
+**未运行**旧全套／旧日验收、10/25梯度比较、模型加载／推理／训练、任何真实optimizer更新、重新分词、历史预测／loss、回测／成本评价或旧模型比较。没有新增收益或Alpha证据，旧PDF不作为今日报告。
+
+### 证据、命令和下一目标
+
+结果根`reports/financial_sentiment_runs/daily_execution_20261027/`：双份manifest、`mock_complete.json`、`mock_before_first_day.json`、`mock_inside_day.json`、`acceptance_receipt.json`、`execution_receipt.json`及日志；`delivery/`保留新测试日志／精确命令、独立检查、索引失败证据和最终保全回执。工作区范围及实现分别在`evidence/20261027/daily_execution/`、`implementation/20261027/daily_execution/`。
+
+已实际运行的命令（仓库根；复现输出必须使用新路径）：
+
+```bash
+RESEARCH_PYTHON=/Library/Frameworks/Python.framework/Versions/3.11/bin/python3.11
+PYTHONDONTWRITEBYTECODE=1 "$RESEARCH_PYTHON" -m unittest discover \
+  -s research/financial_sentiment_using_prices/tests -p test_daily_execution.py -v
+
+PYTHONDONTWRITEBYTECODE=1 "$RESEARCH_PYTHON" \
+  research/financial_sentiment_using_prices/daily_execution.py \
+  --collation-dir reports/financial_sentiment_runs/grouped_collation_20261024/batches \
+  --prepared reports/financial_sentiment_runs/transformer_acceptance_20261022/prepared \
+  --registration research/financial_sentiment_using_prices/transformer_2023_protocol.json \
+  --output-dir reports/financial_sentiment_runs/my_new_daily_execution_acceptance
+```
+
+下一项免费有界目标：将该清单与既有**训练token包的逐日读取适配器**连接，按稳定ID／原始行位置和标题哈希取出单日，验证每个8标题块只属于该日、padding/mask及完整覆盖一致；仍用Mock消费者，不创建模型／optimizer、不打开测试目标、不重复本轮步骤回放。该适配器今天未实现／运行。真实微调仍须先获准依赖／权重并新增浮点checkpoint哈希登记；Git工作树／暂存区核验需待索引可读后再做，不绕过此限制。
+
+本轮于有界验证和原计划更新后停止；无新任务或自动化，无未决写入／执行命令。
+
+
+## 历史首页快照（截至2026-10-27，已被当前首页取代）
+
+以下保留当时原文作为历史记录，含已过期状态；当前进度请看本文首页。
+
+### 原首页标题：Train_Financial_Sentinment_Analysis_Using_Prices：研究与课程主计划
+
+**更新：2026-10-27。第37节完成确定性逐日执行清单与Mock步骤边界验收：15项新聚焦测试通过，两份清单字节一致；272训练公司日、829标题块与尾部4日保留。逐日清零／反传／步骤标记各272次，真实optimizer更新0；中断日明确未完成。原文件及登记保留。Git索引读取超时导致当前暂存区／完整工作树状态未核实；HEAD已核实不变，真实微调资源审批仍待答复。** Financial Sentiment 的主研究保持约两周（10 个交易日）的公司趋势与信息背景，5／20 日用于稳健性检查；富途重点研究条件反向／拥挤指标；结合支撑／压力、市场／行业背景和独立的当日风险更新，辅助 Quant.ai 现有 Alpha。原 60 分钟标签保留为历史接入审计，不再决定项目主周期。已完成小样本试采、Python 研究目录和既有 Quant.ai HF 展示接入。本计划继承原 [Alpha 研究优先级文档](alpha_research_priorities_20260913.md) 的文本与价格研究部分；其他量价研究仍在原文档维护。最终用相同初始资金、同期运行的无文本系统 A 与加入文本信息的系统 B 对照。收益提高是研究目标，不能预先承诺，也不能把分类准确率替代收益证据。
+
+研究起点：[Train Financial Sentiment Analysis Using Price Response as Labels](https://github.com/gpsaggese/gpsaggese.github.io/blob/master/research/ideas/draft.Train_Financial_Sentinment_Analysis_Using_Prices.md)。核心问题是：用后续价格反应作弱标签，能否学习到传统正负面语气与过去量价之外的信息？课程核心依次完成数据与标签、价格标签模型与基线比较、价格大波动的新闻归因；富途的顺向／反向情绪和 X 作为扩展。
+
+**公开入口验收（2026-10-09）：**已将原 Quant 主目录 99 个文件的代码、研究配置和公开汇总提交并推送到 GitHub main 与既有 HF Space，首次公开入口提交为 `c9eebb3`；研究分支英文文档已推送为 `97596ac`。公开 README／页面使用英文，本主计划继续中文。64 项后端检查、4 项前端盈亏展示检查及生产构建通过，HF 实际研究 API 返回 HTTP 200，新闻／富途／行情／SEC／X 计数分别为 187／120／2730／94／未接入，探索标签为 90，模型与 A/B 状态仍为 `Not trained`／`Not evaluated`。原始语料和行情、账户快照与运行账本保留本机；该次推送完成时原主目录只剩 `backend/trade_history.json` 的运行变化未提交。HF 社区数据库在验收时为 waiting，不声称已实现持续自动采集。
+
+## 当前成果与缺口总览（10/27 更新：确定性逐日清单与Mock步骤边界）
+
+**10/27 最新：第37节通过15项新Mock验收及固定训练数据独立清单核对。272个日步骤不会被69个整理批或829个标题块替代；中断回执不冒充完成。Git索引读取超时是当前核验限制，非训练或Alpha结果。**
+
+**10/25 最新：第36节完成16项公司日等权损失／梯度测试及69批真实结构核对。人工张量整袋与不均匀分块结果一致；仅数据与数学验收，未改训练步数、加载真实模型或评价市场表现。**
+
+**10/24 最新：第35节完成69批训练／40批测试数据的真实整理与全量校验；14项今天的分组测试通过，旧测试／模型实验未重跑。公司日分组、尾批、ID标签隔离和输入哈希保留；真实微调资源审批仍待答复。**
+
+**10/23 最新：第 34 节完成分离 token 数据的实际导出与字节级复现。13 项今天的分词测试通过；首版预算失败、定位和等价修正完整记录。没有重跑旧模型／合成训练；真实微调仍缺浮点权重、transformers／safetensors，审批未答复。**
+
+**10/22 最新：第 33 节仅完成数据隔离、冻结层、公司日分组损失与确定性合成回放。今天 13 项新测试通过；422 项是 10/21 的历史全套结果，今天未重跑。真实模型微调、市场评价和 Alpha 均未新增。**
+
+**10/21 最新：第 32 节已核对官方原文，LM 明确指 Loughran–McDonald 词典；官方学术免费来源下载成功。固定 5／10／20 日、原始／SPY 超额收益、期限独立／共同样本两池全部完成新增 LM 对照，原基线未重拟合。422 项测试、7 单元 notebook 验收。词典版本晚于 2023，回溯局限明确；微调、独立归因、严格总回报证据及课程容器／最终提交仍待完成。**
+
+**10/21 最新：第 30 节已在同一 426 行上完成新增 FinBERT 对照；396 项测试通过，9 单元 notebook 实际执行，6,948 次不同标题推理约 129 秒，无截断／新增删行。A／AMZN 的量价＋FinBERT 更差，MSFT 小幅改善；成本中仍是原有空仓／始终持股暴露，没有文本新增择时收益。原严格合格仍为 0。第 29 节三公司来源及 Library 8 页报告保留为此前交付快照。**
+
+**October 20: Section 26 records the 27-pair assistant review (13 direct / 9 contextual / 1 unrelated / 4 uncertain), five shared reported-event groups, and actual 329-test verification. Post-open review is not backdated; eligible labeled samples remain zero.**
+
+**October 19, next NLP step: Section 25 adds a real 25-article input snapshot, verifies primary-source return semantics, and records 0 eligible labeled samples. The actual checkout passed 316 tests; no TF-IDF model was trained.**
+
+**10/19 最新：第 24 节保存真实公司行动宽／窄窗口及发行人日程，实证确认窄过程日期查询漏掉 SPY 9/18 除息；今天实际 308 项测试通过，真实合格标签仍为 0。**
+
+**10/18 最新：第 23 节新增公司行动日期、去重与真实总收益证据约束；今天的测试和阻塞见该节，昨日 269 项不代替今日验收。**
+
+**本轮新增：第 22 节已落实今晚独立日历／价格端点覆盖审计和下一项每日验收；最新运行、测试与任务核对见该节。真实标签与模型评价仍未完成。**
+
+**总体判断：已有能实际运行的“原始数据→审计→规则事件／预训练语气→价格背景→证据展示”原型；课程的“真实文本→十日价格标签模型→较晚时期评价→大波动归因”研究闭环尚未完成。** 工程基础已具备可复算证据，下一阶段的重点是把真实档案连接成经过时间与来源审计的监督学习数据集。当前不能据工程测试、截图或案例说明宣布有预测能力或交易 Alpha，也不宜用一个主观完成百分比概括。
+
+本节只盘点 MSML610 Financial Sentiment 及其在 Quant.ai 的研究展示；Quant.ai 原有 Alpha、交易账本和其他历史研究不计作本课题已验证的成果。以下数量来自本地文件与保存日志。10/15 盘点重新核对代码、产物与哈希；10/16 完成预检、统一入口和来源资格；10/17 新取得同一微软 2025 年事件的官方财报发布和电话会正文，最新全套 255 项研究测试通过，未训练或评价真实价格模型。
+
+### A. 已经实现、实际跑过，以及仍未完成的部分
+
+| 工作项 | 目前实际完成的内容 | 当前边界／缺项 |
+| --- | --- | --- |
+| 原始数据审计 | 新闻、富途、行情、SEC 索引的真实请求与返回归档，覆盖、重复、时间和哈希检查 | 只是多次有界试采，尚无常驻采集与连续质量验收 |
+| 新闻／日线采集器 | `collect_research.py` 固定 Alpaca GET，记录实际收讫、版本、失败和截断，拒绝覆盖已有 run | 没有统一富途／SEC／IR／X 采集、增量调度及完整历史回填 |
+| 自动证据报告 | `event_extraction.py`＋`sentiment_model.py`＋`run_research.py`：公司子句、规则事件、候选分组、固定 FinBERT CPU 语气推理和价格比较；真实档案已跑通 | 当前自动报告仅 PLTR／AMZN／MSFT；不是本项目训练的价格预测文本模型 |
+| SNDK 多来源视图 | `stock_context.py`＋`render_stock_context.py`：七标的量价与参考位、新闻时间线、富途词典、公开 JSON、PNG 和交互组件 | 独立离线管线；新闻精选由助手逐项复核，未自动生成可靠的综合方向预测 |
+| 旧价格标签 | 203 个公司文章候选中的 90 个 60 分钟探索标签，已独立复算 | 历史结果标签；不能改称十日标签，也不是当时预测 |
+| 新十日标签契约 | `price_labels.py`：08:45 原始输入截止、09:15 完成、当日开盘至第十个给定交易日开盘；5／20 日辅助；成熟、缺失和口径区分 | 需要调用方提供可信日历、总收益序列、时间／版本与特征证据；真实档案尚未整理成这一输入契约 |
+| 时间与分组隔离 | 清除未成熟标签、较晚原始特征、来源／事件直接和传递关联；拒绝混合期限、口径与日历 | 工程契约已验证，不能独立认证调用方的真实来源或历史声明 |
+| 五种 baseline 框架 | `price_baselines.py`：训练均值、动量校准、语气校准、纯量价、量价＋语气；同样本、训练内缩放／拟合、逐样本损失差 | 目前验收使用合成数据；输入为预先准备的数字特征，尚无真实 archive→公司日频特征适配器，也没有训练文本编码器 |
+| API 与现有应用展示 | `financial_sentiment_research.py`／`financial_sentiment_context.py` 白名单只读 `/status`、`/report`、`/context`；现有 Financial Sentiment 导航集成证据报告与 SNDK explorer | 页面刷新只读保存结果；新标签／baseline 尚无专门页面，不能把静态报告当正在采集／训练 |
+| 审计保全修复 | CLI 必须显式指定输入目录之外的新 `--audit-output`，拒绝旧审计／路径别名，发布失败保全旧报告 | 新行为有 14 项新增回归；旧审计仍对应历史生成器，修改前代码已备份 |
+| Python 与课程文件 | Python 研究目录、API/example 成对 `.ipynb/.py`、英文 README、Docker／Jupyter 脚本已存在 | Notebook 仍主要演示旧审计，未承载真实十日模型和完整失败分析；Docker 完整运行未验收 |
+| 月度真实数据预检 | 新增 `data_preflight.py`；PLTR／AMZN／MSFT 的 9 月覆盖、原文／版本绑定、请求时间语义和原始日线口径已复算，见第 18 节 | 只有 9/30 的 11 个 ID／15 个公司对，精确收讫缺失；仍不是公司日频训练适配器 |
+| 统一课程入口 | `run_course.py` 复用已有预检与 `evaluate_dataset()`；真实档案 dry-run／prepared 契约／显式合成三种来源，保存逐阶段报告与哈希 | raw→公司日频适配器、真实文本模型、LM 和完整归因仍明确 Pending；prepared 来源由调用方负责独立审计 |
+| 四类来源资格审计 | 既有 `data_preflight` 区分财报、电话会、新闻、投资者评论，保留事件身份、原始发布时间、版本、实际收讫与检索证据；SNDK 52 条来源记录已核对 | SNDK 批次 0 条截点合格来源、财报／电话会正文均缺；微软新取得正文的历史资格另见下一行，不能据此生成真实训练标签 |
+| 微软单事件官方正文 | 新增 `issuer_event.py`，两份官方响应 200；财报正文 18,511 字符、电话会 52,511 字符；同一 FY2026 Q1／2025-10-29 事件与发布日期精度已核对 | 当前版本在 2026-10-17 收到，不能当 2025 年可用输入；精确原始发布时间和历史收讫未知，同事件新闻／评论未取得 |
+| 真实监督学习研究 | 已明确任务、标签、对照、时间切分和输出要求 | TF-IDF／线性文本价格模型、LM 对照、真实较晚时期比较、独立文本评价集均未完成 |
+| 大波动新闻归因 | PLTR 和 SNDK 已有人工辅助案例、价格拆解与证据限制说明 | 没有冻结的大波动检测／前序排序／独立核查闭环，尚无完整错误归因和无法解释比例 |
+| 策略增量 | A／B／C 定义、同资金与成本口径已在计划中说明 | 情绪对交易的样本外增益、富途条件反向、A/B 净收益均未评估 |
+
+### B. 手里实际有哪些数据和实验产物
+
+| 批次 | 真实规模与已保存结果 | 如何解释 |
+| --- | --- | --- |
+| **10/7 接入审计** | 187 篇新闻，152 篇有正文；203 个公司文章对；7 标的 6,604 根五分钟线，其中常规时段 2,730 根；富途首批 120 行／118 ID／115 种文本；SEC 94 条元数据 | 产生 90 个 60 分钟探索标签，涉及 81 篇文章。SEC 正文未成功取得；质量注释是助手审阅，不是独立人类金标准 |
+| **10/9 广窗口案例／语气原型** | 385 篇新闻，286 篇有正文；三公司 265 个文章公司对，221 个语气评分、44 个未评分、262 个候选事件组；25 标的日线背景 | FinBERT 确实在本地 CPU 推理；265 对和 262 组不是同等数量的独立事件，更不是收益预测。PLTR 19 对、AMZN 120 对、MSFT 126 对 |
+| **10/9 新采集器实测** | 57 篇新闻、71 公司文章对、60 个语气评分、69 组；8 标的各 2 根日线；请求／收讫与哈希留存 | 这 57 篇全部包含在上一行的 385 篇中，验证的是采集器与分析衔接 |
+| **10/12 10:45 SNDK 回顾** | 497 根日线；553 根返回五分钟记录中使用 546 根完整柱；另有 30 条富途样本 | 价格与参考区域的人工辅助复盘；富途样本晚于截点收到，不能回填成盘前或 10:45 前输入 |
+| **10/12 12:00 SNDK 快照** | 497 根日线；658 根返回五分钟记录中使用 651 根；新闻 21 篇（19 正文）＋IR 1＋行业 2，共 24 条来源记录；富途 30 条；SEC 37 条元数据 | 新闻／富途在截点可用均为 0，行情也在截点后收到；保存为事后研究。富途词典看多 2、看空 1、未知 27，覆盖 10%；+33.33 是方向平衡刻度，不是上涨概率 |
+| **10/15 标签／baseline 验收** | 无新增真实采集；同一套 45 个 DEMO 观测、80 个人工模拟日、160 条 DEMO／SPY 数值，分别检查 5／10／20 日与五个模型 | 纯合成工程实验。十日为 16 个训练、14 个测试；二十日保留 6 条缺尾部日历记录。真实价格标签模型评价仍为 `Not evaluated` |
+
+**本次只读去重复算：**按同一 Alpaca 新闻 ID，10/7 的 187、10/9 的 385、采集器的 57、10/12 的 21 四份 `news_normalized.json` 合集为 **466 个新闻 ID**。按上述顺序新增 ID 分别为 187／264／0／15。此数仅覆盖这四份明确的规范化新闻档案，不含旧新闻单页访问探针；不表示独立事件、独立全文版本、公司相关样本或合格训练记录。原型 v1／v2／final 及合成 v1／v2 是重跑，不能当新语料批次累加。10/7 的 50 篇旧新闻访问探针、SNDK 重复采样另作诊断证据，不混入主样本。
+
+新闻／社区／价格最新原始批次仍是 10/12；10/17 新增的是对微软 2025-10-29 事件两份官方正文的当前抓取，不能算新的 2025 年当时样本。10/15 14:33 美东保存了标签工程交付，**10/16 新增月度预检、统一入口与来源资格审计**，没有新增市场语料。10/16 分别保存月度预检、入口验收和来源资格 run；10/17 新保存微软官方文档捕获／审计 run。来源资格 run 重读旧档案，微软 run 是历史事件的当前版本，不是新增当时样本。10/17 进程核对未发现项目研究／采集进程，尚无持续采集成功的验收证据。
+
+### C. 已验收的证据、保存位置与课程交付状态
+
+**10/15 工程验收：140 项研究测试＋111 项独立研究 API 测试＝251 项通过，前端 TypeScript／Vite 生产构建通过。10/16 前两轮新增 23 项预检及 19 项入口测试，本轮新增 45 项来源／集成回归，10/16 研究测试全套 227 项通过；10/17 新增 28 项正文捕获／审计回归，最新全套 255 项通过。未改动的 API／前端沿用已保存验收，不计作本轮重跑。** 10/15 盘点核对了保存日志哈希、相关代码／测试指纹和合成输出一致。SNDK 新 CLI 独立复算与旧公开 JSON 只有生成时间不同。Notebook 当前保存的输出和 execution counts 为空，是提交文件状态，不能据此否定已有历史执行记录，也不能据此声称新十日研究已执行。
+
+| 去哪里看 | 内容 |
+| --- | --- |
+| [研究代码与英文复现入口](../research/financial_sentiment_using_prices/README.md) | 现有模块、命令、环境与能力边界 |
+| [10/7 原始审计](../reports/market_impact_data_audit_20261007/)／[复算记录](../reports/market_impact_data_audit_20261007/validation.json) | 最初真实数据、请求、失败和旧标签 |
+| [三公司自动报告](../reports/financial_sentiment_prototype_summary.json) | 规则事件、FinBERT 语气、计数和已实现价格背景 |
+| [SNDK JSON](../reports/financial_sentiment_stock_context.json)／[PNG](../reports/financial_sentiment_stock_context.png)／[浏览器截图](../reports/financial_sentiment_stock_context_preview.jpg) | 12:00 ET 多来源回顾快照与展示 |
+| [微软官方正文审计](../reports/financial_sentiment_runs/msft_fy2026q1_20261017T141455Z/audit/report.json)／[验证清单](../reports/financial_sentiment_runs/msft_fy2026q1_20261017T141455Z/delivery_verification.json) | 两份真实正文、日期角色／精度与实际当前收讫；0 历史截点合格来源、0 标签、255 项工程测试 |
+| [四类来源资格审计](../reports/financial_sentiment_runs/source_eligibility_20261016T162759Z/real_dry_run/source_family_audit.json)／[验证清单](../reports/financial_sentiment_runs/source_eligibility_20261016T162759Z/delivery_verification.json) | 36 个输入、52 条快照记录、0 条截点合格来源；财报／电话会正文缺口与 227 项工程测试 |
+| [统一入口真实 dry-run](../reports/financial_sentiment_runs/course_entry_20261016T144513Z/real_dry_run/report.json)／[入口验证清单](../reports/financial_sentiment_runs/course_entry_20261016T144513Z/delivery_verification.json) | 逐阶段完成情况、9 类待补输入、0 标签／Not evaluated、182 项研究测试及输入保全 |
+| [三公司月度真实预检](../reports/financial_sentiment_runs/month_preflight_20261016T143225Z/preflight.json)／[验证清单](../reports/financial_sentiment_runs/month_preflight_20261016T143225Z/delivery_verification.json) | 9 月覆盖、真实时间缺口、原始价格口径与输入保全，0 个正式标签 |
+| [10/15 真实数据就绪报告](../reports/financial_sentiment_runs/course_framework_20261015T182506Z/real_data_readiness.json) | 为什么真实十日模型仍未评估 |
+| [最终合成比较](../reports/financial_sentiment_runs/course_framework_20261015T182506Z/synthetic_contract_summary_v2.json)／[最终测试记录](../reports/financial_sentiment_runs/course_framework_20261015T182506Z/verification/final_v2_summary.json) | 三个周期的工程验收、模型输入输出与测试日志 |
+| [时间戳备份清单](../.local_backups/financial_sentiment_20261015T181743Z/manifest.json) | 245 文件、18,618,647 字节源数据的本地备份；压缩包与逐文件哈希已核验，不含凭据／环境／交易账本 |
+
+本地最新代码仍有未提交／未跟踪内容；`main` 当前提交为 `b86e611`。**10/17 14:30Z 通过 GitHub 只读 API 核对，远端 `main` 也为同一完整提交 `b86e611b3c2e31f0029c21de8fbd10afbdc55d66`**；提交历史相同不代表工作区已同步。当前 8 个已跟踪文件修改、41 个未跟踪文件（不含忽略的私有档案），其中包含最新采集器、标签／baseline／入口、SNDK 展示和来源审计；交易账本的既有改动单独保留，不计入研究成果。研究最新文件以当前 Quant 工作区为准，不能只从较早的研究 worktree 或干净远端克隆恢复。原始语料和运行审计默认留本机，清洁 clone 不包含这些材料。本地备份已保存，尚无异地备份验收。10/9 公开入口有历史上线记录；本地新能力验收不等于线上已经部署，本次未检查 HF 在线状态。
+
+远端 `origin` 为 GitHub `ypeng12/Quant.ai`，`hf` 为既有 Hugging Face Space；`all` 同时配置 GitHub 和 HF 两处 push 地址。只读盘点未做提交、fetch、push 或部署。最新微软 run 的验证清单另保存两正文的离线重提取、6 份精确生成源码版本及已通过测试日志；145 个历史报告、三份先前 run 的 52 个清单输出和原备份压缩包均重新核对，未改变。
+
+| 课程交付项 | 现状 |
+| --- | --- |
+| 研究问题、主要标签与对照路线 | 已写清；正式结果尚缺 |
+| Python 代码、英文说明、成对 notebooks | 已有；需接入真实十日研究与完整解释 |
+| 数据字典、可再分发样本／明确获取步骤 | 小样本字段与审计已有；正式课程复现方案未验收 |
+| 真实 archive→公司日频特征／标签数据集 | 未完成，是当前连接工程框架与研究的关键缺口 |
+| 文本价格标签模型与公平对照 | 未完成；预训练语气和合成数值实验不能替代 |
+| 独立人工评价、归因评价与失败分析 | 未完成正式验收；现有案例是开发材料 |
+| Docker／新环境完整复现 | 文件齐全，完整运行未验收；本机未发现 Docker |
+| 正式课程 issue／PR／reviewer | 本地计划仍记为待完成，本次未核对远端课程状态 |
+| 最终报告、可讲解演示与视频 | 待形成正式研究结果后完成 |
+
+研究 venv 为 Python 3.11.3，已有固定 NLP 推理依赖与模型缓存；pandas、dotenv、Matplotlib、FastAPI 和 notebook 工具不在该隔离 venv 内。历史验收使用了适合各任务的不同解释器；Notebook 与 NLP 的 numpy 固定版本不同，应保持独立环境。Docker 文件当前覆盖旧 notebook 流程，尚不是完整多来源采集／训练容器。
+
+### D. 对当前进度的判断与下一优先级
+
+已有成果的实用价值是：可以查看真实原文、核对收讫与价格窗口、运行预训练语气和规则报告、展示 SNDK 证据、保存可复算产物，并用测试限制未来信息和覆盖旧审计。**最关键的缺口是研究数据集和真实实验，而非继续增加页面或测试数量。**
+
+1. **先决定真实数据路线并打通适配器。**核验新闻版本／可用时间、独立交易日历、公司行动／总收益，形成公司—决策日特征和标签。当前严格入口主动排除 `Retrospective`；历史回溯研究必须另行明确假设和评价入口，不能把未知时间改成 `verified=True`。
+2. **建立独立复核并跑最小真实模型。**固定公司池／日期／样本与切分，训练 TF-IDF＋线性价格标签模型，对比 FinBERT、LM、动量、纯量价及文本增量；保存失败与较晚时期逐样本结果。先确认基线和评价有效，再考虑更复杂模型。
+3. **补齐归因与课程复现。**覆盖错误与无法解释的案例，完成新环境／Docker、可分发数据、notebooks、报告和演示。富途反向、X、长期估值和交易 A/B 保留为后续扩展。
+
+用户已确认 **11 月底交付、每天推进、高质量完成**。第 17 节的 11/23 是建议的内部验收日，不是用户提供的官方课程截止；每日具体小时数尚未确认，46 天仅为 10/16–11/30 的日历跨度，不代表用户承诺连续工作 46 天。本节盘点实际成果，未来日期和目标不计作已完成工作。
+
+### E. 本地、云端与每日协作的实际条件（10/17 只读核对）
+
+| 运行方式 | 现在能做什么 | 继续所需条件 |
+| --- | --- | --- |
+| 本地研究 | 标准库离线预检／审计、原文复核、现存 Python 3.11 NLP 环境和缓存的 CPU FinBERT 推理；SNDK 图表读取保存快照 | Notebook／绘图与 NLP 依赖分环境补齐；真实训练先解决日历、总收益、来源时间／版本及公司日频适配器。10/17 进程检查仅见编辑器 Python 环境助手，未见研究／采集任务，不重复启动 |
+| 云端研究 | 可以在独立研究环境迁移已验收代码与允许使用的材料；尚未创建或验收该环境 | 明确计算规格、网络／数据权限、依赖与模型缓存、持久存储、日志和备份；私有原始档案需要另行确定允许迁移的范围。现有 Web 容器和 HF 展示不等于完整研究环境，私有 runs 被排除；本机 PATH 未发现 Docker，容器构建／执行尚未验收 |
+| 每日与 Slack | 主计划已有每日一个可验收问题、保留证据及更新进展的节奏 | 当前没有已验收的后台日程或 Slack 自动更新，不能称已在每天自动运行；本次只整理现状，没有发送外部消息 |
+
+现阶段优先在本地完成小规模可复现闭环。转云端可以改善算力与持续运行条件，不能自动补齐历史版本／可用时间或提高数据资格。待数据路线明确后再决定迁移，保留本地最新文件与历史证据。
