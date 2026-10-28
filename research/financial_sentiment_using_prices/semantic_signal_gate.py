@@ -117,15 +117,15 @@ def evaluate_events(events, *, symbol, decision_at, horizon, policy=GatePolicy()
             reasons.append('source_identity_missing')
         if event.target_symbol != symbol:
             reasons.append('target_symbol_mismatch')
-        if not event.event_identity_verified or not event.event_id:
+        if event.event_identity_verified is not True or not event.event_id:
             reasons.append('independent_event_identity_unverified')
-        if (not event.relation_verified or not event.subject_symbol
+        if (event.relation_verified is not True or not event.subject_symbol
                 or event.target_relation not in {'direct_subject', 'explicit_spillover'}
                 or (event.target_relation == 'direct_subject' and event.subject_symbol != symbol)):
             reasons.append('target_subject_relation_unverified')
-        if not event.direction_verified or type(event.direction) is not int or event.direction not in {-1, 1}:
+        if event.direction_verified is not True or type(event.direction) is not int or event.direction not in {-1, 1}:
             reasons.append('direction_unknown_or_unverified')
-        if not event.horizon_verified or event.horizon != horizon:
+        if event.horizon_verified is not True or event.horizon != horizon:
             reasons.append('event_horizon_unknown_or_mismatched')
         if event.is_question is not False or any(c in event.text_for_question_guard for c in ('?', '？', '吗', '嗎')):
             reasons.append('question_or_unverified_assertion')
@@ -133,9 +133,9 @@ def evaluate_events(events, *, symbol, decision_at, horizon, policy=GatePolicy()
             reasons.append('reported_opinion_or_unverified_voice')
         if event.is_conditional_or_negated is not False:
             reasons.append('conditional_negated_or_unverified_statement')
-        if not event.receipt_verified or not event.received_at or not event.capture_id:
+        if event.receipt_verified is not True or not event.received_at or not event.capture_id:
             reasons.append('observed_receipt_unverified')
-        if not event.annotation_clock_verified or not event.annotation_available_at or not event.annotation_receipt_id:
+        if event.annotation_clock_verified is not True or not event.annotation_available_at or not event.annotation_receipt_id:
             reasons.append('semantic_annotation_availability_unverified')
         age = None
         try:
@@ -204,7 +204,7 @@ def apply_semantic_overlay(base_prediction, gate, calibration=None, *, policy=Ga
     else:
         if calibration.target_symbol!=gate['symbol'] or dict(unit=calibration.horizon.unit,value=calibration.horizon.value)!=gate['horizon']:
             reasons.append('calibration_symbol_or_horizon_mismatch')
-        if not calibration.artifact_id or not calibration.event_groups_reviewed:
+        if not calibration.artifact_id or calibration.event_groups_reviewed is not True:
             reasons.append('calibration_event_groups_unverified')
         if any(not isinstance(item,str) or not item for item in calibration.training_event_ids):
             reasons.append('invalid_training_event_ids')

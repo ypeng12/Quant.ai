@@ -31,6 +31,7 @@ SYMBOLS = ("NVDA", "SNDK", "TSLA")
 INPUTS = (*SYMBOLS, "MSTR")
 COSTS = (2., 5., 10.)
 PACKET_ID = "profitability_v2_20261028"
+PACKET_SOURCE = "Archived Yahoo OHLCV with fixed fresh-capture precedence; strict receipt features from frozen v1"
 
 
 def sha(path):
@@ -85,11 +86,12 @@ def prepare(destination):
         input_symbols=list(INPUTS), traded_symbols=list(SYMBOLS), starting_capital=50000.,
         start=registration["requested_start"], end=registration["requested_end"],
         dates=sorted({r["date"] for r in rows}), evaluation_kind="already_inspected_retrospective_development",
-        source="Archived Yahoo OHLCV with fixed fresh-capture precedence; strict receipt features from frozen v1",
+        source=PACKET_SOURCE,
         private_dataset_only=True, contains_actual_account_transactions=False,
         contains_raw_news=False, contains_credentials=False,
         files={str(p.relative_to(out)): sha(p) for p in sorted(out.rglob("*")) if p.is_file()})
     write(out / "manifest.json", manifest)
+    verify_packet(out)
     print(json.dumps(dict(packet=PACKET_ID, files=len(manifest["files"]),
         bytes=sum(p.stat().st_size for p in out.rglob("*") if p.is_file()), dates=len(manifest["dates"]))))
 
@@ -97,12 +99,50 @@ def prepare(destination):
 def verify_packet(folder):
     folder = Path(folder)
     manifest = json.loads((folder / "manifest.json").read_text())
+    fields = {"schema_version", "packet_id", "prepared_at", "input_symbols", "traded_symbols",
+              "starting_capital", "start", "end", "dates", "evaluation_kind", "source",
+              "private_dataset_only", "contains_actual_account_transactions", "contains_raw_news",
+              "contains_credentials", "files"}
+    if not isinstance(manifest, dict) or set(manifest) != fields:
+        raise ValueError("Fixed packet manifest schema fields mismatch")
+    if (not isinstance(manifest["prepared_at"], str)
+            or pd.Timestamp(manifest["prepared_at"]).tz is None
+            or pd.isna(pd.Timestamp(manifest["prepared_at"]))
+            or manifest["source"] != PACKET_SOURCE):
+        raise ValueError("Packet capture provenance metadata is invalid")
+    required = {f"{symbol}.parquet" for symbol in INPUTS} | {"decisions.jsonl.gz", "training.json"}
+    required |= {f"baseline/cost_{cost}bps/{name}/{filename}"
+                 for cost in (2, 5) for name in ("A", "B", "C", "equal_weight")
+                 for filename in ("summary.json", "daily.csv.gz", "fills.csv.gz")}
+    expected_dates = pd.bdate_range("2026-09-14", "2026-10-27").strftime("%Y-%m-%d").tolist()
+    # This fixed packet covers 32 regular sessions with no weekday exchange
+    # holiday in its declared interval. This is not a generic market calendar.
+    if (type(manifest.get("schema_version")) is not int or manifest["schema_version"] != 1
+            or manifest.get("packet_id") != PACKET_ID
+            or manifest.get("input_symbols") != list(INPUTS)
+            or manifest.get("traded_symbols") != list(SYMBOLS)
+            or type(manifest.get("starting_capital")) not in (int, float)
+            or manifest["starting_capital"] != 50000.0
+            or manifest.get("start") != expected_dates[0]
+            or manifest.get("end") != expected_dates[-1]
+            or manifest.get("dates") != expected_dates
+            or manifest.get("evaluation_kind") != "already_inspected_retrospective_development"):
+        raise ValueError("Fixed packet schema, universe, capital or date contract mismatch")
+    if (manifest.get("private_dataset_only") is not True
+            or any(manifest.get(flag) is not False for flag in
+                   ("contains_actual_account_transactions", "contains_credentials", "contains_raw_news"))):
+        raise ValueError("Private numeric packet privacy flags must be explicit booleans")
+    if not isinstance(manifest.get("files"), dict) or set(manifest["files"]) != required:
+        raise ValueError("Manifest must bind exactly the 30 required numeric input files")
+    actual = {str(p.relative_to(folder)) for p in folder.rglob("*") if p.is_file()}
+    if actual != required | {"manifest.json"}:
+        raise ValueError("Packet contains missing or unmanifested files")
     for name, expected in manifest["files"].items():
         path = (folder / name).resolve()
-        if not path.is_relative_to(folder.resolve()) or sha(path) != expected:
+        if (not isinstance(expected, str) or len(expected) != 64
+                or any(c not in "0123456789abcdef" for c in expected)
+                or not path.is_relative_to(folder.resolve()) or sha(path) != expected):
             raise ValueError("Input manifest hash mismatch")
-    if manifest["contains_actual_account_transactions"] or manifest["contains_credentials"]:
-        raise ValueError("Account information is not an eligible cloud research input")
     return manifest
 
 
@@ -128,10 +168,37 @@ def statistics(daily, ledger):
 
 
 def execute(packet, destination):
+    """Persist overall state; publish complete summary only after all components."""
+    out = Path(destination)
+    out.mkdir(parents=True, exist_ok=False)
+    progress = dict(status="running", stage="validating_packet",
+                    started_at=pd.Timestamp.now(tz="UTC").isoformat(),
+                    completed_candidates=[], candidate_completed_dates={})
+
+    def update_progress(**changes):
+        progress.update(changes)
+        progress["updated_at"] = pd.Timestamp.now(tz="UTC").isoformat()
+        write(out / "progress.json", progress)
+
+    update_progress()
+    try:
+        report = _execute(packet, out, update_progress)
+        if report.get("status") != "complete" or report.get("text_ablations_status") != "complete":
+            raise ValueError("Overall completion requires completed text ablations")
+        write(out / "summary.json", report)
+        update_progress(status="complete", stage="complete", completed_at=pd.Timestamp.now(tz="UTC").isoformat())
+        print(json.dumps(dict(completed=True, elapsed_seconds=round(report["duration_seconds"],1))), flush=True)
+        return report
+    except BaseException as exc:
+        update_progress(status="failed", stage_at_failure=progress["stage"],
+                        error_type=type(exc).__name__, complete_summary_available=False)
+        raise
+
+
+def _execute(packet, destination, update_progress):
     from app.research.profit_signal_candidates import CANDIDATES, ProfitSignalModel, SignalHoldingState, executable_open_labels, candidate_registry
     packet, out = Path(packet), Path(destination)
     manifest = verify_packet(packet)
-    out.mkdir(parents=True, exist_ok=False)
     frames = {s: normalize_bars(pd.read_parquet(packet / f"{s}.parquet")) for s in INPUTS}
     dates = manifest["dates"]
     sessions, _, _ = complete_universe(frames, dates)
@@ -159,7 +226,11 @@ def execute(packet, destination):
             "All candidates reported; no automatic promotion or order submission."])
     write(out / "registration.json", registration)
     results = {}
+    completed_candidates, completed_dates = [], {}
     for name in names:
+        completed_dates[name] = []
+        update_progress(stage="running_candidates", current_candidate=name,
+                        completed_candidates=list(completed_candidates), candidate_completed_dates=completed_dates)
         states = {cost:dict(ledger=ShareLedger(list(SYMBOLS), ExecutionConfig(
             starting_equity=50000., slippage_bps=cost)), daily=[], diagnostics=[]) for cost in COSTS}
         training = []
@@ -191,6 +262,8 @@ def execute(packet, destination):
                             decision_at=(stamp+pd.Timedelta(minutes=5)).isoformat(),
                             label_end=ends.loc[stamp].isoformat(),
                             predicted=float(forecasts[symbol].loc[stamp,horizon]), actual=float(labels.loc[stamp])))
+            completed_dates[name].append(day)
+            update_progress(current_date=day, candidate_completed_dates=completed_dates)
         write(out / name / "training.json", training)
         audit = pd.DataFrame(forecast_audit)
         audit.to_csv(out / name / "forecast_audit.csv.gz", index=False)
@@ -215,20 +288,30 @@ def execute(packet, destination):
                 for row in record["diagnostics"]: h.write(json.dumps(row, allow_nan=False) + "\n")
             write(target / "summary.json", result)
             results[f"{name}/{int(cost)}bps"] = result
+        completed_candidates.append(name)
+        update_progress(completed_candidates=list(completed_candidates))
         print(json.dumps(dict(completed_candidate=name, sessions=len(dates))), flush=True)
     baselines = {}
     for p in (packet / "baseline").rglob("summary.json"):
         baselines[str(p.relative_to(packet / "baseline").parent)] = json.loads(p.read_text())
-    write(out / "summary.json", dict(registration=registration, candidates=results,
+    report = dict(status="partial", registration=registration, candidates=results,
         frozen_baselines=baselines, duration_seconds=time.monotonic()-started,
         positive_at_primary_cost=[n for n in names if results[f"{n}/5bps"]["net_pnl"]>0],
-        selected_for_live=False))
+        text_ablations_status="pending", selected_for_live=False)
+    write(out / "summary.partial.json", report)
+    update_progress(stage="running_text_ablations")
     from replay_sentiment_ablations import run_ablations
     decisions = pd.read_json(packet / "decisions.jsonl.gz", lines=True)
     training_receipts = json.loads((packet / "training.json").read_text())
-    run_ablations(frames, decisions, training_receipts, dates,
+    text_result = run_ablations(frames, decisions, training_receipts, dates,
         out / "text_ablations", frozen_root=packet / "baseline")
-    print(json.dumps(dict(completed=True, elapsed_seconds=round(time.monotonic()-started,1))), flush=True)
+    saved_text = json.loads((out / "text_ablations/summary.json").read_text())
+    if text_result.get("status") != "complete" or saved_text.get("status") != "complete":
+        raise ValueError("Text ablation completion receipt is missing or incomplete")
+    report.update(status="complete", text_ablations_status="complete",
+                  text_ablations_summary_sha256=sha(out / "text_ablations/summary.json"),
+                  duration_seconds=time.monotonic()-started, completed_at=pd.Timestamp.now(tz="UTC").isoformat())
+    return report
 
 
 def transfer(operation, repo, folder, revision=None):

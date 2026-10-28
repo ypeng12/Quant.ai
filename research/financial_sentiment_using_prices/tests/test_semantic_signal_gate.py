@@ -120,5 +120,12 @@ class SemanticGateTests(unittest.TestCase):
         self.assertEqual(gate([event])['qualified_event_count'],1)
         self.assertEqual(gate([replace(event,relation_verified=False)])['qualified_event_count'],0)
 
+    def test_truthy_strings_are_not_verification_booleans(self):
+        for field in ('event_identity_verified','relation_verified','direction_verified',
+                      'horizon_verified','receipt_verified','annotation_clock_verified'):
+            self.assertEqual(gate([verified_event(**{field:'false'})])['qualified_event_count'],0)
+        overlay=apply_semantic_overlay(.001,gate([verified_event()]),calibration(event_groups_reviewed='false'))
+        self.assertEqual(overlay['prediction'],.001)
+
 
 if __name__=='__main__':unittest.main()
