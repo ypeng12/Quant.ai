@@ -1,4 +1,4 @@
-"""Four fixed, offline price candidates with executable labels and finite signals.
+"""Fixed offline price candidates and a paired holding-clock diagnostic.
 
 Inputs are the existing NVDA/SNDK/TSLA/MSTR panel; only the first three trade.
 There are no broker/config imports, global signal shrinkage, outcome-based
@@ -21,6 +21,7 @@ from .direction_policy import planned_target
 from .holding_policy import curve_from_cumulative
 
 VERSION = "profit_signal_candidates_v1"
+REGISTRY_VERSION = "profit_signal_candidates_v2"
 INPUT_SYMBOLS = ("NVDA", "SNDK", "TSLA", "MSTR")
 TRADED_SYMBOLS = ("NVDA", "SNDK", "TSLA")
 MIN_TRAINING_SESSIONS = 10
@@ -38,12 +39,15 @@ class ProfitSignalCandidate:
     cost_bps: float = 5.0
     gross_limit: float = 0.95
     symbol_limit: float = 0.70
+    holding_clock_mode: str = "entry_bound"
 
     def __post_init__(self):
         if not self.name or self.max_hold_bars not in (6, 12):
             raise ValueError("Named 30- or 60-minute candidate required")
         if type(self.planning) is not bool or type(self.long_only) is not bool:
             raise ValueError("Boolean policy switches required")
+        if self.holding_clock_mode not in {"entry_bound", "refresh_price"}:
+            raise ValueError("Unknown holding clock mode")
         values = (self.ridge_alpha, self.risk_aversion, self.cost_bps,
                   self.gross_limit, self.symbol_limit)
         if (not np.isfinite(values).all() or self.ridge_alpha <= 0
@@ -63,10 +67,22 @@ CANDIDATES = {c.name: c for c in (
     ProfitSignalCandidate("ridge30_plan_long_only", long_only=True),
 )}
 
+REFRESH_CANDIDATES = {f"{c.name}_refresh_price": replace(
+    c, name=f"{c.name}_refresh_price", holding_clock_mode="refresh_price")
+    for c in CANDIDATES.values()}
+
 
 def candidate_registry():
-    return dict(version=VERSION, candidates=[dict(asdict(c), horizons=list(c.horizons))
-                for c in CANDIDATES.values()], input_symbols=list(INPUT_SYMBOLS),
+    return dict(version=REGISTRY_VERSION, forecast_model_version=VERSION,
+                candidates=[dict(asdict(c), horizons=list(c.horizons))
+                for c in (*CANDIDATES.values(), *REFRESH_CANDIDATES.values())],
+                holding_clock_pairs={name: f"{name}_refresh_price" for name in CANDIDATES},
+                evaluation_kind="post_result_development_diagnostic_not_independent_validation",
+                diagnostic_registered_after="profitability_v2_20261028/results/40788629742",
+                changed_factor="entry_bound_expiry_vs_fresh_completed_bar_replanning_only",
+                unchanged_factors=["features", "fit", "labels", "covariance", "return_predictions",
+                                   "risk_limits", "costs", "terminal_exit_cost", "session_close"],
+                input_symbols=list(INPUT_SYMBOLS),
                 traded_symbols=list(TRADED_SYMBOLS), lookback_sessions=LOOKBACK_SESSIONS,
                 minimum_training_sessions=MIN_TRAINING_SESSIONS,
                 target="next_open_to_horizon_plus_one_open_gross_return",
@@ -80,6 +96,19 @@ def _aware(stamp):
     if value.tzinfo is None:
         raise ValueError("Timezone-aware timestamp required")
     return value.tz_convert(NY)
+
+
+@dataclass(frozen=True)
+class PriceForecastSnapshot:
+    """One indexed completed-bar prediction, never an indefinitely valid score.
+
+    Construct via ProfitSignalModel.forecast_snapshot. The replay assumes the
+    causal completed-bar calculation is available at that close; it does not
+    establish actual production compute latency or authorize a live order.
+    """
+    bar_open: pd.Timestamp
+    available_at: pd.Timestamp
+    returns: Mapping[str, Mapping[int, float]]
 
 
 def _panel(frames):
@@ -258,20 +287,48 @@ class ProfitSignalModel:
             forecasts[s] = pd.DataFrame(result, index=f.index)
         return forecasts
 
+    def forecast_snapshot(self, forecasts, stamp):
+        """Bind values to an existing row; missing bars cannot be forward-filled."""
+        stamp = _aware(stamp)
+        if stamp < self.trained_before or set(forecasts) != set(TRADED_SYMBOLS):
+            raise ValueError("Prior-trained forecasts for every traded stock required")
+        values = {}
+        for symbol in TRADED_SYMBOLS:
+            f = forecasts[symbol]
+            if (not isinstance(f.index, pd.DatetimeIndex) or f.index.tz is None
+                    or f.index.has_duplicates or stamp not in f.index
+                    or set(f.columns) != set(self.candidate.horizons)):
+                raise ValueError("Exact completed-bar forecast row and horizons required")
+            values[symbol] = {h: float(f.loc[stamp, h]) for h in self.candidate.horizons}
+            if not np.isfinite(list(values[symbol].values())).all():
+                raise ValueError("Finite completed-bar forecasts required")
+        return PriceForecastSnapshot(stamp, stamp + pd.Timedelta(minutes=5), values)
+
     def allocate(self, stamp, current: Mapping[str, float], forecasts, *,
                  state: SignalHoldingState, cost_bps=5.0):
         """Use a completed bar; return a target for its next open plus diagnostics.
 
-        An existing signal expires at entry+h. The shared hypothetical plan is
-        truncated at the earliest active expiry; only the expiring stock is
-        forced flat. Others retain their own clocks and may continue holding.
-        This avoids assigning value to holding an old signal past its deadline.
+        entry_bound retains the original entry+h expiry and plan truncation.
+        refresh_price requires a new, exactly stamped completed-bar prediction;
+        its horizon is relative to this decision, not the original entry. It
+        retains terminal exit costs and the 15:55 boundary. No old prediction
+        receives additional forecast periods without a new completed-bar row.
         """
         stamp = _aware(stamp)
         if stamp < self.trained_before:
             raise ValueError("Decision predates fitted model")
         if stamp.minute % 5 or stamp.second or stamp.microsecond or stamp.nanosecond:
             raise ValueError("Five-minute bar-open timestamp required")
+        mode = self.candidate.holding_clock_mode
+        if isinstance(forecasts, PriceForecastSnapshot):
+            if (_aware(forecasts.bar_open) != stamp
+                    or _aware(forecasts.available_at) != stamp + pd.Timedelta(minutes=5)):
+                raise ValueError("Fresh prediction must match this completed bar and its close")
+            forecasts = forecasts.returns
+        elif mode == "refresh_price":
+            raise ValueError("refresh_price requires a stamped completed-bar PriceForecastSnapshot")
+        if mode == "refresh_price" and state.last_stamp is not None and stamp <= state.last_stamp:
+            raise ValueError("refresh_price requires a new completed bar, not a repeated prediction")
         if not np.isfinite(list(current.values())).all() or any(v != 0 for s, v in current.items() if s not in TRADED_SYMBOLS):
             raise ValueError("Finite holdings in the declared traded universe required")
         if set(forecasts) != set(TRADED_SYMBOLS) or any(set(forecasts[s]) != set(self.candidate.horizons) for s in TRADED_SYMBOLS):
@@ -283,20 +340,29 @@ class ProfitSignalModel:
         deadlines = state.observe(current, stamp, spec)
         entry = stamp + pd.Timedelta(minutes=5)
         close = stamp.normalize() + pd.Timedelta(hours=15, minutes=55)
-        expiring = {s for s, deadline in deadlines.items() if entry >= deadline}
+        expiring = ({s for s, deadline in deadlines.items() if entry >= deadline}
+                    if mode == "entry_bound" else set())
         info = dict(candidate=spec.name, decision_at=entry.isoformat(),
-            signal_expires_at={s: t.isoformat() for s, t in deadlines.items()},
+            holding_clock_mode=mode,
+            signal_expires_at=({s: t.isoformat() for s, t in deadlines.items()}
+                              if mode == "entry_bound" else {}),
+            forecast_bar_open=stamp.isoformat(),
+            forecast_available_at=entry.isoformat(),
+            forecast_horizon_end=min(entry + pd.Timedelta(minutes=5 * spec.max_hold_bars), close).isoformat(),
             expired_symbols=sorted(expiring), one_way_cost_bps=cost_bps,
             round_trip_cost_bps=2 * cost_bps, long_only=spec.long_only,
-            expiry_clock="first_observed_fill_bar_open; same_sign_resizes_do_not_renew",
-            expiry_requires_observed_flat_before_new_entry=True,
+            expiry_clock=("first_observed_fill_bar_open; same_sign_resizes_do_not_renew"
+                          if mode == "entry_bound" else "fresh_completed_bar_prediction; bounded_receding_horizon"),
+            hard_holding_limit_bars=spec.max_hold_bars if mode == "entry_bound" else None,
+            expiry_requires_observed_flat_before_new_entry=mode == "entry_bound",
             raw_forecasts_bps={s: {str(h): float(forecasts[s][h]) * 10000 for h in spec.horizons} for s in TRADED_SYMBOLS})
         steps = min(spec.max_hold_bars, int((close - entry) / pd.Timedelta(minutes=5)))
         if steps <= 0:
             return dict.fromkeys(TRADED_SYMBOLS, 0.0), dict(info, reason="scheduled_session_close", effective_horizon_bars=0)
-        for s, deadline in deadlines.items():
-            if s not in expiring:
-                steps = min(steps, int((deadline - entry) / pd.Timedelta(minutes=5)))
+        if mode == "entry_bound":
+            for s, deadline in deadlines.items():
+                if s not in expiring:
+                    steps = min(steps, int((deadline - entry) / pd.Timedelta(minutes=5)))
         curve = curve_from_cumulative(cumulative, spec.horizons, steps)
         n = len(TRADED_SYMBOLS)
         covariance = self.covariance[:steps * n, :steps * n]

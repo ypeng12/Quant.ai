@@ -31,6 +31,7 @@ SYMBOLS = ("NVDA", "SNDK", "TSLA")
 INPUTS = (*SYMBOLS, "MSTR")
 COSTS = (2., 5., 10.)
 PACKET_ID = "profitability_v2_20261028"
+FIRST_RUN = "40788629742"
 PACKET_SOURCE = "Archived Yahoo OHLCV with fixed fresh-capture precedence; strict receipt features from frozen v1"
 
 
@@ -167,7 +168,7 @@ def statistics(daily, ledger):
     return result
 
 
-def execute(packet, destination):
+def execute(packet, destination, experiment="entry_bound"):
     """Persist overall state; publish complete summary only after all components."""
     out = Path(destination)
     out.mkdir(parents=True, exist_ok=False)
@@ -182,7 +183,8 @@ def execute(packet, destination):
 
     update_progress()
     try:
-        report = _execute(packet, out, update_progress)
+        report = (_execute(packet, out, update_progress) if experiment == "entry_bound"
+                  else _execute(packet, out, update_progress, experiment=experiment))
         if report.get("status") != "complete" or report.get("text_ablations_status") != "complete":
             raise ValueError("Overall completion requires completed text ablations")
         write(out / "summary.json", report)
@@ -195,7 +197,7 @@ def execute(packet, destination):
         raise
 
 
-def _execute(packet, destination, update_progress):
+def _execute(packet, destination, update_progress, experiment="entry_bound"):
     from app.research.profit_signal_candidates import CANDIDATES, ProfitSignalModel, SignalHoldingState, executable_open_labels, candidate_registry
     packet, out = Path(packet), Path(destination)
     manifest = verify_packet(packet)
@@ -203,13 +205,31 @@ def _execute(packet, destination, update_progress):
     dates = manifest["dates"]
     sessions, _, _ = complete_universe(frames, dates)
     started = time.monotonic()
-    names = list(CANDIDATES)
-    registration = dict(schema_version=1, experiment="fixed_signal_candidates_v2",
+    if experiment not in ("entry_bound", "refresh_price"):
+        raise ValueError("Unknown fixed experiment")
+    definitions = CANDIDATES
+    if experiment == "refresh_price":
+        from app.research.profit_signal_candidates import REFRESH_CANDIDATES
+        definitions = REFRESH_CANDIDATES
+    names = list(definitions)
+    fixed_forecasts = {}
+    forecast_sources = {}
+    if experiment == "refresh_price":
+        for name in names:
+            path = packet.parent / "results" / FIRST_RUN / name.removesuffix("_refresh_price") / "cost_5bps/decisions.jsonl.gz"
+            with gzip.open(path, "rt") as handle:
+                rows = [json.loads(line) for line in handle]
+            if len(rows) != len(dates)*76:
+                raise ValueError("Frozen forecast row coverage differs")
+            fixed_forecasts[name] = rows
+            forecast_sources[name] = sha(path)
+    registration = dict(schema_version=1, experiment="fixed_signal_candidates_v2_"+experiment,
         registered_at=pd.Timestamp.now(tz="UTC").isoformat(),
         code_revision=os.environ.get("GITHUB_SHA", "local_fixture_only"),
         cloud_run_id=os.environ.get("GITHUB_RUN_ID"), packet_manifest_sha256=sha(packet / "manifest.json"),
         start=dates[0], end=dates[-1], sessions=len(dates), capital=50000.,
         candidates=names, candidate_specs=candidate_registry(), costs_bps_per_side=list(COSTS), primary_cost=5.,
+        frozen_forecast_source_hashes=forecast_sources,
         package_versions={name:importlib.metadata.version(name) for name in
             ("numpy", "pandas", "scipy", "scikit-learn", "osqp", "pyarrow")},
         main_comparison="identical 50k capital, dates, universe, next-open integer ledger, 95% gross and 70% name cap",
@@ -225,6 +245,9 @@ def _execute(packet, destination, update_progress):
             "An expiry or active-trading rule is an experiment, not proof of alpha.",
             "All candidates reported; no automatic promotion or order submission."])
     write(out / "registration.json", registration)
+    if experiment == "refresh_price":
+        from probe_sentiment_reproduction import run_probe
+        run_probe(packet, out / "reproduction_probe")
     results = {}
     completed_candidates, completed_dates = [], {}
     for name in names:
@@ -236,17 +259,34 @@ def _execute(packet, destination, update_progress):
         training = []
         forecast_audit = []
         for day in dates:
-            model = ProfitSignalModel.fit(frames, day, CANDIDATES[name])
+            model = ProfitSignalModel.fit(frames, day, definitions[name])
             day_frames = {s:sessions[s][day] for s in INPUTS}
             bars = {s:day_frames[s] for s in SYMBOLS}
             index = bars[SYMBOLS[0]].index
             forecasts = model.forecast_frames(day_frames)
-            training.append(dict(date=day, audit=model.audit))
+            refit_difference = None
+            if experiment == "refresh_price":
+                rows = [r for r in fixed_forecasts[name] if r["date"] == day]
+                frozen_index = pd.DatetimeIndex([pd.Timestamp(r["decision_at"])-pd.Timedelta(minutes=5) for r in rows]).tz_convert("America/New_York")
+                if not frozen_index.equals(index[:76]):
+                    raise ValueError("Frozen price predictions must match every completed decision bar")
+                frozen = {s:pd.DataFrame([{int(h):v for h,v in r["forecasts"][s].items()} for r in rows],
+                                         index=frozen_index) for s in SYMBOLS}
+                refit_difference = max(float(np.max(np.abs(forecasts[s].loc[frozen_index].to_numpy()-frozen[s].to_numpy())))
+                                       for s in SYMBOLS)
+                if refit_difference > 1e-12:
+                    raise ValueError("Paired price forecasts differ beyond numerical precision")
+                # The holding-clock pair consumes the exact original Python JSON
+                # values, not a refit's nearly identical floating-point outputs.
+                forecasts = frozen
+            training.append(dict(date=day, audit=model.audit, max_abs_refit_vs_frozen_forecast=refit_difference))
             for cost, record in states.items():
                 holding_state = SignalHoldingState()
                 def decide(i, current):
                     values = {s:{int(h):float(forecasts[s].iloc[i][h]) for h in forecasts[s]} for s in SYMBOLS}
-                    weights, info = model.allocate(index[i], current, values,
+                    model_input = (model.forecast_snapshot(forecasts, index[i])
+                                   if experiment == "refresh_price" else values)
+                    weights, info = model.allocate(index[i], current, model_input,
                         state=holding_state, cost_bps=cost)
                     record["diagnostics"].append(dict(date=day, decision_at=(index[i]+pd.Timedelta(minutes=5)).isoformat(),
                         forecasts=values, current=current, target=weights, explanation=info))
@@ -299,6 +339,30 @@ def _execute(packet, destination, update_progress):
         positive_at_primary_cost=[n for n in names if results[f"{n}/5bps"]["net_pnl"]>0],
         text_ablations_status="pending", selected_for_live=False)
     write(out / "summary.partial.json", report)
+    if experiment == "refresh_price":
+        previous = packet.parent / "results" / FIRST_RUN
+        old = json.loads((previous / "summary.json").read_text())
+        text_receipt = json.loads((previous / "text_ablations/summary.json").read_text())
+        if (text_receipt.get("status") != "complete" or
+                old["registration"]["code_revision"] != "ea86c7ea9be535322abed6624dc5455af2e51ca0" or
+                old["registration"]["packet_manifest_sha256"] != sha(packet / "manifest.json")):
+            raise ValueError("Prior paired comparison receipt mismatch")
+        pairs = {}
+        for name in names:
+            base = name.removesuffix("_refresh_price")
+            for cost in COSTS:
+                key = f"{name}/{int(cost)}bps"
+                before = old["candidates"][f"{base}/{int(cost)}bps"]
+                after = results[key]
+                pairs[key] = {field:after[field]-before[field] for field in
+                    ("net_pnl", "gross_pnl", "costs", "fill_count", "mean_gross_exposure")}
+        report.update(status="complete", text_ablations_status="complete",
+            text_ablations_execution="Reused prior complete receipt; not rerun in the price-clock diagnostic",
+            prior_text_reproduction_passed=text_receipt["frozen_reproduction_passed"],
+            prior_result_sha256=sha(previous / "summary.json"), paired_differences=pairs,
+            prior_entry_bound_results=old["candidates"],
+            duration_seconds=time.monotonic()-started, completed_at=pd.Timestamp.now(tz="UTC").isoformat())
+        return report
     update_progress(stage="running_text_ablations")
     from replay_sentiment_ablations import run_ablations
     decisions = pd.read_json(packet / "decisions.jsonl.gz", lines=True)
@@ -322,7 +386,9 @@ def transfer(operation, repo, folder, revision=None):
         raise ValueError("Research inputs and detailed outputs require a private dataset")
     if operation == "download":
         snapshot_download(repo_id=repo, repo_type="dataset", revision=revision,
-            allow_patterns=f"{PACKET_ID}/input/*", local_dir=folder)
+            allow_patterns=[f"{PACKET_ID}/input/*", f"{PACKET_ID}/results/{FIRST_RUN}/summary.json",
+                            f"{PACKET_ID}/results/{FIRST_RUN}/text_ablations/summary.json",
+                            f"{PACKET_ID}/results/{FIRST_RUN}/*/cost_5bps/decisions.jsonl.gz"], local_dir=folder)
     else:
         run = os.environ.get("GITHUB_RUN_ID", "manual")
         api.upload_folder(repo_id=repo, repo_type="dataset", folder_path=folder,
@@ -337,7 +403,8 @@ if __name__ == "__main__":
     parser.add_argument("--packet")
     parser.add_argument("--repo", default="Ypeng12/quant-research-compute")
     parser.add_argument("--revision")
+    parser.add_argument("--experiment", choices=["entry_bound", "refresh_price"], default="entry_bound")
     args = parser.parse_args()
     if args.operation == "prepare": prepare(args.folder)
-    elif args.operation == "run": execute(args.packet, args.folder)
+    elif args.operation == "run": execute(args.packet, args.folder, args.experiment)
     else: transfer(args.operation, args.repo, args.folder, args.revision)

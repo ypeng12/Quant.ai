@@ -7,9 +7,11 @@ on:
       - '.github/workflows/signal-research.yml'
       - 'scripts/cloud_profit_research.py'
       - 'scripts/replay_sentiment_ablations.py'
+      - 'scripts/probe_sentiment_reproduction.py'
       - 'backend/app/research/profit_signal_candidates.py'
       - 'research/financial_sentiment_using_prices/requirements-profit-research.txt'
       - 'research/financial_sentiment_using_prices/profitability_v2_protocol.json'
+      - 'research/financial_sentiment_using_prices/price_clock_diagnostic_protocol.json'
 
 permissions:
   contents: read
@@ -45,18 +47,20 @@ jobs:
           python -m pytest -q backend/tests/test_profit_signal_candidates.py
           scripts/tests/test_cloud_profit_research.py
           scripts/tests/test_replay_sentiment_ablations.py
+          scripts/tests/test_probe_sentiment_reproduction.py
       - name: Read immutable private numeric inputs
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: >-
           python scripts/cloud_profit_research.py download
           --folder "$RUNNER_TEMP/market-input"
-          --revision 39d49efb98664537e4843c35f9f092073c4e9129
+          --revision 34348135ce799096d6686da814bb6f7ecec9becd
       - name: Run fixed offline candidates and text controls
         run: >-
           python scripts/cloud_profit_research.py run
           --packet "$RUNNER_TEMP/market-input/profitability_v2_20261028/input"
           --folder "$RUNNER_TEMP/research-output"
+          --experiment refresh_price
       - name: Save research receipts privately
         if: always()
         env:

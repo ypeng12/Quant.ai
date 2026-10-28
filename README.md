@@ -217,12 +217,12 @@ Once launched, open in your browser:
 * 📈 **Interactive API Docs (Swagger UI)**: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
 
 ### 4. Run Strategy Simulations & Model Calibration
+
+The legacy MaxProfit simulation and parameter-grid scripts are retired from recommended use. They contain look-ahead assumptions and must not be used as evidence of trading performance. Historical source remains available for audit. Follow the [fixed profitability research protocol](research/financial_sentiment_using_prices/profitability_v2_protocol.json) for the current candidate definitions, evaluation boundaries, and cost assumptions.
+
 ```bash
 # Run full automated test suite
 make test
-
-# Execute institutional max-profit multi-asset simulation
-python3 scripts/run_max_profit_simulation.py --capital 500000
 
 # Execute post-market self-reflection & RL Q-table update
 python3 scripts/run_daily_reflection.py --date 2026-09-11
