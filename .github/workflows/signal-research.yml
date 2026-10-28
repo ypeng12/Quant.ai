@@ -1,0 +1,67 @@
+name: Offline signal profitability research
+
+on:
+  push:
+    branches: [research/signal-profitability-v2]
+    paths:
+      - '.github/workflows/signal-research.yml'
+      - 'scripts/cloud_profit_research.py'
+      - 'scripts/replay_sentiment_ablations.py'
+      - 'backend/app/research/profit_signal_candidates.py'
+      - 'research/financial_sentiment_using_prices/requirements-profit-research.txt'
+      - 'research/financial_sentiment_using_prices/profitability_v2_protocol.json'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fixed-profit-signal-research
+  cancel-in-progress: false
+
+jobs:
+  research:
+    if: github.repository == 'ypeng12/Quant.ai'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      PYTHONPATH: backend:scripts
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      HF_HUB_DISABLE_PROGRESS_BARS: '1'
+      HF_HUB_DISABLE_TELEMETRY: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install pinned research dependencies
+        run: pip install -r research/financial_sentiment_using_prices/requirements-profit-research.txt
+      - name: Verify causal models and private packet boundary
+        run: >-
+          python -m pytest -q backend/tests/test_profit_signal_candidates.py
+          scripts/tests/test_cloud_profit_research.py
+          scripts/tests/test_replay_sentiment_ablations.py
+      - name: Read immutable private numeric inputs
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: >-
+          python scripts/cloud_profit_research.py download
+          --folder "$RUNNER_TEMP/market-input"
+          --revision 39d49efb98664537e4843c35f9f092073c4e9129
+      - name: Run fixed offline candidates and text controls
+        run: >-
+          python scripts/cloud_profit_research.py run
+          --packet "$RUNNER_TEMP/market-input/profitability_v2_20261028/input"
+          --folder "$RUNNER_TEMP/research-output"
+      - name: Save research receipts privately
+        if: always()
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          if [ -d "$RUNNER_TEMP/research-output" ]; then
+            python scripts/cloud_profit_research.py upload --folder "$RUNNER_TEMP/research-output"
+          fi
