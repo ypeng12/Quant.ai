@@ -1,5 +1,25 @@
 # Train_Financial_Sentinment_Analysis_Using_Prices
 
+## Offline profitability follow-up (2026-10-28)
+
+The current research priority is absolute net profitability, signal validity, and holding decisions. The frozen A/C/B comparison remains unchanged. Its text increment was negative; repeated observations of two receipt batches do not establish a sentiment alpha. New work is isolated on `research/signal-profitability-v2`, with no app deployment or trading activation.
+
+The [fixed protocol](profitability_v2_protocol.json) evaluates four active price candidates at 2/5/10 bps per side and five text-decomposition arms. [Candidate code](../../backend/app/research/profit_signal_candidates.py) uses prior-only executable return labels and explicit holding/exit costs. The [semantic gate](semantic_signal_gate.py) requires verified entity, event, direction, horizon, and availability evidence; it is not an implemented NLP extraction model or proof of predictive value.
+
+Full replays run in [the research workflow](../../.github/workflows/signal-research.yml) on a standard GitHub-hosted Linux runner. Numeric inputs and detailed simulated results remain in a private dataset; the public repository contains the protocol, code, and tests. The workflow never imports the trading API or supplies broker credentials to a solver. The 32-session historical interval is already-inspected development data, not a new blind test. All candidates, including losses, must be reported.
+
+For local contract tests only:
+
+```bash
+PYTHONPATH=backend:scripts python -m pytest -q \
+  backend/tests/test_profit_signal_candidates.py \
+  scripts/tests/test_cloud_profit_research.py \
+  scripts/tests/test_replay_sentiment_ablations.py \
+  research/financial_sentiment_using_prices/tests/test_semantic_signal_gate.py
+```
+
+The owner's [Chinese review](README.zh-CN.md) and [primary research plan](../../docs/financial_sentiment_using_prices_plan.md) retain the detailed findings and current results.
+
 This Python research module tests whether text labels derived from subsequent price reactions can add information to Quant.ai. The directory preserves the spelling of the assigned project title. See the [owner's research plan](../../docs/financial_sentiment_using_prices_plan.md) for scope and milestones; this README describes reproduction.
 
 For the owner's Chinese explanation, current progress, original trading-logic audit, and the October 28 old/new strategy comparison, see [Chinese project review](README.zh-CN.md). The new offline comparison is implemented; its text overlay did not improve the price-only control in this development run, and no candidate has been promoted to live trading.

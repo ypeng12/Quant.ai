@@ -1,0 +1,21 @@
+{
+  "status": "registered_after_initial_active_candidate_losses_before_macro_replay",
+  "purpose": "Test whether the missing slower market context improves the same intraday prediction and execution task",
+  "hypothesis": "The original feature set resets within each session and cannot explicitly condition an entry on prior market/sector trends or multi-day stock relative strength",
+  "data": {"source": "Connected Alpaca SIP historical daily bars", "symbols": ["SPY", "QQQ", "SOXX"], "requested_start": "2026-06-01", "requested_end_exclusive": "2026-10-28", "raw_rows_each": 105, "unexpected_end_date_rows_each": 1, "required_action": "Exclude 2026-10-28 and later rows, use only dates strictly before each stock decision date", "historical_receipts_reconstructed": false},
+  "features": ["stock prior 1/5/20-session returns", "current stock open versus prior complete session close", "SPY/QQQ/SOXX prior 1/5/20-session returns", "stock minus each market proxy prior 5-session return", "four fixed macro/intraday trend, relative-strength, gap and VWAP interactions"],
+  "feature_count": 41,
+  "candidates": ["macro_ridge30_single_refresh_price", "macro_ridge30_plan_refresh_price"],
+  "comparison_candidates": ["ridge30_single_refresh_price", "ridge30_plan_refresh_price"],
+  "comparison_run": "40790388222",
+  "costs_bps_per_side": [5, 10],
+  "primary_cost": 5,
+  "capital": 50000,
+  "period": ["2026-09-14", "2026-10-27"],
+  "unchanged": ["traded universe", "Ridge alpha 10", "risk aversion 50", "prior-only daily training", "5/30-minute open-to-open targets", "95% gross and 70% name caps", "fresh completed-bar forecasting", "next-open integer fills", "explicit terminal exit costs", "15:55 liquidation"],
+  "no_hyperparameter_or_universe_search": true,
+  "evaluation_kind": "already_inspected_retrospective_development",
+  "selection": "Report both candidates and both cost scenarios even if all lose; no automatic deployment or further search until profitable",
+  "limitations": ["Newly obtained historical bars are not contemporaneously archived receipts", "Daily context rows repeat across intraday decisions and do not create independent sessions", "Mixed SIP reference and Yahoo stock price sources", "This is an intraday strategy with slow context, not a validated multi-week or fundamental investment model"],
+  "selected_for_live": false
+}

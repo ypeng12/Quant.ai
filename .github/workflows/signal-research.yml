@@ -1,0 +1,74 @@
+name: Offline signal profitability research
+
+on:
+  push:
+    branches: [research/signal-profitability-v2]
+    paths:
+      - '.github/workflows/signal-research.yml'
+      - 'scripts/cloud_profit_research.py'
+      - 'scripts/replay_sentiment_ablations.py'
+      - 'scripts/probe_sentiment_reproduction.py'
+      - 'backend/app/research/profit_signal_candidates.py'
+      - 'backend/app/research/macro_price_context.py'
+      - 'research/financial_sentiment_using_prices/requirements-profit-research.txt'
+      - 'research/financial_sentiment_using_prices/profitability_v2_protocol.json'
+      - 'research/financial_sentiment_using_prices/price_clock_diagnostic_protocol.json'
+      - 'research/financial_sentiment_using_prices/macro_context_protocol.json'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fixed-profit-signal-research-macro
+  cancel-in-progress: false
+
+jobs:
+  research:
+    if: github.repository == 'ypeng12/Quant.ai'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      PYTHONPATH: backend:scripts
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      HF_HUB_DISABLE_PROGRESS_BARS: '1'
+      HF_HUB_DISABLE_TELEMETRY: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install pinned research dependencies
+        run: pip install -r research/financial_sentiment_using_prices/requirements-profit-research.txt
+      - name: Verify causal models and private packet boundary
+        run: >-
+          python -m pytest -q backend/tests/test_profit_signal_candidates.py
+          scripts/tests/test_cloud_profit_research.py
+          scripts/tests/test_replay_sentiment_ablations.py
+          scripts/tests/test_probe_sentiment_reproduction.py
+          backend/tests/test_macro_price_context.py
+      - name: Read immutable private numeric inputs
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: >-
+          python scripts/cloud_profit_research.py download
+          --folder "$RUNNER_TEMP/market-input"
+          --revision 21913c049c60498aded760728b314f6e0db6fc36
+      - name: Run macro context diagnostic
+        run: >-
+          python scripts/cloud_profit_research.py run
+          --packet "$RUNNER_TEMP/market-input/profitability_v2_20261028/input"
+          --folder "$RUNNER_TEMP/research-output"
+          --experiment macro_context
+      - name: Save research receipts privately
+        if: always()
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          if [ -d "$RUNNER_TEMP/research-output" ]; then
+            python scripts/cloud_profit_research.py upload --folder "$RUNNER_TEMP/research-output"
+          fi

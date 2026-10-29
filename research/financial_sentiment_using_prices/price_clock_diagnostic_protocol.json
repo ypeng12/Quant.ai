@@ -1,0 +1,19 @@
+{
+  "status": "registered_after_reviewing_first_run_and_before_refresh_replay",
+  "first_run": "40788629742",
+  "first_run_code": "ea86c7ea9be535322abed6624dc5455af2e51ca0",
+  "first_run_finding": "All four active candidates lost net of 2/5/10bps; all nine unique stock-horizon MAEs exceeded zero-prediction MAE",
+  "hypothesis": "Entry-anchored expiry incorrectly treats a freshly recomputed price forecast as an old news event; it can force churn and shorten the plan of other stocks",
+  "pairs": ["ridge30_single", "ridge30_plan", "ridge60_plan", "ridge30_plan_long_only"],
+  "only_changed_mechanism": "Refresh the price forecast horizon on a verifiably new completed-bar forecast; remove entry-age forced liquidation and entry-deadline plan truncation",
+  "forecast_control": "Consume the exact Python-JSON predictions retained in the first run; refit forecasts are checked within 1e-12 return units but are not substituted into the paired allocation",
+  "unchanged": ["inputs", "features", "labels", "daily training cutoffs", "Ridge alpha", "risk aversion", "gross/name limits", "capital", "next-open integer execution", "terminal exit costs", "scheduled 15:55 liquidation"],
+  "costs_bps_per_side": [2, 5, 10],
+  "primary_cost": 5,
+  "text_event_expiry_changed": false,
+  "numeric_probe": "Before replay, compare original JSON, pandas parsed and full-precision reconstructed C forecasts at the first divergent frozen state; inspect solver targets and integer conversion without rewriting v1",
+  "selection": "Report all four pairs, including worse results; no additional parameter search or automatic promotion",
+  "evaluation_kind": "post_result_diagnostic_on_already_inspected_development_period",
+  "new_blind_test": false,
+  "selected_for_live": false
+}
