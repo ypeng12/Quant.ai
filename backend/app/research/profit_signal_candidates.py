@@ -208,7 +208,8 @@ class ProfitSignalModel:
     """Fixed Ridge per stock/horizon; daily rolling prior training, no selection."""
 
     @classmethod
-    def fit(cls, frames, before, candidate=CANDIDATES["ridge30_plan"]):
+    def fit(cls, frames, before, candidate=CANDIDATES["ridge30_plan"], *,
+            feature_builder=profit_signal_features):
         # A runner's ISO session date means New York start-of-day explicitly.
         # Arbitrary naive timestamps are still rejected rather than guessed.
         cutoff = (pd.Timestamp(before, tz=NY) if isinstance(before, str)
@@ -231,8 +232,9 @@ class ProfitSignalModel:
         if len(days) < MIN_TRAINING_SESSIONS:
             raise ValueError("At least ten common complete prior sessions required")
         bars = {s: pd.concat([complete[s][d] for d in days]) for s in INPUT_SYMBOLS}
-        features = profit_signal_features(bars)
+        features = feature_builder(bars)
         model = cls()
+        model.feature_builder = feature_builder
         model.candidate, model.symbols, model.trained_before = candidate, TRADED_SYMBOLS, cutoff
         model.feature_names = tuple(features[TRADED_SYMBOLS[0]].columns)
         model.models, fits = {}, []
@@ -273,7 +275,7 @@ class ProfitSignalModel:
         bars = _panel(frames)
         if min(bars[INPUT_SYMBOLS[0]].index) < self.trained_before:
             raise ValueError("Prediction period overlaps training")
-        features = profit_signal_features(bars)
+        features = self.feature_builder(bars)
         forecasts = {}
         for s in TRADED_SYMBOLS:
             f = features[s]

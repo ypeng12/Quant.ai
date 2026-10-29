@@ -7,7 +7,7 @@ ledgers are stored in a private dataset. This never imports the API or runner.
 from __future__ import annotations
 
 import argparse
-from dataclasses import asdict
+from dataclasses import asdict, replace
 import gzip
 import hashlib
 import importlib.metadata
@@ -32,6 +32,7 @@ INPUTS = (*SYMBOLS, "MSTR")
 COSTS = (2., 5., 10.)
 PACKET_ID = "profitability_v2_20261028"
 FIRST_RUN = "40788629742"
+REFRESH_RUN = "40790388222"
 PACKET_SOURCE = "Archived Yahoo OHLCV with fixed fresh-capture precedence; strict receipt features from frozen v1"
 
 
@@ -205,12 +206,24 @@ def _execute(packet, destination, update_progress, experiment="entry_bound"):
     dates = manifest["dates"]
     sessions, _, _ = complete_universe(frames, dates)
     started = time.monotonic()
-    if experiment not in ("entry_bound", "refresh_price"):
+    if experiment not in ("entry_bound", "refresh_price", "macro_context"):
         raise ValueError("Unknown fixed experiment")
     definitions = CANDIDATES
-    if experiment == "refresh_price":
+    builder = None
+    context_audit = None
+    costs = COSTS if experiment != "macro_context" else (5., 10.)
+    if experiment in ("refresh_price", "macro_context"):
         from app.research.profit_signal_candidates import REFRESH_CANDIDATES
         definitions = REFRESH_CANDIDATES
+    if experiment == "macro_context":
+        from app.research.macro_price_context import make_macro_feature_builder
+        names = ("ridge30_single_refresh_price", "ridge30_plan_refresh_price")
+        definitions = {"macro_"+n:replace(REFRESH_CANDIDATES[n],name="macro_"+n) for n in names}
+        source = packet.parent / "macro_context/market_daily.json"
+        if sha(source) != "93b330d286ef097a18f539fcba1d961f6ecd6e1643b312759b79812b849c4525":
+            raise ValueError("Registered market context capture hash differs")
+        builder = make_macro_feature_builder(frames, json.loads(source.read_text()), evaluation_end="2026-10-27")
+        context_audit = dict(builder.audit, source_sha256=sha(source))
     names = list(definitions)
     fixed_forecasts = {}
     forecast_sources = {}
@@ -228,7 +241,8 @@ def _execute(packet, destination, update_progress, experiment="entry_bound"):
         code_revision=os.environ.get("GITHUB_SHA", "local_fixture_only"),
         cloud_run_id=os.environ.get("GITHUB_RUN_ID"), packet_manifest_sha256=sha(packet / "manifest.json"),
         start=dates[0], end=dates[-1], sessions=len(dates), capital=50000.,
-        candidates=names, candidate_specs=candidate_registry(), costs_bps_per_side=list(COSTS), primary_cost=5.,
+        candidates=names, candidate_specs={name:asdict(value) for name,value in definitions.items()},
+        costs_bps_per_side=list(costs), primary_cost=5., macro_context_audit=context_audit,
         frozen_forecast_source_hashes=forecast_sources,
         package_versions={name:importlib.metadata.version(name) for name in
             ("numpy", "pandas", "scipy", "scikit-learn", "osqp", "pyarrow")},
@@ -244,6 +258,13 @@ def _execute(packet, destination, update_progress, experiment="entry_bound"):
             "OHLCV next-open execution and costs are assumptions, with no market-impact/borrow verification.",
             "An expiry or active-trading rule is an experiment, not proof of alpha.",
             "All candidates reported; no automatic promotion or order submission."])
+    extra_sources = ([ROOT/"backend/app/research/macro_price_context.py",
+                      ROOT/"research/financial_sentiment_using_prices/macro_context_protocol.json"]
+                     if experiment == "macro_context" else
+                     [ROOT/"research/financial_sentiment_using_prices/price_clock_diagnostic_protocol.json"]
+                     if experiment == "refresh_price" else
+                     [ROOT/"research/financial_sentiment_using_prices/profitability_v2_protocol.json"])
+    registration["source_hashes"].update({str(p.relative_to(ROOT)):sha(p) for p in extra_sources})
     write(out / "registration.json", registration)
     if experiment == "refresh_price":
         from probe_sentiment_reproduction import run_probe
@@ -255,11 +276,12 @@ def _execute(packet, destination, update_progress, experiment="entry_bound"):
         update_progress(stage="running_candidates", current_candidate=name,
                         completed_candidates=list(completed_candidates), candidate_completed_dates=completed_dates)
         states = {cost:dict(ledger=ShareLedger(list(SYMBOLS), ExecutionConfig(
-            starting_equity=50000., slippage_bps=cost)), daily=[], diagnostics=[]) for cost in COSTS}
+            starting_equity=50000., slippage_bps=cost)), daily=[], diagnostics=[]) for cost in costs}
         training = []
         forecast_audit = []
         for day in dates:
-            model = ProfitSignalModel.fit(frames, day, definitions[name])
+            model = (ProfitSignalModel.fit(frames, day, definitions[name]) if builder is None
+                     else ProfitSignalModel.fit(frames, day, definitions[name], feature_builder=builder))
             day_frames = {s:sessions[s][day] for s in INPUTS}
             bars = {s:day_frames[s] for s in SYMBOLS}
             index = bars[SYMBOLS[0]].index
@@ -285,7 +307,7 @@ def _execute(packet, destination, update_progress, experiment="entry_bound"):
                 def decide(i, current):
                     values = {s:{int(h):float(forecasts[s].iloc[i][h]) for h in forecasts[s]} for s in SYMBOLS}
                     model_input = (model.forecast_snapshot(forecasts, index[i])
-                                   if experiment == "refresh_price" else values)
+                                   if experiment in ("refresh_price", "macro_context") else values)
                     weights, info = model.allocate(index[i], current, model_input,
                         state=holding_state, cost_bps=cost)
                     record["diagnostics"].append(dict(date=day, decision_at=(index[i]+pd.Timedelta(minutes=5)).isoformat(),
@@ -339,7 +361,7 @@ def _execute(packet, destination, update_progress, experiment="entry_bound"):
         positive_at_primary_cost=[n for n in names if results[f"{n}/5bps"]["net_pnl"]>0],
         text_ablations_status="pending", selected_for_live=False)
     write(out / "summary.partial.json", report)
-    if experiment == "refresh_price":
+    if experiment in ("refresh_price", "macro_context"):
         previous = packet.parent / "results" / FIRST_RUN
         old = json.loads((previous / "summary.json").read_text())
         text_receipt = json.loads((previous / "text_ablations/summary.json").read_text())
@@ -348,19 +370,35 @@ def _execute(packet, destination, update_progress, experiment="entry_bound"):
                 old["registration"]["packet_manifest_sha256"] != sha(packet / "manifest.json")):
             raise ValueError("Prior paired comparison receipt mismatch")
         pairs = {}
-        for name in names:
+        for name in (names if experiment == "refresh_price" else []):
             base = name.removesuffix("_refresh_price")
-            for cost in COSTS:
+            for cost in costs:
                 key = f"{name}/{int(cost)}bps"
                 before = old["candidates"][f"{base}/{int(cost)}bps"]
                 after = results[key]
                 pairs[key] = {field:after[field]-before[field] for field in
                     ("net_pnl", "gross_pnl", "costs", "fill_count", "mean_gross_exposure")}
+        if experiment == "macro_context":
+            context_control_path = packet.parent / "results" / REFRESH_RUN / "summary.json"
+            control = json.loads(context_control_path.read_text())
+            if (control.get("status") != "complete" or
+                    control["registration"]["code_revision"] != "51591441acfd7669694879ab1cb3cccf09a9871f" or
+                    control["registration"]["packet_manifest_sha256"] != sha(packet/"manifest.json")):
+                raise ValueError("Macro comparison control receipt mismatch")
+            for name in names:
+                for cost in costs:
+                    key = f"{name}/{int(cost)}bps"
+                    before = control["candidates"][f"{name.removeprefix('macro_')}/{int(cost)}bps"]
+                    after = results[key]
+                    pairs[key] = {field:after[field]-before[field] for field in
+                        ("net_pnl", "gross_pnl", "costs", "fill_count", "mean_gross_exposure")}
+            report["context_control_summary_sha256"] = sha(context_control_path)
         report.update(status="complete", text_ablations_status="complete",
             text_ablations_execution="Reused prior complete receipt; not rerun in the price-clock diagnostic",
             prior_text_reproduction_passed=text_receipt["frozen_reproduction_passed"],
             prior_result_sha256=sha(previous / "summary.json"), paired_differences=pairs,
             prior_entry_bound_results=old["candidates"],
+            context_comparison_run=("40790388222" if experiment == "macro_context" else None),
             duration_seconds=time.monotonic()-started, completed_at=pd.Timestamp.now(tz="UTC").isoformat())
         return report
     update_progress(stage="running_text_ablations")
@@ -388,7 +426,9 @@ def transfer(operation, repo, folder, revision=None):
         snapshot_download(repo_id=repo, repo_type="dataset", revision=revision,
             allow_patterns=[f"{PACKET_ID}/input/*", f"{PACKET_ID}/results/{FIRST_RUN}/summary.json",
                             f"{PACKET_ID}/results/{FIRST_RUN}/text_ablations/summary.json",
-                            f"{PACKET_ID}/results/{FIRST_RUN}/*/cost_5bps/decisions.jsonl.gz"], local_dir=folder)
+                            f"{PACKET_ID}/results/{FIRST_RUN}/*/cost_5bps/decisions.jsonl.gz",
+                            f"{PACKET_ID}/results/{REFRESH_RUN}/summary.json",
+                            f"{PACKET_ID}/macro_context/market_daily.json"], local_dir=folder)
     else:
         run = os.environ.get("GITHUB_RUN_ID", "manual")
         api.upload_folder(repo_id=repo, repo_type="dataset", folder_path=folder,
@@ -403,7 +443,7 @@ if __name__ == "__main__":
     parser.add_argument("--packet")
     parser.add_argument("--repo", default="Ypeng12/quant-research-compute")
     parser.add_argument("--revision")
-    parser.add_argument("--experiment", choices=["entry_bound", "refresh_price"], default="entry_bound")
+    parser.add_argument("--experiment", choices=["entry_bound", "refresh_price", "macro_context"], default="entry_bound")
     args = parser.parse_args()
     if args.operation == "prepare": prepare(args.folder)
     elif args.operation == "run": execute(args.packet, args.folder, args.experiment)

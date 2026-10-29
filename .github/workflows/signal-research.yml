@@ -9,15 +9,17 @@ on:
       - 'scripts/replay_sentiment_ablations.py'
       - 'scripts/probe_sentiment_reproduction.py'
       - 'backend/app/research/profit_signal_candidates.py'
+      - 'backend/app/research/macro_price_context.py'
       - 'research/financial_sentiment_using_prices/requirements-profit-research.txt'
       - 'research/financial_sentiment_using_prices/profitability_v2_protocol.json'
       - 'research/financial_sentiment_using_prices/price_clock_diagnostic_protocol.json'
+      - 'research/financial_sentiment_using_prices/macro_context_protocol.json'
 
 permissions:
   contents: read
 
 concurrency:
-  group: fixed-profit-signal-research
+  group: fixed-profit-signal-research-macro
   cancel-in-progress: false
 
 jobs:
@@ -48,19 +50,20 @@ jobs:
           scripts/tests/test_cloud_profit_research.py
           scripts/tests/test_replay_sentiment_ablations.py
           scripts/tests/test_probe_sentiment_reproduction.py
+          backend/tests/test_macro_price_context.py
       - name: Read immutable private numeric inputs
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: >-
           python scripts/cloud_profit_research.py download
           --folder "$RUNNER_TEMP/market-input"
-          --revision 34348135ce799096d6686da814bb6f7ecec9becd
-      - name: Run fixed offline candidates and text controls
+          --revision 21913c049c60498aded760728b314f6e0db6fc36
+      - name: Run macro context diagnostic
         run: >-
           python scripts/cloud_profit_research.py run
           --packet "$RUNNER_TEMP/market-input/profitability_v2_20261028/input"
           --folder "$RUNNER_TEMP/research-output"
-          --experiment refresh_price
+          --experiment macro_context
       - name: Save research receipts privately
         if: always()
         env:
