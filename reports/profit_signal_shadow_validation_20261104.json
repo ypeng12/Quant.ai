@@ -1,0 +1,86 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-11-04T19:43:39.612954+00:00",
+  "kind": "profit_signal_shadow_engineering_validation",
+  "deployment": "shadow_only",
+  "execution_enabled": false,
+  "active_policy_changed": false,
+  "live_runner_modified": false,
+  "production_ready": false,
+  "candidate_selection": "explicit_registered_name_only_no_outcome_ranking",
+  "candidate_families": [
+    "ridge30_single",
+    "ridge30_plan",
+    "ridge60_plan",
+    "ridge30_plan_long_only",
+    "registered_refresh_price_pairs"
+  ],
+  "implementation_sha256": {
+    "backend/app/research/profit_signal_shadow.py": "a150b539b8fc38b3c04382d0b35e0c06b171df63dddeddfc62e1b461d9a88562",
+    "backend/tests/test_profit_signal_shadow.py": "35d00a0a14606c852d0531beaee0aead3b94b6249ea34ecf7e7eea5436c55535",
+    "backend/app/research/profit_signal_candidates.py": "39f40b3d687310b294fe1c9e672c958d25eb0b087a82a2c4855b28feba648f5e"
+  },
+  "dependencies": {
+    "numpy": "1.26.4",
+    "pandas": "2.3.3",
+    "scipy": "1.16.2",
+    "scikit-learn": "1.7.2",
+    "osqp": "1.1.3",
+    "pytest": "9.0.3"
+  },
+  "validation": {
+    "data_kind": "deterministic_synthetic_engineering_fixture_not_observed_market_data",
+    "training": "actual_registered_21_feature_Ridge_scaler_and_LedoitWolf_pipeline_on_ten_prior_sessions",
+    "comparison": "actual_costed_optimizer_and_next_open_integer_share_cash_ledger",
+    "full_session_decisions_compared": 76,
+    "identical_target_weights_to_tolerance": 1e-10,
+    "identical_integer_share_fills_costs_marks_and_pnl": true,
+    "nonzero_fill_count_and_positive_costs_asserted": true,
+    "final_adapter_tests_passed": 18,
+    "existing_candidate_regression_tests_passed": 18,
+    "initial_combined_run": {
+      "passed": 33,
+      "seconds": 110.62
+    },
+    "final_adapter_run_after_boundary_fixes": {
+      "passed": 16,
+      "seconds": 94.4
+    },
+    "command": "OPENBLAS_NUM_THREADS=1 PYTHONPATH=backend .venv-course/bin/python -m pytest -q backend/tests/test_profit_signal_shadow.py backend/tests/test_profit_signal_candidates.py",
+    "checks": [
+      "future_bar_poison_has_no_effect",
+      "full_session_replay_target_and_fill_parity",
+      "registered_candidate_and_audit_consistency",
+      "finite_json_roundtrip_and_exclusive_creation",
+      "missing_stale_or_naive_data_rejected",
+      "unknown_nonflat_startup_and_decision_gaps_rejected",
+      "permissions_reoptimized",
+      "early_close_truncation_and_flatten_plan_diagnostics",
+      "no_broker_or_network_imports_in_adapter",
+      "explicit_permission_containers_and_complete_finite_scalar_inventory",
+      "finite_scalar_equity_and_int64_quantity_range",
+      "sizing_failure_rolls_back_holding_state_and_decision_clock"
+    ],
+    "final_combined_run_after_input_review": {
+      "passed": 36,
+      "seconds": 128.53,
+      "adapter_tests": 18,
+      "existing_candidate_tests": 18
+    },
+    "new_input_boundary_regressions_passed": 2
+  },
+  "interfaces": {
+    "fit": "ProfitSignalShadowModel.fit(local_frames, session_date, explicit_candidate)",
+    "live_target": "completed local bars and explicit current weights/permissions -> weights and diagnostics",
+    "shadow_targets": "same inputs plus equity -> whole-share intentions; no order submission",
+    "save_load": "bounded declarative numerical JSON; no executable pickle; holding state is not silently restored"
+  },
+  "limitations": [
+    "All four original candidates lost in the inspected historical comparison; no winner is promoted.",
+    "Synthetic numerical parity is not new market performance evidence, an alpha claim or execution certification.",
+    "Audit validation checks declared consistency and prior cutoffs, not independent authenticity of training data.",
+    "Real deployment still needs fresh daily artifact production, authenticated fill timestamps and persisted holding clocks.",
+    "The optional runner integration exists only as a private unapplied proposal requiring owner review.",
+    "The proposal adds an inline numerical computation whose runtime latency still requires review."
+  ]
+}

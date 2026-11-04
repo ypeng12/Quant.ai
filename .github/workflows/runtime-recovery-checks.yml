@@ -49,6 +49,8 @@ jobs:
           backend/tests/test_runtime_status.py
           backend/tests/test_public_read_only.py
           backend/tests/test_owner_auth.py
+          backend/tests/test_profit_signal_candidates.py
+          backend/tests/test_profit_signal_shadow.py
           tests/test_financial_sentiment_preview.py
           scripts/tests/test_replay_sentiment_ablations.py
           scripts/tests/test_probe_sentiment_reproduction.py
