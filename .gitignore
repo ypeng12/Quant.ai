@@ -12,6 +12,10 @@ Thumbs.db
 venv/
 .venv/
 .venv-*/
+.local-preview/
+.local_backups/
+# Course submissions and original screenshots are private local materials.
+/coursework/
 env/
 .env
 backend/.runtime_state/

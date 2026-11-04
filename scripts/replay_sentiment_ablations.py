@@ -162,12 +162,24 @@ def comparison_to_frozen(daily,fills,summary,folder):
     daily_differences=[{'date':n['date'],'net_pnl_difference':finite(n['net_pnl'])-finite(o['net_pnl']),
                        'cost_difference':finite(n['costs'])-finite(o['costs'])} for n,o in zip(daily,old_daily)]
     maximum=max(abs(r['net_pnl_difference']) for r in daily_differences)
-    exact=first is None and maximum<=1e-6 and abs(summary['costs']-old_summary['costs'])<=1e-6
+    maximum_cost=max(abs(r['cost_difference']) for r in daily_differences)
+    net_difference=finite(summary['net_pnl'])-finite(old_summary['net_pnl'])
+    cost_difference=finite(summary['costs'])-finite(old_summary['costs'])
+    # Matching aggregate reports alone can hide a damaged report on both sides,
+    # and matching total costs can hide a different daily cost path. Reconcile
+    # each summary to its own daily ledger before calling this a reproduction.
+    reconciliation={side:{key:finite(report[key])-math.fsum(finite(r[key]) for r in rows)
+                          for key in ('net_pnl','costs')}
+                    for side,report,rows in (('current',summary,daily),('frozen',old_summary,old_daily))}
+    exact=(first is None and maximum<=1e-6 and maximum_cost<=1e-6
+           and abs(net_difference)<=1e-6 and abs(cost_difference)<=1e-6
+           and all(abs(value)<=1e-6 for differences in reconciliation.values() for value in differences.values()))
     return {'status':'reproduced_within_1e_6_usd' if exact else 'reproduction_difference',
         'exact_fill_identity':first is None,'matching_fill_rows':matching,'first_different_fill':first,
-        'net_pnl_difference':summary['net_pnl']-old_summary['net_pnl'],
-        'cost_difference':summary['costs']-old_summary['costs'],
-        'maximum_absolute_daily_net_pnl_difference':maximum,'daily_differences':daily_differences,
+        'net_pnl_difference':net_difference,'cost_difference':cost_difference,
+        'maximum_absolute_daily_net_pnl_difference':maximum,
+        'maximum_absolute_daily_cost_difference':maximum_cost,
+        'summary_to_daily_differences':reconciliation,'daily_differences':daily_differences,
         'input_sha256':{n:digest(folder/n) for n in ('summary.json','daily.csv.gz','fills.csv.gz')},
         'note':'If differences occur, ablation comparisons use the common numeric-input replay; do not relabel them as the original frozen execution.'}
 
