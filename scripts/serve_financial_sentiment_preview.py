@@ -22,7 +22,9 @@ from app.financial_sentiment_context import router as context_router
 from app.financial_sentiment_signals import router as signals_router
 
 
-def create_app():
+def create_app(dist_dir: str | Path | None = None):
+    """Serve one locally selected build directory; HTTP cannot change it."""
+    dist = (Path(dist_dir) if dist_dir is not None else ROOT / "frontend/dist").resolve()
     app = FastAPI(title="Read-only Quant.ai research preview")
 
     @app.middleware("http")
@@ -38,7 +40,17 @@ def create_app():
     app.include_router(research_router)
     app.include_router(context_router)
     app.include_router(signals_router)
-    dist = ROOT / "frontend/dist"
+
+    @app.get("/api/runtime/capabilities")
+    def capabilities():
+        return {
+            "mode": "research_preview",
+            "trading_available": False,
+            "account_available": False,
+            "market_status_available": False,
+            "message": "Research preview: saved reports only. Trading and account connections are unavailable here.",
+        }
+
     if not (dist / "index.html").is_file():
         raise RuntimeError("Build the existing frontend first")
     app.mount("/assets", StaticFiles(directory=dist / "assets"), name="assets")
@@ -54,5 +66,7 @@ def create_app():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--port", type=int, default=8138)
+    parser.add_argument("--dist", type=Path, default=ROOT / "frontend/dist",
+                        help="Local frontend build directory (default: frontend/dist)")
     args = parser.parse_args()
-    uvicorn.run(create_app(), host="127.0.0.1", port=args.port, log_level="warning")
+    uvicorn.run(create_app(args.dist), host="127.0.0.1", port=args.port, log_level="warning")

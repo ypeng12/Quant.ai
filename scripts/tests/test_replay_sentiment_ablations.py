@@ -97,4 +97,69 @@ class AblationTests(unittest.TestCase):
             self.assertFalse(result['promoted'])
 
 
+class FrozenSummaryTests(unittest.TestCase):
+    """Artificial ledgers: matching fills must not hide inconsistent reports."""
+
+    def setUp(self):
+        self.directory = tempfile.TemporaryDirectory()
+        self.addCleanup(self.directory.cleanup)
+        self.folder = Path(self.directory.name)
+        self.daily = [
+            {'date': '2026-10-22', 'net_pnl': 1.0, 'costs': .2},
+            {'date': '2026-10-23', 'net_pnl': -3.0, 'costs': .4},
+        ]
+        self.fills = [{'date': '2026-10-23', 'fill_time': '2026-10-23T09:35:00-04:00',
+                       'symbol': 'NVDA', 'quantity': 1, 'shares_after': 1,
+                       'reason': 'policy_rebalance', 'reference_price': 100.,
+                       'fill_price': 100.02, 'cost': .02, 'notional': 100.}]
+        self.summary = {'net_pnl': -2.0, 'costs': .6}
+        self.save_frozen(self.daily, self.summary)
+
+    def save_frozen(self, daily, summary):
+        (self.folder / 'summary.json').write_text(json.dumps(summary))
+        pd.DataFrame(daily).to_csv(self.folder / 'daily.csv.gz', index=False, compression='gzip')
+        pd.DataFrame(self.fills).to_csv(self.folder / 'fills.csv.gz', index=False, compression='gzip')
+
+    def compare(self, summary=None):
+        return mod.comparison_to_frozen(
+            self.daily, self.fills, self.summary if summary is None else summary, self.folder)
+
+    def test_consistent_summary_retains_existing_tolerance(self):
+        result = self.compare()
+        self.assertEqual(result['status'], 'reproduced_within_1e_6_usd')
+        self.assertTrue(result['exact_fill_identity'])
+
+    def test_summary_only_pnl_difference_is_not_reproduced(self):
+        for side in ('current', 'frozen'):
+            with self.subTest(side=side):
+                changed = {**self.summary, 'net_pnl': 98.0}
+                self.save_frozen(self.daily, changed if side == 'frozen' else self.summary)
+                result = self.compare(changed if side == 'current' else self.summary)
+                self.assertEqual(result['status'], 'reproduction_difference')
+                self.assertEqual(abs(result['net_pnl_difference']), 100.)
+                self.assertEqual(result['summary_to_daily_differences'][side]['net_pnl'], 100.)
+
+    def test_matching_incorrect_summaries_do_not_hide_daily_disagreement(self):
+        for field in ('net_pnl', 'costs'):
+            with self.subTest(field=field):
+                changed = {**self.summary, field: self.summary[field] + 10.}
+                self.save_frozen(self.daily, changed)
+                result = self.compare(changed)
+                self.assertEqual(result['status'], 'reproduction_difference')
+                self.assertEqual(result['net_pnl_difference'], 0.)
+                self.assertEqual(result['cost_difference'], 0.)
+                self.assertAlmostEqual(result['summary_to_daily_differences']['frozen'][field], 10.)
+
+    def test_costs_shifted_between_days_are_reported_despite_matching_totals(self):
+        changed = copy.deepcopy(self.daily)
+        changed[0]['costs'] += .1
+        changed[1]['costs'] -= .1
+        self.save_frozen(changed, self.summary)
+        result = self.compare()
+        self.assertEqual(result['status'], 'reproduction_difference')
+        self.assertAlmostEqual(result['maximum_absolute_daily_cost_difference'], .1)
+        self.assertEqual(result['net_pnl_difference'], 0.)
+        self.assertEqual(result['cost_difference'], 0.)
+
+
 if __name__=='__main__':unittest.main()

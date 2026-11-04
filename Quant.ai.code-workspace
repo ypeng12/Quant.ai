@@ -1,0 +1,47 @@
+{
+  "folders": [{ "name": "Quant.ai", "path": "." }],
+  "settings": {
+    "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+    "window.title": "Quant.ai — ${activeEditorShort}${separator}${appName}",
+    "files.watcherExclude": {
+      "**/.git/objects/**": true,
+      "**/node_modules/**": true,
+      "**/.venv/**": true,
+      "**/reports/**": true,
+      "**/backend/data/**": true
+    },
+    "search.exclude": {
+      "**/.git-rewrite/**": true,
+      "**/reports/**": true,
+      "**/node_modules/**": true,
+      "**/.venv/**": true
+    }
+  },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "Quant.ai: build research preview",
+        "type": "process",
+        "command": "npm",
+        "args": ["run", "build", "--", "--outDir", "../.local-preview/dist"],
+        "options": {
+          "cwd": "${workspaceFolder}/frontend",
+          "env": { "VITE_API_BASE": "http://127.0.0.1:18080" }
+        },
+        "problemMatcher": [],
+        "group": "build"
+      },
+      {
+        "label": "Quant.ai: open research preview server",
+        "type": "process",
+        "command": "${workspaceFolder}/.venv/bin/python",
+        "args": ["scripts/serve_financial_sentiment_preview.py", "--port", "18080", "--dist", ".local-preview/dist"],
+        "options": { "cwd": "${workspaceFolder}" },
+        "dependsOn": "Quant.ai: build research preview",
+        "problemMatcher": [],
+        "presentation": { "reveal": "always", "panel": "dedicated" }
+      }
+    ]
+  }
+}

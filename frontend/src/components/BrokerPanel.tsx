@@ -2,6 +2,9 @@ import { useState, useEffect, useMemo } from 'react';
 import { API_BASE } from '../config';
 import { PortfolioHistoryChart } from './PortfolioHistoryChart';
 import { matchedPnlView } from './brokerPnl';
+import { INITIAL_RUNTIME, botHeading, emptyPositionsView, executionHistoryNotice, liveStatusFromResponse,
+  maySendAutomaticRequests, requestRuntimeAction, runtimeActionNotice, serviceIssue,
+  type RuntimeCapabilities } from '../runtimeCapabilities';
 
 interface AccountSummary {
   success: boolean;
@@ -61,6 +64,7 @@ interface TodaySummary {
 
 interface BrokerPanelProps {
   watchlist?: string[];
+  runtime?: RuntimeCapabilities;
 }
 
 interface PolicyOpportunity {
@@ -81,16 +85,19 @@ const isMatchedClose = (trade: TradeRecord) => trade.matched_closing_qty !== und
 const hasKnownClosePnl = (trade: TradeRecord) => isMatchedClose(trade)
   && trade.pnl_complete !== false && Number.isFinite(trade.pnl);
 
-export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
+export function BrokerPanel({ watchlist = [], runtime = INITIAL_RUNTIME }: BrokerPanelProps) {
   const [account, setAccount] = useState<AccountSummary | null>(null);
-  const [accountError, setAccountError] = useState('正在连接账户… / Connecting to account…');
+  const [accountError, setAccountError] = useState('Connecting to account…');
   const [positions, setPositions] = useState<BrokerPosition[]>([]);
-  const [isBotRunning, setIsBotRunning] = useState<boolean>(false);
+  const [positionsAvailable, setPositionsAvailable] = useState<boolean | null>(null);
+  const [isBotRunning, setIsBotRunning] = useState<boolean | null>(null);
+  const [statusError, setStatusError] = useState('Waiting for trading status…');
   const [activeTickers, setActiveTickers] = useState<string[]>([]);
   const [actionFeed, setActionFeed] = useState<string[]>([]);
   const [analysisFeed, setAnalysisFeed] = useState<string[]>([]);
   const [tradeHistory, setTradeHistory] = useState<TradeRecord[]>([]);
-  const [accountingState, setAccountingState] = useState('reconciling_broker_fills');
+  const [historyAvailable, setHistoryAvailable] = useState<boolean | null>(null);
+  const [accountingState, setAccountingState] = useState('unavailable');
   const [todaySummary, setTodaySummary] = useState<TodaySummary | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
@@ -103,7 +110,7 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
   const [extPrice, setExtPrice] = useState(300.0);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<ActiveTab>('analysis');
-  const [isMarketOpen, setIsMarketOpen] = useState<boolean>(false);
+  const [isMarketOpen, setIsMarketOpen] = useState<boolean | null>(null);
   const [opportunities, setOpportunities] = useState<Record<string, PolicyOpportunity>>({});
   const [policyState, setPolicyState] = useState<{
     state: string; reason?: string; model?: string; trained_before?: string;
@@ -111,12 +118,14 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
   } | null>(null);
 
   const handleClosePosition = async (ticker: string) => {
+    const notice = runtimeActionNotice(runtime);
+    if (notice) { window.alert(notice); return; }
     if (!window.confirm(`Are you sure you want to force close position for ${ticker}?`)) {
       return;
     }
     setClosingTicker(ticker);
     try {
-      const res = await fetch(`${API_BASE}/api/live/close_position`, {
+      const res = await requestRuntimeAction(runtime, `${API_BASE}/api/live/close_position`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ticker })
@@ -135,35 +144,61 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
   };
 
   const fetchBrokerData = async () => {
+    if (runtime.mode === 'loading') return;
+    if (runtime.mode === 'research_preview') {
+      setAccount(null);
+      setAccountError(runtime.message);
+      setPositions([]);
+      setPositionsAvailable(false);
+      setIsBotRunning(null);
+      setIsMarketOpen(null);
+      setStatusError(runtime.message);
+      setTradeHistory([]);
+      setHistoryAvailable(false);
+      setAccountingState('unavailable');
+      setTodaySummary(null);
+      setLoading(false);
+      return;
+    }
     try {
-      fetch(`${API_BASE}/api/broker/account`).then(r => r.json()).then(accJson => {
-        if (accJson?.success === true && [accJson.equity, accJson.cash, accJson.buying_power].every(Number.isFinite)) {
+      fetch(`${API_BASE}/api/broker/account`).then(async response => {
+        const accJson = await response.json().catch(() => null);
+        if (response.ok && accJson?.success === true && [accJson.equity, accJson.cash, accJson.buying_power].every(Number.isFinite)) {
           setAccount(accJson);
           setAccountError('');
           try { localStorage.setItem('cached_account', JSON.stringify(accJson)); } catch (e) {}
         } else {
-          setAccountError('账户待连接：请在服务端配置 Alpaca Key 和 Secret。 / Account disconnected: configure the Alpaca key and secret on the server.');
+          setAccountError(serviceIssue('Account service', response.status, accJson));
         }
-      }).catch(() => setAccountError('账户刷新失败，已有数值为最近一次读取结果。 / Account refresh failed; showing the last retrieved values.'));
+      }).catch(() => setAccountError(serviceIssue('Account service', 0, null)));
 
-      fetch(`${API_BASE}/api/broker/positions`).then(r => r.json()).then(posJson => {
-        if (posJson && posJson.success) {
-          const newPos = posJson.positions || [];
+      fetch(`${API_BASE}/api/broker/positions`).then(async response => {
+        const posJson = await response.json().catch(() => null);
+        if (response.ok && posJson?.success === true && Array.isArray(posJson.positions)) {
+          const newPos = posJson.positions;
           setPositions(newPos);
+          setPositionsAvailable(true);
           try { localStorage.setItem('cached_positions', JSON.stringify(newPos)); } catch (e) {}
-        }
-      }).catch(e => console.error(e));
+        } else setPositionsAvailable(false);
+      }).catch(() => setPositionsAvailable(false));
 
-      fetch(`${API_BASE}/api/live/status`).then(r => r.json()).then(statusJson => {
-        if (statusJson && statusJson.success) {
-          setIsBotRunning(statusJson.status.is_running);
-          if (statusJson.status.is_market_open !== undefined) setIsMarketOpen(statusJson.status.is_market_open);
+      fetch(`${API_BASE}/api/live/status`).then(async response => {
+        const statusJson = await response.json().catch(() => null);
+        const status = liveStatusFromResponse(response.status, statusJson);
+        setIsBotRunning(status.running);
+        setIsMarketOpen(status.marketOpen);
+        setStatusError(status.issue);
+        if (response.ok && statusJson?.success === true && statusJson.status) {
           const monitored = statusJson.status.active_tickers || statusJson.status.monitored_tickers;
           if (monitored) setActiveTickers(monitored);
           setOpportunities(Object.fromEntries((statusJson.status.intraday_opportunities || []).map((op: PolicyOpportunity) => [op.ticker, op])));
           setPolicyState(statusJson.status.quant_policy || null);
         }
-      }).catch(e => console.error(e));
+      }).catch(() => {
+        setIsBotRunning(null);
+        setIsMarketOpen(null);
+        setStatusError(serviceIssue('Trading status', 0, null));
+      });
 
       fetch(`${API_BASE}/api/live/action_feed?limit=50`).then(r => r.json()).then(feedJson => {
         if (feedJson && feedJson.success && feedJson.logs) setActionFeed(feedJson.logs);
@@ -173,11 +208,19 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
         if (analysisJson && analysisJson.success && analysisJson.logs) setAnalysisFeed(analysisJson.logs);
       }).catch(e => console.error(e));
 
-      fetch(`${API_BASE}/api/live/trade_history`, { cache: 'no-store' }).then(r => r.json()).then(histJson => {
-        const rawTrades = histJson.trade_history || histJson.trades || [];
-        setTradeHistory(rawTrades);
-        setAccountingState(histJson.accounting_state || 'unavailable');
-      }).catch(e => { setAccountingState('unavailable'); console.error(e); });
+      fetch(`${API_BASE}/api/live/trade_history`, { cache: 'no-store' }).then(async response => {
+        const histJson = await response.json().catch(() => null);
+        const rawTrades = histJson?.trade_history ?? histJson?.trades;
+        // The current history endpoint returns a bare archive without a success flag.
+        if (response.ok && histJson?.success !== false && Array.isArray(rawTrades)) {
+          setTradeHistory(rawTrades);
+          setHistoryAvailable(true);
+          setAccountingState(histJson.accounting_state || 'unavailable');
+        } else {
+          setHistoryAvailable(false);
+          setAccountingState('unavailable');
+        }
+      }).catch(e => { setHistoryAvailable(false); setAccountingState('unavailable'); console.error(e); });
 
       fetch(`${API_BASE}/api/live/today_summary`).then(r => r.json()).then(todayJson => {
         if (todayJson && todayJson.success && todayJson.summary) {
@@ -198,16 +241,17 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
   // Auto refresh broker data every 1.5s so numbers continuously update without needing to click Pause/Start
   useEffect(() => {
     fetchBrokerData();
+    if (runtime.mode === 'loading' || runtime.mode === 'research_preview') return;
     const timer = setInterval(() => {
       fetchBrokerData();
     }, 1500);
     return () => clearInterval(timer);
-  }, []);
+  }, [runtime.mode]);
 
   // Sync watchlist to AI Live Scanner automatically when changed
   useEffect(() => {
-    if (watchlist.length > 0) {
-      fetch(`${API_BASE}/api/live/watchlist/sync`, {
+    if (watchlist.length > 0 && maySendAutomaticRequests(runtime)) {
+      requestRuntimeAction(runtime, `${API_BASE}/api/live/watchlist/sync`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tickers: watchlist })
@@ -217,39 +261,46 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
         }
       }).catch(err => console.error('Watchlist sync error:', err));
     }
-  }, [watchlist]);
+  }, [watchlist, runtime.mode]);
 
   const handleStartBot = async () => {
+    const notice = runtimeActionNotice(runtime);
+    if (notice) { window.alert(notice); return; }
     setActionLoading('start');
     try {
-      const res = await fetch(`${API_BASE}/api/live/start`, {
+      const res = await requestRuntimeAction(runtime, `${API_BASE}/api/live/start`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tickers: watchlist })
       });
       const json = await res.json();
-      if (json.success) setIsBotRunning(json.status.is_running);
-      else alert('Failed to start bot: ' + (json.status?.logs?.[json.status.logs.length - 1] || 'Error.'));
-    } catch { alert('Request failed'); }
+      if (res.ok && json.success) setIsBotRunning(liveStatusFromResponse(res.status, json).running);
+      else alert(serviceIssue('Start request', res.status, json));
+    } catch (error) { alert(error instanceof Error ? error.message : 'Start request failed.'); }
     finally { setActionLoading(null); fetchBrokerData(); }
   };
 
   const handleStopBot = async () => {
-    if (!window.confirm('⚠️ Are you sure you want to pause the AI Quant Trading Bot?\n(Click OK to pause; bot runs continuously by default.)')) return;
+    const notice = runtimeActionNotice(runtime);
+    if (notice) { window.alert(notice); return; }
+    if (!window.confirm('Are you sure you want to pause the AI Quant Trading Bot?')) return;
     setActionLoading('stop');
     try {
-      const res = await fetch(`${API_BASE}/api/live/stop`, { method: 'POST' });
+      const res = await requestRuntimeAction(runtime, `${API_BASE}/api/live/stop`, { method: 'POST' });
       const json = await res.json();
-      setIsBotRunning(json.status.is_running);
+      if (res.ok && json.success) setIsBotRunning(liveStatusFromResponse(res.status, json).running);
+      else alert(serviceIssue('Pause request', res.status, json));
     } catch { alert('Request failed'); }
     finally { setActionLoading(null); fetchBrokerData(); }
   };
 
   const handleCancelAllOrders = async () => {
+    const notice = runtimeActionNotice(runtime);
+    if (notice) { window.alert(notice); return; }
     if (!window.confirm('Are you sure you want to cancel all pending open orders?')) return;
     setActionLoading('cancel_orders');
     try {
-      const res = await fetch(`${API_BASE}/api/broker/cancel_orders`, { method: 'POST' });
+      const res = await requestRuntimeAction(runtime, `${API_BASE}/api/broker/cancel_orders`, { method: 'POST' });
       const json = await res.json();
       alert(json.message || 'Order cancellation request sent');
     } catch { alert('Failed to cancel orders'); }
@@ -257,10 +308,12 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
   };
 
   const handleForceLiquidate = async () => {
+    const notice = runtimeActionNotice(runtime);
+    if (notice) { window.alert(notice); return; }
     if (!window.confirm('🚨 This will immediately close ALL open positions at market price! Continue?')) return;
     setActionLoading('liquidate');
     try {
-      const res = await fetch(`${API_BASE}/api/broker/close_positions`, { method: 'POST' });
+      const res = await requestRuntimeAction(runtime, `${API_BASE}/api/broker/close_positions`, { method: 'POST' });
       const json = await res.json();
       alert(json.message || 'Force liquidation request sent');
     } catch { alert('Failed to close positions'); }
@@ -268,9 +321,11 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
   };
 
   const handleSendExtendedHoursOrder = async () => {
+    const notice = runtimeActionNotice(runtime);
+    if (notice) { window.alert(notice); return; }
     setActionLoading('ext_order');
     try {
-      const res = await fetch(`${API_BASE}/api/live/extended_hours_order`, {
+      const res = await requestRuntimeAction(runtime, `${API_BASE}/api/live/extended_hours_order`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -294,10 +349,12 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
   };
 
   const handleArchiveHistory = async () => {
+    const notice = runtimeActionNotice(runtime);
+    if (notice) { window.alert(notice); return; }
     if (!window.confirm('📦 Upload past trade history archive to Hugging Face Dataset (Ypeng12/quant-ai-trade-history) and prune local storage?')) return;
     setActionLoading('archive_history');
     try {
-      const res = await fetch(`${API_BASE}/api/live/archive_history`, { method: 'POST' });
+      const res = await requestRuntimeAction(runtime, `${API_BASE}/api/live/archive_history`, { method: 'POST' });
       const json = await res.json();
       if (json.success) {
         alert(json.message || 'Archived and uploaded successfully!');
@@ -336,16 +393,17 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
   if (errorMsg) {
     return (
       <div className="card" style={{ padding: '2.5rem', textAlign: 'center', border: '1px solid var(--color-red)', background: 'rgba(255,59,48,0.05)' }}>
-        <h3 style={{ color: 'var(--color-red)', marginTop: 0 }}>🔌 Alpaca Account Disconnected</h3>
+        <h3 style={{ color: 'var(--color-red)', marginTop: 0 }}>Account Service Unavailable</h3>
         <p style={{ color: '#e5e5e7', fontSize: '0.95rem' }}>{errorMsg}</p>
         <div style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
-          Please configure your Alpaca API Key in <code style={{ color: '#fff', background: '#111', padding: '2px 6px', borderRadius: '4px' }}>backend/.env</code>.
+          The account connection could not be verified. Check the reported server response.
         </div>
       </div>
     );
   }
 
   const todayPnlPositive = (todaySummary?.total_pnl ?? 0) >= 0;
+  const emptyPositions = emptyPositionsView(positionsAvailable, isMarketOpen, isBotRunning);
 
   return (
     <div className="fade-in">
@@ -362,14 +420,17 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
             <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: isBotRunning ? 'var(--color-green)' : '#8e8e93', boxShadow: isBotRunning ? '0 0 12px var(--color-green)' : 'none' }} />
             <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 900, color: '#ffffff' }}>
-              {isBotRunning ? '⚡ AI Quant Bot Running' : '⏸️ AI Automated Trading Paused'}
+              {botHeading(runtime, isBotRunning)}
             </h2>
           </div>
           <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
-            {isBotRunning
+            {runtime.mode === 'research_preview' || runtime.mode === 'public_read_only' ? runtime.message : isBotRunning === null
+              ? 'The trading service has not supplied a current bot status.' : isBotRunning
               ? 'Forecasts update on completed 5-minute bars; portfolio targets account for risk and trading costs.'
               : 'Click Start to enable AI execution. Automatically manages trades and risk controls.'}
           </p>
+          {runtime.mode === 'public_read_only' && isBotRunning !== null && <p style={{ marginBottom: 0, fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>Bot status reported by the server: {isBotRunning ? 'Running' : 'Paused'}.</p>}
+          {statusError && runtime.mode !== 'research_preview' && <p role="status" style={{ marginBottom: 0, fontSize: '0.8rem', color: '#fbbf24' }}>{statusError}</p>}
           {policyState && <p style={{ marginBottom: 0, fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>Policy: {policyState.state}{policyState.reason ? ` · ${policyState.reason}` : ''}</p>}
           {policyState?.model && <p style={{ marginBottom: 0, fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>Model: {policyState.model} · Training cutoff (exclusive): {policyState.trained_before || 'Unavailable'}</p>}
           {!!policyState?.unmodeled_watchlist_symbols?.length && <p style={{ marginBottom: 0, fontSize: '0.8rem', color: '#fbbf24' }}>No fitted model for: {policyState.unmodeled_watchlist_symbols.join(', ')}. These watchlist symbols do not receive model signals.</p>}
@@ -384,7 +445,7 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
               {actionLoading === 'stop' ? '⏳ Stopping...' : '⏸️ Pause AI Bot'}
             </button>
           )}
-          <button onClick={() => setShowExtModal(true)} disabled={actionLoading !== null} style={{ background: 'linear-gradient(135deg, #2e1065 0%, #3b0764 100%)', color: '#c084fc', fontWeight: 800, fontSize: '0.95rem', padding: '12px 20px', borderRadius: '8px', border: '1px solid rgba(192,132,252,0.4)', cursor: 'pointer', boxShadow: '0 4px 15px rgba(147,51,234,0.25)' }}>
+          <button onClick={() => { const notice = runtimeActionNotice(runtime); if (notice) window.alert(notice); else setShowExtModal(true); }} disabled={actionLoading !== null} style={{ background: 'linear-gradient(135deg, #2e1065 0%, #3b0764 100%)', color: '#c084fc', fontWeight: 800, fontSize: '0.95rem', padding: '12px 20px', borderRadius: '8px', border: '1px solid rgba(192,132,252,0.4)', cursor: 'pointer', boxShadow: '0 4px 15px rgba(147,51,234,0.25)' }}>
             🌙 Extended-Hours Limit Order
           </button>
         </div>
@@ -574,10 +635,11 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
       {/* Account Overview */}
       <section aria-label="账户资金 / Account Funds" style={{ marginBottom: '1.5rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-          <strong>账户资金 / Account Funds · {account ? (account.is_paper === true ? 'Alpaca Paper 模拟账户 / Paper Account' : account.is_paper === false ? 'Alpaca 实盘账户 / Live Account' : 'Alpaca 账户 / Account') : '待连接 / Disconnected'}</strong>
+          <strong>账户资金 / Account Funds · {account ? (account.is_paper === true ? 'Alpaca Paper 模拟账户 / Paper Account' : account.is_paper === false ? 'Alpaca 实盘账户 / Live Account' : 'Alpaca 账户 / Account') : runtime.mode === 'research_preview' ? 'Not connected in research preview' : 'Unavailable'}</strong>
           <button onClick={fetchBrokerData}>刷新资金 / Refresh Funds</button>
         </div>
         {accountError && <p role="status" style={{ color: '#fbbf24', fontSize: '0.8rem' }}>{accountError}</p>}
+        {account && accountError && <p style={{ color: '#94a3b8', fontSize: '0.75rem' }}>Displayed balances are from the last successful account read.</p>}
         <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
           {[
             { label: '当前总资金 / Net Equity', value: account?.equity, color: undefined },
@@ -604,9 +666,11 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
               {positions.length > 0 && (
                 <button
                   onClick={async () => {
+                    const notice = runtimeActionNotice(runtime);
+                    if (notice) { window.alert(notice); return; }
                     if (window.confirm("⚠️ Force liquidate all open positions?")) {
                       try {
-                        const res = await fetch(`${API_BASE}/api/broker/close_all`, { method: 'POST' });
+                        const res = await requestRuntimeAction(runtime, `${API_BASE}/api/broker/close_all`, { method: 'POST' });
                         const d = await res.json();
                         if (d.success) fetchBrokerData();
                       } catch (e) {}
@@ -629,27 +693,15 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
               <span style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>Account: <strong>{account?.account_number}</strong></span>
             </div>
           </div>
+          {positionsAvailable === false && positions.length > 0 && <p role="status" style={{ color: '#fbbf24', fontSize: '0.8rem' }}>Position refresh is unavailable; the table shows the last retrieved positions.</p>}
           {positions.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '3rem 1.5rem', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', border: '1px dashed rgba(255,255,255,0.1)' }}>
-              {!isMarketOpen ? (
-                <div>
-                  <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#ff6b6b', marginBottom: '6px' }}>
-                    💤 Market Closed
-                  </div>
-                  <div style={{ fontSize: '0.82rem', color: 'var(--color-text-secondary)' }}>
-                    US stock exchanges are outside regular trading hours. Waiting for market open...
-                  </div>
-                </div>
-              ) : (
-                <div>
-                  <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#00c805', marginBottom: '6px' }}>
-                    📡 Market Scanning Active (Currently Flat)
-                  </div>
-                  <div style={{ fontSize: '0.82rem', color: 'var(--color-text-secondary)' }}>
-                    AI Quant Engine is scanning watchlist microstructure. No active entry signals triggered yet...
-                  </div>
-                </div>
-              )}
+              <div style={{ fontSize: '1.1rem', fontWeight: 800, color: isMarketOpen === false ? '#ff6b6b' : '#94a3b8', marginBottom: '6px' }}>
+                {emptyPositions.title}
+              </div>
+              <div style={{ fontSize: '0.82rem', color: 'var(--color-text-secondary)' }}>
+                {runtime.mode === 'research_preview' ? 'Account positions and market status are unavailable in this preview.' : emptyPositions.detail}
+              </div>
             </div>
           ) : (
             <table className="ledger-table" style={{ fontSize: '0.85rem' }}>
@@ -758,13 +810,17 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
             <div style={{ flex: 1, overflowY: 'auto', maxHeight: '380px' }}>
               {analysisFeed.length === 0 ? (
                 <div style={{ color: 'var(--color-text-secondary)', fontSize: '0.85rem', padding: '2.5rem 0', textAlign: 'center' }}>
-                  {isBotRunning ? (
+                  {runtime.mode === 'research_preview' ? (
+                    <div>Live analysis feeds are unavailable in this research preview.</div>
+                  ) : isBotRunning === null ? (
+                    <div>Trading status is unavailable. Live scanning has not been verified.</div>
+                  ) : isBotRunning ? (
                     <div style={{ color: '#00c805', fontWeight: 700 }}>
-                      📡 AI Quant Engine is active and scanning market bars in real time...
+                      The server reports that the bot is running. No analysis messages have been received yet.
                     </div>
                   ) : (
                     <div>
-                      ▶️ Click "Start AI Bot" to launch live indicator scanning and pattern alerts.
+                      {runtime.mode === 'public_read_only' ? 'The server reports that the bot is paused. Trading controls are read-only on this website.' : 'The server reports that the bot is paused. Click "Start AI Bot" to request execution.'}
                     </div>
                   )}
                 </div>
@@ -891,6 +947,7 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
       {/* ====== Execution Log with Date Selector ====== */}
       {(() => {
         const todayStr = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/New_York' });
+        const historyNotice = executionHistoryNotice(runtime, historyAvailable);
         const rawDates = tradeHistory.map(t => (t.date || t.time?.slice(0, 10))?.trim()).filter(Boolean) as string[];
         const availableDates = Array.from(new Set(rawDates)).sort().reverse();
         
@@ -955,11 +1012,11 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
                     >
                       {availableDates.map(d => (
                         <option key={d} value={d} style={{ background: '#1c1c1e', color: '#fff' }}>
-                          {d === todayStr ? `🔴 Live Today (${d})` : `🗓️ ${d}`}
+                          {d === todayStr ? `${historyNotice ? 'Today' : '🔴 Live Today'} (${d})` : `🗓️ ${d}`}
                         </option>
                       ))}
                     </select>
-                    {selectedDate && selectedDate !== todayStr && (
+                    {!historyNotice && selectedDate && selectedDate !== todayStr && (
                       <button
                         onClick={() => setSelectedDate('')}
                         style={{
@@ -979,35 +1036,35 @@ export function BrokerPanel({ watchlist = [] }: BrokerPanelProps) {
                   </div>
                 </div>
                 <p style={{ margin: '4px 0 0', fontSize: '0.78rem', color: 'var(--color-text-secondary)' }}>
-                  {effectiveDate === todayStr ? '🔴 Real-time stream of all orders today' : `🗓️ Historical review for date: ${effectiveDate}`}
+                  {historyNotice || (effectiveDate === todayStr ? '🔴 Real-time stream of all orders today' : `🗓️ Historical review for date: ${effectiveDate}`)}
                 </p>
               </div>
 
               <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
                 <div style={{ textAlign: 'right' }}>
                   <div style={{ fontSize: '0.72rem', color: 'var(--color-text-secondary)' }}>Total Trades</div>
-                  <div style={{ fontSize: '1rem', fontWeight: 900, color: '#fff' }}>{totalTradesCount} orders</div>
+                  <div style={{ fontSize: '1rem', fontWeight: 900, color: '#fff' }}>{historyNotice ? 'Unavailable' : `${totalTradesCount} orders`}</div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <div style={{ fontSize: '0.72rem', color: 'var(--color-text-secondary)' }}>Wins / Losses</div>
                   <div style={{ fontSize: '1rem', fontWeight: 900 }}>
-                    <span style={{ color: 'var(--color-green)' }}>{winsCount}</span>
+                    {historyNotice ? 'Unavailable' : <><span style={{ color: 'var(--color-green)' }}>{winsCount}</span>
                     <span style={{ color: '#444', margin: '0 4px' }}>/</span>
-                    <span style={{ color: 'var(--color-red)' }}>{lossesCount}</span>
+                    <span style={{ color: 'var(--color-red)' }}>{lossesCount}</span></>}
                   </div>
                 </div>
                 <div style={{ textAlign: 'right', minWidth: '100px' }}>
                   <div style={{ fontSize: '0.72rem', color: 'var(--color-text-secondary)' }}>Realized PnL ({effectiveDate})</div>
                   <div style={{ fontSize: '1.3rem', fontWeight: 900, color: dayPnlPending ? '#888' : realizedPnl >= 0 ? 'var(--color-green)' : 'var(--color-red)' }}>
-                    {dayPnlPending ? 'Pending reconciliation' : `${realizedPnl >= 0 ? '+' : ''}$${Number(realizedPnl).toFixed(2)}`}
+                    {historyNotice ? 'Unavailable' : dayPnlPending ? 'Pending reconciliation' : `${realizedPnl >= 0 ? '+' : ''}$${Number(realizedPnl).toFixed(2)}`}
                   </div>
                 </div>
               </div>
             </div>
 
-            {displayTrades.length === 0 ? (
+            {historyNotice || displayTrades.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '3rem 0', color: 'var(--color-text-secondary)', fontSize: '0.85rem' }}>
-                {accountingState !== 'ready' ? 'Broker fills are being reconciled. Trade history is not yet complete.' : `No executed trades found for ${effectiveDate}.`}
+                {historyNotice || (accountingState !== 'ready' ? 'Broker fills are being reconciled. Trade history is not yet complete.' : `No executed trades found for ${effectiveDate}.`)}
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>

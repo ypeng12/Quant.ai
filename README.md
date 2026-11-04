@@ -27,7 +27,7 @@ Research follows the [assigned financial sentiment project](https://github.com/g
 - [Owner's research plan](docs/financial_sentiment_using_prices_plan.md): scope, data provenance, course requirements, and milestones (Chinese).
 - **Financial Sentiment** in the existing [Quant.ai research page](https://ypeng12-quant-ai.hf.space/?tab=financial_sentiment): public aggregate audit results.
 
-Current status: **Not trained / Not evaluated**. The historical raw archive at `reports/market_impact_data_audit_20261007/` stays local. Persistent collection and validated labels precede model training, out-of-sample evaluation, event attribution, and an equal-capital A/B comparison. The course submission will be packaged for the instructor's repository later.
+Current status (2026-10-28): historical baselines, BERT fine-tuning (272 optimizer steps and 154 held-out predictions), and an equal-capital A/C/B replay have been completed. Results are mixed and do not establish a tradable alpha. See the owner's research plan for the current priorities and evidence; private source archives remain local. The course submission will be packaged for the instructor's repository later.
 
 ### Ultra-Low Latency C++20 Engine · Microstructure LOB Causal Alpha · Self-Evolving Reinforcement Learning
 
@@ -249,3 +249,32 @@ For complete mathematical derivations, proof of convergence, and backtest audit 
 ## ⚖️ Disclaimer
 
 *This repository is intended strictly for quantitative finance research, algorithmic engineering, and academic analysis. Live trading involves substantial risk of financial loss. Users must thoroughly evaluate their own risk tolerance and assume full responsibility for all capital deployment and execution outcomes.*
+## Local development in VS Code
+
+Open `Quant.ai.code-workspace` to edit this checkout. The workspace includes tasks
+to build and serve the existing research interface using saved public reports.
+This preview does not start the trading backend or collectors.
+
+```bash
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements-preview.txt
+git lfs pull --include="reports/financial_sentiment_signal_explorer.json.gz"
+cd frontend
+npm ci
+VITE_API_BASE=http://127.0.0.1:18080 npm run build -- --outDir ../.local-preview/dist
+cd ..
+.venv/bin/python scripts/serve_financial_sentiment_preview.py --port 18080 --dist .local-preview/dist
+```
+
+Visit `http://127.0.0.1:18080/?tab=financial_sentiment`. After editing frontend
+code, run the build task again and refresh the browser. Local preview output is
+kept outside the tracked deployment build. Private captures and
+broker credentials are not required for this preview.
+
+The interface reads `/api/runtime/capabilities` to distinguish the saved-report
+preview, the public read-only deployment, and a local trading server. A preview
+does not connect to a broker. The public Hugging Face deployment can display
+account data, but its existing read-only middleware rejects trading and other
+state-changing requests. A visible Start control does not mean execution is
+available. Missing or stale market-clock observations are shown as unknown,
+instead of being interpreted as a closed market.

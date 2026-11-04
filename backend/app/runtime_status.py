@@ -1,0 +1,39 @@
+"""Describe runtime capabilities and observed clock data without broker calls."""
+from collections.abc import Mapping
+from datetime import datetime, timezone
+
+from .public_read_only import public_read_only
+
+
+def market_clock_view(clock: Mapping | None = None, *, now: datetime | None = None) -> dict:
+    clock = clock or {}
+    observed_at = clock.get("timestamp")
+    try:
+        observed = datetime.fromisoformat(str(observed_at).replace("Z", "+00:00"))
+        age = ((now or datetime.now(timezone.utc)) - observed).total_seconds()
+        # Display freshness only: never reuse yesterday's stopped-runner clock.
+        # This does not alter the runner's clock or any execution decision.
+        fresh = 0 <= age <= 60
+    except (TypeError, ValueError):
+        fresh = False
+    available = fresh and clock.get("success") is True and type(clock.get("is_open")) is bool
+    return {
+        "is_market_open": clock["is_open"] if available else None,
+        "market_status_available": available,
+        "market_clock_observed_at": observed_at,
+    }
+
+
+def runtime_capabilities(environment: Mapping[str, str] | None = None, clock: Mapping | None = None) -> dict:
+    read_only = public_read_only(environment)
+    return {
+        "mode": "public_read_only" if read_only else "local",
+        "trading_available": not read_only,
+        # These describe available API features, not successful authentication.
+        "account_available": True,
+        "market_status_available": market_clock_view(clock)["market_status_available"],
+        "message": (
+            "This website is read-only. Account and research views are available; trading controls cannot run here."
+            if read_only else "Local trading controls are available. Account and execution status are reported separately."
+        ),
+    }

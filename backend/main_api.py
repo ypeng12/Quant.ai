@@ -12,6 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, HTMLResponse
 from app.public_read_only import PublicReadOnlyMiddleware
+from app.runtime_status import market_clock_view, runtime_capabilities
 from pydantic import BaseModel
 from typing import Optional, List
 import uvicorn
@@ -1493,11 +1494,18 @@ def sync_watchlist(req: WatchlistSyncRequest):
 
 @app.get("/api/live/status")
 def get_live_status():
+    status = dict(live_runner.get_status())
+    status.update(market_clock_view(getattr(live_runner, "_quant_clock", None)))
     return {
         "success": True,
-        "status": live_runner.get_status(),
+        "status": status,
         "logs": live_runner.logs
     }
+
+
+@app.get("/api/runtime/capabilities")
+def get_runtime_capabilities():
+    return runtime_capabilities(clock=getattr(live_runner, "_quant_clock", None))
 
 
 @app.post("/api/broker/cancel_orders")
@@ -1624,7 +1632,7 @@ async def websocket_live_feed(websocket: WebSocket):
                 positions = live_runner.get_cached_open_positions()
                 status_data = {
                     "is_running": live_runner.is_running,
-                    "is_market_open": live_runner.is_market_open(),
+                    **market_clock_view(getattr(live_runner, "_quant_clock", None)),
                     "active_tickers": live_runner.active_tickers,
                     "quant_policy": getattr(live_runner, "_quant_status", {}),
                     "intraday_opportunities": list(live_runner.intraday_opportunities.values())

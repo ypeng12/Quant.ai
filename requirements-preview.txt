@@ -1,0 +1,3 @@
+# Dependencies for the saved-report preview; no broker or training services.
+fastapi>=0.95.0
+uvicorn>=0.20.0

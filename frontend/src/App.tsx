@@ -25,6 +25,8 @@ import { TradeComparisonPanel } from './components/TradeComparisonPanel';
 import { PaperAlphaDashboard } from './components/PaperAlphaDashboard';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { API_BASE } from './config';
+import { INITIAL_RUNTIME, maySendAutomaticRequests, readRuntimeCapabilities, requestRuntimeAction,
+  runtimeActionNotice, type RuntimeCapabilities } from './runtimeCapabilities';
 
 interface SummaryData {
   initial_cash: number;
@@ -155,6 +157,12 @@ type ActiveTab = 'dashboard' | 'research' | 'report' | 'walkforward' | 'experime
 function App() {
   // Presentation only; the API middleware enforces public read-only access.
   const isPublicResearchView = window.location.hostname.endsWith('.hf.space');
+  const [runtime, setRuntime] = useState<RuntimeCapabilities>(INITIAL_RUNTIME);
+  useEffect(() => {
+    let mounted = true;
+    readRuntimeCapabilities(API_BASE).then(value => { if (mounted) setRuntime(value); });
+    return () => { mounted = false; };
+  }, []);
   const [watchlist, setWatchlist] = useState<string[]>(["SNDK", "TSLA", "PLTR", "NVDA"]);
   const [newTickerInput, setNewTickerInput] = useState<string>('');
   
@@ -200,7 +208,7 @@ function App() {
 
   // AI 智能调参逻辑
   useEffect(() => {
-    if (!aiAutoPilot) {
+    if (!aiAutoPilot || !maySendAutomaticRequests(runtime)) {
       setTuningReport(null);
       setTuningMetrics(null);
       return;
@@ -209,7 +217,7 @@ function App() {
     const runAiTuning = async () => {
       setTuningLoading(true);
       try {
-        const response = await fetch(`${API_BASE}/api/ai_tune`, {
+        const response = await requestRuntimeAction(runtime, `${API_BASE}/api/ai_tune`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -236,7 +244,7 @@ function App() {
     };
 
     runAiTuning();
-  }, [aiAutoPilot, activeTicker, activeInterval]);
+  }, [aiAutoPilot, activeTicker, activeInterval, runtime.mode]);
 
   // 1. 获取回测仿真数据 (参数改变自动重算)
   useEffect(() => {
@@ -343,14 +351,14 @@ function App() {
       localStorage.setItem("quant_watchlist", JSON.stringify(watchlist));
     } catch (e) {}
 
-    if (watchlist.length > 0) {
-      fetch(`${API_BASE}/api/live/watchlist/sync`, {
+    if (watchlist.length > 0 && maySendAutomaticRequests(runtime)) {
+      requestRuntimeAction(runtime, `${API_BASE}/api/live/watchlist/sync`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tickers: watchlist })
       }).catch(err => console.error('Watchlist live runner sync error:', err));
     }
-  }, [watchlist]);
+  }, [watchlist, runtime.mode]);
 
   const handleTickerChange = (ticker: string) => {
     setActiveTicker(ticker);
@@ -552,6 +560,8 @@ function App() {
   // 删除自选股并提醒同步平仓清盘
   const handleRemoveTicker = async (tickerToRemove: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    const notice = runtimeActionNotice(runtime);
+    if (notice) { window.alert(notice); return; }
     
     const confirmMsg = `Remove [${tickerToRemove}] from the watchlist?\n\nIf your account holds a position in ${tickerToRemove}, removing it will automatically submit a request to close that position. The AI will no longer buy or trade this stock.`;
     if (!window.confirm(confirmMsg)) {
@@ -560,7 +570,7 @@ function App() {
 
     // 1. 尝试自动平仓（若有残留持仓）
     try {
-      await fetch(`${API_BASE}/api/live/close_position`, {
+      await requestRuntimeAction(runtime, `${API_BASE}/api/live/close_position`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ticker: tickerToRemove })
@@ -578,7 +588,7 @@ function App() {
 
     // 3. 强同步至后端与 Alpaca 云端 Watchlist
     try {
-      await fetch(`${API_BASE}/api/live/watchlist/sync`, {
+      await requestRuntimeAction(runtime, `${API_BASE}/api/live/watchlist/sync`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tickers: newWatchlist })
@@ -589,16 +599,20 @@ function App() {
   const DEFAULT_WATCHLIST_STOCKS = ["SNDK", "TSLA", "PLTR", "NVDA"];
 
   const handleResetDefaultWatchlist = () => {
+    const notice = runtimeActionNotice(runtime);
+    if (notice) { window.alert(notice); return; }
     setWatchlist(DEFAULT_WATCHLIST_STOCKS);
     if (!DEFAULT_WATCHLIST_STOCKS.includes(activeTicker)) {
       setActiveTicker(DEFAULT_WATCHLIST_STOCKS[0]);
     }
-    fetch(`${API_BASE}/api/watchlist/reset`, { method: 'POST' }).catch(() => {});
+    requestRuntimeAction(runtime, `${API_BASE}/api/watchlist/reset`, { method: 'POST' }).catch(() => {});
   };
 
   const handleClearWatchlist = () => {
+    const notice = runtimeActionNotice(runtime);
+    if (notice) { window.alert(notice); return; }
     setWatchlist([]);
-    fetch(`${API_BASE}/api/live/watchlist/sync`, {
+    requestRuntimeAction(runtime, `${API_BASE}/api/live/watchlist/sync`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ tickers: [] })
@@ -764,7 +778,14 @@ function App() {
         </div>
       </header>
 
-      {isPublicResearchView && (
+      {(runtime.mode === 'research_preview' || runtime.mode === 'public_read_only') && (
+        <div role="status" style={{ padding: '10px 24px', borderBottom: '1px solid var(--color-border)',
+          color: '#fbbf24', fontSize: '0.85rem', lineHeight: 1.5 }}>
+          {runtime.message}
+        </div>
+      )}
+
+      {isPublicResearchView && runtime.mode !== 'public_read_only' && (
         <div role="note" style={{
           padding: '10px 24px',
           borderBottom: '1px solid var(--color-border)',
@@ -839,7 +860,7 @@ function App() {
           {/* Alpaca Live Tab (Mode 1) */}
           {activeTab === 'broker' && (
             <ErrorBoundary fallbackTitle="Live Account and Fill Log">
-              <BrokerPanel watchlist={watchlist} />
+              <BrokerPanel watchlist={watchlist} runtime={runtime} />
             </ErrorBoundary>
           )}
 
