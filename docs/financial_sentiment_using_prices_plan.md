@@ -11,7 +11,10 @@
 - 最新代码、前端依赖、轻量预览依赖和公开信号 gzip 已补齐。独立研究预览使用 `scripts/serve_financial_sentiment_preview.py`，本机入口 `http://127.0.0.1:18080/?tab=financial_sentiment`；前端本地构建放到 `.local-preview/dist`，不覆盖已跟踪的部署产物。公开报告、比较和信号接口可读，不导入交易服务或采集器。
 - 本轮继续修复 `comparison_to_frozen()` 的复现核对：除了逐日净损益与成交，还核对汇总净损益、逐日成本，以及两侧汇总各自与每日账本的合计，避免金额不一致却标为复现成功。旧版 5 个失败情形已由 fixture 复现，修复后相关研究测试 29 项及 4 个子测试通过；独立预览专项 1 项测试、前端构建和本机报告接口检查通过。未重跑历史候选、未更改模型参数或历史结果。
 - 用户最新澄清：Start AI Bot 问题在 HF 网站，账户截图来自本地预览。线上账户 GET 正常返回 ACTIVE paper 账户；启动类请求被原有公共只读中间件以 `403 public_read_only` 拒绝。该边界已在 10/28 版本存在，与目录拆分无关。已在主代码增加运行模式接口与界面说明，保留原布局、按钮、公共账户读取及本地执行路径；预览不再误报缺密钥、休市、暂停、零笔交易或正在对账，旧/缺失时钟显示未知。只改状态表达，未改 `live_runner.py`、未新增交易限制。
-- 旧目录的本地账户配置已恢复为主目录私有 `backend/.env`（0600、Git 忽略）；只读验证 paper 账户成功，未输出密钥或账户金额。此配置不会使独立研究预览自动连接账户。状态/只读/预览后端专项 **22 项通过**，前端状态与损益专项 **14 项通过**，TypeScript 与构建通过；本机报告、比较、context、signals 接口可读，浏览器已验证新预览说明。线上尚未发布本轮修改，未启动自动交易、未提交订单。
+- 旧目录的本地账户配置已恢复为主目录私有 `backend/.env`（0600、Git 忽略）；只读验证 paper 账户成功，未输出密钥或账户金额。此配置不会使独立研究预览自动连接账户。状态/只读/预览后端专项 **22 项通过**，前端状态与损益专项 **14 项通过**，TypeScript 与构建通过；本机报告、比较、context、signals 接口可读，浏览器已验证新预览说明。修复已通过独立云端检查后合并到 GitHub main，由现有流程同步 HF；未启动自动交易、未提交订单。
+- GitHub 继续使用唯一主仓库 `ypeng12/Quant.ai`。[PR #2](https://github.com/ypeng12/Quant.ai/pull/2) 已合并；[独立 Ubuntu 云端验证](https://github.com/ypeng12/Quant.ai/actions/runs/41883996844) 对应本轮源码，34 项 Python 测试与 4 项子测试、14 项前端测试以及 TypeScript/Vite 构建全部通过。该检查不使用账户密钥、私有输入或真实订单。桌面主目录使用同一 main；GitHub 同步恢复为已验证可用的现有 SSH 身份。
+- 老师邮件要求的项目登记已完成：[课程 Issue #861](https://github.com/gpsaggese/gpsaggese.github.io/issues/861)。标题为 `MSML610_Fall2026_Train_Financial_Sentinment_Analysis_Using_Prices`，作者 `@ypeng12`，个人项目；选题表 Group 19 不是 Issue 编号。课程分支/PR 应使用 `UmdTask861_MSML610_Fall2026_Train_Financial_Sentinment_Analysis_Using_Prices`。Issue 已写入研究计划、已完成证据及尚未完成里程碑，不能把登记完成说成研究或最终作业全部完成。
+- Google Doc 指向另一份 Git/Docker 环境作业。旧 PDF 7 页已归入 coursework，但视觉核对发现 lint 截图实际报错，正文却宣称成功；另缺课程 Docker 镜像/Jupyter、git pull、Issue 分支的成功证据。本机 Colima daemon 未运行，课程仓库有旧修改；因此旧 PDF 尚不能作为全部验收通过或已提交 ELMS 的证明。未覆盖课程仓库、未上传该 PDF。
 - 下一步沿用下面的算法、signal 和成本后盈利优先级；先围绕冻结结果与新增独立数据完成证据核对，再安排必要回放。不能把源码恢复、工程测试或完成 BERT 微调说成已经获得可交易 Alpha。
 
 ## 当前目标：先验证 Quant.ai 的经济价值
