@@ -71,18 +71,21 @@ export function startControlSnapshotFromResponse(status: number, payload: unknow
 /** Explain independent server states; this helper never enables or sends a control request. */
 export function startControlView(runtime: RuntimeCapabilities, snapshot: StartControlSnapshot) {
   if (runtime.mode === 'research_preview') return {
-    heading: 'Research preview · Trading unavailable', detail: runtime.message,
+    heading: 'Research preview', summary: 'Trading is unavailable in this preview.', detail: runtime.message,
     connection: 'Execution account unavailable in research preview.',
     access: 'Trading controls are unavailable in this preview.',
     market: 'Market status has not been observed.',
   };
 
-  const heading = snapshot.running === true ? 'Bot running'
-    : snapshot.running === false ? 'Bot stopped · Start required' : 'Bot status unavailable';
+  const heading = snapshot.running === true ? 'AI Bot Running'
+    : snapshot.running === false ? 'AI Bot Paused' : 'Bot status unavailable';
+  const summary = snapshot.connected === true
+    ? `${snapshot.isPaper === true ? 'Paper' : snapshot.isPaper === false ? 'Live' : 'Execution'} account connected.`
+    : snapshot.connected === false ? 'Account disconnected.' : 'Checking account connection…';
   const detail = snapshot.running === false
     ? snapshot.policyReason && snapshot.policyReason !== 'Explicit start request required'
       ? `The execution service is stopped. ${snapshot.policyReason}`
-      : 'The execution service is stopped. Sign-in and an account connection do not start it; an explicit Start request is required.'
+      : 'Click Start AI Bot to begin.'
     : snapshot.running === true
       ? 'The server reports an active execution worker. Orders depend on the policy, account and market conditions.'
       : 'The server has not supplied a current execution status. Refresh status before interpreting the bot as stopped or running.';
@@ -91,7 +94,7 @@ export function startControlView(runtime: RuntimeCapabilities, snapshot: StartCo
     : snapshot.connected === false
       ? `Execution account disconnected.${snapshot.connectionReason ? ` ${snapshot.connectionReason}` : ''}`
       : 'Execution account connection has not been verified. Account balances alone do not verify execution access.';
-  const access = runtime.mode === 'public_read_only'
+  const access = runtime.mode === 'paper' ? 'Paper controls are available.' : runtime.mode === 'public_read_only'
     ? runtime.owner_login_available === false
       ? 'Owner access is not configured on this server.'
       : 'Sign in as the owner to unlock Start. Sign-in does not start the bot.'
@@ -103,7 +106,7 @@ export function startControlView(runtime: RuntimeCapabilities, snapshot: StartCo
   const market = snapshot.marketOpen === true ? 'Market open, as reported by the server.'
     : snapshot.marketOpen === false ? 'Market closed, as reported by the server. Market hours and bot start/stop status are separate.'
       : 'Market status has not been observed recently. A stopped bot does not mean the market is closed.';
-  return { heading, detail, connection, access, market };
+  return { heading, summary, detail, connection, access, market };
 }
 
 /** HTTP 200 alone is not a successful start; require the server's running state. */

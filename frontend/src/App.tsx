@@ -805,7 +805,7 @@ function App() {
         </div>
       )}
 
-      {isPublicResearchView && runtime.mode !== 'public_read_only' && runtime.mode !== 'owner_authenticated' && (
+      {isPublicResearchView && runtime.mode !== 'paper' && runtime.mode !== 'loading' && runtime.mode !== 'public_read_only' && runtime.mode !== 'owner_authenticated' && (
         <div role="note" style={{
           padding: '10px 24px',
           borderBottom: '1px solid var(--color-border)',

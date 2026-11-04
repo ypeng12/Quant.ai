@@ -209,3 +209,43 @@ test('expired or rejected owner sessions never retry execution', async () => {
   assert.equal(response.status, 403);
   assert.equal(calls, 1);
 });
+
+test('paper discovery permits a single explicit control request without signing in', async () => {
+  const calls = [];
+  const fakeFetch = async (url, options = {}) => {
+    calls.push({ url, method: options.method ?? 'GET', body: options.body });
+    return new Response(JSON.stringify(url.endsWith('/api/runtime/capabilities')
+      ? { mode: 'paper', trading_available: true, account_available: true, owner_login_available: false }
+      : { success: true, status: { is_running: url.endsWith('/start') } }));
+  };
+  const paper = await readRuntimeCapabilities('https://fixture.invalid', fakeFetch);
+  assert.equal(paper.mode, 'paper');
+  assert.equal(paper.message, '');
+  assert.equal(paper.owner_login_available, false);
+  assert.equal(runtimeActionNotice(paper), '');
+  assert.equal(maySendAutomaticRequests(paper), false);
+  assert.deepEqual(calls.map(c => c.method), ['GET']);
+  const body = JSON.stringify({ tickers: ['NVDA'] });
+  await requestRuntimeAction(paper, 'https://fixture.invalid/api/live/start', { method: 'POST', body }, fakeFetch);
+  assert.deepEqual(calls.slice(1), [{ url: 'https://fixture.invalid/api/live/start', method: 'POST', body }]);
+  await requestRuntimeAction(paper, 'https://fixture.invalid/api/live/stop', { method: 'POST' }, fakeFetch);
+  assert.equal(calls.filter(c => c.method === 'POST').length, 2);
+  assert.ok(calls.every(c => !c.url.includes('/auth/')));
+});
+
+test('malformed paper capabilities cannot authorize a control request', async () => {
+  for (const [status, payload] of [
+    [200, { mode: 'paper' }], [200, { mode: 'paper', trading_available: false }],
+    [200, { mode: 'paper', trading_available: 'true' }], [500, { mode: 'paper', trading_available: true }],
+  ]) {
+    const runtime = runtimeFromResponse(status, payload);
+    assert.equal(runtime.mode, 'unavailable');
+    let requests = 0;
+    await assert.rejects(requestRuntimeAction(runtime, '/api/live/start', { method: 'POST' }, async () => {
+      requests++;
+      return new Response('{}');
+    }));
+    assert.equal(requests, 0);
+    assert.equal(maySendAutomaticRequests(runtime), false);
+  }
+});

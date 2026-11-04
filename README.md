@@ -272,22 +272,27 @@ kept outside the tracked deployment build. Private captures and
 broker credentials are not required for this preview.
 
 The interface reads `/api/runtime/capabilities` to distinguish the saved-report
-preview, public viewing, authenticated owner controls, and a local trading server.
-A preview does not connect to a broker. On the public Hugging Face website, the
-owner can unlock the existing controls; anonymous state-changing requests remain
-unavailable. Signing in never starts trading or changes the strategy. Missing or
-stale market-clock observations are shown as unknown.
+preview, Paper controls, public viewing, owner controls, and a local server.
+A preview does not connect to a broker. Missing market observations are shown
+only in the expandable details, not as a failed bot start.
 
-### Owner controls on Hugging Face
+### One-click Paper controls on Hugging Face
 
-Configure `QUANT_OWNER_SECRET` as a random secret of at least 32 characters in
-Space Secrets and `QUANT_OWNER_ORIGIN=https://ypeng12-quant-ai.hf.space` as a Space
-variable. Keep the key out of code, build variables, URLs, and Git. Open the
-direct Space website, use **Unlock owner controls**, then use the existing Start
-button when you intend to request execution. The secure browser session lasts
-15 minutes and is invalidated by server restart; expiry does not stop an already
-running bot. The credential controls website access, not model performance.
-The local standalone research preview has no trading service to unlock.
+For the existing Paper account, set the server variable
+`QUANT_ONE_CLICK_PAPER=1` and the exact HTTPS website origin in
+`QUANT_OWNER_ORIGIN` (or use the Space's supplied `SPACE_HOST`). The existing
+Start and Pause buttons then work without an access key, sign-in, or cookies,
+including inside the HF frame. Page loading does not start the bot or silently
+change the strategy. Only a successful server response confirms execution.
+
+This explicitly enables visitor access to the listed simulated trading and
+watchlist controls; it is not owner authentication. Requests still need the
+website's exact origin. Live credentials, unknown mutation endpoints, and
+archive-upload controls are not included. All paper controls operate on the
+runner's execution account. Other deployments retain the existing owner-session
+or local access behavior. The independent research preview has no execution
+service. Main bot status and Start errors stay visible; research diagnostics
+are available under **Details**.
 
 ### Parallel profit-signal comparison
 

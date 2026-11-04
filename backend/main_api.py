@@ -14,6 +14,7 @@ from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from app.public_read_only import PublicReadOnlyMiddleware, public_read_only
 from app.owner_auth import OwnerSessions, owner_auth_router
 from app.runtime_status import market_clock_view, runtime_capabilities
+from app.paper_controls import paper_controls_enabled, connected_paper_adapter
 from pydantic import BaseModel
 from typing import Optional, List
 import uvicorn
@@ -130,7 +131,8 @@ async def track_latency(request, call_next):
         request_latencies.pop(0)
     return response
 
-# Public controls require an owner session. CORS wraps boundary responses.
+# Public paper controls may opt into same-origin one-click actions. Other
+# mutations retain owner sessions. CORS wraps boundary responses.
 app.add_middleware(PublicReadOnlyMiddleware, owner_auth=owner_sessions)
 
 # 允许跨域请求 (CORS)，方便 React 前端调用
@@ -1519,7 +1521,8 @@ def cancel_all_orders():
     from app.config import ALPACA_API_KEY, ALPACA_SECRET_KEY, ALPACA_BASE_URL
     from app.broker.alpaca_adapter import AlpacaAdapter
     try:
-        adapter = AlpacaAdapter(ALPACA_API_KEY, ALPACA_SECRET_KEY, ALPACA_BASE_URL)
+        adapter = (connected_paper_adapter(live_runner) if paper_controls_enabled() else
+                   AlpacaAdapter(ALPACA_API_KEY, ALPACA_SECRET_KEY, ALPACA_BASE_URL))
         res = adapter.cancel_all_orders()
         live_runner.add_log("📢 用户手动触发：撤销所有未成交挂单。")
         return res
@@ -1532,7 +1535,8 @@ def close_all_positions():
     from app.config import ALPACA_API_KEY, ALPACA_SECRET_KEY, ALPACA_BASE_URL
     from app.broker.alpaca_adapter import AlpacaAdapter
     try:
-        adapter = AlpacaAdapter(ALPACA_API_KEY, ALPACA_SECRET_KEY, ALPACA_BASE_URL)
+        adapter = (connected_paper_adapter(live_runner) if paper_controls_enabled() else
+                   AlpacaAdapter(ALPACA_API_KEY, ALPACA_SECRET_KEY, ALPACA_BASE_URL))
         # Step 1: 先全量撤销挂单，彻底绝后患
         adapter.cancel_all_orders()
         # Step 2: 强行全平所有持仓
@@ -2185,11 +2189,13 @@ async def serve_spa(full_path: str):
     if full_path.startswith("api/"):
         raise HTTPException(status_code=404, detail="API endpoint not found")
     target_file = os.path.join(_dist_dir, full_path)
+    entry_headers = {"Cache-Control": "no-cache, no-store, must-revalidate",
+                     "Pragma": "no-cache", "Expires": "0"}
     if full_path and os.path.exists(target_file) and os.path.isfile(target_file):
-        return FileResponse(target_file)
+        return FileResponse(target_file, headers=entry_headers if full_path == "index.html" else None)
     index_file = os.path.join(_dist_dir, "index.html")
     if os.path.exists(index_file):
-        return FileResponse(index_file)
+        return FileResponse(index_file, headers=entry_headers)
     raise HTTPException(status_code=404, detail="Frontend index.html not found")
 
 
