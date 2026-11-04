@@ -1,6 +1,6 @@
 # Quant.ai：原交易逻辑改进与金融情绪研究（中文检查入口）
 
-更新：2026-10-28。本文是项目所有者检查代码、进度和结果的中文 README；英文复现入口仍为 [README.md](README.md)。持续维护的执行计划在[研究主计划](../../docs/financial_sentiment_using_prices_plan.md)，原量化研究背景在[Alpha 主计划](../../docs/alpha_research_priorities_20260913.md)。本文明确区分已实现、实际结果和未实现目标。
+更新：2026-11-04。最新恢复、真实基线重放、课程Docker/Notebook验收、归因检测、HF所有者启动控制和仍待完成事项，请先看[唯一执行主计划](../../docs/financial_sentiment_using_prices_plan.md)。下面10/28段落是有日期的历史实验记录，不能把其中“尚未同步/尚未部署”当作当前源码状态。英文复现入口为 [README.md](README.md)，新的独立课程入口为 [course/README.md](course/README.md)。原量化研究背景在[Alpha 主计划](../../docs/alpha_research_priorities_20260913.md)保留。
 
 ## 最新：10/28 云端主动交易实验，没有得到盈利的新模型
 

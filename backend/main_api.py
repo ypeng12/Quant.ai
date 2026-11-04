@@ -7,11 +7,12 @@ if _backend_dir not in sys.path:
 
 import json
 import asyncio
-from fastapi import FastAPI, HTTPException, Query, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, Query, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, HTMLResponse
-from app.public_read_only import PublicReadOnlyMiddleware
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
+from app.public_read_only import PublicReadOnlyMiddleware, public_read_only
+from app.owner_auth import OwnerSessions, owner_auth_router
 from app.runtime_status import market_clock_view, runtime_capabilities
 from pydantic import BaseModel
 from typing import Optional, List
@@ -81,6 +82,8 @@ class ExtendedHoursOrderRequest(BaseModel):
     limit_price: Optional[float] = None
 
 app = FastAPI(title="Quant.ai API Server")
+owner_sessions = OwnerSessions()
+app.include_router(owner_auth_router(owner_sessions))
 app.include_router(financial_sentiment_research_router)
 app.include_router(financial_sentiment_comparison_router)
 app.include_router(financial_sentiment_context_router)
@@ -127,13 +130,14 @@ async def track_latency(request, call_next):
         request_latencies.pop(0)
     return response
 
-# Public Spaces expose research views only. CORS must wrap the denial response.
-app.add_middleware(PublicReadOnlyMiddleware)
+# Public controls require an owner session. CORS wraps boundary responses.
+app.add_middleware(PublicReadOnlyMiddleware, owner_auth=owner_sessions)
 
 # 允许跨域请求 (CORS)，方便 React 前端调用
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # 开发阶段允许所有来源
+    allow_origins=([owner_sessions.expected_origin()] if owner_sessions.expected_origin() else [])
+    if public_read_only() else ["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -1504,8 +1508,10 @@ def get_live_status():
 
 
 @app.get("/api/runtime/capabilities")
-def get_runtime_capabilities():
-    return runtime_capabilities(clock=getattr(live_runner, "_quant_clock", None))
+def get_runtime_capabilities(request: Request):
+    return JSONResponse(runtime_capabilities(clock=getattr(live_runner, "_quant_clock", None),
+                                             owner_state=owner_sessions.status(request.scope)),
+                        headers={"Cache-Control": "no-store"})
 
 
 @app.post("/api/broker/cancel_orders")

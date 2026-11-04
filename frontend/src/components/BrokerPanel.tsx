@@ -4,6 +4,7 @@ import { PortfolioHistoryChart } from './PortfolioHistoryChart';
 import { matchedPnlView } from './brokerPnl';
 import { INITIAL_RUNTIME, botHeading, emptyPositionsView, executionHistoryNotice, liveStatusFromResponse,
   maySendAutomaticRequests, requestRuntimeAction, runtimeActionNotice, serviceIssue,
+  signInOwner, signOutOwner,
   type RuntimeCapabilities } from '../runtimeCapabilities';
 
 interface AccountSummary {
@@ -65,6 +66,7 @@ interface TodaySummary {
 interface BrokerPanelProps {
   watchlist?: string[];
   runtime?: RuntimeCapabilities;
+  onRuntimeChange?: (runtime: RuntimeCapabilities) => void;
 }
 
 interface PolicyOpportunity {
@@ -85,7 +87,10 @@ const isMatchedClose = (trade: TradeRecord) => trade.matched_closing_qty !== und
 const hasKnownClosePnl = (trade: TradeRecord) => isMatchedClose(trade)
   && trade.pnl_complete !== false && Number.isFinite(trade.pnl);
 
-export function BrokerPanel({ watchlist = [], runtime = INITIAL_RUNTIME }: BrokerPanelProps) {
+export function BrokerPanel({ watchlist = [], runtime = INITIAL_RUNTIME, onRuntimeChange }: BrokerPanelProps) {
+  const [ownerSecret, setOwnerSecret] = useState('');
+  const [ownerBusy, setOwnerBusy] = useState(false);
+  const [ownerError, setOwnerError] = useState('');
   const [account, setAccount] = useState<AccountSummary | null>(null);
   const [accountError, setAccountError] = useState('Connecting to account…');
   const [positions, setPositions] = useState<BrokerPosition[]>([]);
@@ -117,6 +122,19 @@ export function BrokerPanel({ watchlist = [], runtime = INITIAL_RUNTIME }: Broke
     unmodeled_watchlist_symbols?: string[];
   } | null>(null);
 
+  const handleOwnerSignIn = async () => {
+    setOwnerBusy(true); setOwnerError('');
+    try { onRuntimeChange?.(await signInOwner(API_BASE, ownerSecret)); }
+    catch (error) { setOwnerError(error instanceof Error ? error.message : 'Owner sign-in failed.'); }
+    finally { setOwnerSecret(''); setOwnerBusy(false); }
+  };
+  const handleOwnerSignOut = async () => {
+    setOwnerBusy(true); setOwnerError('');
+    try { onRuntimeChange?.(await signOutOwner(API_BASE)); }
+    catch (error) { setOwnerError(error instanceof Error ? error.message : 'Owner sign-out failed.'); }
+    finally { setOwnerBusy(false); }
+  };
+
   const handleClosePosition = async (ticker: string) => {
     const notice = runtimeActionNotice(runtime);
     if (notice) { window.alert(notice); return; }
@@ -131,10 +149,10 @@ export function BrokerPanel({ watchlist = [], runtime = INITIAL_RUNTIME }: Broke
         body: JSON.stringify({ ticker })
       });
       const data = await res.json();
-      if (data.success) {
+      if (res.ok && data.success) {
         await fetchBrokerData();
       } else {
-        alert(`Failed to close position: ${data.error || data.detail || 'Unknown error'}`);
+        alert(serviceIssue('Close-position request', res.status, data));
       }
     } catch (err) {
       alert(`Request failed: ${err}`);
@@ -302,7 +320,8 @@ export function BrokerPanel({ watchlist = [], runtime = INITIAL_RUNTIME }: Broke
     try {
       const res = await requestRuntimeAction(runtime, `${API_BASE}/api/broker/cancel_orders`, { method: 'POST' });
       const json = await res.json();
-      alert(json.message || 'Order cancellation request sent');
+      alert(!res.ok || json.success === false ? serviceIssue('Cancel-orders request', res.status, json)
+        : json.message || 'Order cancellation request sent');
     } catch { alert('Failed to cancel orders'); }
     finally { setActionLoading(null); fetchBrokerData(); }
   };
@@ -315,7 +334,8 @@ export function BrokerPanel({ watchlist = [], runtime = INITIAL_RUNTIME }: Broke
     try {
       const res = await requestRuntimeAction(runtime, `${API_BASE}/api/broker/close_positions`, { method: 'POST' });
       const json = await res.json();
-      alert(json.message || 'Force liquidation request sent');
+      alert(!res.ok || json.success === false ? serviceIssue('Close-positions request', res.status, json)
+        : json.message || 'Force liquidation request sent');
     } catch { alert('Failed to close positions'); }
     finally { setActionLoading(null); fetchBrokerData(); }
   };
@@ -336,11 +356,11 @@ export function BrokerPanel({ watchlist = [], runtime = INITIAL_RUNTIME }: Broke
         })
       });
       const json = await res.json();
-      if (json.success) {
+      if (res.ok && json.success) {
         alert(`🌙 [Extended-Hours Order] Order submitted! ${extSymbol} ${extSide.toUpperCase()} ${extQty} shares @ $${extPrice}`);
         setShowExtModal(false);
       } else {
-        alert('Order failed: ' + (json.message || json.error || 'Unknown error'));
+        alert(serviceIssue('Extended-hours order', res.status, json));
       }
     } finally {
       setActionLoading(null);
@@ -356,10 +376,10 @@ export function BrokerPanel({ watchlist = [], runtime = INITIAL_RUNTIME }: Broke
     try {
       const res = await requestRuntimeAction(runtime, `${API_BASE}/api/live/archive_history`, { method: 'POST' });
       const json = await res.json();
-      if (json.success) {
+      if (res.ok && json.success) {
         alert(json.message || 'Archived and uploaded successfully!');
       } else {
-        alert('Archive failed: ' + (json.error || json.message || 'Unknown error'));
+        alert(serviceIssue('Archive request', res.status, json));
       }
     } catch {
       alert('Request failed');
@@ -424,7 +444,7 @@ export function BrokerPanel({ watchlist = [], runtime = INITIAL_RUNTIME }: Broke
             </h2>
           </div>
           <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
-            {runtime.mode === 'research_preview' || runtime.mode === 'public_read_only' ? runtime.message : isBotRunning === null
+            {runtime.mode === 'research_preview' || runtime.mode === 'public_read_only' || runtime.mode === 'owner_authenticated' ? runtime.message : isBotRunning === null
               ? 'The trading service has not supplied a current bot status.' : isBotRunning
               ? 'Forecasts update on completed 5-minute bars; portfolio targets account for risk and trading costs.'
               : 'Click Start to enable AI execution. Automatically manages trades and risk controls.'}
@@ -434,6 +454,28 @@ export function BrokerPanel({ watchlist = [], runtime = INITIAL_RUNTIME }: Broke
           {policyState && <p style={{ marginBottom: 0, fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>Policy: {policyState.state}{policyState.reason ? ` · ${policyState.reason}` : ''}</p>}
           {policyState?.model && <p style={{ marginBottom: 0, fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>Model: {policyState.model} · Training cutoff (exclusive): {policyState.trained_before || 'Unavailable'}</p>}
           {!!policyState?.unmodeled_watchlist_symbols?.length && <p style={{ marginBottom: 0, fontSize: '0.8rem', color: '#fbbf24' }}>No fitted model for: {policyState.unmodeled_watchlist_symbols.join(', ')}. These watchlist symbols do not receive model signals.</p>}
+          {runtime.mode === 'public_read_only' && (
+            <div style={{ marginTop: '12px', fontSize: '0.8rem' }}>
+              {runtime.owner_login_available === false ? (
+                <p style={{ color: '#fbbf24' }}>Owner access has not been configured on this server.</p>
+              ) : (
+                <form onSubmit={event => { event.preventDefault(); void handleOwnerSignIn(); }} style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  <input type="password" aria-label="Owner access key" placeholder="Owner access key" autoComplete="current-password"
+                    value={ownerSecret} onChange={event => setOwnerSecret(event.target.value)} maxLength={1024}
+                    style={{ padding: '8px', borderRadius: '6px', border: '1px solid var(--color-border)', background: '#111', color: '#fff' }} />
+                  <button type="submit" disabled={ownerBusy || !ownerSecret} style={{ padding: '8px 14px', borderRadius: '6px', cursor: 'pointer' }}>
+                    {ownerBusy ? 'Signing in…' : 'Unlock owner controls'}
+                  </button>
+                </form>
+              )}
+              <p style={{ marginBottom: 0 }}>Sign-in does not start the bot. If this page is embedded, <a href={API_BASE} target="_blank" rel="noreferrer">open the website directly</a>.</p>
+            </div>
+          )}
+          {runtime.mode === 'owner_authenticated' && <p style={{ marginBottom: 0, fontSize: '0.8rem' }}>
+            Owner session expires {runtime.owner_session_expires_at ? new Date(runtime.owner_session_expires_at).toLocaleTimeString() : 'shortly'}.
+            {' '}<button onClick={handleOwnerSignOut} disabled={ownerBusy} style={{ cursor: 'pointer' }}>Sign out of owner controls</button>
+          </p>}
+          {ownerError && <p role="alert" style={{ color: '#fbbf24', fontSize: '0.8rem' }}>{ownerError}</p>}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
           {!isBotRunning ? (
@@ -672,8 +714,9 @@ export function BrokerPanel({ watchlist = [], runtime = INITIAL_RUNTIME }: Broke
                       try {
                         const res = await requestRuntimeAction(runtime, `${API_BASE}/api/broker/close_all`, { method: 'POST' });
                         const d = await res.json();
-                        if (d.success) fetchBrokerData();
-                      } catch (e) {}
+                        if (res.ok && d.success) fetchBrokerData();
+                        else alert(serviceIssue('Close-all request', res.status, d));
+                      } catch (error) { alert(error instanceof Error ? error.message : 'Close-all request failed.'); }
                     }
                   }}
                   style={{
