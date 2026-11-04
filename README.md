@@ -272,9 +272,31 @@ kept outside the tracked deployment build. Private captures and
 broker credentials are not required for this preview.
 
 The interface reads `/api/runtime/capabilities` to distinguish the saved-report
-preview, the public read-only deployment, and a local trading server. A preview
-does not connect to a broker. The public Hugging Face deployment can display
-account data, but its existing read-only middleware rejects trading and other
-state-changing requests. A visible Start control does not mean execution is
-available. Missing or stale market-clock observations are shown as unknown,
-instead of being interpreted as a closed market.
+preview, public viewing, authenticated owner controls, and a local trading server.
+A preview does not connect to a broker. On the public Hugging Face website, the
+owner can unlock the existing controls; anonymous state-changing requests remain
+unavailable. Signing in never starts trading or changes the strategy. Missing or
+stale market-clock observations are shown as unknown.
+
+### Owner controls on Hugging Face
+
+Configure `QUANT_OWNER_SECRET` as a random secret of at least 32 characters in
+Space Secrets and `QUANT_OWNER_ORIGIN=https://ypeng12-quant-ai.hf.space` as a Space
+variable. Keep the key out of code, build variables, URLs, and Git. Open the
+direct Space website, use **Unlock owner controls**, then use the existing Start
+button when you intend to request execution. The secure browser session lasts
+15 minutes and is invalidated by server restart; expiry does not stop an already
+running bot. The credential controls website access, not model performance.
+The local standalone research preview has no trading service to unlock.
+
+### Course checkpoint
+
+The portable course entry is
+[`research/financial_sentiment_using_prices/course`](research/financial_sentiment_using_prices/course/README.md).
+It actually refits four baseline models on observed numeric features without
+broker credentials and audits the separate published BERT/strategy reports.
+The official template container and both notebooks run locally. Raw 2023 input
+recovery, independent attribution evaluation, the student's presentation, and
+course review remain separate acceptance items. `scripts/export_course_project.py`
+exports an allowlisted snapshot to the instructor's required project directory;
+this Quant checkout remains the sole development source.

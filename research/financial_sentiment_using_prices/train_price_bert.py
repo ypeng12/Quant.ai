@@ -163,7 +163,15 @@ def load_model(directory, seed):
 
 
 def public_summary(receipt, reg):
-    """Aggregate-only export: no text, local paths, state tensors, or source IDs."""
+    """Export actual progress separately from the registered company-day pool.
+
+    One optimizer step consumes one company-day in the registered single epoch.
+    The legacy ``training_rows``/``heldout_rows`` fields now count actual training
+    steps and completed evaluation rows. A stopped run must not inherit the full
+    272/154 pool sizes. Older complete receipts retain their original counts via
+    their recorded evaluation cases; an unknown planned heldout count stays null.
+    No text, local paths, state tensors, or source IDs are exported.
+    """
     cases=[]
     for case in receipt.get('evaluation_cases', []):
         costs=case['cost_evaluation']
@@ -172,6 +180,13 @@ def public_summary(receipt, reg):
             'illustrative_cost_scenarios':{'mode':costs['mode'],
                 'eligible_nonoverlapping_intervals':costs['eligible_intervals'],
                 'models':costs['models'],'is_executable_strategy_evidence':False}})
+    training_rows = receipt['actual_optimizer_steps']
+    evaluated_rows = receipt.get('actual_evaluated_rows', sum(case['test_rows'] for case in cases))
+    planned_training_rows = receipt.get('planned_training_rows', reg['training']['max_total_steps'])
+    planned_heldout_rows = receipt.get('planned_heldout_rows')
+    if planned_heldout_rows is None and receipt['status'] == 'complete':
+        # Legacy completed receipts predate explicit prepared-pool counts.
+        planned_heldout_rows = sum(case['test_rows'] for case in cases)
     return {'schema_version':1,'generated_at':stamp(),'status':receipt['status'],
         'evaluation_kind':'retrospective_development','model':'price_label_bert',
         'model_label':'Price-label BERT (final encoder layer + regression head)',
@@ -184,7 +199,10 @@ def public_summary(receipt, reg):
         'completed_companies':receipt['actual_finetuned_companies'],
         'heldout_predictions_completed':bool(receipt.get('heldout_prediction_sha256')),
         'heldout_outcomes_opened':receipt['heldout_outcomes_opened'],
-        'training_rows':272,'heldout_rows':154,'horizon_sessions':10,
+        'training_rows':training_rows,'heldout_rows':evaluated_rows,
+        'actual_training_rows':training_rows,'actual_evaluated_rows':evaluated_rows,
+        'planned_training_rows':planned_training_rows,'planned_heldout_rows':planned_heldout_rows,
+        'row_count_unit':'company_day','horizon_sessions':10,
         'test_start':'2023-09-01','target':'company minus SPY split-adjusted price return',
         'cases':cases,'promoted':False,'alpha_established':False,
         'failure_types':[f['type'] for f in receipt['failures']],
@@ -217,6 +235,7 @@ def run(repo, registration, output):
         'registration_sha256': sha(registration), 'actual_optimizer_steps': 0,
         'actual_finetuned_companies': [], 'heldout_features_opened': False,
         'heldout_outcomes_opened': False, 'companies': {}, 'promoted': False,
+        'actual_evaluated_rows': 0,
         'alpha_established': False, 'strict_labels_created': 0, 'failures': []}
     resources = reg['resources']
     torch.set_num_threads(resources['threads'])
@@ -230,6 +249,8 @@ def run(repo, registration, output):
     signal.setitimer(signal.ITIMER_REAL, resources['outer_seconds'])
     try:
         manifest = read(repo / reg['prepared'] / 'preparation_receipt.json')
+        receipt['planned_training_rows'] = sum(len(manifest['companies'][c]['train_ids']) for c in reg['companies'])
+        receipt['planned_heldout_rows'] = sum(len(manifest['companies'][c]['test_ids']) for c in reg['companies'])
         training = read(repo / reg['prepared'] / 'training_packet.json')['companies']
         train_tokens = read(repo / reg['tokenized'] / 'training_tokens.json')['companies']
         heldout_ids = {s for c in manifest['companies'].values() for s in c['test_ids']}
@@ -321,6 +342,8 @@ def run(repo, registration, output):
                     'metrics':all_metrics,'cost_evaluation':cost_evaluation(combined,[0,10,20])}
             cases.append(case)
             save(out / (company + '.paired_predictions.json'), combined)
+            receipt['actual_evaluated_rows'] += len(combined)
+            save(out / 'training_receipt.json', receipt)
         receipt.update(status='complete', completed_at=stamp(), evaluation_cases=cases,
             evaluation_peak_observed_rss_bytes=budget.peak_observed_rss,
             evaluation_minimum_observed_available_bytes=budget.minimum_observed_available)

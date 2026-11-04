@@ -1,5 +1,49 @@
 # Train_Financial_Sentinment_Analysis_Using_Prices
 
+## Attribution acceptance and research accounting (2026-11-04)
+
+[`move_attribution.py`](move_attribution.py) adds an offline review pipeline:
+open-to-open stock-minus-benchmark moves use only preceding volatility; missing
+calendar sessions break the window. News must have verified entity and exact
+publication, version and receipt clocks before the move starts. Date-only
+retrospective headlines are excluded. Candidate ranking uses receipt recency,
+not an LLM, and does not claim a causal explanation.
+
+The evaluator requires an explicit independent, blinded human-review declaration
+and supporting references. It distinguishes unassessed, unexplained and uncertain
+cases, reports the reviewed denominator, and leaves error rates unavailable when
+gold labels are absent. The declaration is not independent identity authentication.
+The 19 synthetic contract tests are engineering evidence, not a human evaluation.
+
+Local JSON input schemas and callable APIs are documented in the module. For an
+authorized, materialized dataset, write a new private output directory:
+
+```bash
+python3 research/financial_sentiment_using_prices/move_attribution.py \
+  --bars /path/to/calendar_indexed_opens.json --news /path/to/versioned_news.json \
+  --output /path/to/new_private_attribution_review
+```
+
+Optional `--predictions` and `--human-review` files enable evaluation. Outputs
+contain private review inputs and are ignored by Git. No network, training,
+trading or automatic attribution occurs. The [local recovery audit](../../reports/financial_sentiment_research_acceptance_20261104.json)
+records missing 2023 raw inputs and the detailed BERT run receipt; aggregate
+historical reports remain available but were not independently replayed today.
+
+The newly recovered 2016–2020 Agilent capture can also be read directly with
+`--capture` in place of `--bars`/`--news`. The [actual detection receipt](../../reports/financial_sentiment_move_attribution_20261104.json)
+records 1,144 paired opening-price observations, 1,123 intervals after warmup,
+and 26 three-standard-deviation excess moves. Its 356 retrospective headlines
+provide no verified preceding-news candidates. Attribution predictions and
+independent human evaluation remain unavailable; zero eligible candidates does
+not mean that all 26 moves lacked a news cause. This is a descriptive recovery
+run, not a preregistered new holdout or recovery of the missing 2023 experiment.
+
+BERT exports now separate planned pools from actual training/evaluation counts;
+stopped runs no longer inherit 272/154 completed rows. Historical complete reports
+are unchanged. The old registration preserves its original source hashes, so a
+future training run with modified source needs a new registration.
+
 ## Offline profitability follow-up (2026-10-28)
 
 The current research priority is absolute net profitability, signal validity, and holding decisions. The frozen A/C/B comparison remains unchanged. Its text increment was negative; repeated observations of two receipt batches do not establish a sentiment alpha. New work is isolated on `research/signal-profitability-v2`, with no app deployment or trading activation.

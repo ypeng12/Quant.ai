@@ -48,6 +48,7 @@ jobs:
           python -m pytest -q
           backend/tests/test_runtime_status.py
           backend/tests/test_public_read_only.py
+          backend/tests/test_owner_auth.py
           tests/test_financial_sentiment_preview.py
           scripts/tests/test_replay_sentiment_ablations.py
           scripts/tests/test_probe_sentiment_reproduction.py
@@ -63,3 +64,26 @@ jobs:
       - name: Type-check and build frontend
         working-directory: frontend
         run: npm run build
+
+  course-container:
+    name: Portable course notebook replay (Docker)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+          persist-credentials: false
+      - name: Export public course files
+        run: python scripts/export_course_project.py "$RUNNER_TEMP/course-project"
+      - name: Build official course template image
+        run: docker build -t quant-ai-course:check "$RUNNER_TEMP/course-project"
+      - name: Refit and execute both notebooks offline
+        run: |
+          docker run --rm --network none \
+            --mount "type=bind,source=$RUNNER_TEMP/course-project,target=/workspace" \
+            --workdir /workspace quant-ai-course:check bash -lc '
+              python -m unittest test_financial_sentiment -v &&
+              jupyter nbconvert --to notebook --execute financial_sentiment.API.ipynb --output-dir executed &&
+              jupyter nbconvert --to notebook --execute financial_sentiment.example.ipynb --output-dir executed
+            '

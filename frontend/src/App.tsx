@@ -1,6 +1,6 @@
 // frontend/src/App.tsx
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { StockChart } from './components/StockChart';
 import { PortfolioStats } from './components/PortfolioStats';
 import { LedgerTable, type LedgerItem } from './components/LedgerTable';
@@ -26,7 +26,7 @@ import { PaperAlphaDashboard } from './components/PaperAlphaDashboard';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { API_BASE } from './config';
 import { INITIAL_RUNTIME, maySendAutomaticRequests, readRuntimeCapabilities, requestRuntimeAction,
-  runtimeActionNotice, type RuntimeCapabilities } from './runtimeCapabilities';
+  runtimeActionNotice, OWNER_SESSION_CHANGED_EVENT, type RuntimeCapabilities } from './runtimeCapabilities';
 
 interface SummaryData {
   initial_cash: number;
@@ -158,11 +158,31 @@ function App() {
   // Presentation only; the API middleware enforces public read-only access.
   const isPublicResearchView = window.location.hostname.endsWith('.hf.space');
   const [runtime, setRuntime] = useState<RuntimeCapabilities>(INITIAL_RUNTIME);
+  const refreshRuntime = useCallback(() => {
+    readRuntimeCapabilities(API_BASE).then(next => setRuntime(previous =>
+      next.mode === 'unavailable' && previous.mode === 'owner_authenticated'
+        ? { ...previous, mode: 'public_read_only', trading_available: false, owner_session_expires_at: null,
+            message: 'The owner session could not be verified. Sign in again to use trading controls.' }
+        : next));
+  }, []);
   useEffect(() => {
     let mounted = true;
     readRuntimeCapabilities(API_BASE).then(value => { if (mounted) setRuntime(value); });
     return () => { mounted = false; };
   }, []);
+  useEffect(() => {
+    window.addEventListener(OWNER_SESSION_CHANGED_EVENT, refreshRuntime);
+    return () => window.removeEventListener(OWNER_SESSION_CHANGED_EVENT, refreshRuntime);
+  }, [refreshRuntime]);
+  useEffect(() => {
+    if (runtime.mode !== 'owner_authenticated') return;
+    const timer = window.setInterval(refreshRuntime, 30000);
+    const expiresIn = Date.parse(runtime.owner_session_expires_at || '') - Date.now();
+    const expiryTimer = Number.isFinite(expiresIn)
+      ? window.setTimeout(refreshRuntime, Math.max(0, Math.min(expiresIn + 100, 3600000))) : undefined;
+    window.addEventListener('focus', refreshRuntime);
+    return () => { window.clearInterval(timer); window.clearTimeout(expiryTimer); window.removeEventListener('focus', refreshRuntime); };
+  }, [runtime.mode, runtime.owner_session_expires_at, refreshRuntime]);
   const [watchlist, setWatchlist] = useState<string[]>(["SNDK", "TSLA", "PLTR", "NVDA"]);
   const [newTickerInput, setNewTickerInput] = useState<string>('');
   
@@ -778,14 +798,14 @@ function App() {
         </div>
       </header>
 
-      {(runtime.mode === 'research_preview' || runtime.mode === 'public_read_only') && (
+      {(runtime.mode === 'research_preview' || runtime.mode === 'public_read_only' || runtime.mode === 'owner_authenticated') && (
         <div role="status" style={{ padding: '10px 24px', borderBottom: '1px solid var(--color-border)',
           color: '#fbbf24', fontSize: '0.85rem', lineHeight: 1.5 }}>
           {runtime.message}
         </div>
       )}
 
-      {isPublicResearchView && runtime.mode !== 'public_read_only' && (
+      {isPublicResearchView && runtime.mode !== 'public_read_only' && runtime.mode !== 'owner_authenticated' && (
         <div role="note" style={{
           padding: '10px 24px',
           borderBottom: '1px solid var(--color-border)',
@@ -860,7 +880,7 @@ function App() {
           {/* Alpaca Live Tab (Mode 1) */}
           {activeTab === 'broker' && (
             <ErrorBoundary fallbackTitle="Live Account and Fill Log">
-              <BrokerPanel watchlist={watchlist} runtime={runtime} />
+              <BrokerPanel watchlist={watchlist} runtime={runtime} onRuntimeChange={setRuntime} />
             </ErrorBoundary>
           )}
 

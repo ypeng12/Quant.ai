@@ -4,6 +4,7 @@ import {
   INITIAL_RUNTIME, PREVIEW_MESSAGE, PUBLIC_READ_ONLY_MESSAGE, runtimeFromResponse, readRuntimeCapabilities,
   maySendAutomaticRequests, requestRuntimeAction, serviceIssue, liveStatusFromResponse,
   botHeading, emptyPositionsView, executionHistoryNotice,
+  signInOwner, signOutOwner, runtimeActionNotice,
 } from '../src/runtimeCapabilities.ts';
 
 const preview = runtimeFromResponse(200, {
@@ -147,4 +148,64 @@ test('preview and failed history reads cannot appear as zero trades or active re
   assert.equal(executionHistoryNotice(legacy, true), '');
   const publicWebsite = runtimeFromResponse(200, { mode: 'public_read_only', account_available: true });
   assert.equal(executionHistoryNotice(publicWebsite, true), '');
+});
+
+const ownerPayload = {
+  mode: 'owner_authenticated', owner_authenticated: true, trading_available: true,
+  account_available: true, market_status_available: false, owner_login_available: true,
+  owner_session_expires_at: '2099-01-01T00:00:00Z',
+};
+
+test('owner sign-in only authenticates and reads capabilities, without starting or tuning', async () => {
+  const calls = [];
+  const fakeFetch = async (url, options) => {
+    calls.push([url, options.method ?? 'GET']);
+    assert.equal(options.credentials, 'same-origin');
+    return new Response(JSON.stringify(url.endsWith('/login') ? { success: true } : ownerPayload));
+  };
+  const owner = await signInOwner('', 'fixture-secret-only', fakeFetch);
+  assert.equal(owner.mode, 'owner_authenticated');
+  assert.equal(owner.trading_available, true);
+  assert.equal(maySendAutomaticRequests(owner), false);
+  assert.deepEqual(calls, [['/api/auth/login', 'POST'], ['/api/runtime/capabilities', 'GET']]);
+  await requestRuntimeAction(owner, '/api/live/start', { method: 'POST' }, fakeFetch);
+  assert.deepEqual(calls.at(-1), ['/api/live/start', 'POST']);
+  assert.equal(calls.length, 3);
+});
+
+test('owner login failures and blocked cookies never report unlocked controls', async () => {
+  let calls = 0;
+  await assert.rejects(signInOwner('', 'wrong', async () => {
+    calls += 1;
+    return new Response(JSON.stringify({ detail: 'Owner access was not accepted.' }), { status: 401 });
+  }), /Owner access was not accepted/);
+  assert.equal(calls, 1);
+  await assert.rejects(signInOwner('', 'fixture', async url => new Response(JSON.stringify(
+    url.endsWith('/login') ? { success: true } : { mode: 'public_read_only', trading_available: false },
+  ))), /session was not received.*website directly/);
+});
+
+test('owner logout returns to read-only without sending a trading request', async () => {
+  const calls = [];
+  const runtime = await signOutOwner('', async (url, options) => {
+    calls.push([url, options.method ?? 'GET']);
+    return new Response(JSON.stringify(url.endsWith('/logout') ? { success: true } : { mode: 'public_read_only' }));
+  });
+  assert.equal(runtime.mode, 'public_read_only');
+  assert.deepEqual(calls, [['/api/auth/logout', 'POST'], ['/api/runtime/capabilities', 'GET']]);
+});
+
+test('expired or rejected owner sessions never retry execution', async () => {
+  const expired = runtimeFromResponse(200, { ...ownerPayload, owner_session_expires_at: '2000-01-01T00:00:00Z' });
+  assert.match(runtimeActionNotice(expired), /expired/);
+  let calls = 0;
+  await assert.rejects(requestRuntimeAction(expired, '/api/live/start', { method: 'POST' }, async () => {
+    calls += 1; return new Response('{}');
+  }), /expired/);
+  assert.equal(calls, 0);
+  const response = await requestRuntimeAction(runtimeFromResponse(200, ownerPayload), '/api/live/start', { method: 'POST' }, async () => {
+    calls += 1; return new Response('{}', { status: 403 });
+  });
+  assert.equal(response.status, 403);
+  assert.equal(calls, 1);
 });

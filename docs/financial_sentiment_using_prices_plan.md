@@ -1,6 +1,20 @@
 # Financial Sentiment：Quant.ai 信息增强与交易改进主计划
 
-**更新：2026-11-04；策略与模型研究证据仍截至 10/28，本次恢复不增加盈利结论。当前优先级以本页为准；后面的带日期记录是历史证据，不能当作当前进度。** 中文阅读入口：[README.zh-CN.md](../research/financial_sentiment_using_prices/README.zh-CN.md)。本文件继续作为该项目唯一执行计划；原股票 Alpha 研究在 [Alpha 主计划](alpha_research_priorities_20260913.md) 保留。
+**更新：2026-11-04；已继续执行真实基线复现、归因检测、课程容器验收和 HF 启动修复。没有新增盈利或独立 Alpha 结论。当前优先级以本页为准；后面的带日期记录是历史证据，不能当作当前进度。** 中文阅读入口：[README.zh-CN.md](../research/financial_sentiment_using_prices/README.zh-CN.md)。本文件继续作为该项目唯一执行计划；原股票 Alpha 研究在 [Alpha 主计划](alpha_research_priorities_20260913.md) 保留。
+
+## 11/4 继续开发：实际交付与剩余验收
+
+用户明确要求直接修改 `~/Desktop/Quant`、同步 GitHub/HF、修复 Start，并推进新逻辑和课程要求；不扩展华丽界面。VS Code 根工作区即当前真实源码。课程 fork 只接收白名单生成的提交快照，不作为第二开发主目录。
+
+- **HF Start 根因与修复**：原公共只读中间件无条件拒绝 Space 的 POST，故有 Alpaca 配置也无法启动。新增所有者短期会话，精确同源验证、服务端密钥、HttpOnly/Secure cookie；解锁后原按钮走现有启动接口，登录不自动启动/调参/同步自选。会话过期只影响控制请求，不停止已运行机器人。原本地执行不变、`live_runner.py` 未改。40 项后端 mock 测试、18 项前端测试、TypeScript/Vite 通过；实际交易启动需由所有者点击，测试未发订单。
+- **BERT 计数修复**：原摘要写死 272/154，即使部分失败仍可能误报；现分别统计计划与实际、完成公司/实际训练/实际预测。6 个新失败/部分完成场景及2个既有轻量校验通过。10/28 已公布旧报告保持原样，不伪造新的完整权重/训练回执。
+- **真实基线重新运行**：新采集目录 `reports/financial_sentiment_runs/course_recovery_20261104/capture` 复用原固定 FNSPID revision 的 2MB 前缀与授权 Alpaca 日线，356 标题，A/SPY 各1144条。执行完整标签/分组/切分/四模型实验，91训练、87测试。MAE分别为训练均值2.57639pp、量价2.65432pp、TF-IDF2.60126pp、组合2.68501pp；没有优于均值的证据。新采集时钟不回填旧历史。原news_prefix/prices缺件仅在与旧manifest SHA完全一致后归位，旧归一化新闻/日历并未被改写冒充恢复。
+- **可独立运行课程包**：`research/financial_sentiment_using_prices/course` 使用最新老师模板原 Dockerfile/requirements；Colima实际启动，镜像构建成功。在 `--network none` 容器内完成5个专项测试和API/example两本全部4/5代码cell，无错误。默认示例用匿名数字特征重新拟合四模型，并以独立 NumPy 对偶解对照原 sklearn 逐条预测（容差1e-6）；不是展示旧分数。原文/vocabulary/账户记录/密钥不发布。原始文本预处理和2023完整BERT重训不属于此默认复现范围。
+- **归因实算**：新增 `move_attribution.py`，过去20区间波动率检测，严格前序新闻排名、无法解释候选与未评价分开、人工gold来源和覆盖分母明确。新真实档案检验1123区间，发现26个3σ超额变动；356回溯标题无独立验证历史可用/相关性，合格候选0。没有独立人工gold，不把false-attribution或真实unexplained比例填0。19项专项通过。
+- **算法接入**：独立只读shadow适配器使用真实模型/规划器核对研究与执行目标，不能把已亏损候选写成优化成功。新候选尚未替换默认实盘路径；任何 `live_runner.py` 具体变更必须先呈交用户审阅。
+- **课程提交与本人环节**：Issue861已完整满足登记要求；老师课程fork/规定分支/目录/PR按真实源提交生成。Dev Shah 的官方仓库标记为 `@Delvitron1019`，邀请其与 `@gpsaggese` 审阅。课程包是checkpoint；独立人工归因、完整2023原始回执/可重训输入、后续新时期实验、本人10–20分钟逐cell讲解视频和老师验收仍未完成。`course/PRESENTATION.md` 为录制提纲，不冒充已录视频。单独Git/Docker环境作业PDF仍未改写为通过。
+
+下一步优先：把研究/执行一致性做实，按明确模型选择接入；补经核验的新文本事件与前瞻标签，完成独立人工归因，再推进最终课程验收。未来交易日标签和学生本人讲解不能以增加测试数量替代。
 
 ## 11/4 本地源码恢复与继续开发
 
