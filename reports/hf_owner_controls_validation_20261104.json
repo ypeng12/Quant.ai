@@ -1,0 +1,79 @@
+{
+  "observed_date": "2026-11-04",
+  "recorded_at": "2026-11-04T19:42:27Z",
+  "note": "Authentication verification only: the sequence signs in, reads capabilities, and signs out. It does not start the bot or send trading-control requests. No Start, order, stop, or watchlist endpoint was called.",
+  "deployment": {
+    "endpoint": "https://huggingface.co/api/spaces/Ypeng12/quant-ai",
+    "status": "RUNNING",
+    "github_main_sha": "f52b740f72dbc566ce1bff82fbe8baade9c805fc",
+    "hf_repository_sha": "f52b740f72dbc566ce1bff82fbe8baade9c805fc",
+    "hf_runtime_sha": "f52b740f72dbc566ce1bff82fbe8baade9c805fc"
+  },
+  "synchronization": {
+    "endpoint": "https://api.github.com/repos/ypeng12/Quant.ai/actions/runs/41898113923",
+    "status": "success"
+  },
+  "checks": [
+    {
+      "method": "GET",
+      "endpoint": "https://ypeng12-quant-ai.hf.space/api/runtime/capabilities",
+      "status": 200,
+      "mode": "public_read_only",
+      "trading_available": false,
+      "account_available": true,
+      "owner_authenticated": false,
+      "owner_login_available": true,
+      "has_session_expiry": false
+    },
+    {
+      "method": "GET",
+      "endpoint": "https://ypeng12-quant-ai.hf.space/api/live/status",
+      "status": 200,
+      "is_running": false,
+      "is_market_open": null,
+      "market_status_available": false
+    },
+    {
+      "method": "POST",
+      "endpoint": "https://ypeng12-quant-ai.hf.space/api/auth/login",
+      "status": 200,
+      "success": true,
+      "cookie_attributes": {
+        "host_prefix": true,
+        "secure": true,
+        "http_only": true,
+        "same_site": "Strict",
+        "path": "/",
+        "host_only": true
+      }
+    },
+    {
+      "method": "GET",
+      "endpoint": "https://ypeng12-quant-ai.hf.space/api/runtime/capabilities",
+      "status": 200,
+      "mode": "owner_authenticated",
+      "trading_available": true,
+      "account_available": true,
+      "owner_authenticated": true,
+      "owner_login_available": true,
+      "has_session_expiry": true
+    },
+    {
+      "method": "POST",
+      "endpoint": "https://ypeng12-quant-ai.hf.space/api/auth/logout",
+      "status": 200,
+      "success": true
+    },
+    {
+      "method": "GET",
+      "endpoint": "https://ypeng12-quant-ai.hf.space/api/runtime/capabilities",
+      "status": 200,
+      "mode": "public_read_only",
+      "trading_available": false,
+      "account_available": true,
+      "owner_authenticated": false,
+      "owner_login_available": true,
+      "has_session_expiry": false
+    }
+  ]
+}

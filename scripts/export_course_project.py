@@ -25,7 +25,7 @@ def export(destination):
     for source in (RESEARCH / "course").rglob("*"):
         relative = source.relative_to(RESEARCH / "course")
         if source.is_file() and not any(x in {"__pycache__", "executed", ".ipynb_checkpoints"} for x in relative.parts):
-            if source.suffix in {".py", ".ipynb", ".md", ".txt", ".sh", ".json"} or source.name in {"Dockerfile", "etc_sudoers", "bashrc", ".dockerignore", ".gitignore"}:
+            if source.suffix in {".py", ".ipynb", ".md", ".txt", ".sh", ".json"} or source.name in {"Dockerfile", "etc_sudoers", "bashrc", ".dockerignore", ".gitignore", ".gitattributes"}:
                 source_map[relative] = source
     # Research implementation and tests are preserved as a separately named
     # source tree, never confused with the portable evidence-audit entry points.
