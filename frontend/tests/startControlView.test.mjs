@@ -22,10 +22,10 @@ const stoppedPaper = {
 test('connected paper account, owner sign-in, stopped bot and unknown market are distinct', () => {
   const snapshot = startControlSnapshotFromResponse(200, stoppedPaper);
   const view = startControlView(publicRuntime, snapshot);
-  assert.equal(view.heading, 'Bot stopped · Start required');
+  assert.equal(view.heading, 'AI Bot Paused');
   assert.equal(view.connection, 'Paper account connected.');
   assert.match(view.access, /Sign in as the owner.*Sign-in does not start/);
-  assert.match(view.detail, /explicit Start request is required/);
+  assert.match(view.detail, /Click Start AI Bot/);
   assert.match(view.market, /not been observed recently/);
   assert.doesNotMatch(view.market, /^Market closed/);
   const unlocked = startControlView(ownerRuntime, snapshot);
@@ -39,7 +39,7 @@ test('market closure does not overwrite a running or stopped execution state', (
       success: true, status: { is_running: running, is_market_open: false },
     });
     const view = startControlView(ownerRuntime, snapshot);
-    assert.equal(view.heading, running ? 'Bot running' : 'Bot stopped · Start required');
+    assert.equal(view.heading, running ? 'AI Bot Running' : 'AI Bot Paused');
     assert.match(view.market, /^Market closed.*separate/);
   }
 });
@@ -138,4 +138,15 @@ test('only successful start plus boolean running true confirms a start', () => {
     assert.equal(result.running, null);
     assert.notEqual(result.issue, '');
   }
+});
+
+test('paper summary stays simple with unknown market hours and never asks for a key', () => {
+  const runtime = runtimeFromResponse(200, { mode: 'paper', trading_available: true });
+  const view = startControlView(runtime, startControlSnapshotFromResponse(200, stoppedPaper));
+  assert.equal(view.heading, 'AI Bot Paused');
+  assert.equal(view.summary, 'Paper account connected.');
+  assert.doesNotMatch(view.summary + view.access + view.detail, /owner|key|sign.in|unavailable/i);
+  assert.match(view.market, /not been observed/);
+  assert.equal(startControlView(runtime, { ...startControlSnapshotFromResponse(200, stoppedPaper), running: true }).heading,
+    'AI Bot Running');
 });

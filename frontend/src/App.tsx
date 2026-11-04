@@ -26,7 +26,7 @@ import { PaperAlphaDashboard } from './components/PaperAlphaDashboard';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { API_BASE } from './config';
 import { INITIAL_RUNTIME, maySendAutomaticRequests, readRuntimeCapabilities, requestRuntimeAction,
-  runtimeActionNotice, OWNER_SESSION_CHANGED_EVENT, type RuntimeCapabilities } from './runtimeCapabilities';
+  runtimeActionNotice, syncExplicitWatchlist, OWNER_SESSION_CHANGED_EVENT, type RuntimeCapabilities } from './runtimeCapabilities';
 
 interface SummaryData {
   initial_cash: number;
@@ -185,6 +185,7 @@ function App() {
   }, [runtime.mode, runtime.owner_session_expires_at, refreshRuntime]);
   const [watchlist, setWatchlist] = useState<string[]>(["SNDK", "TSLA", "PLTR", "NVDA"]);
   const [newTickerInput, setNewTickerInput] = useState<string>('');
+  const [addingTicker, setAddingTicker] = useState(false);
   
   const [activeTicker, setActiveTicker] = useState<string>('TSLA');
   const [activeInterval, setActiveInterval] = useState<string>('1d');
@@ -567,13 +568,23 @@ function App() {
   const liveStats = getLiveReplayStats();
 
   // 添加自选股
-  const handleAddTicker = (e: React.FormEvent) => {
+  const handleAddTicker = async (e: React.FormEvent) => {
     e.preventDefault();
     const cleanTicker = newTickerInput.trim().toUpperCase();
-    if (cleanTicker && !watchlist.includes(cleanTicker)) {
-      setWatchlist([...watchlist, cleanTicker]);
-      setActiveTicker(cleanTicker);
+    if (!cleanTicker || watchlist.includes(cleanTicker) || addingTicker) return;
+    const updated = [...watchlist, cleanTicker];
+    setAddingTicker(true);
+    try {
+      // These modes do not auto-sync on page load; only this explicit edit writes.
+      const confirmed = runtime.mode === 'paper' || runtime.mode === 'owner_authenticated'
+        ? await syncExplicitWatchlist(runtime, API_BASE, updated) : updated;
+      setWatchlist(confirmed);
+      if (confirmed.includes(cleanTicker)) setActiveTicker(cleanTicker);
       setNewTickerInput('');
+    } catch {
+      window.alert('The watchlist update was not confirmed. Refresh and try again.');
+    } finally {
+      setAddingTicker(false);
     }
   };
 
@@ -805,7 +816,7 @@ function App() {
         </div>
       )}
 
-      {isPublicResearchView && runtime.mode !== 'public_read_only' && runtime.mode !== 'owner_authenticated' && (
+      {isPublicResearchView && runtime.mode !== 'paper' && runtime.mode !== 'loading' && runtime.mode !== 'public_read_only' && runtime.mode !== 'owner_authenticated' && (
         <div role="note" style={{
           padding: '10px 24px',
           borderBottom: '1px solid var(--color-border)',
@@ -1232,6 +1243,7 @@ function App() {
             />
             <button 
               type="submit"
+              disabled={addingTicker}
               style={{
                 background: 'var(--color-green)',
                 color: '#000000',

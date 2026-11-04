@@ -1,5 +1,5 @@
 export interface RuntimeCapabilities {
-  mode: 'loading' | 'research_preview' | 'public_read_only' | 'owner_authenticated' | 'application' | 'unavailable';
+  mode: 'loading' | 'research_preview' | 'public_read_only' | 'owner_authenticated' | 'paper' | 'application' | 'unavailable';
   trading_available: boolean | null;
   account_available: boolean | null;
   market_status_available: boolean | null;
@@ -40,6 +40,14 @@ export function runtimeFromResponse(status: number, payload: unknown): RuntimeCa
       owner_login_available: booleanOrUnknown(body.owner_login_available),
     };
   }
+  if (status >= 200 && status < 300 && body.mode === 'paper' && body.trading_available === true) {
+    return {
+      mode: 'paper', trading_available: true,
+      account_available: booleanOrUnknown(body.account_available),
+      market_status_available: booleanOrUnknown(body.market_status_available),
+      owner_login_available: false, message: '',
+    };
+  }
   if (status >= 200 && status < 300 && body.mode === 'owner_authenticated'
       && body.owner_authenticated === true && body.trading_available === true) {
     return {
@@ -78,6 +86,8 @@ export function runtimeActionNotice(runtime: RuntimeCapabilities): string {
   if (runtime.mode === 'research_preview') return PREVIEW_MESSAGE;
   if (runtime.mode === 'public_read_only') return PUBLIC_READ_ONLY_MESSAGE;
   if (runtime.mode === 'loading') return 'Checking server capabilities. Please try again shortly.';
+  if (runtime.mode === 'unavailable') return 'Server capabilities could not be read. Refresh and try again.';
+  if (runtime.mode === 'paper' && runtime.trading_available !== true) return 'Paper controls are unavailable.';
   if (runtime.mode === 'owner_authenticated' && runtime.owner_session_expires_at
       && Date.parse(runtime.owner_session_expires_at) <= Date.now()) {
     return 'Your owner session has expired. Sign in again to use trading controls.';
@@ -97,6 +107,20 @@ export async function requestRuntimeAction(
     window.dispatchEvent(new Event(OWNER_SESSION_CHANGED_EVENT));
   }
   return response;
+}
+
+/** Persist an explicit watchlist edit; a successful HTTP response alone is not confirmation. */
+export async function syncExplicitWatchlist(runtime: RuntimeCapabilities, apiBase: string, tickers: string[], fetcher: typeof fetch = fetch): Promise<string[]> {
+  const response = await requestRuntimeAction(runtime, `${apiBase}/api/live/watchlist/sync`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tickers }),
+  }, fetcher);
+  const body = await response.json().catch(() => null);
+  const confirmed = body?.watchlist ?? body?.active_tickers;
+  if (!response.ok || body?.success !== true || !Array.isArray(confirmed)
+      || !confirmed.every((ticker: unknown) => typeof ticker === 'string')) {
+    throw new Error('The server did not confirm the watchlist update. Refresh and try again.');
+  }
+  return confirmed;
 }
 
 export async function signInOwner(apiBase: string, secret: string, fetcher: typeof fetch = fetch) {

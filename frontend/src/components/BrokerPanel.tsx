@@ -321,7 +321,6 @@ export function BrokerPanel({ watchlist = [], runtime = INITIAL_RUNTIME, onRunti
   const handleStopBot = async () => {
     const notice = runtimeActionNotice(runtime);
     if (notice) { window.alert(notice); return; }
-    if (!window.confirm('Are you sure you want to pause the AI Quant Trading Bot?')) return;
     setActionLoading('stop');
     try {
       const res = await requestRuntimeAction(runtime, `${API_BASE}/api/live/stop`, { method: 'POST' });
@@ -465,24 +464,28 @@ export function BrokerPanel({ watchlist = [], runtime = INITIAL_RUNTIME, onRunti
               {startControl.heading}
             </h2>
           </div>
-          <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
-            {startControl.detail}
-          </p>
-          <p style={{ margin: '6px 0 0', fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>{startControl.connection} {startControl.access}</p>
-          <p style={{ margin: '4px 0 0', fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>{startControl.market}</p>
+          <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>{startControl.summary}</p>
           {startError && <p role="alert" style={{ marginBottom: 0, fontSize: '0.85rem', color: '#fbbf24' }}>{startError}</p>}
-          {statusError && runtime.mode !== 'research_preview' && <p role="status" style={{ marginBottom: 0, fontSize: '0.8rem', color: '#fbbf24' }}>{statusError}</p>}
-          {controlSnapshot.policyState && <p style={{ marginBottom: 0, fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>Policy: {controlSnapshot.policyState}</p>}
-          {policyState?.model && <p style={{ marginBottom: 0, fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>Model: {policyState.model} · Training cutoff (exclusive): {policyState.trained_before || 'Unavailable'}</p>}
-          {!!policyState?.unmodeled_watchlist_symbols?.length && <p style={{ marginBottom: 0, fontSize: '0.8rem', color: '#fbbf24' }}>No fitted model for: {policyState.unmodeled_watchlist_symbols.join(', ')}. These watchlist symbols do not receive model signals.</p>}
-          <div role="status" aria-label="Parallel target comparison" style={{ marginTop: '12px', fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>
-            <p style={{ margin: 0, color: profitShadow.warning ? '#fbbf24' : undefined }}><strong>Parallel comparison: {profitShadow.label}</strong> · {profitShadow.detail}</p>
-            {profitShadow.identity && <p style={{ margin: '4px 0 0' }}>{profitShadow.identity}</p>}
-            {profitShadow.comparison && <p style={{ margin: '4px 0 0' }}>{profitShadow.comparison}</p>}
-            {profitShadow.freshness && <p style={{ margin: '4px 0 0' }}>{profitShadow.freshness}</p>}
-            {profitShadow.diagnostics && <p style={{ margin: '4px 0 0' }}>{profitShadow.diagnostics}</p>}
-            <p style={{ margin: '4px 0 0' }}>{profitShadow.scope}</p>
-          </div>
+          <details style={{ marginTop: '10px', fontSize: '0.8rem', color: 'var(--color-text-secondary)', maxWidth: '760px' }}>
+            <summary style={{ cursor: 'pointer' }}>Details</summary>
+            <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
+              {startControl.detail}
+            </p>
+            <p style={{ margin: '6px 0 0', fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>{startControl.access}</p>
+            <p style={{ margin: '4px 0 0', fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>{startControl.market}</p>
+            {statusError && runtime.mode !== 'research_preview' && <p role="status" style={{ marginBottom: 0, fontSize: '0.8rem', color: '#fbbf24' }}>{statusError}</p>}
+            {controlSnapshot.policyState && <p style={{ marginBottom: 0, fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>Policy: {controlSnapshot.policyState}</p>}
+            {policyState?.model && <p style={{ marginBottom: 0, fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>Model: {policyState.model} · Training cutoff (exclusive): {policyState.trained_before || 'Unavailable'}</p>}
+            {!!policyState?.unmodeled_watchlist_symbols?.length && <p style={{ marginBottom: 0, fontSize: '0.8rem', color: '#fbbf24' }}>No fitted model for: {policyState.unmodeled_watchlist_symbols.join(', ')}. These watchlist symbols do not receive model signals.</p>}
+            <div role="status" aria-label="Parallel target comparison" style={{ marginTop: '12px', fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>
+              <p style={{ margin: 0, color: profitShadow.warning ? '#fbbf24' : undefined }}><strong>Parallel comparison: {profitShadow.label}</strong> · {profitShadow.detail}</p>
+              {profitShadow.identity && <p style={{ margin: '4px 0 0' }}>{profitShadow.identity}</p>}
+              {profitShadow.comparison && <p style={{ margin: '4px 0 0' }}>{profitShadow.comparison}</p>}
+              {profitShadow.freshness && <p style={{ margin: '4px 0 0' }}>{profitShadow.freshness}</p>}
+              {profitShadow.diagnostics && <p style={{ margin: '4px 0 0' }}>{profitShadow.diagnostics}</p>}
+              <p style={{ margin: '4px 0 0' }}>{profitShadow.scope}</p>
+            </div>
+          </details>
           {runtime.mode === 'public_read_only' && (
             <div style={{ marginTop: '12px', fontSize: '0.8rem' }}>
               {runtime.owner_login_available === false ? (
