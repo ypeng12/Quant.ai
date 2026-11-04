@@ -2,7 +2,10 @@ import { useState, useEffect, useMemo } from 'react';
 import { API_BASE } from '../config';
 import { PortfolioHistoryChart } from './PortfolioHistoryChart';
 import { matchedPnlView } from './brokerPnl';
-import { INITIAL_RUNTIME, botHeading, emptyPositionsView, executionHistoryNotice, liveStatusFromResponse,
+import { profitShadowFromResponse, profitShadowView, type ProfitShadowStatus } from './profitShadowView';
+import { startControlSnapshotFromResponse, startControlView, startResultFromResponse,
+  type StartControlSnapshot } from '../startControlView';
+import { INITIAL_RUNTIME, emptyPositionsView, executionHistoryNotice, liveStatusFromResponse,
   maySendAutomaticRequests, requestRuntimeAction, runtimeActionNotice, serviceIssue,
   signInOwner, signOutOwner,
   type RuntimeCapabilities } from '../runtimeCapabilities';
@@ -97,6 +100,9 @@ export function BrokerPanel({ watchlist = [], runtime = INITIAL_RUNTIME, onRunti
   const [positionsAvailable, setPositionsAvailable] = useState<boolean | null>(null);
   const [isBotRunning, setIsBotRunning] = useState<boolean | null>(null);
   const [statusError, setStatusError] = useState('Waiting for trading status…');
+  const [startError, setStartError] = useState('');
+  const [controlSnapshot, setControlSnapshot] = useState<StartControlSnapshot>(() => startControlSnapshotFromResponse(0, null));
+  const [profitShadowStatus, setProfitShadowStatus] = useState<ProfitShadowStatus | null>(null);
   const [activeTickers, setActiveTickers] = useState<string[]>([]);
   const [actionFeed, setActionFeed] = useState<string[]>([]);
   const [analysisFeed, setAnalysisFeed] = useState<string[]>([]);
@@ -164,6 +170,7 @@ export function BrokerPanel({ watchlist = [], runtime = INITIAL_RUNTIME, onRunti
   const fetchBrokerData = async () => {
     if (runtime.mode === 'loading') return;
     if (runtime.mode === 'research_preview') {
+      setProfitShadowStatus(null);
       setAccount(null);
       setAccountError(runtime.message);
       setPositions([]);
@@ -171,6 +178,7 @@ export function BrokerPanel({ watchlist = [], runtime = INITIAL_RUNTIME, onRunti
       setIsBotRunning(null);
       setIsMarketOpen(null);
       setStatusError(runtime.message);
+      setControlSnapshot(startControlSnapshotFromResponse(0, null));
       setTradeHistory([]);
       setHistoryAvailable(false);
       setAccountingState('unavailable');
@@ -206,6 +214,10 @@ export function BrokerPanel({ watchlist = [], runtime = INITIAL_RUNTIME, onRunti
         setIsBotRunning(status.running);
         setIsMarketOpen(status.marketOpen);
         setStatusError(status.issue);
+        setControlSnapshot(startControlSnapshotFromResponse(response.status, statusJson));
+        // A normal stopped-status refresh must not erase a rejected Start.
+        if (status.running === true) setStartError('');
+        setProfitShadowStatus(profitShadowFromResponse(response.status, statusJson));
         if (response.ok && statusJson?.success === true && statusJson.status) {
           const monitored = statusJson.status.active_tickers || statusJson.status.monitored_tickers;
           if (monitored) setActiveTickers(monitored);
@@ -213,8 +225,10 @@ export function BrokerPanel({ watchlist = [], runtime = INITIAL_RUNTIME, onRunti
           setPolicyState(statusJson.status.quant_policy || null);
         }
       }).catch(() => {
+        setProfitShadowStatus(null);
         setIsBotRunning(null);
         setIsMarketOpen(null);
+        setControlSnapshot(startControlSnapshotFromResponse(0, null));
         setStatusError(serviceIssue('Trading status', 0, null));
       });
 
@@ -282,8 +296,9 @@ export function BrokerPanel({ watchlist = [], runtime = INITIAL_RUNTIME, onRunti
   }, [watchlist, runtime.mode]);
 
   const handleStartBot = async () => {
+    setStartError('');
     const notice = runtimeActionNotice(runtime);
-    if (notice) { window.alert(notice); return; }
+    if (notice) { setStartError(notice); return; }
     setActionLoading('start');
     try {
       const res = await requestRuntimeAction(runtime, `${API_BASE}/api/live/start`, {
@@ -291,10 +306,15 @@ export function BrokerPanel({ watchlist = [], runtime = INITIAL_RUNTIME, onRunti
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tickers: watchlist })
       });
-      const json = await res.json();
-      if (res.ok && json.success) setIsBotRunning(liveStatusFromResponse(res.status, json).running);
-      else alert(serviceIssue('Start request', res.status, json));
-    } catch (error) { alert(error instanceof Error ? error.message : 'Start request failed.'); }
+      const json = await res.json().catch(() => null);
+      const result = startResultFromResponse(res.status, json);
+      if (result.accepted) {
+        setIsBotRunning(result.running);
+        setControlSnapshot(startControlSnapshotFromResponse(res.status, json));
+      } else setStartError(result.issue);
+    } catch {
+      setStartError(runtimeActionNotice(runtime) || 'Start could not be confirmed. Check the server connection and refresh status.');
+    }
     finally { setActionLoading(null); fetchBrokerData(); }
   };
 
@@ -424,6 +444,8 @@ export function BrokerPanel({ watchlist = [], runtime = INITIAL_RUNTIME, onRunti
 
   const todayPnlPositive = (todaySummary?.total_pnl ?? 0) >= 0;
   const emptyPositions = emptyPositionsView(positionsAvailable, isMarketOpen, isBotRunning);
+  const profitShadow = profitShadowView(profitShadowStatus, runtime.mode);
+  const startControl = startControlView(runtime, { ...controlSnapshot, running: isBotRunning, marketOpen: isMarketOpen });
 
   return (
     <div className="fade-in">
@@ -440,20 +462,27 @@ export function BrokerPanel({ watchlist = [], runtime = INITIAL_RUNTIME, onRunti
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
             <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: isBotRunning ? 'var(--color-green)' : '#8e8e93', boxShadow: isBotRunning ? '0 0 12px var(--color-green)' : 'none' }} />
             <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 900, color: '#ffffff' }}>
-              {botHeading(runtime, isBotRunning)}
+              {startControl.heading}
             </h2>
           </div>
           <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
-            {runtime.mode === 'research_preview' || runtime.mode === 'public_read_only' || runtime.mode === 'owner_authenticated' ? runtime.message : isBotRunning === null
-              ? 'The trading service has not supplied a current bot status.' : isBotRunning
-              ? 'Forecasts update on completed 5-minute bars; portfolio targets account for risk and trading costs.'
-              : 'Click Start to enable AI execution. Automatically manages trades and risk controls.'}
+            {startControl.detail}
           </p>
-          {runtime.mode === 'public_read_only' && isBotRunning !== null && <p style={{ marginBottom: 0, fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>Bot status reported by the server: {isBotRunning ? 'Running' : 'Paused'}.</p>}
+          <p style={{ margin: '6px 0 0', fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>{startControl.connection} {startControl.access}</p>
+          <p style={{ margin: '4px 0 0', fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>{startControl.market}</p>
+          {startError && <p role="alert" style={{ marginBottom: 0, fontSize: '0.85rem', color: '#fbbf24' }}>{startError}</p>}
           {statusError && runtime.mode !== 'research_preview' && <p role="status" style={{ marginBottom: 0, fontSize: '0.8rem', color: '#fbbf24' }}>{statusError}</p>}
-          {policyState && <p style={{ marginBottom: 0, fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>Policy: {policyState.state}{policyState.reason ? ` · ${policyState.reason}` : ''}</p>}
+          {controlSnapshot.policyState && <p style={{ marginBottom: 0, fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>Policy: {controlSnapshot.policyState}</p>}
           {policyState?.model && <p style={{ marginBottom: 0, fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>Model: {policyState.model} · Training cutoff (exclusive): {policyState.trained_before || 'Unavailable'}</p>}
           {!!policyState?.unmodeled_watchlist_symbols?.length && <p style={{ marginBottom: 0, fontSize: '0.8rem', color: '#fbbf24' }}>No fitted model for: {policyState.unmodeled_watchlist_symbols.join(', ')}. These watchlist symbols do not receive model signals.</p>}
+          <div role="status" aria-label="Parallel target comparison" style={{ marginTop: '12px', fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>
+            <p style={{ margin: 0, color: profitShadow.warning ? '#fbbf24' : undefined }}><strong>Parallel comparison: {profitShadow.label}</strong> · {profitShadow.detail}</p>
+            {profitShadow.identity && <p style={{ margin: '4px 0 0' }}>{profitShadow.identity}</p>}
+            {profitShadow.comparison && <p style={{ margin: '4px 0 0' }}>{profitShadow.comparison}</p>}
+            {profitShadow.freshness && <p style={{ margin: '4px 0 0' }}>{profitShadow.freshness}</p>}
+            {profitShadow.diagnostics && <p style={{ margin: '4px 0 0' }}>{profitShadow.diagnostics}</p>}
+            <p style={{ margin: '4px 0 0' }}>{profitShadow.scope}</p>
+          </div>
           {runtime.mode === 'public_read_only' && (
             <div style={{ marginTop: '12px', fontSize: '0.8rem' }}>
               {runtime.owner_login_available === false ? (

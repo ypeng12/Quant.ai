@@ -289,6 +289,39 @@ button when you intend to request execution. The secure browser session lasts
 running bot. The credential controls website access, not model performance.
 The local standalone research preview has no trading service to unlock.
 
+### Parallel profit-signal comparison
+
+The original policy continues to control every order. An optional `ridge30_plan`
+observer compares NVDA/SNDK/TSLA targets from the same observed holdings, after
+the original order cycle. MSTR remains an input and may also be traded by the
+original policy; this is a three-symbol target comparison, not independent PnL.
+Each side retains its own policy settings; tighter owner position caps apply to
+the original targets. Target differences do not isolate algorithmic improvement.
+One background worker keeps at most one pending snapshot. Missing models,
+comparison errors, or slow calculations do not change the original targets.
+
+Build a dated private model using only prior completed sessions:
+
+```bash
+python scripts/build_profit_shadow_artifact.py --session YYYY-MM-DD \
+  --fetch-alpaca --output .local_backups/shadow-YYYYMMDD
+```
+
+An existing timezone-aware four-symbol archive can replace `--fetch-alpaca`
+with `--archive PATH`. The script never submits orders or promotes the model.
+Set `QUANT_SHADOW_POLICY_PATH` to the resulting `shadow_model.json` locally.
+For HF, put its contents in the **secret** `QUANT_SHADOW_POLICY_JSON`; startup
+materializes a private file. Do not commit the model, credentials, raw data,
+or comparison journals. Refresh is currently manual for each trading date;
+tomorrow's model can be prepared after today's complete regular session.
+
+The bot card reports configuration, the last comparison time, and target
+differences. A stopped bot has no new comparisons. The private daily journal
+is under `backend/.runtime_state/profit_shadow/comparisons`; HF storage may be
+replaced on restart. Persistent journals, independent shadow inventory/PnL,
+authenticated fill-time recovery, and prospective profitability evidence
+remain unfinished. Assumed execution costs are not verified broker fees.
+
 ### Course checkpoint
 
 The portable course entry is

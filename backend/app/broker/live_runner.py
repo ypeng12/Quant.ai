@@ -244,6 +244,56 @@ class LiveTradingRunner:
             self._quant_last_bar = None
         return self._quant_fitted_model
 
+    def _prepare_profit_signal_shadow(self):
+        """Optional diagnostic configuration; failure never affects execution."""
+        try:
+            from app.broker.profit_shadow_artifact import prepare_shadow_artifact
+            backend = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+            self._profit_shadow_path, self._profit_shadow_metadata = prepare_shadow_artifact(backend)
+            self._profit_shadow_setup_error = None
+        except Exception as exc:
+            self._profit_shadow_path = None
+            self._profit_shadow_metadata = {}
+            self._profit_shadow_setup_error = type(exc).__name__
+
+    def _observe_profit_signal_shadow(self, frames, current, equity, allowed, shortable, now, liquidation_at, baseline):
+        """Queue an isolated comparison after the original order cycle completes."""
+        try:
+            if not hasattr(self, "_profit_shadow_path"):
+                self._prepare_profit_signal_shadow()
+            if not self._profit_shadow_path:
+                return
+            from copy import deepcopy
+            from app.broker.profit_shadow_observer import ProfitShadowObserver
+            if not hasattr(self, "_profit_shadow_observer"):
+                backend = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+                self._profit_shadow_observer = ProfitShadowObserver(self._profit_shadow_path,
+                    journal_directory=os.path.join(backend, ".runtime_state", "profit_shadow", "comparisons"))
+            self._profit_shadow_observer.observe(
+                {s: f.copy(deep=True) for s, f in frames.items()}, dict(current), equity,
+                tuple(allowed), dict(shortable), now, liquidation_at, deepcopy(baseline))
+            self._profit_shadow_setup_error = None
+        except Exception as exc:
+            # Never write _quant_targets/status or expose private exception text.
+            self._profit_shadow_setup_error = type(exc).__name__
+
+    def _profit_signal_shadow_status(self):
+        configured = bool(os.environ.get("QUANT_SHADOW_POLICY_PATH") or os.environ.get("QUANT_SHADOW_POLICY_JSON"))
+        base = {"configured": configured, "execution_enabled": False,
+                "state": "waiting_for_decision" if configured else "not_configured",
+                "comparison_kind": "targets_from_same_observed_holdings_not_independent_pnl",
+                "comparison_count": 0}
+        try:
+            error = getattr(self, "_profit_shadow_setup_error", None)
+            if error:
+                return {**base, "state": "unavailable", "error_type": error}
+            observer = getattr(self, "_profit_shadow_observer", None)
+            if observer is not None:
+                return observer.status()
+            return {**base, **getattr(self, "_profit_shadow_metadata", {})}
+        except Exception as exc:
+            return {**base, "state": "unavailable", "error_type": type(exc).__name__}
+
     def _execution_mutex(self):
         if not hasattr(self, "_quant_execution_lock"):
             self._quant_execution_lock = threading.RLock()
@@ -305,6 +355,7 @@ class LiveTradingRunner:
             return self._run_quant_policy_cycle_unlocked()
 
     def _run_quant_policy_cycle_unlocked(self):
+        shadow_observation = None
         from app.quant_policy import integer_targets, target_weights
         if isinstance(self.adapter, MockAlpacaAdapter):
             connection = getattr(self, "_broker_connection", {})
@@ -452,6 +503,11 @@ class LiveTradingRunner:
                     if not self._quant_decision_audited:
                         # Retry a failed receipt on the next reconciliation cycle.
                         self._quant_last_bar = None
+                    shadow_observation = (frames, current, equity, allowed_symbols, shortable, now,
+                        close - pd.Timedelta(minutes=float(self.strategy_params["flatten_before_close_minutes"])),
+                        {"target_weights": dict(weights), "target_shares": dict(self._quant_targets),
+                         "model": model.spec.name, "model_sha256": getattr(self, "_quant_model_sha256", "unavailable"),
+                         "decision_id": self._quant_decision_id, "bar_time": bar.isoformat()})
                 self._quant_status = {"state": "ready", "model": model.spec.name,
                                       "trained_before": model.trained_before,
                                       "bar_time": bar.isoformat(), "target_shares": dict(self._quant_targets),
@@ -542,6 +598,8 @@ class LiveTradingRunner:
             self._quant_status.update(state="awaiting_broker_resolution", reason="A submission has no confirmed broker outcome; its client ID is being reconciled")
         # Genuine filled quantities/prices enter the ledger through the existing
         # order reconciliation worker. Submission success never enters inventory.
+        if shadow_observation is not None:
+            self._observe_profit_signal_shadow(*shadow_observation)
 
     async def _run_loop(self):
         while self.is_running:
@@ -593,6 +651,7 @@ class LiveTradingRunner:
         self._quant_targets = {}
         self._loaded_strategy_version = None
         self.load_runner_config()
+        self._prepare_profit_signal_shadow()
         self.add_log("Quant policy ready in stopped mode; an explicit start request is required for execution.")
 
 
@@ -1356,6 +1415,7 @@ class LiveTradingRunner:
             "monitored_tickers": self.active_tickers,
             "strategy_params": self.strategy_params,
             "quant_policy": self._quant_status,
+            "profit_signal_shadow": self._profit_signal_shadow_status(),
             "decision_audit": dict(getattr(self, "_decision_audit_status", {"status": "not_started"})),
             "logs_count": len(self.logs),
             "orders": orders_snapshot["orders"],
