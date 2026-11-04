@@ -1,0 +1,110 @@
+{
+  "kind": "offline_real_input_hypothetical_account_comparison_v1",
+  "execution_enabled": false,
+  "account_api_read": false,
+  "bot_started": false,
+  "candidate_pnl": null,
+  "historical_as_of": "2026-11-04T15:50:00-05:00",
+  "latest_completed_bar_open": "2026-11-04T15:45:00-05:00",
+  "data_actual_received_at": "2026-11-04T21:49:58.562685+00:00",
+  "source_feed": "sip",
+  "source_receipt_sha256": "32e114f77bbd7616c8077e2e9d5546779a00a5c241ac6d25e175535a8c07fc72",
+  "input_rows_per_symbol": {
+    "MSTR": 76,
+    "NVDA": 76,
+    "SNDK": 76,
+    "TSLA": 76
+  },
+  "assumptions_not_actual_account": {
+    "equity": 50000.0,
+    "current_weights": {
+      "MSTR": 0.0,
+      "NVDA": 0.0,
+      "SNDK": 0.0,
+      "TSLA": 0.0
+    },
+    "allowed_symbols": [
+      "MSTR",
+      "NVDA",
+      "SNDK",
+      "TSLA"
+    ],
+    "shortable": {
+      "MSTR": true,
+      "NVDA": true,
+      "SNDK": true,
+      "TSLA": true
+    },
+    "position_cap": 0.7
+  },
+  "baseline": {
+    "name": "price_volume_h1_g50",
+    "model_sha256": "a3f186e60e54e901bd1d22c349e8aa86d5bfa37c8a51c802ba186e55328cf418",
+    "trained_before": "2026-09-12",
+    "trained_last_session": "2026-09-11",
+    "target_weights": {
+      "MSTR": 0.0,
+      "NVDA": -0.41060285908242633,
+      "SNDK": 0.0,
+      "TSLA": 0.0
+    },
+    "target_shares": {
+      "MSTR": 0,
+      "NVDA": -101,
+      "SNDK": 0,
+      "TSLA": 0
+    }
+  },
+  "shadow": {
+    "target_weights": {
+      "NVDA": 0.0,
+      "SNDK": 0.0,
+      "TSLA": 0.0
+    },
+    "target_shares": {
+      "NVDA": 0,
+      "SNDK": 0,
+      "TSLA": 0
+    }
+  },
+  "delta_weights": {
+    "NVDA": 0.41060285908242633,
+    "SNDK": 0.0,
+    "TSLA": 0.0
+  },
+  "delta_shares": {
+    "NVDA": 101,
+    "SNDK": 0,
+    "TSLA": 0
+  },
+  "async_enqueue_accepted": true,
+  "async_enqueue_ms": 0.469,
+  "observer_status": {
+    "state": "observed",
+    "candidate": "ridge30_plan",
+    "model_sha256": "8c4fbc7984f2ec77f153c8772d32c92c8e37d6c70f437077a435729d283d5c72",
+    "model_trained_before": "2026-11-04",
+    "comparison_count": 1,
+    "shared_symbols": [
+      "NVDA",
+      "SNDK",
+      "TSLA"
+    ],
+    "baseline_only_symbols": [
+      "MSTR"
+    ],
+    "max_abs_weight_delta": 0.41060285908242633,
+    "differing_target_count": 1,
+    "elapsed_ms": 369.177,
+    "journal_state": "written",
+    "recorded_at": "2026-11-04T21:53:35.706493+00:00"
+  },
+  "private_journal_sha256": "dac886254aeab7494957e2aba62cfcb5c6f32d12e400f4d398334361934fc138",
+  "limitations": [
+    "Captured after the session; historical_as_of is a replay cutoff, not a live receipt time.",
+    "Hypothetical equity, flat holdings and permissions; no account state was read.",
+    "Single offline target comparison is not a live bot observation, independent portfolio, or PnL test.",
+    "Baseline and candidate use different existing model artifacts; this does not isolate algorithmic improvement.",
+    "One timing sample includes model loading and is not a production latency benchmark."
+  ]
+}

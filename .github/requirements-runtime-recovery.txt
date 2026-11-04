@@ -1,5 +1,5 @@
 # Only dependencies imported by the offline recovery fixture suites.
-# Numerical pins match the frozen research environment; no broker/training SDKs.
+# Numerical pins match the frozen research environment; broker calls are mocked.
 fastapi==0.141.1
 httpx==0.28.1
 uvicorn==0.46.0
@@ -9,3 +9,5 @@ pandas==2.3.3
 scipy==1.16.2
 scikit-learn==1.7.2
 osqp==1.1.3
+alpaca-py==0.43.2
+python-dotenv==1.1.0

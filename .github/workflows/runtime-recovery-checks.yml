@@ -51,6 +51,14 @@ jobs:
           backend/tests/test_owner_auth.py
           backend/tests/test_profit_signal_candidates.py
           backend/tests/test_profit_signal_shadow.py
+          backend/tests/test_profit_shadow_artifact.py
+          backend/tests/test_profit_shadow_observer.py
+          backend/tests/test_profit_shadow_integration.py
+          backend/tests/test_explicit_execution_startup.py
+          backend/tests/test_research_execution.py
+          backend/tests/test_holding_integration.py
+          backend/tests/test_intraday_liquidation.py
+          scripts/tests/test_build_profit_shadow_artifact.py
           tests/test_financial_sentiment_preview.py
           scripts/tests/test_replay_sentiment_ablations.py
           scripts/tests/test_probe_sentiment_reproduction.py
