@@ -109,6 +109,20 @@ export async function requestRuntimeAction(
   return response;
 }
 
+/** Persist an explicit watchlist edit; a successful HTTP response alone is not confirmation. */
+export async function syncExplicitWatchlist(runtime: RuntimeCapabilities, apiBase: string, tickers: string[], fetcher: typeof fetch = fetch): Promise<string[]> {
+  const response = await requestRuntimeAction(runtime, `${apiBase}/api/live/watchlist/sync`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tickers }),
+  }, fetcher);
+  const body = await response.json().catch(() => null);
+  const confirmed = body?.watchlist ?? body?.active_tickers;
+  if (!response.ok || body?.success !== true || !Array.isArray(confirmed)
+      || !confirmed.every((ticker: unknown) => typeof ticker === 'string')) {
+    throw new Error('The server did not confirm the watchlist update. Refresh and try again.');
+  }
+  return confirmed;
+}
+
 export async function signInOwner(apiBase: string, secret: string, fetcher: typeof fetch = fetch) {
   const response = await fetcher(`${apiBase}/api/auth/login`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
