@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { API_BASE } from '../config';
 import { PortfolioHistoryChart } from './PortfolioHistoryChart';
 import { matchedPnlView } from './brokerPnl';
+import { executionActivityFromResponse } from './executionActivity';
 import { profitShadowFromResponse, profitShadowView, type ProfitShadowStatus } from './profitShadowView';
 import { startControlSnapshotFromResponse, startControlView, startResultFromResponse,
   type StartControlSnapshot } from '../startControlView';
@@ -104,7 +105,7 @@ export function BrokerPanel({ watchlist = [], runtime = INITIAL_RUNTIME, onRunti
   const [controlSnapshot, setControlSnapshot] = useState<StartControlSnapshot>(() => startControlSnapshotFromResponse(0, null));
   const [profitShadowStatus, setProfitShadowStatus] = useState<ProfitShadowStatus | null>(null);
   const [activeTickers, setActiveTickers] = useState<string[]>([]);
-  const [actionFeed, setActionFeed] = useState<string[]>([]);
+  const [executionActivity, setExecutionActivity] = useState(() => executionActivityFromResponse(0, null));
   const [analysisFeed, setAnalysisFeed] = useState<string[]>([]);
   const [tradeHistory, setTradeHistory] = useState<TradeRecord[]>([]);
   const [historyAvailable, setHistoryAvailable] = useState<boolean | null>(null);
@@ -180,6 +181,7 @@ export function BrokerPanel({ watchlist = [], runtime = INITIAL_RUNTIME, onRunti
       setStatusError(runtime.message);
       setControlSnapshot(startControlSnapshotFromResponse(0, null));
       setTradeHistory([]);
+      setExecutionActivity(executionActivityFromResponse(0, null));
       setHistoryAvailable(false);
       setAccountingState('unavailable');
       setTodaySummary(null);
@@ -232,16 +234,13 @@ export function BrokerPanel({ watchlist = [], runtime = INITIAL_RUNTIME, onRunti
         setStatusError(serviceIssue('Trading status', 0, null));
       });
 
-      fetch(`${API_BASE}/api/live/action_feed?limit=50`).then(r => r.json()).then(feedJson => {
-        if (feedJson && feedJson.success && feedJson.logs) setActionFeed(feedJson.logs);
-      }).catch(e => console.error(e));
-
       fetch(`${API_BASE}/api/live/analysis_feed?limit=80`).then(r => r.json()).then(analysisJson => {
         if (analysisJson && analysisJson.success && analysisJson.logs) setAnalysisFeed(analysisJson.logs);
       }).catch(e => console.error(e));
 
       fetch(`${API_BASE}/api/live/trade_history`, { cache: 'no-store' }).then(async response => {
         const histJson = await response.json().catch(() => null);
+        setExecutionActivity(executionActivityFromResponse(response.status, histJson));
         const rawTrades = histJson?.trade_history ?? histJson?.trades;
         // The current history endpoint returns a bare archive without a success flag.
         if (response.ok && histJson?.success !== false && Array.isArray(rawTrades)) {
@@ -252,7 +251,10 @@ export function BrokerPanel({ watchlist = [], runtime = INITIAL_RUNTIME, onRunti
           setHistoryAvailable(false);
           setAccountingState('unavailable');
         }
-      }).catch(e => { setHistoryAvailable(false); setAccountingState('unavailable'); console.error(e); });
+      }).catch(e => {
+        setExecutionActivity(executionActivityFromResponse(0, null));
+        setHistoryAvailable(false); setAccountingState('unavailable'); console.error(e);
+      });
 
       fetch(`${API_BASE}/api/live/today_summary`).then(r => r.json()).then(todayJson => {
         if (todayJson && todayJson.success && todayJson.summary) {
@@ -947,14 +949,17 @@ export function BrokerPanel({ watchlist = [], runtime = INITIAL_RUNTIME, onRunti
           {/* 2. Execution Activity Tab */}
           {activeTab === 'actions' && (
             <div style={{ flex: 1, overflowY: 'auto', maxHeight: '380px' }}>
-              {actionFeed.length === 0 ? (
+              <p role="status" style={{ color: 'var(--color-text-secondary)', fontSize: '0.75rem', marginTop: 0 }}>
+                {executionActivity.notice}
+              </p>
+              {executionActivity.logs.length === 0 ? (
                 <div style={{ color: 'var(--color-text-secondary)', fontSize: '0.85rem', padding: '2.5rem 0', textAlign: 'center' }}>
-                  No executed orders yet.<br />
-                  <span style={{ fontSize: '0.75rem', opacity: 0.6 }}>Order execution logs will be listed here.</span>
+                  No verified fill records to display.<br />
+                  <span style={{ fontSize: '0.75rem', opacity: 0.6 }}>This list uses the same account fills as Trade History.</span>
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  {actionFeed.map((feed, idx) => {
+                  {executionActivity.logs.map((feed, idx) => {
                     const actionMatch = feed.match(/\[([A-Z]+)\]/);
                     const action = actionMatch ? ['BUY','SHORT','SELL','COVER'].find(a => feed.includes(a)) || '' : '';
                     const style = getActionStyle(action);
